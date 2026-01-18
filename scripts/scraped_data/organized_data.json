@@ -1,0 +1,372 @@
+{
+  "metadata": {
+    "source": "https://sci.uru.ac.th",
+    "organized_at": "2026-01-18",
+    "description": "Organized data from Faculty of Science and Technology, Uttaradit Rajabhat University"
+  },
+  "site_settings": {
+    "site_name_th": "คณะวิทยาศาสตร์และเทคโนโลยี",
+    "site_name_en": "Faculty of Science and Technology",
+    "university_name_th": "มหาวิทยาลัยราชภัฏอุตรดิตถ์",
+    "university_name_en": "Uttaradit Rajabhat University",
+    "phone": "055-411096",
+    "fax": "055-411096 ต่อ 1700",
+    "email": "sci@uru.ac.th",
+    "address_th": "คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์ 27 ถ.อินใจมี ต.ท่าอิฐ อ.เมือง จ.อุตรดิตถ์ 53000",
+    "address_en": "Faculty of Science and Technology, Uttaradit Rajabhat University, 27 Injaimee Rd., Tha-It, Muang, Uttaradit 53000, Thailand",
+    "facebook": "https://www.facebook.com/scienceuru",
+    "website": "https://sci.uru.ac.th",
+    "logo": "https://sci.uru.ac.th/images/logo250.png",
+    "philosophy_th": "สร้างองค์ความรู้และพัฒนาคนในชาติ ด้วยวิทยาศาสตร์และเทคโนโลยี",
+    "philosophy_en": "Creating knowledge and developing people through science and technology",
+    "vision_th": "คณะวิทยาศาสตร์และเทคโนโลยี เป็นองค์กรแห่งความสุข มุ่งพัฒนาและผลิตบัณฑิตให้เป็นคนดี คนเก่ง มีจิตอาสา นำพาสังคม พร้อมทั้งเป็นแหล่งเรียนรู้และบริการวิชาการแก่ชุมชน ท้องถิ่น ระดับชาติและนานาชาติ",
+    "vision_en": "Faculty of Science and Technology is a happy organization, committed to developing and producing graduates who are good, talented, have a volunteer spirit, lead society, and serve as a center for learning and academic services for communities locally, nationally and internationally.",
+    "mission_th": "1. ผลิตบัณฑิตที่มีคุณภาพตามมาตรฐานวิชาชีพ\n2. วิจัยและพัฒนาองค์ความรู้ด้านวิทยาศาสตร์และเทคโนโลยี\n3. บริการวิชาการแก่สังคมและชุมชน\n4. ทำนุบำรุงศิลปวัฒนธรรม",
+    "mission_en": "1. Produce quality graduates according to professional standards\n2. Research and develop knowledge in science and technology\n3. Provide academic services to society and communities\n4. Preserve arts and culture",
+    "identity_th": "บัณฑิตนักปฏิบัติ",
+    "identity_en": "Practical Graduates",
+    "established_year": 1936,
+    "years_of_excellence": 89
+  },
+  "departments": [
+    {
+      "name_th": "สาขาวิชาคณิตศาสตร์ประยุกต์",
+      "name_en": "Department of Applied Mathematics",
+      "code": "MATH"
+    },
+    {
+      "name_th": "สาขาวิชาชีววิทยา",
+      "name_en": "Department of Biology",
+      "code": "BIOL"
+    },
+    {
+      "name_th": "สาขาวิชาเคมี",
+      "name_en": "Department of Chemistry",
+      "code": "CHEM"
+    },
+    {
+      "name_th": "สาขาวิชาเทคโนโลยีสารสนเทศ",
+      "name_en": "Department of Information Technology",
+      "code": "IT"
+    },
+    {
+      "name_th": "สาขาวิชาวิทยาการคอมพิวเตอร์",
+      "name_en": "Department of Computer Science",
+      "code": "CS"
+    },
+    {
+      "name_th": "สาขาวิชาวิทยาการข้อมูล",
+      "name_en": "Department of Data Science",
+      "code": "DS"
+    },
+    {
+      "name_th": "สาขาวิชาวิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+      "name_en": "Department of Sports and Exercise Science",
+      "code": "SPORT"
+    },
+    {
+      "name_th": "สาขาวิชาวิทยาศาสตร์สิ่งแวดล้อม",
+      "name_en": "Department of Environmental Science",
+      "code": "ENV"
+    },
+    {
+      "name_th": "สาขาวิชาสาธารณสุขศาสตร์",
+      "name_en": "Department of Public Health",
+      "code": "PH"
+    },
+    {
+      "name_th": "สาขาวิชาอาหารและโภชนาการ",
+      "name_en": "Department of Food and Nutrition",
+      "code": "FOOD"
+    },
+    {
+      "name_th": "สำนักงานคณะ",
+      "name_en": "Faculty Office",
+      "code": "OFFICE"
+    }
+  ],
+  "programs": {
+    "bachelor": [
+      {
+        "name_th": "คณิตศาสตร์ประยุกต์",
+        "name_en": "Applied Mathematics",
+        "degree_th": "วิทยาศาสตรบัณฑิต (วท.บ.)",
+        "degree_en": "Bachelor of Science (B.Sc.)",
+        "department_code": "MATH",
+        "duration": 4,
+        "credits": 126,
+        "description_th": "หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาคณิตศาสตร์ประยุกต์ มุ่งผลิตบัณฑิตที่มีความรู้ความสามารถในการประยุกต์ใช้คณิตศาสตร์ในการแก้ปัญหาทางวิทยาศาสตร์และเทคโนโลยี"
+      },
+      {
+        "name_th": "ชีววิทยา",
+        "name_en": "Biology",
+        "degree_th": "วิทยาศาสตรบัณฑิต (วท.บ.)",
+        "degree_en": "Bachelor of Science (B.Sc.)",
+        "department_code": "BIOL",
+        "duration": 4,
+        "credits": 130,
+        "description_th": "หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาชีววิทยา มุ่งผลิตบัณฑิตที่มีความรู้ความเข้าใจในหลักชีววิทยาและสามารถนำไปประยุกต์ใช้ในการทำงานและการศึกษาต่อ"
+      },
+      {
+        "name_th": "เคมี",
+        "name_en": "Chemistry",
+        "degree_th": "วิทยาศาสตรบัณฑิต (วท.บ.)",
+        "degree_en": "Bachelor of Science (B.Sc.)",
+        "department_code": "CHEM",
+        "duration": 4,
+        "credits": 130,
+        "description_th": "หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเคมี มุ่งผลิตบัณฑิตที่มีความรู้ความสามารถทางเคมีทั้งภาคทฤษฎีและปฏิบัติ"
+      },
+      {
+        "name_th": "เทคโนโลยีสารสนเทศ",
+        "name_en": "Information Technology",
+        "degree_th": "วิทยาศาสตรบัณฑิต (วท.บ.)",
+        "degree_en": "Bachelor of Science (B.Sc.)",
+        "department_code": "IT",
+        "duration": 4,
+        "credits": 126,
+        "description_th": "หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ มุ่งผลิตบัณฑิตที่มีความรู้และทักษะด้านเทคโนโลยีสารสนเทศที่ทันสมัย"
+      },
+      {
+        "name_th": "วิทยาการคอมพิวเตอร์",
+        "name_en": "Computer Science",
+        "degree_th": "วิทยาศาสตรบัณฑิต (วท.บ.)",
+        "degree_en": "Bachelor of Science (B.Sc.)",
+        "department_code": "CS",
+        "duration": 4,
+        "credits": 126,
+        "description_th": "หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์ มุ่งผลิตบัณฑิตที่มีความรู้ความสามารถด้านการพัฒนาซอฟต์แวร์และระบบคอมพิวเตอร์"
+      },
+      {
+        "name_th": "วิทยาการข้อมูล",
+        "name_en": "Data Science",
+        "degree_th": "วิทยาศาสตรบัณฑิต (วท.บ.)",
+        "degree_en": "Bachelor of Science (B.Sc.)",
+        "department_code": "DS",
+        "duration": 4,
+        "credits": 126,
+        "description_th": "หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการข้อมูล มุ่งผลิตบัณฑิตที่มีความรู้ความสามารถในการวิเคราะห์และจัดการข้อมูลขนาดใหญ่"
+      },
+      {
+        "name_th": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+        "name_en": "Sports and Exercise Science",
+        "degree_th": "วิทยาศาสตรบัณฑิต (วท.บ.)",
+        "degree_en": "Bachelor of Science (B.Sc.)",
+        "department_code": "SPORT",
+        "duration": 4,
+        "credits": 130,
+        "description_th": "หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาศาสตร์การกีฬาและการออกกำลังกาย มุ่งผลิตบัณฑิตที่มีความรู้ด้านวิทยาศาสตร์การกีฬา"
+      },
+      {
+        "name_th": "วิทยาศาสตร์สิ่งแวดล้อม",
+        "name_en": "Environmental Science",
+        "degree_th": "วิทยาศาสตรบัณฑิต (วท.บ.)",
+        "degree_en": "Bachelor of Science (B.Sc.)",
+        "department_code": "ENV",
+        "duration": 4,
+        "credits": 130,
+        "description_th": "หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาวิทยาศาสตร์สิ่งแวดล้อม มุ่งผลิตบัณฑิตที่มีความรู้ความสามารถด้านการจัดการสิ่งแวดล้อม"
+      },
+      {
+        "name_th": "สาธารณสุขศาสตร์",
+        "name_en": "Public Health",
+        "degree_th": "สาธารณสุขศาสตรบัณฑิต (ส.บ.)",
+        "degree_en": "Bachelor of Public Health (B.P.H.)",
+        "department_code": "PH",
+        "duration": 4,
+        "credits": 138,
+        "description_th": "หลักสูตรสาธารณสุขศาสตรบัณฑิต มุ่งผลิตบัณฑิตที่มีความรู้ความสามารถด้านการสาธารณสุขและส่งเสริมสุขภาพชุมชน"
+      },
+      {
+        "name_th": "อาหารและโภชนาการ",
+        "name_en": "Food and Nutrition",
+        "degree_th": "วิทยาศาสตรบัณฑิต (วท.บ.)",
+        "degree_en": "Bachelor of Science (B.Sc.)",
+        "department_code": "FOOD",
+        "duration": 4,
+        "credits": 130,
+        "description_th": "หลักสูตรวิทยาศาสตรบัณฑิต สาขาวิชาอาหารและโภชนาการ มุ่งผลิตบัณฑิตที่มีความรู้ด้านโภชนาการและวิทยาศาสตร์อาหาร"
+      }
+    ],
+    "master": [
+      {
+        "name_th": "วิทยาศาสตร์ประยุกต์",
+        "name_en": "Applied Science",
+        "degree_th": "วิทยาศาสตรมหาบัณฑิต (วท.ม.)",
+        "degree_en": "Master of Science (M.Sc.)",
+        "department_code": "OFFICE",
+        "duration": 2,
+        "credits": 36,
+        "description_th": "หลักสูตรระดับปริญญาโท สาขาวิทยาศาสตร์ประยุกต์ เน้นการวิจัยและพัฒนาองค์ความรู้ด้านวิทยาศาสตร์และเทคโนโลยี"
+      },
+      {
+        "name_th": "วิศวกรรมคอมพิวเตอร์และปัญญาประดิษฐ์",
+        "name_en": "Computer Engineering and Artificial Intelligence",
+        "degree_th": "วิศวกรรมศาสตรมหาบัณฑิต (วศ.ม.)",
+        "degree_en": "Master of Engineering (M.Eng.)",
+        "department_code": "CS",
+        "duration": 2,
+        "credits": 36,
+        "description_th": "หลักสูตรวิศวกรรมศาสตรมหาบัณฑิต สาขาวิชาวิศวกรรมคอมพิวเตอร์และปัญญาประดิษฐ์ เน้นการพัฒนาระบบ AI และ Machine Learning"
+      }
+    ],
+    "doctorate": [
+      {
+        "name_th": "วิทยาศาสตร์ประยุกต์",
+        "name_en": "Applied Science",
+        "degree_th": "ปรัชญาดุษฎีบัณฑิต (ปร.ด.)",
+        "degree_en": "Doctor of Philosophy (Ph.D.)",
+        "department_code": "OFFICE",
+        "duration": 3,
+        "credits": 48,
+        "description_th": "หลักสูตรระดับปริญญาเอก สาขาวิทยาศาสตร์ประยุกต์ เน้นการวิจัยขั้นสูงและสร้างองค์ความรู้ใหม่"
+      }
+    ]
+  },
+  "quick_links": [
+    {
+      "name_th": "ระบบจัดการงานวิชาการส่วนบุคคล",
+      "name_en": "Personal Academic Management System",
+      "url": "https://sci.uru.ac.th/pams",
+      "category": "service"
+    },
+    {
+      "name_th": "ระบบฐานข้อมูลเพื่อการบริหาร",
+      "name_en": "Management Information System",
+      "url": "https://sci.uru.ac.th/mis",
+      "category": "service"
+    },
+    {
+      "name_th": "ระบบสารสนเทศสำหรับอาจารย์ที่ปรึกษา",
+      "name_en": "Advisor Information System",
+      "url": "https://sci.uru.ac.th/advisor",
+      "category": "service"
+    },
+    {
+      "name_th": "ระบบภาระงานบุคลากรสายวิชาการ",
+      "name_en": "Faculty Workload System",
+      "url": "https://sci.uru.ac.th/workload",
+      "category": "service"
+    },
+    {
+      "name_th": "ระบบฐานข้อมูลการประกันคุณภาพ",
+      "name_en": "Quality Assurance Database",
+      "url": "https://sci.uru.ac.th/qa",
+      "category": "service"
+    },
+    {
+      "name_th": "เอกสารแบบฟอร์มดาวน์โหลด",
+      "name_en": "Download Forms",
+      "url": "https://sci.uru.ac.th/download",
+      "category": "download"
+    },
+    {
+      "name_th": "แจ้งขอใช้รถยนต์",
+      "name_en": "Vehicle Request",
+      "url": "https://sci.uru.ac.th/car",
+      "category": "service"
+    },
+    {
+      "name_th": "ตารางสอบ",
+      "name_en": "Exam Schedule",
+      "url": "https://sci.uru.ac.th/exam",
+      "category": "academic"
+    }
+  ],
+  "research_centers": [
+    {
+      "name_th": "ศูนย์ดิจิทัลเพื่อพัฒนาท้องถิ่น",
+      "name_en": "Digital Center for Local Development",
+      "description_th": "ศูนย์เพื่อการพัฒนาและประยุกต์ใช้เทคโนโลยีดิจิทัลในการพัฒนาท้องถิ่น"
+    },
+    {
+      "name_th": "หน่วยจัดการงานวิจัยและพันธกิจสัมพันธ์",
+      "name_en": "Research and Engagement Management Unit",
+      "description_th": "หน่วยงานบริหารจัดการงานวิจัยและความร่วมมือกับภาคส่วนต่างๆ"
+    },
+    {
+      "name_th": "ศูนย์พลังงานและสิ่งแวดล้อม",
+      "name_en": "Energy and Environment Center",
+      "description_th": "ศูนย์วิจัยและพัฒนาด้านพลังงานและสิ่งแวดล้อม"
+    }
+  ],
+  "journals": [
+    {
+      "name_th": "วารสารวิชาการวิทยาศาสตร์และวิทยาศาสตร์ประยุกต์",
+      "name_en": "Journal of Science and Applied Science",
+      "url": "https://sci.uru.ac.th/journal"
+    },
+    {
+      "name_th": "วารสารคณิตศาสตร์ราชภัฏ",
+      "name_en": "Rajabhat Mathematics Journal",
+      "url": "https://sci.uru.ac.th/mathjournal"
+    }
+  ],
+  "events": [
+    {
+      "name_th": "สัปดาห์วิทยาศาสตร์แห่งชาติ",
+      "name_en": "National Science Week",
+      "description_th": "งานสัปดาห์วิทยาศาสตร์แห่งชาติ ส่วนภูมิภาค ประจำปี",
+      "month": 8
+    },
+    {
+      "name_th": "AUCC",
+      "name_en": "Asia Undergraduate Conference on Computing",
+      "description_th": "การประชุมวิชาการระดับปริญญาตรีด้านคอมพิวเตอร์ภูมิภาคเอเชีย",
+      "month": 2
+    }
+  ],
+  "page_content": {
+    "home": {
+      "hero_title_th": "คณะวิทยาศาสตร์และเทคโนโลยี",
+      "hero_title_en": "Faculty of Science and Technology",
+      "hero_subtitle_th": "มหาวิทยาลัยราชภัฏอุตรดิตถ์",
+      "hero_subtitle_en": "Uttaradit Rajabhat University",
+      "hero_description_th": "สร้างองค์ความรู้และพัฒนาคนในชาติ ด้วยวิทยาศาสตร์และเทคโนโลยี",
+      "stats": {
+        "programs": 13,
+        "departments": 11,
+        "years": 89,
+        "students": "2000+"
+      }
+    },
+    "about": {
+      "title_th": "เกี่ยวกับคณะ",
+      "title_en": "About Faculty",
+      "history_th": "คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์ ก่อตั้งขึ้นเพื่อผลิตบัณฑิตที่มีคุณภาพในสาขาวิทยาศาสตร์และเทคโนโลยี เพื่อตอบสนองความต้องการของท้องถิ่นและประเทศชาติ",
+      "sections": [
+        {
+          "title_th": "ปรัชญา",
+          "content_th": "สร้างองค์ความรู้และพัฒนาคนในชาติ ด้วยวิทยาศาสตร์และเทคโนโลยี"
+        },
+        {
+          "title_th": "วิสัยทัศน์",
+          "content_th": "คณะวิทยาศาสตร์และเทคโนโลยี เป็นองค์กรแห่งความสุข มุ่งพัฒนาและผลิตบัณฑิตให้เป็นคนดี คนเก่ง มีจิตอาสา นำพาสังคม พร้อมทั้งเป็นแหล่งเรียนรู้และบริการวิชาการแก่ชุมชน ท้องถิ่น ระดับชาติและนานาชาติ"
+        },
+        {
+          "title_th": "พันธกิจ",
+          "content_th": "1. ผลิตบัณฑิตที่มีคุณภาพตามมาตรฐานวิชาชีพ\n2. วิจัยและพัฒนาองค์ความรู้ด้านวิทยาศาสตร์และเทคโนโลยี\n3. บริการวิชาการแก่สังคมและชุมชน\n4. ทำนุบำรุงศิลปวัฒนธรรม"
+        },
+        {
+          "title_th": "อัตลักษณ์",
+          "content_th": "บัณฑิตนักปฏิบัติ"
+        }
+      ]
+    },
+    "academics": {
+      "title_th": "หลักสูตร",
+      "title_en": "Academic Programs",
+      "description_th": "คณะวิทยาศาสตร์และเทคโนโลยี เปิดสอนหลักสูตรระดับปริญญาตรี ปริญญาโท และปริญญาเอก รวม 13 หลักสูตร ครอบคลุมสาขาวิชาต่างๆ ทางวิทยาศาสตร์และเทคโนโลยี"
+    },
+    "research": {
+      "title_th": "งานวิจัย",
+      "title_en": "Research",
+      "description_th": "คณะวิทยาศาสตร์และเทคโนโลยี มุ่งเน้นการวิจัยและพัฒนาที่ตอบโจทย์ความต้องการของชุมชนและท้องถิ่น ผ่านศูนย์วิจัยและหน่วยงานต่างๆ"
+    },
+    "contact": {
+      "title_th": "ติดต่อเรา",
+      "title_en": "Contact Us",
+      "map_embed": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3854.4893892173!2d100.10095!3d17.6301!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30de5a8b3f6f1e1f%3A0x5e0e8b0e0e0e0e0e!2sUttaradit%20Rajabhat%20University!5e0!3m2!1sen!2sth!4v1600000000000!5m2!1sen!2sth"
+    }
+  }
+}

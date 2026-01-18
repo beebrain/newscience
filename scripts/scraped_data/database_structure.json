@@ -1,0 +1,183 @@
+{
+  "tables": [
+    {
+      "name": "news",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "primary": true,
+          "auto_increment": true
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(500)",
+          "nullable": false
+        },
+        {
+          "name": "slug",
+          "type": "VARCHAR(500)",
+          "unique": true
+        },
+        {
+          "name": "content",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "excerpt",
+          "type": "VARCHAR(1000)",
+          "nullable": true
+        },
+        {
+          "name": "featured_image",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "ENUM('draft','published')",
+          "default": "draft"
+        },
+        {
+          "name": "author_id",
+          "type": "INT",
+          "nullable": true,
+          "foreign_key": "users.id"
+        },
+        {
+          "name": "published_at",
+          "type": "DATETIME",
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "default": "CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "on_update": "CURRENT_TIMESTAMP"
+        }
+      ],
+      "sample_count": 143
+    },
+    {
+      "name": "news_images",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "primary": true,
+          "auto_increment": true
+        },
+        {
+          "name": "news_id",
+          "type": "INT",
+          "foreign_key": "news.id"
+        },
+        {
+          "name": "image_path",
+          "type": "VARCHAR(255)",
+          "nullable": false
+        },
+        {
+          "name": "caption",
+          "type": "VARCHAR(500)",
+          "nullable": true
+        },
+        {
+          "name": "sort_order",
+          "type": "INT",
+          "default": 0
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "default": "CURRENT_TIMESTAMP"
+        }
+      ]
+    },
+    {
+      "name": "departments",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "primary": true,
+          "auto_increment": true
+        },
+        {
+          "name": "name_th",
+          "type": "VARCHAR(255)",
+          "nullable": false
+        },
+        {
+          "name": "name_en",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "image",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        }
+      ]
+    },
+    {
+      "name": "programs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT",
+          "primary": true,
+          "auto_increment": true
+        },
+        {
+          "name": "name_th",
+          "type": "VARCHAR(255)",
+          "nullable": false
+        },
+        {
+          "name": "name_en",
+          "type": "VARCHAR(255)",
+          "nullable": true
+        },
+        {
+          "name": "degree_level",
+          "type": "ENUM('bachelor','master','doctorate')"
+        },
+        {
+          "name": "department_id",
+          "type": "INT",
+          "foreign_key": "departments.id"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true
+        },
+        {
+          "name": "url",
+          "type": "VARCHAR(500)",
+          "nullable": true
+        }
+      ],
+      "sample_count": 1
+    }
+  ],
+  "relationships": [
+    {
+      "from": "news_images.news_id",
+      "to": "news.id",
+      "type": "many-to-one",
+      "on_delete": "CASCADE"
+    }
+  ]
+}
