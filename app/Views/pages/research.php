@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/main_layout') ?>
+<?= $this->extend($layout) ?>
 
 <?= $this->section('content') ?>
 
@@ -135,7 +135,7 @@
     <div class="container">
         <div class="feature-section">
             <div class="feature-section__image animate-on-scroll">
-                <img src="https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=600&h=400&fit=crop" alt="Research Center">
+                <img src="<?= base_url('assets/images/research_laboratory.png') ?>" alt="Research Center">
             </div>
             <div class="feature-section__content animate-on-scroll">
                 <span class="feature-section__subtitle">Infrastructure</span>
@@ -188,3 +188,4 @@
 </section>
 
 <?= $this->endSection() ?>
+

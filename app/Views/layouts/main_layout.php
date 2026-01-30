@@ -9,19 +9,55 @@
     <!-- Google Fonts - Thai Support -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sarabun': ['Sarabun', 'Noto Sans Thai', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#1e3a5f',
+                        'primary-dark': '#0f2744',
+                        secondary: '#2d7d46',
+                        accent: '#f5a623',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Styles -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/style.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/style.css?v=' . time()) ?>">
     
     <style>
-        /* Thai Font Override */
+        /* Thai Font - Sarabun Style */
         body {
-            font-family: 'Sarabun', 'Noto Sans Thai', sans-serif;
+            font-family: 'Sarabun', sans-serif;
+            font-weight: 400;
+            color: #4a5568;
         }
         
-        .hero__title, h1, h2, h3, h4, h5, h6 {
-            font-family: 'Noto Sans Thai', 'Sarabun', sans-serif;
+        h1, h2, h3, h4, h5, h6,
+        .hero__title,
+        .section-header__title {
+            font-family: 'Sarabun', sans-serif;
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+        
+        .section-header__subtitle,
+        .section-header__description {
+            font-family: 'Sarabun', sans-serif;
+            font-weight: 400;
+            color: #64748b;
         }
         
         /* Science Theme Colors */
@@ -31,6 +67,8 @@
             --secondary: #2d7d46;
             --accent: #f5a623;
             --accent-hover: #e09000;
+            --text-primary: #1e3a5f;
+            --text-secondary: #64748b;
         }
         
         .hero--science {
@@ -44,8 +82,56 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1920&h=1080&fit=crop') center/cover;
+            background: url('<?= base_url('assets/images/hero_background.png') ?>') center/cover;
             opacity: 0.15;
+        }
+
+        /* Dropdown Menu */
+
+        .nav__item--has-dropdown {
+            position: relative;
+        }
+        
+        .nav__dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            min-width: 280px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+        
+        .nav__item--has-dropdown:hover .nav__dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .nav__dropdown-link {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: background 0.2s;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .nav__dropdown-link:last-child {
+            border-bottom: none;
+        }
+        
+        .nav__dropdown-link:hover {
+            background: #f8fafc;
+            color: var(--secondary);
+            padding-left: 1.75rem;
         }
     </style>
 </head>
@@ -93,7 +179,53 @@
                     <li><a href="<?= base_url() ?>" class="nav__link <?= ($active_page ?? '') === 'home' ? 'active' : '' ?>">หน้าแรก</a></li>
                     <li><a href="<?= base_url('academics') ?>" class="nav__link <?= ($active_page ?? '') === 'academics' ? 'active' : '' ?>">หลักสูตร</a></li>
                     <li><a href="<?= base_url('research') ?>" class="nav__link <?= ($active_page ?? '') === 'research' ? 'active' : '' ?>">วิจัย</a></li>
+                    <li class="nav__item--has-dropdown">
+                        <a href="#" class="nav__link">
+                            ระบบฐานข้อมูลและวารสาร
+                            <svg style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-left:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </a>
+                        <ul class="nav__dropdown">
+                            <li><a href="http://edoc.sci.uru.ac.th/" target="_blank" class="nav__dropdown-link">งานวิชาการ (e-Doc)</a></li>
+                            <li><a href="http://sci.uru.ac.th/scienceadmin" target="_blank" class="nav__dropdown-link">ฐานข้อมูลบริหาร</a></li>
+                            <li><a href="https://advisor.uru.ac.th" target="_blank" class="nav__dropdown-link">อาจารย์ที่ปรึกษา</a></li>
+                            <li><a href="https://workload.uru.ac.th/" target="_blank" class="nav__dropdown-link">ภาระงาน</a></li>
+                            <li><a href="https://sci.uru.ac.th/docs/qa2568.pdf" target="_blank" class="nav__dropdown-link">ประกันคุณภาพ</a></li>
+                            <li><a href="https://ph03.tci-thaijo.org/index.php/ajsas" target="_blank" class="nav__dropdown-link">วารสารวิทยาศาสตร์ฯ (AJSAS)</a></li>
+                            <li><a href="http://www.rmj.uru.ac.th/" target="_blank" class="nav__dropdown-link">วารสารคณิตศาสตร์ (RMS)</a></li>
+                            <li><a href="https://sci.uru.ac.th/academic" target="_blank" class="nav__dropdown-link">ตำแหน่งทางวิชาการ</a></li>
+                        </ul>
+                    </li>
                     <li><a href="<?= base_url('news') ?>" class="nav__link <?= ($active_page ?? '') === 'news' ? 'active' : '' ?>">ข่าว</a></li>
+                    <li><a href="<?= base_url('personnel') ?>" class="nav__link <?= ($active_page ?? '') === 'personnel' ? 'active' : '' ?>">บุคลากร</a></li>
+                    <li class="nav__item--has-dropdown">
+                        <a href="#" class="nav__link <?= in_array(($active_page ?? ''), ['support-documents', 'official-documents', 'promotion-criteria']) ? 'active' : '' ?>">
+                            เอกสาร
+                            <svg style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-left:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </a>
+                        <ul class="nav__dropdown">
+                            <li><a href="<?= base_url('support-documents') ?>" class="nav__dropdown-link">แบบฟอร์มดาวน์โหลด</a></li>
+                            <li><a href="<?= base_url('internal-documents') ?>" class="nav__dropdown-link">เอกสารภายในมหาวิทยาลัย</a></li>
+                            <li><a href="<?= base_url('official-documents') ?>" class="nav__dropdown-link">คำสั่ง/ประกาศ/ระเบียบ</a></li>
+                            <li><a href="<?= base_url('promotion-criteria') ?>" class="nav__dropdown-link">เกณฑ์การประเมินบุคคล</a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav__item--has-dropdown">
+                        <a href="#" class="nav__link">
+                            เว็บไซต์หน่วยงาน
+                            <svg style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-left:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </a>
+                        <ul class="nav__dropdown">
+                            <li><a href="http://202.29.52.60/~dicenter" target="_blank" class="nav__dropdown-link">ศูนย์ดิจิทัลเพื่อพัฒนาท้องถิ่น</a></li>
+                            <li><a href="https://www.facebook.com/ScienceRMUURU" target="_blank" class="nav__dropdown-link">หน่วยจัดการงานวิจัยและพันธกิจสัมพันธ์</a></li>
+                            <li><a href="https://ph03.tci-thaijo.org/index.php/ajsas" target="_blank" class="nav__dropdown-link">วารสารวิชาการวิทยาศาสตร์ฯ</a></li>
+                            <li><a href="http://www.rmj.uru.ac.th/" target="_blank" class="nav__dropdown-link">วารสารคณิตศาสตร์ราชภัฏ</a></li>
+                            <li><a href="https://sci.uru.ac.th/csrm" target="_blank" class="nav__dropdown-link">ศูนย์ประสานงานโครงการ CSRM</a></li>
+                            <li><a href="http://scirmu.sci.uru.ac.th/" target="_blank" class="nav__dropdown-link">ศูนย์พลังงานและสิ่งแวดล้อม</a></li>
+                            <li><a href="https://sci.uru.ac.th/scienceweek" target="_blank" class="nav__dropdown-link">สัปดาห์วิทยาศาสตร์แห่งชาติ</a></li>
+                        </ul>
+                    </li>
+
                     <li><a href="<?= base_url('about') ?>" class="nav__link <?= ($active_page ?? '') === 'about' ? 'active' : '' ?>">เกี่ยวกับ</a></li>
                     <li><a href="<?= base_url('contact') ?>" class="nav__link <?= ($active_page ?? '') === 'contact' ? 'active' : '' ?>">ติดต่อ</a></li>
                 </ul>
@@ -141,6 +273,11 @@
             <li><a href="<?= base_url('academics') ?>" class="mobile-nav__link">หลักสูตร</a></li>
             <li><a href="<?= base_url('research') ?>" class="mobile-nav__link">วิจัย</a></li>
             <li><a href="<?= base_url('news') ?>" class="mobile-nav__link">ข่าว</a></li>
+            <li><a href="<?= base_url('personnel') ?>" class="mobile-nav__link">บุคลากร</a></li>
+            <li class="mobile-nav__header-item">เอกสาร</li>
+            <li><a href="<?= base_url('support-documents') ?>" class="mobile-nav__link" style="padding-left: 2rem;">แบบฟอร์มดาวน์โหลด</a></li>
+            <li><a href="<?= base_url('official-documents') ?>" class="mobile-nav__link" style="padding-left: 2rem;">คำสั่ง/ประกาศ/ระเบียบ</a></li>
+            <li><a href="<?= base_url('promotion-criteria') ?>" class="mobile-nav__link" style="padding-left: 2rem;">เกณฑ์การประเมินบุคคล</a></li>
             <li><a href="<?= base_url('about') ?>" class="mobile-nav__link">เกี่ยวกับ</a></li>
             <li><a href="<?= base_url('contact') ?>" class="mobile-nav__link">ติดต่อ</a></li>
             <li><a href="<?= base_url('admission') ?>" class="mobile-nav__link">สมัครเรียน</a></li>
@@ -243,8 +380,8 @@
     </footer>
 
     <!-- Scripts -->
-    <!-- jQuery 3.7.1 (latest stable) -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <!-- jQuery (Local) -->
+    <script src="<?= base_url('assets/js/jquery.min.js') ?>"></script>
     
     <!-- Base URL for API -->
     <script>
@@ -256,5 +393,7 @@
     
     <!-- Main Scripts -->
     <script src="<?= base_url('assets/js/main.js') ?>"></script>
+    <!-- SPA Logic -->
+    <script src="<?= base_url('assets/js/app.js') ?>"></script>
 </body>
 </html>

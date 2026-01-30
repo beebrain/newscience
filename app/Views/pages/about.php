@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/main_layout') ?>
+<?= $this->extend($layout) ?>
 
 <?= $this->section('content') ?>
 
@@ -19,7 +19,7 @@
     <div class="container">
         <div class="feature-section">
             <div class="feature-section__image animate-on-scroll">
-                <img src="https://images.unsplash.com/photo-1562774053-701939374585?w=600&h=400&fit=crop" alt="<?= $site_info['site_name_th'] ?? 'Campus' ?>">
+                <img src="<?= base_url('assets/images/research_laboratory.png') ?>" alt="<?= $site_info['site_name_th'] ?? 'Campus' ?>">
             </div>
             <div class="feature-section__content animate-on-scroll">
                 <span class="feature-section__subtitle">ปรัชญา</span>
@@ -38,7 +38,7 @@
     <div class="container">
         <div class="feature-section feature-section--reverse">
             <div class="feature-section__image animate-on-scroll">
-                <img src="https://images.unsplash.com/photo-1607237138185-eedd9c632b0b?w=600&h=400&fit=crop" alt="วิสัยทัศน์">
+                <img src="<?= base_url('assets/images/community_service.png') ?>" alt="วิสัยทัศน์">
             </div>
             <div class="feature-section__content animate-on-scroll">
                 <span class="feature-section__subtitle">วิสัยทัศน์</span>
@@ -526,3 +526,4 @@
 </style>
 
 <?= $this->endSection() ?>
+

@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/main_layout') ?>
+<?= $this->extend($layout) ?>
 
 <?= $this->section('content') ?>
 
@@ -173,3 +173,4 @@
 </section>
 
 <?= $this->endSection() ?>
+

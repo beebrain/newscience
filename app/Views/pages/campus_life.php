@@ -1,4 +1,4 @@
-<?= $this->extend('layouts/main_layout') ?>
+<?= $this->extend($layout) ?>
 
 <?= $this->section('content') ?>
 
@@ -33,7 +33,7 @@
     <div class="container">
         <div class="feature-section">
             <div class="feature-section__image animate-on-scroll">
-                <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&h=400&fit=crop" alt="Student Activities">
+                <img src="<?= base_url('assets/images/student_activities.png') ?>" alt="Student Activities">
             </div>
             <div class="feature-section__content animate-on-scroll">
                 <span class="feature-section__subtitle">Student Life</span>
@@ -149,7 +149,7 @@
             </div>
             
             <div class="card animate-on-scroll">
-                <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=250&fit=crop" alt="Wellness" class="card__image">
+                <img src="<?= base_url('assets/images/wellness_recreation.png') ?>" alt="Wellness" class="card__image">
                 <div class="card__content">
                     <h3 class="card__title">Mental Wellness</h3>
                     <p class="card__excerpt">
@@ -173,3 +173,4 @@
 </section>
 
 <?= $this->endSection() ?>
+

@@ -19,6 +19,50 @@ class Api extends BaseController
     }
     
     /**
+     * Format featured image URL based on where it's stored
+     * Handles: full URLs, newsimages/, uploads/news/, and plain filenames
+     */
+    protected function formatFeaturedImage($imagePath)
+    {
+        // Return empty string if no image
+        if (empty($imagePath) || trim($imagePath) === '') {
+            return '';
+        }
+        
+        $imagePath = trim($imagePath);
+        
+        // Already a full URL (http or https)
+        if (strpos($imagePath, 'http') === 0) {
+            return $imagePath;
+        }
+        
+        // Path starts with newsimages/ (local scraped images)
+        if (strpos($imagePath, 'newsimages/') === 0) {
+            return base_url($imagePath);
+        }
+        
+        // Path starts with uploads/ (already has folder path)
+        if (strpos($imagePath, 'uploads/') === 0) {
+            return base_url($imagePath);
+        }
+        
+        // Check if file exists in newsimages folder first
+        $newsImagesPath = FCPATH . 'newsimages/' . $imagePath;
+        if (file_exists($newsImagesPath)) {
+            return base_url('newsimages/' . $imagePath);
+        }
+        
+        // Check if file exists in uploads/news folder
+        $uploadsPath = FCPATH . 'uploads/news/' . $imagePath;
+        if (file_exists($uploadsPath)) {
+            return base_url('uploads/news/' . $imagePath);
+        }
+        
+        // Default to uploads/news path
+        return base_url('uploads/news/' . $imagePath);
+    }
+    
+    /**
      * Get news articles with pagination
      * GET /api/news
      * 
@@ -58,9 +102,7 @@ class Api extends BaseController
                 'slug' => $article['slug'],
                 'excerpt' => $article['excerpt'] ?? mb_substr(strip_tags($article['content']), 0, 150) . '...',
                 'content' => $article['content'],
-                'featured_image' => $article['featured_image'] 
-                    ? base_url('uploads/news/' . $article['featured_image'])
-                    : null,
+                'featured_image' => $this->formatFeaturedImage($article['featured_image'] ?? ''),
                 'author' => trim(($article['gf_name'] ?? '') . ' ' . ($article['gl_name'] ?? '')),
                 'published_at' => $article['published_at'],
                 'formatted_date' => date('M j, Y', strtotime($article['published_at'] ?? $article['created_at']))
@@ -114,9 +156,7 @@ class Api extends BaseController
                 'slug' => $news['slug'],
                 'content' => $news['content'],
                 'excerpt' => $news['excerpt'],
-                'featured_image' => $news['featured_image'] 
-                    ? base_url('uploads/news/' . $news['featured_image'])
-                    : null,
+                'featured_image' => $this->formatFeaturedImage($news['featured_image'] ?? ''),
                 'author' => trim(($news['gf_name'] ?? '') . ' ' . ($news['gl_name'] ?? '')),
                 'published_at' => $news['published_at'],
                 'formatted_date' => date('F j, Y', strtotime($news['published_at'] ?? $news['created_at'])),
@@ -153,9 +193,7 @@ class Api extends BaseController
                 'title' => $article['title'],
                 'slug' => $article['slug'],
                 'excerpt' => $article['excerpt'] ?? mb_substr(strip_tags($article['content']), 0, 100) . '...',
-                'featured_image' => $article['featured_image'] 
-                    ? base_url('uploads/news/' . $article['featured_image'])
-                    : null,
+                'featured_image' => $this->formatFeaturedImage($article['featured_image'] ?? ''),
                 'formatted_date' => date('M j, Y', strtotime($article['published_at'] ?? $article['created_at']))
             ];
         }
@@ -163,6 +201,58 @@ class Api extends BaseController
         return $this->response->setJSON([
             'success' => true,
             'data' => $data
+        ]);
+    }
+    
+    /**
+     * Get news by category
+     * GET /api/news/category/:category
+     * 
+     * Query params:
+     * - limit: number of items (default: 6)
+     */
+    public function newsByCategory($category = null)
+    {
+        if (!$category) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Category parameter is required'
+            ]);
+        }
+        
+        $limit = (int) $this->request->getGet('limit') ?? 6;
+        $limit = min(50, max(1, $limit));
+        
+        $news = $this->newsModel
+            ->select('news.*, user.gf_name, user.gl_name')
+            ->join('user', 'user.uid = news.author_id', 'left')
+            ->where('news.status', 'published')
+            ->where('news.category', $category)
+            ->orderBy('news.published_at', 'DESC')
+            ->limit($limit)
+            ->find();
+        
+        $data = [];
+        foreach ($news as $article) {
+            $data[] = [
+                'id' => $article['id'],
+                'title' => $article['title'],
+                'slug' => $article['slug'],
+                'excerpt' => $article['excerpt'] ?? mb_substr(strip_tags($article['content']), 0, 150) . '...',
+                'content' => $article['content'],
+                'featured_image' => $this->formatFeaturedImage($article['featured_image'] ?? ''),
+                'author' => trim(($article['gf_name'] ?? '') . ' ' . ($article['gl_name'] ?? '')),
+                'published_at' => $article['published_at'],
+                'formatted_date' => date('d M Y', strtotime($article['published_at'] ?? $article['created_at'])),
+                'category' => $article['category'] ?? 'general'
+            ];
+        }
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $data,
+            'category' => $category,
+            'count' => count($data)
         ]);
     }
     
@@ -199,9 +289,7 @@ class Api extends BaseController
                 'title' => $article['title'],
                 'slug' => $article['slug'],
                 'excerpt' => mb_substr(strip_tags($article['content']), 0, 100) . '...',
-                'featured_image' => $article['featured_image'] 
-                    ? base_url('uploads/news/' . $article['featured_image'])
-                    : null
+                'featured_image' => $this->formatFeaturedImage($article['featured_image'] ?? '')
             ];
         }
         
@@ -340,6 +428,35 @@ class Api extends BaseController
         return $this->response->setJSON([
             'success' => true,
             'data' => $settings
+        ]);
+    }
+    
+    /**
+     * Get active hero slides
+     * GET /api/hero-slides
+     */
+    public function heroSlides()
+    {
+        $heroSlideModel = new \App\Models\HeroSlideModel();
+        $slides = $heroSlideModel->getActiveSlides();
+        
+        $data = [];
+        foreach ($slides as $slide) {
+            $data[] = [
+                'id' => $slide['id'],
+                'title' => $slide['title'],
+                'subtitle' => $slide['subtitle'],
+                'description' => $slide['description'],
+                'image' => base_url($slide['image']),
+                'link' => $slide['link'],
+                'link_text' => $slide['link_text'] ?: 'ดูรายละเอียด',
+                'show_buttons' => (bool)$slide['show_buttons'],
+            ];
+        }
+        
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $data
         ]);
     }
 }

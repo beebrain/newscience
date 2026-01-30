@@ -34,8 +34,8 @@
     --color-info: #3B82F6;
 
     /* Typography */
-    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-serif: 'Source Serif Pro', Georgia, serif;
+    --font-primary: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
 
     /* Font Sizes */
     --text-xs: 0.75rem;
@@ -148,9 +148,9 @@ h3,
 h4,
 h5,
 h6 {
-    font-family: var(--font-serif);
+    font-family: var(--font-primary);
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.3;
     color: var(--color-dark);
 }
 
@@ -217,9 +217,46 @@ p {
     background-color: var(--color-gray-100);
 }
 
+.section.section-light {
+    padding: var(--spacing-8) 0;
+}
+
 .section-primary {
     background-color: var(--color-primary);
     color: var(--color-dark);
+}
+
+/* New Background Utilities */
+.section-blue-light {
+    background-color: #f0f9ff;
+    /* Pale Blue */
+    color: var(--color-dark);
+}
+
+.section-cream {
+    background-color: #fffbeb;
+    /* Warm Cream */
+    color: var(--color-dark);
+}
+
+.news-section.section-cream {
+    padding: var(--spacing-6) 0;
+    margin: 0;
+}
+
+.section-white-pattern {
+    background-color: #ffffff;
+    background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.section-dark-blue {
+    background-color: #1e3a5f;
+    color: var(--color-white);
+}
+
+.section-slate-gradient {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
 /* ================================
@@ -608,18 +645,23 @@ p {
     grid-template-columns: repeat(4, 1fr);
 }
 
+.grid-6 {
+    grid-template-columns: repeat(6, 1fr);
+}
+
 /* ================================
    News Section
    ================================ */
 .news-section {
-    padding: var(--spacing-20) 0;
+    padding: var(--spacing-8) 0;
+    margin: 0;
 }
 
 .news-section__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-10);
+    margin-bottom: var(--spacing-4);
 }
 
 .news-section__title {
@@ -638,19 +680,112 @@ p {
     text-decoration: underline;
 }
 
-/* Featured News */
+/* Featured News - 3 columns x 2 rows = 6 items */
 .featured-news {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-8);
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto;
+    /* 2 rows x 3 columns = 6 items total */
+    gap: var(--spacing-4);
+    grid-auto-flow: row;
+    align-items: start;
 }
 
-.featured-news__main {
-    grid-row: span 2;
+/* All cards take equal space - 1 column x 1 row each */
+.featured-news > article {
+    grid-column: span 1;
+    grid-row: span 1;
 }
 
-.featured-news__main .card__image {
-    height: 300px;
+/* All cards have consistent styling */
+.featured-news .card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.featured-news .card__image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.featured-news .card__content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-3);
+    background: #fff;
+    transition: background 0.3s ease;
+}
+
+/* Background colors for different news categories */
+.featured-news .card__content--research_grant {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    /* Amber/Yellow gradient for research grants */
+}
+
+.featured-news .card__content--student_activity {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    /* Blue gradient for student activities */
+}
+
+.featured-news .card__content--general {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    /* Gray gradient for general news */
+}
+
+.featured-news .card__category {
+    margin-bottom: var(--spacing-1);
+    font-size: var(--text-xs);
+}
+
+.featured-news .card__title {
+    font-size: var(--text-base);
+    margin-bottom: var(--spacing-1);
+    line-height: 1.3;
+}
+
+.featured-news .card__excerpt {
+    margin-bottom: var(--spacing-1);
+    font-size: var(--text-xs);
+    color: var(--color-gray-600);
+    line-height: 1.4;
+}
+
+.featured-news .card__meta {
+    margin-top: auto;
+    font-size: var(--text-xs);
+    color: var(--color-gray-500);
+    padding-top: var(--spacing-1);
+}
+
+/* Responsive News Grid */
+@media (max-width: 1024px) {
+    .featured-news {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: auto auto auto;
+        /* 3 rows x 2 columns = 6 items on tablet */
+        gap: var(--spacing-3);
+    }
+
+    .featured-news .card__image {
+        height: 180px;
+    }
+}
+
+@media (max-width: 640px) {
+    .featured-news {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        /* Single column, all items stack */
+        gap: var(--spacing-3);
+    }
+
+    .featured-news .card__image {
+        height: 200px;
+    }
 }
 
 /* ================================
@@ -659,19 +794,24 @@ p {
 .section-header {
     text-align: center;
     max-width: 700px;
-    margin: 0 auto var(--spacing-12);
+    margin: 0 auto var(--spacing-4);
 }
 
 .section-header__subtitle {
+    display: inline-block;
     color: var(--color-primary-dark);
-    font-size: var(--text-sm);
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    margin-bottom: var(--spacing-3);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--spacing-2);
+    padding: 0.5rem 1.25rem;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(218, 165, 32, 0.1) 100%);
+    border-radius: 50px;
+    border: 1px solid rgba(218, 165, 32, 0.3);
 }
 
 .section-header__title {
-    margin-bottom: var(--spacing-4);
+    margin-bottom: var(--spacing-2);
 }
 
 .section-header__description {
@@ -976,7 +1116,9 @@ p {
     }
 
     .grid-2,
-    .grid-3 {
+    .grid-3,
+    .grid-4,
+    .grid-6 {
         grid-template-columns: 1fr;
     }
 
@@ -1756,5 +1898,110 @@ p {
 
     .news-detail__title {
         font-size: var(--text-2xl);
+    }
+}
+
+/* ================================
+   Service Grid (Database & Journals)
+   ================================ */
+.service-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+.service-card {
+    background: #fff;
+    border: 1px solid var(--color-gray-200);
+    border-radius: 10px;
+    padding: 0.875rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    border-color: var(--color-primary);
+}
+
+.service-card__icon {
+    width: 40px;
+    height: 40px;
+    background: var(--color-gray-100);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    color: var(--color-primary-dark);
+    transition: all 0.3s ease;
+}
+
+.service-card:hover .service-card__icon {
+    background: var(--color-primary);
+    color: var(--color-dark);
+}
+
+.service-card__icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.service-card__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+}
+
+.service-card__desc {
+    font-size: 0.75rem;
+    color: var(--color-gray-500);
+}
+
+/* Journal specific style */
+.service-card--journal .service-card__icon {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    /* Emerald 600 */
+}
+
+.service-card--journal:hover .service-card__icon {
+    background: #059669;
+    color: white;
+}
+
+.service-card--journal:hover {
+    border-color: #059669;
+}
+
+@media (max-width: 640px) {
+    .service-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .service-card {
+        padding: 1rem;
+    }
+
+    .service-card__icon {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 0.75rem;
+    }
+
+    .service-card__title {
+        font-size: 0.9rem;
     }
 }

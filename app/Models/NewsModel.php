@@ -17,6 +17,7 @@ class NewsModel extends Model
         'content',
         'excerpt',
         'status',
+        'category',
         'featured_image',
         'author_id',
         'view_count',
@@ -37,6 +38,17 @@ class NewsModel extends Model
     public function getPublished(int $limit = 10, int $offset = 0)
     {
         return $this->where('status', 'published')
+                    ->orderBy('published_at', 'DESC')
+                    ->findAll($limit, $offset);
+    }
+
+    /**
+     * Get published news by category
+     */
+    public function getPublishedByCategory(string $category, int $limit = 10, int $offset = 0)
+    {
+        return $this->where('status', 'published')
+                    ->where('category', $category)
                     ->orderBy('published_at', 'DESC')
                     ->findAll($limit, $offset);
     }
@@ -105,5 +117,101 @@ class NewsModel extends Model
                     ->where('id', $id)
                     ->set('view_count', 'view_count + 1', false)
                     ->update();
+    }
+
+    /**
+     * Categorize a news article based on content analysis
+     * Returns suggested category: 'general', 'student_activity', or 'research_grant'
+     */
+    public function suggestCategory(array $news): string
+    {
+        $title = mb_strtolower($news['title'] ?? '');
+        $content = mb_strtolower($news['content'] ?? '');
+        $excerpt = mb_strtolower($news['excerpt'] ?? '');
+        
+        // Keywords for each category
+        $keywords = [
+            'student_activity' => [
+                'นักศึกษา', 'กิจกรรมนักศึกษา', 'ค่าย', 'ทัศนศึกษา', 'แข่งขัน', 'ประกวด',
+                'นิทรรศการ', 'งานแสดง', 'การแข่งขัน', 'รางวัล', 'เกียรติบัตร', 'ประกาศนียบัตร',
+                'รับสมัคร', 'สอบ', 'สัมมนา', 'อบรม', 'workshop', 'student', 'activity',
+                'กิจกรรม', 'โครงการ', 'ค่าย', 'ทัศนศึกษา'
+            ],
+            'research_grant' => [
+                'วิจัย', 'งานวิจัย', 'โครงการวิจัย', 'ทุนวิจัย', 'research',
+                'grant', 'funding', 'ทุน', 'scholarship', 'fellowship', 'ทุนสนับสนุน',
+                'ผลงานวิจัย', 'ตีพิมพ์', 'publication', 'journal', 'วารสาร', 'conference',
+                'การประชุมวิชาการ', 'symposium', 'seminar', 'การนำเสนอผลงาน'
+            ],
+            'general' => [
+                'ประกาศ', 'แจ้งเตือน', 'ข่าว', 'ประชาสัมพันธ์', 'announcement', 'notice',
+                'general', 'ทั่วไป', 'ข้อมูล', 'information'
+            ]
+        ];
+        
+        $scores = [
+            'student_activity' => 0,
+            'research_grant' => 0,
+            'general' => 0
+        ];
+
+        // Score each category based on keyword matches
+        foreach ($keywords as $category => $categoryKeywords) {
+            foreach ($categoryKeywords as $keyword) {
+                $keywordLower = mb_strtolower($keyword);
+                // Weight: title (3x), excerpt (2x), content (1x)
+                $titleCount = substr_count($title, $keywordLower) * 3;
+                $excerptCount = substr_count($excerpt, $keywordLower) * 2;
+                $contentCount = substr_count($content, $keywordLower) * 1;
+                
+                $scores[$category] += $titleCount + $excerptCount + $contentCount;
+            }
+        }
+
+        // Find category with highest score
+        $maxScore = max($scores);
+        
+        // If no strong match, default to general
+        if ($maxScore === 0) {
+            return 'general';
+        }
+
+        // Return category with highest score
+        return array_search($maxScore, $scores);
+    }
+
+    /**
+     * Auto-categorize all news articles
+     * Returns array with statistics
+     */
+    public function autoCategorizeAll(): array
+    {
+        $allNews = $this->findAll();
+        $stats = [
+            'total' => count($allNews),
+            'updated' => 0,
+            'unchanged' => 0,
+            'by_category' => [
+                'general' => 0,
+                'student_activity' => 0,
+                'research_grant' => 0
+            ]
+        ];
+
+        foreach ($allNews as $news) {
+            $currentCategory = $news['category'] ?? 'general';
+            $suggestedCategory = $this->suggestCategory($news);
+            
+            if ($currentCategory !== $suggestedCategory) {
+                $this->update($news['id'], ['category' => $suggestedCategory]);
+                $stats['updated']++;
+            } else {
+                $stats['unchanged']++;
+            }
+            
+            $stats['by_category'][$suggestedCategory]++;
+        }
+
+        return $stats;
     }
 }

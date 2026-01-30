@@ -122,5 +122,17 @@ _modules/*
 # Visual Studio Code
 .vscode/
 
+# Cursor IDE
+.cursor/
+
 /results/
 /phpunit*.xml
+
+#-------------------------
+# Uploaded & Scraped Data
+#-------------------------
+scraped_data/
+scripts/scraped_data/
+public/newsimages/
+public/uploads/news/
+public/uploads/personnel/
