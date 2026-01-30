@@ -133,6 +133,5 @@ _modules/*
 #-------------------------
 scraped_data/
 scripts/scraped_data/
-public/newsimages/
 public/uploads/news/
 public/uploads/personnel/
