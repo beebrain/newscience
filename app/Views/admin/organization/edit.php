@@ -8,7 +8,17 @@
         <a href="<?= base_url('admin/organization') ?>" class="btn btn-secondary">ย้อนกลับ</a>
     </div>
     <div class="card-body">
-        <form action="<?= base_url('admin/organization/update/' . $person['id']) ?>" method="post" enctype="multipart/form-data">
+        <?php if (session('errors')): ?>
+            <div class="alert alert-danger" style="margin-bottom: 1rem;">
+                <ul style="margin: 0; padding-left: 1.25rem;">
+                    <?php foreach (session('errors') as $e): ?>
+                        <li><?= esc($e) ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
+
+        <form action="<?= base_url('admin/organization/update/' . $person['id']) ?>" method="post" enctype="multipart/form-data" id="org-edit-form">
             <?= csrf_field() ?>
 
             <h3 style="font-size: 1rem; margin-bottom: 1rem; color: var(--color-gray-700);">รูปภาพ</h3>
@@ -323,6 +333,27 @@ if (document.readyState === 'loading') {
 } else {
     initProgramTagsEdit();
 }
+
+// ถ้าเลือกประธานหลักสูตร ต้องมีอย่างน้อย 1 หลักสูตรที่บทบาทเป็น ประธานหลักสูตร
+(function() {
+    var form = document.getElementById('org-edit-form');
+    if (!form) return;
+    form.addEventListener('submit', function(e) {
+        var pos = document.getElementById('position');
+        if (pos && pos.value === 'ประธานหลักสูตร') {
+            var roleSelects = document.querySelectorAll('#program-tags .program-tag-role-select');
+            var hasChair = false;
+            for (var i = 0; i < roleSelects.length; i++) {
+                if (roleSelects[i].value === 'ประธานหลักสูตร') { hasChair = true; break; }
+            }
+            if (!hasChair) {
+                e.preventDefault();
+                alert('เมื่อตำแหน่งเป็น ประธานหลักสูตร ต้องระบุว่าประธานของหลักสูตรใด โดยเพิ่มหลักสูตรและเลือกบทบาท "ประธานหลักสูตร" ในหลักสูตรที่เลือก');
+                return false;
+            }
+        }
+    });
+})();
 </script>
 
 <?= $this->endSection() ?>

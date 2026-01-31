@@ -18,7 +18,7 @@
             </div>
         <?php endif; ?>
 
-        <form action="<?= base_url('admin/organization/store') ?>" method="post" enctype="multipart/form-data">
+        <form action="<?= base_url('admin/organization/store') ?>" method="post" enctype="multipart/form-data" id="org-create-form">
             <?= csrf_field() ?>
 
             <h3 style="font-size: 1rem; margin-bottom: 1rem; color: var(--color-gray-700);">รูปภาพ</h3>
@@ -254,6 +254,27 @@ if (document.readyState === 'loading') {
 } else {
     initProgramTags();
 }
+
+// ถ้าเลือกประธานหลักสูตร ต้องมีอย่างน้อย 1 หลักสูตรที่บทบาทเป็น ประธานหลักสูตร
+(function() {
+    var form = document.getElementById('org-create-form');
+    if (!form) return;
+    form.addEventListener('submit', function(e) {
+        var pos = document.getElementById('position');
+        if (pos && pos.value === 'ประธานหลักสูตร') {
+            var roleSelects = document.querySelectorAll('#program-tags .program-tag-role-select');
+            var hasChair = false;
+            for (var i = 0; i < roleSelects.length; i++) {
+                if (roleSelects[i].value === 'ประธานหลักสูตร') { hasChair = true; break; }
+            }
+            if (!hasChair) {
+                e.preventDefault();
+                alert('เมื่อตำแหน่งเป็น ประธานหลักสูตร ต้องระบุว่าประธานของหลักสูตรใด โดยเพิ่มหลักสูตรและเลือกบทบาท "ประธานหลักสูตร" ในหลักสูตรที่เลือก');
+                return false;
+            }
+        }
+    });
+})();
 </script>
 
 <?= $this->endSection() ?>
