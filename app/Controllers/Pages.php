@@ -212,30 +212,105 @@ class Pages extends BaseController
         return view('pages/contact', $data);
     }
 
+    /**
+     * Position tier for "โดยรวม" view: คณบดี → รองคณบดี → ผู้ช่วยคณบดี → อาจารย์/บุคลากรในสังกัด
+     * รองรับทั้ง "รองคณบดี" และ "รอง คณบดี", "ผู้ช่วยคณบดี" และ "ผู้ช่วย คณบดี"
+     */
+    private static function personnelPositionTier(string $position): int
+    {
+        $p = $position ?: '';
+        $hasDean = mb_strpos($p, 'คณบดี') !== false;
+        $hasVice = mb_strpos($p, 'รอง') !== false;
+        $hasAssistant = mb_strpos($p, 'ผู้ช่วย') !== false;
+
+        if ($hasDean && $hasVice && !$hasAssistant) return 2;  // รองคณบดี (รอง + คณบดี)
+        if ($hasDean && $hasAssistant) return 3;                 // ผู้ช่วยคณบดี (ผู้ช่วย + คณบดี)
+        if ($hasDean) return 1;                                 // คณบดี เท่านั้น
+        return 4;                                                // อาจารย์, ประธานหลักสูตร ฯลฯ
+    }
+
+    /** Tier from English position (when Thai position is empty) */
+    private static function personnelPositionTierEn(string $position): int
+    {
+        $p = strtolower($position ?: '');
+        if (strpos($p, 'associate dean') !== false || strpos($p, 'vice dean') !== false) return 2;
+        if (strpos($p, 'assistant dean') !== false) return 3;
+        if (strpos($p, 'dean') !== false) return 1;
+        return 4;
+    }
+
+    /**
+     * Sort personnel by position tier then by sort_order
+     */
+    private static function sortPersonnelByPositionTier(array $list): array
+    {
+        usort($list, function ($a, $b) {
+            $tierA = self::personnelPositionTier($a['position'] ?? '');
+            $tierB = self::personnelPositionTier($b['position'] ?? '');
+            if ($tierA !== $tierB) return $tierA - $tierB;
+            return ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0));
+        });
+        return $list;
+    }
+
+    /**
+     * Group personnel by position tier for "โดยรวม": คณบดี | รองคณบดี | ผู้ช่วยคณบดี | อาจารย์และบุคลากร
+     */
+    private static function groupPersonnelByPositionTier(array $personnel): array
+    {
+        $groups = [
+            1 => ['label_th' => 'คณบดี', 'label_en' => 'Dean', 'personnel' => []],
+            2 => ['label_th' => 'รองคณบดี', 'label_en' => 'Associate Dean', 'personnel' => []],
+            3 => ['label_th' => 'ผู้ช่วยคณบดี', 'label_en' => 'Assistant Dean', 'personnel' => []],
+            4 => ['label_th' => 'อาจารย์และบุคลากรในสังกัด', 'label_en' => 'Faculty & Staff', 'personnel' => []],
+        ];
+        foreach ($personnel as $p) {
+            $posTh = $p['position'] ?? '';
+            $posEn = $p['position_en'] ?? '';
+            $tier = self::personnelPositionTier($posTh);
+            if ($tier === 4 && $posTh === '' && $posEn !== '') {
+                $tier = self::personnelPositionTierEn($posEn);
+            }
+            $groups[$tier]['personnel'][] = $p;
+        }
+        return $groups;
+    }
+
     public function personnel(): string
     {
         $siteInfo = $this->siteSettingModel->getAll();
 
-        // Get all active personnel and departments
-        $personnel = $this->personnelModel->getActive();
+        // Get all active personnel with department name
+        $personnel = $this->personnelModel->getActiveWithDepartment();
         $departments = $this->departmentModel->getActive();
 
-        // Group personnel by department for "บุคลากรตามหลักสูตร" tab
+        // เติมหลักสูตร/บทบาท (ประธานหลักสูตรของหลักสูตรใด) จาก personnel_programs
+        $personnel = $this->enrichPersonnelWithProgramRoles($personnel);
+
+        // แบ่งตามหลักสูตร: group by department, within each sort by position tier (ใช้ personnel ที่ enrich แล้ว)
         $personnelByDepartment = [];
+        $personnelById = [];
+        foreach ($personnel as $p) {
+            $personnelById[(int)($p['id'] ?? 0)] = $p;
+        }
         foreach ($departments as $dept) {
+            $deptPersonnel = $this->personnelModel->getByDepartment($dept['id']);
+            $enriched = array_map(fn($p) => $personnelById[(int)($p['id'] ?? 0)] ?? $p, $deptPersonnel);
             $personnelByDepartment[$dept['id']] = [
                 'department' => $dept,
-                'personnel' => $this->personnelModel->getByDepartment($dept['id']),
+                'personnel' => self::sortPersonnelByPositionTier($enriched),
             ];
         }
-        // Personnel without department
         $noDept = array_filter($personnel, fn($p) => empty($p['department_id']));
         if (!empty($noDept)) {
             $personnelByDepartment['_none'] = [
                 'department' => ['id' => null, 'name_th' => 'อื่นๆ', 'name_en' => 'Other'],
-                'personnel' => $noDept,
+                'personnel' => self::sortPersonnelByPositionTier(array_values($noDept)),
             ];
         }
+
+        // โดยรวม: group by position tier (คณบดี → รองคณบดี → ผู้ช่วยคณบดี → อาจารย์และบุคลากร)
+        $personnelByPositionTier = self::groupPersonnelByPositionTier($personnel);
 
         // ดึงข้อมูลบุคลากรตามหลักสูตรจาก API (Research Record)
         $apiByCurriculum = FacultyPersonnelApi::fetchGroupedByCurriculum();
@@ -247,9 +322,61 @@ class Pages extends BaseController
             'personnel' => $personnel,
             'departments' => $departments,
             'personnel_by_department' => $personnelByDepartment,
+            'personnel_by_position_tier' => $personnelByPositionTier,
             'api_personnel_by_curriculum' => $apiByCurriculum['groups'] ?? [],
             'api_faculty' => $apiByCurriculum['faculty'] ?? null,
             'api_personnel_total' => $apiByCurriculum['total'] ?? 0,
+        ]);
+
+        return view('pages/personnel', $data);
+    }
+
+    /**
+     * เติม programs_list_tags (หลักสูตร + บทบาท) ให้แต่ละคน จาก personnel_programs
+     * ใช้แสดง "ประธานของหลักสูตรใด" สำหรับตำแหน่งประธานหลักสูตร
+     */
+    private function enrichPersonnelWithProgramRoles(array $personnel): array
+    {
+        if (!$this->personnelModel->db->tableExists('personnel_programs')) {
+            foreach ($personnel as &$p) {
+                $p['programs_list_tags'] = [];
+            }
+            unset($p);
+            return $personnel;
+        }
+        foreach ($personnel as &$p) {
+            $ppList = $this->personnelModel->getProgramsForPersonnel((int)($p['id'] ?? 0));
+            $tags = [];
+            foreach ($ppList as $pp) {
+                $pr = $this->programModel->find((int)($pp['program_id'] ?? 0));
+                if ($pr) {
+                    $tags[] = [
+                        'name' => $pr['name_th'] ?? $pr['name_en'] ?? '',
+                        'role' => $pp['role_in_curriculum'] ?? '',
+                    ];
+                }
+            }
+            $p['programs_list_tags'] = $tags;
+        }
+        unset($p);
+        return $personnel;
+    }
+
+    /**
+     * หน้าผู้บริหาร – โครงสร้างองค์กร (คณบดี, รองคณบดี, ผู้ช่วยคณบดี)
+     */
+    public function executives(): string
+    {
+        $siteInfo = $this->siteSettingModel->getAll();
+        $personnel = $this->personnelModel->getActiveWithDepartment();
+        $personnel = $this->enrichPersonnelWithProgramRoles($personnel);
+        $personnelByPositionTier = self::groupPersonnelByPositionTier($personnel);
+
+        $data = array_merge($this->getCommonData(), [
+            'page_title' => 'ผู้บริหาร | ' . ($siteInfo['site_name_th'] ?? 'Executives'),
+            'meta_description' => 'ผู้บริหารคณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์',
+            'active_page' => 'executives',
+            'personnel_by_position_tier' => $personnelByPositionTier,
         ]);
 
         return view('pages/personnel', $data);

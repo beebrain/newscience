@@ -196,7 +196,16 @@
                         </ul>
                     </li>
                     <li><a href="<?= base_url('news') ?>" class="nav__link <?= ($active_page ?? '') === 'news' ? 'active' : '' ?>">ข่าว</a></li>
-                    <li><a href="<?= base_url('personnel') ?>" class="nav__link <?= ($active_page ?? '') === 'personnel' ? 'active' : '' ?>">บุคลากร</a></li>
+                    <li class="nav__item--has-dropdown">
+                        <a href="<?= base_url('personnel') ?>" class="nav__link <?= in_array($active_page ?? '', ['personnel', 'executives']) ? 'active' : '' ?>">
+                            บุคลากร
+                            <svg style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-left:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </a>
+                        <ul class="nav__dropdown">
+                            <li><a href="<?= base_url('executives') ?>" class="nav__dropdown-link">ผู้บริหาร</a></li>
+                            <li><a href="<?= base_url('personnel') ?>" class="nav__dropdown-link">บุคลากร</a></li>
+                        </ul>
+                    </li>
                     <li class="nav__item--has-dropdown">
                         <a href="#" class="nav__link <?= in_array(($active_page ?? ''), ['support-documents', 'official-documents', 'promotion-criteria']) ? 'active' : '' ?>">
                             เอกสาร
@@ -273,7 +282,9 @@
             <li><a href="<?= base_url('academics') ?>" class="mobile-nav__link">หลักสูตร</a></li>
             <li><a href="<?= base_url('research') ?>" class="mobile-nav__link">วิจัย</a></li>
             <li><a href="<?= base_url('news') ?>" class="mobile-nav__link">ข่าว</a></li>
-            <li><a href="<?= base_url('personnel') ?>" class="mobile-nav__link">บุคลากร</a></li>
+            <li class="mobile-nav__header-item">บุคลากร</li>
+            <li><a href="<?= base_url('executives') ?>" class="mobile-nav__link" style="padding-left: 2rem;">ผู้บริหาร</a></li>
+            <li><a href="<?= base_url('personnel') ?>" class="mobile-nav__link" style="padding-left: 2rem;">บุคลากร</a></li>
             <li class="mobile-nav__header-item">เอกสาร</li>
             <li><a href="<?= base_url('support-documents') ?>" class="mobile-nav__link" style="padding-left: 2rem;">แบบฟอร์มดาวน์โหลด</a></li>
             <li><a href="<?= base_url('official-documents') ?>" class="mobile-nav__link" style="padding-left: 2rem;">คำสั่ง/ประกาศ/ระเบียบ</a></li>

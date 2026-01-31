@@ -11,7 +11,7 @@ class PersonnelModel extends Model
     protected $returnType = 'array';
     protected $allowedFields = [
         'title', 'first_name', 'last_name', 'first_name_en', 'last_name_en',
-        'position', 'position_en', 'department_id', 'email', 'phone',
+        'position', 'position_en', 'department_id', 'program_id', 'email', 'phone',
         'image', 'bio', 'bio_en', 'education', 'expertise',
         'sort_order', 'status'
     ];
@@ -75,5 +75,39 @@ class PersonnelModel extends Model
         return $this->like('position', 'คณบดี')
                     ->where('status', 'active')
                     ->first();
+    }
+
+    /**
+     * Get active personnel with department and program names (join)
+     * Run database/add_personnel_program_id.sql to add program_id column if missing.
+     */
+    public function getActiveWithDepartment()
+    {
+        $select = 'personnel.*, departments.name_th as department_name_th, departments.name_en as department_name_en';
+        if ($this->db->fieldExists('program_id', 'personnel')) {
+            $select .= ', programs.name_th as program_name_th, programs.name_en as program_name_en';
+        }
+        $builder = $this->select($select)
+                    ->join('departments', 'departments.id = personnel.department_id', 'left')
+                    ->where('personnel.status', 'active');
+        if ($this->db->fieldExists('program_id', 'personnel')) {
+            $builder->join('programs', 'programs.id = personnel.program_id', 'left');
+        }
+        return $builder->orderBy('departments.sort_order', 'ASC')
+                    ->orderBy('personnel.sort_order', 'ASC')
+                    ->findAll();
+    }
+
+    /**
+     * หลักสูตรที่บุคลากรสังกัด (หลายหลักสูตร) จากตาราง personnel_programs
+     * คืนค่า [] ถ้าตารางไม่มีหรือยังไม่มีข้อมูล
+     */
+    public function getProgramsForPersonnel(int $personnelId): array
+    {
+        if (!$this->db->tableExists('personnel_programs')) {
+            return [];
+        }
+        $model = new \App\Models\PersonnelProgramModel();
+        return $model->getByPersonnelId($personnelId);
     }
 }

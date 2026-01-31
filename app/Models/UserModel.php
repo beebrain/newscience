@@ -42,6 +42,26 @@ class UserModel extends Model
     }
 
     /**
+     * Find user by login_uid (username)
+     */
+    public function findByLoginUid(string $loginUid)
+    {
+        return $this->where('login_uid', $loginUid)->first();
+    }
+
+    /**
+     * Find user by email or login_uid
+     */
+    public function findByIdentifier(string $login): ?array
+    {
+        $user = $this->where('email', $login)->first();
+        if ($user) {
+            return $user;
+        }
+        return $this->where('login_uid', $login)->first();
+    }
+
+    /**
      * Verify password
      */
     public function verifyPassword(string $password, string $hash): bool

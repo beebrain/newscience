@@ -342,7 +342,7 @@ class Api extends BaseController
                 'department_id' => $person['department_id'],
                 'email' => $person['email'],
                 'phone' => $person['phone'],
-                'image' => $person['image'] ? base_url('uploads/personnel/' . $person['image']) : null
+                'image' => $person['image'] ? (strpos($person['image'], 'staff/') === 0 ? base_url('uploads/' . $person['image']) : base_url('uploads/personnel/' . $person['image'])) : null
             ];
         }
         
@@ -374,7 +374,7 @@ class Api extends BaseController
                 'id' => $dean['id'],
                 'full_name' => $personnelModel->getFullName($dean),
                 'position' => $dean['position'],
-                'image' => $dean['image'] ? base_url('uploads/personnel/' . $dean['image']) : null,
+                'image' => $dean['image'] ? (strpos($dean['image'], 'staff/') === 0 ? base_url('uploads/' . $dean['image']) : base_url('uploads/personnel/' . $dean['image'])) : null,
                 'bio' => $dean['bio']
             ]
         ]);

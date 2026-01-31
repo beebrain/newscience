@@ -1,11 +1,11 @@
 #Requires -RunAsAdministrator
 <#
 .SYNOPSIS
-    ปิด FTP และการเข้าถึง MySQL จากภายนอก เพื่อป้องกันการโจมตี (Lock)
+    Lock FTP and external MySQL access to prevent external attacks.
 .DESCRIPTION
-    - หยุดบริการ FTP (IIS / FTPSVC)
-    - สร้างกฎ Firewall บล็อกพอร์ต 21 (FTP) และ 3306 (MySQL) จากภายนอก
-    - การเชื่อมต่อ localhost ยังใช้ได้ (MySQL ภายในเครื่องยังใช้ได้)
+    - Stop FTP service (IIS / FTPSVC)
+    - Create firewall rules to block port 21 (FTP) and 3306 (MySQL) from external
+    - Localhost connections still allowed (MySQL on this machine remains usable)
 .EXAMPLE
     .\secure-external-services.ps1
 #>
@@ -14,9 +14,9 @@ $ErrorActionPreference = 'Stop'
 $RuleNameFtp  = 'Sci-Secure-Block-FTP-21'
 $RuleNameMySQL = 'Sci-Secure-Block-MySQL-3306'
 
-Write-Host "=== ปิดการเข้าถึงจากภายนอก (Lock) ===" -ForegroundColor Cyan
+Write-Host "=== Lock external access ===" -ForegroundColor Cyan
 
-# 1) หยุดบริการ FTP (ชื่อบริการอาจเป็น FTPSVC, Microsoft FTP Service ฯลฯ)
+# 1) Stop FTP service (FTPSVC, Microsoft FTP Service, etc.)
 $ftpServiceNames = @('FTPSVC', 'FtpSvc', 'MicrosoftFtpSvc')
 $ftpStopped = $false
 foreach ($name in $ftpServiceNames) {
@@ -24,19 +24,19 @@ foreach ($name in $ftpServiceNames) {
     if ($svc) {
         if ($svc.Status -eq 'Running') {
             Stop-Service -Name $name -Force
-            Write-Host "  [OK] หยุดบริการ FTP: $name" -ForegroundColor Green
+            Write-Host "  [OK] Stopped FTP service: $name" -ForegroundColor Green
             $ftpStopped = $true
         } else {
-            Write-Host "  [--] บริการ FTP ($name) หยุดอยู่แล้ว" -ForegroundColor Gray
+            Write-Host "  [--] FTP service ($name) already stopped" -ForegroundColor Gray
         }
         break
     }
 }
 if (-not $ftpStopped -and -not (Get-Service -Name $ftpServiceNames[0] -ErrorAction SilentlyContinue)) {
-    Write-Host "  [--] ไม่พบบริการ FTP บนเครื่อง (ข้าม)" -ForegroundColor Gray
+    Write-Host "  [--] FTP service not found on this machine (skipped)" -ForegroundColor Gray
 }
 
-# 2) Firewall: อนุญาต localhost ก่อน แล้วบล็อกพอร์ต 21 และ 3306 จากภายนอก
+# 2) Firewall: Allow localhost first, then block port 21 and 3306 from external
 $allowLocalNameFtp  = 'Sci-Secure-Allow-FTP-Localhost'
 $allowLocalNameMySQL = 'Sci-Secure-Allow-MySQL-Localhost'
 $rules = @(
@@ -44,20 +44,20 @@ $rules = @(
     @{ Name = $RuleNameMySQL; Port = 3306; Desc = 'MySQL'; AllowName = $allowLocalNameMySQL }
 )
 foreach ($r in $rules) {
-    # อนุญาตเฉพาะ 127.0.0.1 (localhost) เพื่อให้ใช้ในเครื่องได้เมื่อล็อก
+    # Allow 127.0.0.1 only so local use works when locked
     $allowRule = Get-NetFirewallRule -DisplayName $r.AllowName -ErrorAction SilentlyContinue
     if (-not $allowRule) {
         New-NetFirewallRule -DisplayName $r.AllowName `
             -Direction Inbound -LocalPort $r.Port -RemoteAddress 127.0.0.1 `
             -Protocol TCP -Action Allow -Profile Any `
             -Description "Allow localhost $($r.Desc) when locked" | Out-Null
-        Write-Host "  [OK] สร้างกฎอนุญาต localhost พอร์ต $($r.Port)" -ForegroundColor Green
+        Write-Host "  [OK] Created firewall rule: allow localhost port $($r.Port)" -ForegroundColor Green
     }
-    # บล็อกจากที่อื่น (ภายนอก)
+    # Block from external
     $existing = Get-NetFirewallRule -DisplayName $r.Name -ErrorAction SilentlyContinue
     if ($existing) {
         Set-NetFirewallRule -DisplayName $r.Name -Enabled True | Out-Null
-        Write-Host "  [OK] เปิดใช้กฎ Firewall บล็อกภายนอก: $($r.Name)" -ForegroundColor Green
+        Write-Host "  [OK] Enabled firewall rule (block external): $($r.Name)" -ForegroundColor Green
     } else {
         New-NetFirewallRule -DisplayName $r.Name `
             -Direction Inbound `
@@ -66,9 +66,9 @@ foreach ($r in $rules) {
             -Action Block `
             -Profile Any `
             -Description "Block external $($r.Desc) for security (Sci)" | Out-Null
-        Write-Host "  [OK] สร้างกฎ Firewall บล็อกพอร์ต $($r.Port) จากภายนอก ($($r.Desc))" -ForegroundColor Green
+        Write-Host "  [OK] Created firewall rule: block port $($r.Port) from external ($($r.Desc))" -ForegroundColor Green
     }
 }
 
-Write-Host "`nเสร็จ: ปิดการเข้าถึง FTP และ MySQL จากภายนอกแล้ว" -ForegroundColor Green
-Write-Host "ต้องการเปิดสำหรับนักพัฒนา ให้รัน: .\enable-external-services.ps1" -ForegroundColor Yellow
+Write-Host "`nDone: External FTP and MySQL access locked." -ForegroundColor Green
+Write-Host "To unlock for developers, run: .\enable-external-services.ps1" -ForegroundColor Yellow

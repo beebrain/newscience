@@ -37,7 +37,7 @@ class Auth extends BaseController
     public function attemptLogin()
     {
         $rules = [
-            'email' => 'required|valid_email',
+            'login'    => 'required|min_length[1]',
             'password' => 'required|min_length[6]'
         ];
 
@@ -47,11 +47,11 @@ class Auth extends BaseController
                             ->with('errors', $this->validator->getErrors());
         }
 
-        $email = $this->request->getPost('email');
+        $login = trim($this->request->getPost('login') ?? '');
         $password = $this->request->getPost('password');
 
-        // Find user by email
-        $user = $this->userModel->findByEmail($email);
+        // Find user by email or username (login_uid)
+        $user = $this->userModel->findByIdentifier($login);
 
         if (!$user) {
             return redirect()->back()

@@ -16,6 +16,7 @@ $routes->get('/news/(:num)', 'Pages::newsDetail/$1');
 $routes->get('/events', 'Pages::events');
 $routes->get('/contact', 'Pages::contact');
 $routes->get('/personnel', 'Pages::personnel');
+$routes->get('/executives', 'Pages::executives');
 $routes->get('/support-documents', 'Pages::supportDocuments');
 
 // Faculty personnel from external Research Record API (see doc_api.rd)
@@ -41,6 +42,14 @@ $routes->group('admin', ['filter' => 'adminauth'], function ($routes) {
     $routes->post('news/update/(:num)', 'Admin\News::update/$1');
     $routes->get('news/delete/(:num)', 'Admin\News::delete/$1');
     
+    // Organization (โครงสร้างองค์กร)
+    $routes->get('organization', 'Admin\Organization::index');
+    $routes->get('organization/create', 'Admin\Organization::create');
+    $routes->post('organization/store', 'Admin\Organization::store');
+    $routes->get('organization/edit/(:num)', 'Admin\Organization::edit/$1');
+    $routes->post('organization/update/(:num)', 'Admin\Organization::update/$1');
+    $routes->get('organization/delete/(:num)', 'Admin\Organization::delete/$1');
+
     // Hero Slides Management
     $routes->get('hero-slides', 'Admin\HeroSlides::index');
     $routes->get('hero-slides/create', 'Admin\HeroSlides::create');
