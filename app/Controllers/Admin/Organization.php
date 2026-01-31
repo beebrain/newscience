@@ -241,6 +241,12 @@ class Organization extends BaseController
         }
 
         $programRoles = $this->collectProgramAssignmentsFromPost();
+        $position = $this->request->getPost('position') ?: null;
+        $chairError = $this->validateProgramChairRequirement($position, $programRoles);
+        if ($chairError !== null) {
+            return redirect()->back()->withInput()->with('errors', ['program_chair' => $chairError]);
+        }
+
         $departmentId = null;
         $programId = null;
         if (!empty($programRoles)) {
@@ -306,6 +312,26 @@ class Organization extends BaseController
     }
 
     /**
+     * ถ้าตำแหน่งเป็น ประธานหลักสูตร ต้องมีอย่างน้อย 1 หลักสูตรที่เลือกบทบาท ประธานหลักสูตร
+     * คืนค่า error message หรือ null ถ้าผ่าน
+     */
+    private function validateProgramChairRequirement(?string $position, array $programRoles): ?string
+    {
+        if ($position === null || $position === '') {
+            return null;
+        }
+        if (mb_strpos($position, 'ประธานหลักสูตร') === false) {
+            return null;
+        }
+        foreach ($programRoles as $pr) {
+            if (isset($pr['role_in_curriculum']) && $pr['role_in_curriculum'] === 'ประธานหลักสูตร') {
+                return null;
+            }
+        }
+        return 'เมื่อตำแหน่งเป็น ประธานหลักสูตร ต้องระบุว่าประธานของหลักสูตรใด โดยเพิ่มหลักสูตรและเลือกบทบาท "ประธานหลักสูตร" ในหลักสูตรที่เลือก';
+    }
+
+    /**
      * แก้ไขตำแหน่ง/ลำดับบุคลากรในโครงสร้าง
      */
     public function edit(int $id)
@@ -355,11 +381,15 @@ class Organization extends BaseController
         $firstNameEn = $this->request->getPost('first_name_en');
         $lastNameEn = $this->request->getPost('last_name_en');
         $email = $this->request->getPost('email');
-        $position = $this->request->getPost('position');
+        $position = $this->request->getPost('position') ?: null;
         $positionEn = $this->request->getPost('position_en');
         $sortOrder = (int) $this->request->getPost('sort_order');
 
         $programRoles = $this->collectProgramAssignmentsFromPost();
+        $chairError = $this->validateProgramChairRequirement($position, $programRoles);
+        if ($chairError !== null) {
+            return redirect()->back()->withInput()->with('errors', ['program_chair' => $chairError]);
+        }
         $departmentId = null;
         $programId = null;
         if (!empty($programRoles)) {
