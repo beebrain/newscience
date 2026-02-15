@@ -24,6 +24,7 @@ $routes->get('/promotion-criteria', 'Pages::promotionCriteria');
 
 // Program Website Routes (Public)
 $routes->get('program/(:num)', 'ProgramController::show/$1');
+$routes->get('program-site/(:num)', 'ProgramWebsite::index/$1');
 
 // Serve uploaded files from writable (fallback to public)
 $routes->get('serve/uploads/(:segment)/(:segment)', 'Serve::file/$1/$2');
@@ -211,4 +212,17 @@ $routes->group('program-admin', ['filter' => 'programadmin'], function ($routes)
     $routes->post('update-order/(:num)', 'Admin\ProgramAdmin\Dashboard::updateOrder/$1');
     $routes->get('preview/(:num)', 'Admin\ProgramAdmin\Dashboard::preview/$1');
     $routes->post('toggle-publish/(:num)', 'Admin\ProgramAdmin\Dashboard::togglePublish/$1');
+
+    // Content Builder Routes
+    $routes->get('content-builder/(:num)', 'Admin\ProgramAdmin\ContentBuilder::index/$1');
+    $routes->get('content-builder/(:num)/blocks', 'Admin\ProgramAdmin\ContentBuilder::getBlocks/$1');
+    $routes->post('content-builder/(:num)/blocks', 'Admin\ProgramAdmin\ContentBuilder::createBlock/$1');
+    $routes->get('content-builder/block/(:num)/edit', 'Admin\ProgramAdmin\ContentBuilder::editBlock/$1');
+    $routes->post('content-builder/block/(:num)/update', 'Admin\ProgramAdmin\ContentBuilder::updateBlock/$1');
+    $routes->post('content-builder/block/(:num)/delete', 'Admin\ProgramAdmin\ContentBuilder::deleteBlock/$1');
+    $routes->post('content-builder/(:num)/reorder', 'Admin\ProgramAdmin\ContentBuilder::reorderBlocks/$1');
+    $routes->post('content-builder/block/(:num)/toggle', 'Admin\ProgramAdmin\ContentBuilder::toggleBlock/$1');
+    $routes->post('content-builder/block/(:num)/publish', 'Admin\ProgramAdmin\ContentBuilder::togglePublishBlock/$1');
+    $routes->post('content-builder/block/(:num)/duplicate', 'Admin\ProgramAdmin\ContentBuilder::duplicateBlock/$1');
+    $routes->get('live-preview/(:num)', 'Admin\ProgramAdmin\ContentBuilder::livePreview/$1');
 });

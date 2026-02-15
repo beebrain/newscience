@@ -51,7 +51,16 @@
                     <polyline points="7 10 12 15 17 10" />
                     <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                    ดาวน์โหลด
+                ดาวน์โหลด
+            </button>
+            <button type="button" class="tab-button" data-tab="content-builder" onclick="window.location.href='<?= base_url('program-admin/content-builder/' . $program['id']) ?>'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                    <path d="M2 2l7.586 7.586"></path>
+                    <circle cx="11" cy="11" r="2"></circle>
+                </svg>
+                Content Builder
             </button>
             <button type="button" class="tab-button" data-tab="personnel" onclick="switchTab('personnel')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -70,10 +79,10 @@
             <div id="basic-tab" class="tab-content active">
                 <form action="<?= base_url('program-admin/update/' . $program['id']) ?>" method="post" style="padding: 1.5rem;">
                     <?= csrf_field() ?>
-                    
+
                     <div class="form-section">
                         <h4 class="form-section-title">ข้อมูลพื้นฐาน</h4>
-                        
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="name_th" class="form-label">ชื่อหลักสูตร (ไทย) *</label>
@@ -84,7 +93,7 @@
                                 <input type="text" id="name_en" name="name_en" class="form-control" value="<?= esc($program['name_en']) ?>">
                             </div>
                         </div>
-                        
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="level" class="form-label">ระดับ *</label>
@@ -102,7 +111,7 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="form-actions" style="margin-top: 2rem;">
                             <button type="submit" class="btn btn-primary">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -122,60 +131,60 @@
             <div id="content-tab" class="tab-content">
                 <form action="<?= base_url('program-admin/update-page/' . $program['id']) ?>" method="post" style="padding: 1.5rem;">
                     <?= csrf_field() ?>
-                    
+
                     <div class="form-section">
                         <h4 class="form-section-title">เนื้อหาหลักสูตร</h4>
-                        
+
                         <div class="form-group">
                             <label for="philosophy" class="form-label">ปรัชญาหลักสูตร</label>
                             <textarea id="philosophy" name="philosophy" class="form-control" rows="4"><?= esc($program_page['philosophy'] ?? '') ?></textarea>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="objectives" class="form-label">วัตถุประสงค์</label>
                             <textarea id="objectives" name="objectives" class="form-control" rows="4"><?= esc($program_page['objectives'] ?? '') ?></textarea>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="graduate_profile" class="form-label">คุณลักษณะบัณฑิต</label>
                             <textarea id="graduate_profile" name="graduate_profile" class="form-control" rows="4"><?= esc($program_page['graduate_profile'] ?? '') ?></textarea>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="curriculum_structure" class="form-label">โครงสร้างหลักสูตร</label>
                             <textarea id="curriculum_structure" name="curriculum_structure" class="form-control" rows="6"><?= esc($program_page['curriculum_structure'] ?? '') ?></textarea>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="study_plan" class="form-label">แผนการเรียน</label>
                             <textarea id="study_plan" name="study_plan" class="form-control" rows="6"><?= esc($program_page['study_plan'] ?? '') ?></textarea>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="career_prospects" class="form-label">อาชีพที่สามารถประกอบได้</label>
                             <textarea id="career_prospects" name="career_prospects" class="form-control" rows="4"><?= esc($program_page['career_prospects'] ?? '') ?></textarea>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="tuition_fees" class="form-label">ค่าเล่าเรียน/ค่าธรรมเนียม</label>
                             <textarea id="tuition_fees" name="tuition_fees" class="form-control" rows="4"><?= esc($program_page['tuition_fees'] ?? '') ?></textarea>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="admission_info" class="form-label">การรับสมัคร</label>
                             <textarea id="admission_info" name="admission_info" class="form-control" rows="4"><?= esc($program_page['admission_info'] ?? '') ?></textarea>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="contact_info" class="form-label">ข้อมูลติดต่อ</label>
                             <textarea id="contact_info" name="contact_info" class="form-control" rows="4"><?= esc($program_page['contact_info'] ?? '') ?></textarea>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="intro_video_url" class="form-label">วิดีโอแนะนำ</label>
                             <input type="url" id="intro_video_url" name="intro_video_url" class="form-control" value="<?= esc($program_page['intro_video_url'] ?? '') ?>" placeholder="https://youtube.com/watch?v=...">
                         </div>
-                        
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="theme_color" class="form-label">สีธีม</label>
@@ -189,12 +198,12 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="meta_description" class="form-label">คำอธิบายสำหรับ SEO</label>
                             <textarea id="meta_description" name="meta_description" class="form-control" rows="2" placeholder="คำอธิบายสำหรับแสดงในผลการค้นหา"><?= esc($program_page['meta_description'] ?? '') ?></textarea>
                         </div>
-                        
+
                         <div class="form-actions" style="margin-top: 2rem;">
                             <button type="submit" class="btn btn-primary">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -217,7 +226,7 @@
                         <h4>เอกสารดาวน์โหลด</h4>
                         <p style="color: var(--color-gray-600);">จัดการไฟล์เอกสารสำหรับนักศึกษาดาวน์โหลด</p>
                     </div>
-                    
+
                     <!-- Upload Form -->
                     <form action="<?= base_url('program-admin/upload-download/' . $program['id']) ?>" method="post" enctype="multipart/form-data" style="margin-bottom: 2rem;">
                         <?= csrf_field() ?>
@@ -253,7 +262,7 @@
                             อัปโหลดไฟล์
                         </button>
                     </form>
-                    
+
                     <!-- Downloads List -->
                     <?php if (!empty($downloads)): ?>
                         <div class="downloads-list">
@@ -270,7 +279,7 @@
                                     <div style="flex: 1;">
                                         <div style="font-weight: 500;"><?= esc($download['title']) ?></div>
                                         <div style="font-size: 0.875rem; color: var(--color-gray-600);">
-                                            <?= $programDownloadModel->getFormattedSize($download['file_size']) ?> • 
+                                            <?= $programDownloadModel->getFormattedSize($download['file_size']) ?> •
                                             <span style="text-transform: uppercase;"><?= esc($download['file_type']) ?></span>
                                         </div>
                                     </div>
@@ -314,7 +323,7 @@
                         <h4>บุคลากรหลักสูตร</h4>
                         <p style="color: var(--color-gray-600);">ประธานหลักสูตรและอาจารย์ประจำหลักสูตร</p>
                     </div>
-                    
+
                     <!-- Coordinator -->
                     <?php if ($coordinator): ?>
                         <div class="personnel-card" style="border: 1px solid var(--color-blue-200); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; background: var(--color-blue-50);">
@@ -333,7 +342,7 @@
                             </div>
                         </div>
                     <?php endif; ?>
-                    
+
                     <!-- Other Personnel -->
                     <?php if (!empty($personnel_list)): ?>
                         <h5 style="margin-bottom: 1rem;">อาจารย์ประจำหลักสูตร</h5>
@@ -372,201 +381,201 @@
 
 <!-- JavaScript for Tab Navigation -->
 <script>
-function switchTab(tabName) {
-    // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    
-    // Remove active class from all buttons
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('active');
-    });
-    
-    // Show selected tab
-    document.getElementById(tabName + '-tab').classList.add('active');
-    
-    // Add active class to clicked button
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-}
+    function switchTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
 
-function confirmDelete(url) {
-    if (confirm('คุณแน่ใจว่าต้องการลบไฟล์นี้?')) {
-        window.location.href = url;
+        // Remove active class from all buttons
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.classList.remove('active');
+        });
+
+        // Show selected tab
+        document.getElementById(tabName + '-tab').classList.add('active');
+
+        // Add active class to clicked button
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
     }
-}
 
-// Initialize first tab
-document.addEventListener('DOMContentLoaded', function() {
-    switchTab('basic');
-});
+    function confirmDelete(url) {
+        if (confirm('คุณแน่ใจว่าต้องการลบไฟล์นี้?')) {
+            window.location.href = url;
+        }
+    }
+
+    // Initialize first tab
+    document.addEventListener('DOMContentLoaded', function() {
+        switchTab('basic');
+    });
 </script>
 
 <style>
-.tab-navigation {
-    display: flex;
-    border-bottom: 1px solid var(--color-gray-200);
-    background: var(--color-gray-50);
-}
+    .tab-navigation {
+        display: flex;
+        border-bottom: 1px solid var(--color-gray-200);
+        background: var(--color-gray-50);
+    }
 
-.tab-button {
-    padding: 1rem 1.5rem;
-    border: none;
-    background: none;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 500;
-    color: var(--color-gray-600);
-}
+    .tab-button {
+        padding: 1rem 1.5rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        color: var(--color-gray-600);
+    }
 
-.tab-button:hover {
-    color: var(--color-gray-900);
-    background: var(--color-gray-100);
-}
+    .tab-button:hover {
+        color: var(--color-gray-900);
+        background: var(--color-gray-100);
+    }
 
-.tab-button.active {
-    color: var(--color-primary-600);
-    border-bottom-color: var(--color-primary-600);
-    background: white;
-}
+    .tab-button.active {
+        color: var(--color-primary-600);
+        border-bottom-color: var(--color-primary-600);
+        background: white;
+    }
 
-.tab-content-container {
-    background: white;
-}
+    .tab-content-container {
+        background: white;
+    }
 
-.tab-content {
-    display: none;
-}
+    .tab-content {
+        display: none;
+    }
 
-.tab-content.active {
-    display: block;
-}
+    .tab-content.active {
+        display: block;
+    }
 
-.form-section {
-    margin-bottom: 2rem;
-}
+    .form-section {
+        margin-bottom: 2rem;
+    }
 
-.form-section-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: var(--color-gray-900);
-}
+    .form-section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--color-gray-900);
+    }
 
-.form-row {
-    display: grid;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-@media (min-width: 768px) {
     .form-row {
-        grid-template-columns: repeat(2, 1fr);
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 1rem;
     }
-}
 
-.form-group {
-    margin-bottom: 1rem;
-}
+    @media (min-width: 768px) {
+        .form-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 
-.form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--color-gray-700);
-}
+    .form-group {
+        margin-bottom: 1rem;
+    }
 
-.form-control {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--color-gray-300);
-    border-radius: 6px;
-    font-size: 0.875rem;
-    transition: border-color 0.2s;
-}
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--color-gray-700);
+    }
 
-.form-control:focus {
-    outline: none;
-    border-color: var(--color-primary-500);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--color-gray-300);
+        border-radius: 6px;
+        font-size: 0.875rem;
+        transition: border-color 0.2s;
+    }
 
-.form-actions {
-    display: flex;
-    gap: 0.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--color-gray-200);
-}
+    .form-control:focus {
+        outline: none;
+        border-color: var(--color-primary-500);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
 
-.btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
-    text-decoration: none;
-}
+    .form-actions {
+        display: flex;
+        gap: 0.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--color-gray-200);
+    }
 
-.btn-primary {
-    background: var(--color-primary-600);
-    color: white;
-}
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
 
-.btn-primary:hover {
-    background: var(--color-primary-700);
-}
+    .btn-primary {
+        background: var(--color-primary-600);
+        color: white;
+    }
 
-.btn-secondary {
-    background: var(--color-gray-200);
-    color: var(--color-gray-700);
-}
+    .btn-primary:hover {
+        background: var(--color-primary-700);
+    }
 
-.btn-secondary:hover {
-    background: var(--color-gray-300);
-}
+    .btn-secondary {
+        background: var(--color-gray-200);
+        color: var(--color-gray-700);
+    }
 
-.btn-outline {
-    background: transparent;
-    border: 1px solid var(--color-gray-300);
-    color: var(--color-gray-700);
-}
+    .btn-secondary:hover {
+        background: var(--color-gray-300);
+    }
 
-.btn-outline:hover {
-    background: var(--color-gray-50);
-}
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--color-gray-300);
+        color: var(--color-gray-700);
+    }
 
-.btn-danger {
-    background: var(--color-red-600);
-    color: white;
-}
+    .btn-outline:hover {
+        background: var(--color-gray-50);
+    }
 
-.btn-danger:hover {
-    background: var(--color-red-700);
-}
+    .btn-danger {
+        background: var(--color-red-600);
+        color: white;
+    }
 
-.btn-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-}
+    .btn-danger:hover {
+        background: var(--color-red-700);
+    }
 
-.personnel-grid {
-    display: grid;
-    gap: 1rem;
-}
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
 
-@media (min-width: 768px) {
     .personnel-grid {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        display: grid;
+        gap: 1rem;
     }
-}
+
+    @media (min-width: 768px) {
+        .personnel-grid {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+    }
 </style>
 
 <?= $this->endSection() ?>
