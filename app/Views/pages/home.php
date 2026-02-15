@@ -592,7 +592,7 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
             </div>
         </div>
 
-        <div class="featured-news" data-category="general" data-limit="6">
+        <div class="featured-news" data-tag="general" data-limit="6">
             <div class="news-loading" style="text-align: center; padding: 2rem;">
                 <div class="spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                 <p style="margin-top: 1rem; color: #64748b;">กำลังโหลดข่าว...</p>
@@ -616,7 +616,7 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
             </a>
         </div>
 
-        <div class="featured-news" data-category="research" data-limit="6">
+        <div class="featured-news" data-tag="research" data-limit="6">
             <div class="news-loading" style="text-align: center; padding: 2rem;">
                 <div class="spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                 <p style="margin-top: 1rem; color: #64748b;">กำลังโหลดข่าว...</p>
@@ -639,7 +639,7 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
             </a>
         </div>
 
-        <div class="featured-news" data-category="student_activity" data-limit="6">
+        <div class="featured-news" data-tag="student_activity" data-limit="6">
             <div class="news-loading" style="text-align: center; padding: 2rem;">
                 <div class="spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                 <p style="margin-top: 1rem; color: #64748b;">กำลังโหลดข่าว...</p>
@@ -1070,24 +1070,12 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
     (function() {
         const baseUrl = window.BASE_URL || '<?= base_url() ?>';
 
-        // Category labels (slug จาก news_tags)
-        const categoryLabels = {
-            'research': {
-                main: 'งานวิจัย',
-                secondary: 'งานวิจัย'
-            },
-            'research_grant': {
-                main: 'ทุนวิจัย',
-                secondary: 'ทุนการศึกษา'
-            },
-            'student_activity': {
-                main: 'กิจกรรม',
-                secondary: 'กิจกรรม'
-            },
-            'general': {
-                main: 'ข่าวล่าสุด',
-                secondary: 'ข่าว'
-            }
+        // Tag labels (slug จาก news_tags)
+        const tagLabels = {
+            'research': 'งานวิจัย',
+            'research_grant': 'ทุนวิจัย',
+            'student_activity': 'กิจกรรมนักศึกษา',
+            'general': 'ข่าวทั่วไป'
         };
 
         // Format date helper (Thai format)
@@ -1122,20 +1110,40 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                 imageUrl = 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400&h=200&fit=crop';
             }
 
-            const category = article.category || 'general';
-            const categoryLabel = categoryLabels[category] || categoryLabels['general'];
-            const label = categoryLabel.secondary;
+            // Use primary tag or first available tag for categorization
+            let primaryTag = 'general';
+            let primaryTagLabel = 'ข่าวทั่วไป';
+
+            if (article.primary_tag) {
+                primaryTag = article.primary_tag;
+                primaryTagLabel = tagLabels[primaryTag] || tagLabels['general'];
+            } else if (article.tags && article.tags.length > 0) {
+                primaryTag = article.tags[0].slug;
+                primaryTagLabel = article.tags[0].name;
+            }
+
             const title = article.title.length > 100 ? article.title.substring(0, 100) + '...' : article.title;
+
+            // Generate tags HTML if tags are available
+            let tagsHtml = '';
+            if (article.tags && article.tags.length > 0) {
+                tagsHtml = '<div class="card__tags">';
+                article.tags.forEach(tag => {
+                    tagsHtml += `<span class="card__tag">${tag.name}</span>`;
+                });
+                tagsHtml += '</div>';
+            }
 
             return `
                 <article class="card animate-on-scroll">
                     <img src="${imageUrl}" alt="${article.title}" class="card__image" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400&h=200&fit=crop';">
-                    <div class="card__content card__content--${category}">
-                        <span class="card__category">${label}</span>
+                    <div class="card__content card__content--${primaryTag}">
+                        <span class="card__category">${primaryTagLabel}</span>
                         <h3 class="card__title">
                             <a href="${baseUrl}news/${article.id}">${title}</a>
                         </h3>
                         ${article.excerpt ? `<p class="card__excerpt">${article.excerpt.substring(0, 130)}${article.excerpt.length > 130 ? '…' : ''}</p>` : ''}
+                        ${tagsHtml}
                         <div class="card__meta">
                             <span>${formatDate(article.published_at)}</span>
                         </div>
@@ -1146,10 +1154,23 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
 
         // Load news for a section
         function loadNewsSection(container) {
-            const category = container.getAttribute('data-category');
+            const tag = container.getAttribute('data-tag');
             const limit = parseInt(container.getAttribute('data-limit')) || 6;
 
-            fetch(`${baseUrl}api/news/category/${category}?limit=${limit}`)
+            // Use tag-based API endpoints
+            let apiUrl;
+            if (tag === 'research') {
+                // Use dedicated research news endpoint for research tag
+                apiUrl = `${baseUrl}api/news/research?limit=${limit}`;
+            } else if (tag) {
+                // Use general tag endpoint
+                apiUrl = `${baseUrl}api/news/tag/${tag}?limit=${limit}`;
+            } else {
+                // Fallback to general news if no tag specified
+                apiUrl = `${baseUrl}api/news?limit=${limit}`;
+            }
+
+            fetch(apiUrl)
                 .then(response => response.json())
                 .then(result => {
                     if (result.success && result.data && result.data.length > 0) {
@@ -1271,7 +1292,7 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
 
         // Load all news sections when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-            const newsSections = document.querySelectorAll('.featured-news[data-category]');
+            const newsSections = document.querySelectorAll('.featured-news[data-tag]');
 
             // Load each section with a small delay to stagger requests
             newsSections.forEach((section, index) => {
@@ -1284,6 +1305,60 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
             setTimeout(loadEventsComingUp, 400);
         });
     })();
+</script>
+
+<style>
+    /* News card tags */
+    .card__tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        margin: 0.5rem 0;
+    }
+
+    .card__tag {
+        display: inline-block;
+        padding: 0.125rem 0.5rem;
+        background-color: #f1f5f9;
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border-radius: 0.25rem;
+        text-transform: none;
+        line-height: 1.4;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .card__tag:hover {
+        background-color: #e2e8f0;
+        color: #334155;
+    }
+
+    /* Research tag specific styling */
+    .card__tag.research-tag {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+
+    .card__tag.research-tag:hover {
+        background-color: #bfdbfe;
+        color: #1e3a8a;
+    }
+</style>
+
+<script>
+    // Add research tag styling after tags are rendered
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            const researchTags = document.querySelectorAll('.card__tag');
+            researchTags.forEach(tag => {
+                const tagText = tag.textContent.trim();
+                if (tagText.includes('งานวิจัย') || tagText.includes('วิจัย') || tagText.includes('ทุนวิจัย')) {
+                    tag.classList.add('research-tag');
+                }
+            });
+        }, 1000); // Wait for tags to be loaded
+    });
 </script>
 
 <?= $this->endSection() ?>

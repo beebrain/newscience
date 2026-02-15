@@ -147,10 +147,41 @@ class Pages extends BaseController
     {
         $siteInfo = $this->siteSettingModel->getAll();
 
+        // Get research news with pagination (same as news method)
+        $perPage = 12;
+        $newsModel = new NewsModel();
+
+        // Get news with research or research_grant tags
+        $researchNews = $newsModel->getPublishedByTag('research', 100);
+
+        // Also get research_grant news and merge
+        $researchGrantNews = $newsModel->getPublishedByTag('research_grant', 100);
+
+        // Merge and remove duplicates
+        $allResearchNews = array_merge($researchNews, $researchGrantNews);
+        $uniqueNews = [];
+        $seenIds = [];
+
+        foreach ($allResearchNews as $news) {
+            $id = $news['id'] ?? null;
+            if ($id && !isset($seenIds[$id])) {
+                $seenIds[$id] = true;
+                $uniqueNews[] = $news;
+            }
+        }
+
+        // Sort by published_at descending
+        usort($uniqueNews, function ($a, $b) {
+            $dateA = $a['published_at'] ?? $a['created_at'] ?? '';
+            $dateB = $b['published_at'] ?? $b['created_at'] ?? '';
+            return strtotime($dateB) - strtotime($dateA);
+        });
+
         $data = array_merge($this->getCommonData(), [
-            'page_title' => 'งานวิจัย | ' . ($siteInfo['site_name_th'] ?? 'Research'),
-            'meta_description' => 'งานวิจัยและนวัตกรรม คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์',
+            'page_title' => 'ข่าววิจัย | ' . ($siteInfo['site_name_th'] ?? 'Research'),
+            'meta_description' => 'ข่าววิจัยและนวัตกรรมล่าสุดจากคณะวิทยาศาสตร์และเทคโนโลยี',
             'active_page' => 'research',
+            'news_items' => $uniqueNews,
         ]);
 
         return view('pages/research', $data);

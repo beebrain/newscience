@@ -245,16 +245,15 @@ class Api extends BaseController
     }
 
     /**
-     * Get news by tag slug
-     * GET /api/news/category/:segment  (segment = tag slug เช่น general, student_activity, research_grant)
-     * ใช้เฉพาะ news_tags + news_news_tags (ไม่ใช้ news.category)
+     * Get news by tag slug (ใช้เฉพาะ news_tags + news_news_tags)
+     * GET /api/news/tag/:segment
      *
      * Query params:
      * - limit: number of items (default: 6)
      */
-    public function newsByCategory($segment = null)
+    public function newsByTag($tagSlug = null)
     {
-        if (!$segment) {
+        if (!$tagSlug) {
             return $this->response->setStatusCode(400)->setJSON([
                 'success' => false,
                 'message' => 'Tag slug is required'
@@ -268,12 +267,12 @@ class Api extends BaseController
             return $this->response->setJSON([
                 'success' => true,
                 'data' => [],
-                'category' => $segment,
+                'tag' => $tagSlug,
                 'count' => 0
             ]);
         }
 
-        $tagRow = $this->newsTagModel->findBySlug($segment);
+        $tagRow = $this->newsTagModel->findBySlug($tagSlug);
         $news = [];
         if ($tagRow) {
             $news = $this->newsModel
@@ -282,7 +281,7 @@ class Api extends BaseController
                 ->join('news_tags', 'news_tags.id = news_news_tags.news_tag_id')
                 ->join('user', 'user.uid = news.author_id', 'left')
                 ->where('news.status', 'published')
-                ->where('news_tags.slug', $segment)
+                ->where('news_tags.slug', $tagSlug)
                 ->orderBy('news.published_at', 'DESC')
                 ->groupBy('news.id')
                 ->limit($limit)
@@ -301,7 +300,7 @@ class Api extends BaseController
                 'author' => trim(($article['gf_name'] ?? '') . ' ' . ($article['gl_name'] ?? '')),
                 'published_at' => $article['published_at'],
                 'formatted_date' => date('d M Y', strtotime($article['published_at'] ?? $article['created_at'])),
-                'category' => $segment
+                'primary_tag' => $tagSlug
             ];
         }
         $data = $this->attachTagsToArticles($data);
@@ -309,7 +308,70 @@ class Api extends BaseController
         return $this->response->setJSON([
             'success' => true,
             'data' => $data,
-            'category' => $segment,
+            'tag' => $tagSlug,
+            'count' => count($data)
+        ]);
+    }
+
+    /**
+     * Get research news (ข่าววิจัย) - filters by 'research' or 'research_grant' tags
+     * GET /api/news/research
+     * 
+     * Query params:
+     * - limit: number of items (default: 6)
+     */
+    public function newsResearch()
+    {
+        $limit = (int) ($this->request->getGet('limit') ?? 6);
+        $limit = min(50, max(1, $limit));
+
+        $db = \Config\Database::connect();
+        if (!$db->tableExists('news_tags') || !$db->tableExists('news_news_tags')) {
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => [],
+                'category' => 'research',
+                'count' => 0
+            ]);
+        }
+
+        // Get news that has either 'research' or 'research_grant' tags
+        $news = $this->newsModel
+            ->select('news.*, user.gf_name, user.gl_name')
+            ->join('news_news_tags', 'news_news_tags.news_id = news.id')
+            ->join('news_tags', 'news_tags.id = news_news_tags.news_tag_id')
+            ->join('user', 'user.uid = news.author_id', 'left')
+            ->where('news.status', 'published')
+            ->groupStart()
+            ->where('news_tags.slug', 'research')
+            ->orWhere('news_tags.slug', 'research_grant')
+            ->groupEnd()
+            ->orderBy('news.published_at', 'DESC')
+            ->groupBy('news.id')
+            ->limit($limit)
+            ->find();
+
+        $data = [];
+        foreach ($news as $article) {
+            $data[] = [
+                'id' => $article['id'],
+                'title' => $article['title'],
+                'slug' => $article['slug'],
+                'excerpt' => $article['excerpt'] ?? mb_substr(strip_tags($article['content'] ?? ''), 0, 150) . '...',
+                'content' => $article['content'] ?? '',
+                'featured_image' => $this->formatFeaturedImageThumb($article['featured_image'] ?? ''),
+                'author' => trim(($article['gf_name'] ?? '') . ' ' . ($article['gl_name'] ?? '')),
+                'published_at' => $article['published_at'],
+                'formatted_date' => date('d M Y', strtotime($article['published_at'] ?? $article['created_at'])),
+                'category' => 'research'
+            ];
+        }
+        $data = $this->attachTagsToArticles($data);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $data,
+            'category' => 'research',
             'count' => count($data)
         ]);
     }

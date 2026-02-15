@@ -22,6 +22,7 @@ class StudentUserModel extends Model
         'tl_name',
         'th_name',
         'thai_lastname',
+        'program_id',
         'profile_image',
         'role',
         'status',
@@ -33,6 +34,8 @@ class StudentUserModel extends Model
     protected $validationRules = [
         'email' => 'required|valid_email|is_unique[student_user.email,id,{id}]',
         'password' => 'permit_empty|min_length[6]',
+        'role' => 'required|in_list[student,club,admin_student]',
+        'program_id' => 'permit_empty|integer',
     ];
 
     /**
@@ -96,19 +99,191 @@ class StudentUserModel extends Model
     }
 
     /**
-     * List for dropdown (id, email, display name)
+     * Get students by role
      */
-    public function getListForDropdown(): array
+    public function getByRole(string $role): array
     {
-        $rows = $this->orderBy('email', 'ASC')->findAll();
-        $list = [];
-        foreach ($rows as $r) {
-            $list[] = [
-                'id' => (int) $r['id'],
-                'email' => $r['email'] ?? '',
-                'display_name' => $this->getFullName($r) ?: $r['email'],
-            ];
+        return $this->where('role', $role)->findAll();
+    }
+
+    /**
+     * Get students by program
+     */
+    public function getByProgram(int $programId): array
+    {
+        return $this->where('program_id', $programId)->findAll();
+    }
+
+    /**
+     * Get students by role and program
+     */
+    public function getByRoleAndProgram(string $role, int $programId): array
+    {
+        return $this->where('role', $role)->where('program_id', $programId)->findAll();
+    }
+
+    /**
+     * Get admin students only
+     */
+    public function getAdminStudents(): array
+    {
+        return $this->where('role', 'admin_student')->where('status', 'active')->findAll();
+    }
+
+    /**
+     * Get regular students only
+     */
+    public function getRegularStudents(): array
+    {
+        return $this->where('role', 'student')->where('status', 'active')->findAll();
+    }
+
+    /**
+     * Get club members only
+     */
+    public function getClubMembers(): array
+    {
+        return $this->where('role', 'club')->where('status', 'active')->findAll();
+    }
+
+    /**
+     * Check if student is admin student
+     */
+    public function isAdminStudent(array $student): bool
+    {
+        return ($student['role'] ?? '') === 'admin_student';
+    }
+
+    /**
+     * Check if student is club member
+     */
+    public function isClubMember(array $student): bool
+    {
+        return ($student['role'] ?? '') === 'club';
+    }
+
+    /**
+     * Check if student can manage program
+     * (ตรวจสอบว่า student มีสิทธิ์จัดการ program นี้หรือไม่)
+     */
+    public function canManageProgram(array $user, int $programId): bool
+    {
+        // Admin student can manage their own program
+        if ($this->isAdminStudent($user) && (int)($user['program_id'] ?? 0) === $programId) {
+            return true;
         }
-        return $list;
+
+        // ถ้า user เป็น admin/editor/faculty_admin ก็สามารถจัดการได้
+        if (in_array($user['role'] ?? '', ['admin', 'editor', 'faculty_admin', 'super_admin'], true)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Search students by name or email
+     */
+    public function searchStudents(string $query, ?int $programId = null): array
+    {
+        $builder = $this->like('email', $query)
+            ->orLike('gf_name', $query)
+            ->orLike('gl_name', $query)
+            ->orLike('th_name', $query)
+            ->orLike('thai_lastname', $query);
+
+        if ($programId) {
+            $builder->where('program_id', $programId);
+        }
+
+        return $builder->findAll();
+    }
+
+    /**
+     * Get students with pagination and filters
+     */
+    public function getStudentsWithFilters(?string $role = null, ?int $programId = null, ?string $status = null, int $limit = 20, int $offset = 0): array
+    {
+        $builder = $this;
+
+        if ($role) {
+            $builder = $builder->where('role', $role);
+        }
+
+        if ($programId) {
+            $builder = $builder->where('program_id', $programId);
+        }
+
+        if ($status) {
+            $activeValue = ($status === 'active') ? 1 : 0;
+            $builder = $builder->where('active', $activeValue);
+        }
+
+        return $builder->orderBy('created_at', 'DESC')
+            ->limit($limit, $offset)
+            ->findAll();
+    }
+
+    /**
+     * Count students with filters
+     */
+    public function countStudentsWithFilters(?string $role = null, ?int $programId = null, ?string $status = null): int
+    {
+        $builder = $this;
+
+        if ($role) {
+            $builder = $builder->where('role', $role);
+        }
+
+        if ($programId) {
+            $builder = $builder->where('program_id', $programId);
+        }
+
+        if ($status) {
+            $activeValue = ($status === 'active') ? 1 : 0;
+            $builder = $builder->where('active', $activeValue);
+        }
+
+        return $builder->countAllResults();
+    }
+
+    /**
+     * Toggle student active status
+     */
+    public function toggleStatus(int $id): bool
+    {
+        $student = $this->find($id);
+        if (!$student) {
+            return false;
+        }
+
+        $currentActive = (int) ($student['active'] ?? 0);
+        $newActive = $currentActive === 1 ? 0 : 1;
+        return $this->update($id, ['active' => $newActive]);
+    }
+
+    /**
+     * Bulk update student roles
+     */
+    public function bulkUpdateRoles(array $ids, string $role): bool
+    {
+        if (empty($ids)) {
+            return false;
+        }
+
+        return $this->whereIn('id', $ids)->update(['role' => $role]);
+    }
+
+    /**
+     * Bulk update student active status
+     */
+    public function bulkUpdateStatus(array $ids, string $status): bool
+    {
+        if (empty($ids)) {
+            return false;
+        }
+
+        $activeValue = ($status === 'active') ? 1 : 0;
+        return $this->whereIn('id', $ids)->update(['active' => $activeValue]);
     }
 }

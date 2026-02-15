@@ -24,6 +24,7 @@ class UserModel extends Model
         'thai_name',
         'thai_lastname',
         'role',
+        'program_id',
         'profile_image',
         'status'
     ];
@@ -34,6 +35,8 @@ class UserModel extends Model
     protected $validationRules = [
         'email' => 'required|valid_email|is_unique[user.email,uid,{uid}]',
         'password' => 'permit_empty|min_length[6]',
+        'role' => 'required|in_list[super_admin,faculty_admin,user]',
+        'program_id' => 'permit_empty|integer',
     ];
 
     /**
@@ -196,36 +199,199 @@ class UserModel extends Model
     }
 
     /**
-     * รายการ user สำหรับเลือกเพิ่มเป็นบุคลากร (dropdown) — แสดงทั้งชื่อ และนามสกุล
+     * Get users by role
      */
-    public function getListForPersonnel(bool $excludeLinked = true): array
+    public function getByRole(string $role): array
     {
-        $builder = $this->db->table($this->table);
-        $builder->select('user.*');
-        if ($excludeLinked && $this->db->tableExists('personnel') && $this->db->fieldExists('user_uid', 'personnel')) {
-            $builder->join('personnel', 'personnel.user_uid = user.uid', 'left');
-            $builder->where('personnel.id IS NULL');
+        return $this->where('role', $role)->findAll();
+    }
+
+    /**
+     * Get users by program
+     */
+    public function getByProgram(int $programId): array
+    {
+        return $this->where('program_id', $programId)->findAll();
+    }
+
+    /**
+     * Get users by role and program
+     */
+    public function getByRoleAndProgram(string $role, int $programId): array
+    {
+        return $this->where('role', $role)->where('program_id', $programId)->findAll();
+    }
+
+    /**
+     * Get super admins only
+     */
+    public function getSuperAdmins(): array
+    {
+        return $this->where('role', 'super_admin')->where('status', 'active')->findAll();
+    }
+
+    /**
+     * Get faculty admins only
+     */
+    public function getFacultyAdmins(): array
+    {
+        return $this->where('role', 'faculty_admin')->where('status', 'active')->findAll();
+    }
+
+    /**
+     * Get regular users only
+     */
+    public function getRegularUsers(): array
+    {
+        return $this->where('role', 'user')->where('status', 'active')->findAll();
+    }
+
+    /**
+     * Check if user is super admin
+     */
+    public function isSuperAdmin(array $user): bool
+    {
+        return ($user['role'] ?? '') === 'super_admin';
+    }
+
+    /**
+     * Check if user is faculty admin
+     */
+    public function isFacultyAdmin(array $user): bool
+    {
+        return ($user['role'] ?? '') === 'faculty_admin';
+    }
+
+    /**
+     * Check if user is admin (รวม admin, editor, faculty_admin)
+     */
+    public function isAdmin(array $user): bool
+    {
+        return in_array($user['role'] ?? '', ['admin', 'editor', 'faculty_admin'], true);
+    }
+
+    /**
+     * Check if user can manage program
+     */
+    public function canManageProgram(array $user, int $programId): bool
+    {
+        // Super admin can manage all programs
+        if ($this->isSuperAdmin($user)) {
+            return true;
         }
-        $builder->orderBy('user.email', 'ASC');
-        $rows = $builder->get()->getResultArray();
-        $list = [];
-        foreach ($rows as $u) {
-            $uid = (int) ($u['uid'] ?? 0);
-            if ($uid <= 0) continue;
-            $nameTh = $this->getFullNameThaiForDisplay($u);
-            $nameEn = trim(($u['gf_name'] ?? '') . ' ' . ($u['gl_name'] ?? ''));
-            if ($nameEn === '') {
-                $nameEn = $nameTh;
-            }
-            $email = trim($u['email'] ?? '');
-            $list[] = [
-                'uid' => $uid,
-                'email' => $email,
-                'display_name' => $nameTh !== '' ? $nameTh . ' (' . $email . ')' : $email,
-                'name' => $nameTh,
-                'name_en' => $nameEn,
-            ];
+
+        // Admin, Editor, Faculty admin can manage their own program
+        if ($this->isAdmin($user) && (int)($user['program_id'] ?? 0) === $programId) {
+            return true;
         }
-        return $list;
+
+        return false;
+    }
+
+    /**
+     * Search users by name or email
+     */
+    public function searchUsers(string $query, ?int $programId = null): array
+    {
+        $builder = $this->like('email', $query)
+            ->orLike('gf_name', $query)
+            ->orLike('gl_name', $query)
+            ->orLike('th_name', $query)
+            ->orLike('thai_name', $query)
+            ->orLike('thai_lastname', $query);
+
+        if ($programId) {
+            $builder->where('program_id', $programId);
+        }
+
+        return $builder->findAll();
+    }
+
+    /**
+     * Get users with pagination and filters
+     */
+    public function getUsersWithFilters(?string $role = null, ?int $programId = null, ?string $status = null, int $limit = 20, int $offset = 0): array
+    {
+        $builder = $this;
+
+        if ($role) {
+            $builder = $builder->where('role', $role);
+        }
+
+        if ($programId) {
+            $builder = $builder->where('program_id', $programId);
+        }
+
+        if ($status) {
+            $activeValue = ($status === 'active') ? 1 : 0;
+            $builder = $builder->where('active', $activeValue);
+        }
+
+        return $builder->orderBy('created_at', 'DESC')
+            ->limit($limit, $offset)
+            ->findAll();
+    }
+
+    /**
+     * Count users with filters
+     */
+    public function countUsersWithFilters(?string $role = null, ?int $programId = null, ?string $status = null): int
+    {
+        $builder = $this;
+
+        if ($role) {
+            $builder = $builder->where('role', $role);
+        }
+
+        if ($programId) {
+            $builder = $builder->where('program_id', $programId);
+        }
+
+        if ($status) {
+            $activeValue = ($status === 'active') ? 1 : 0;
+            $builder = $builder->where('active', $activeValue);
+        }
+
+        return $builder->countAllResults();
+    }
+
+    /**
+     * Toggle user active status
+     */
+    public function toggleStatus(int $uid): bool
+    {
+        $user = $this->find($uid);
+        if (!$user) {
+            return false;
+        }
+
+        $currentActive = (int) ($user['active'] ?? 0);
+        $newActive = $currentActive === 1 ? 0 : 1;
+        return $this->update($uid, ['active' => $newActive]);
+    }
+
+    /**
+     * Bulk update user roles
+     */
+    public function bulkUpdateRoles(array $uids, string $role): bool
+    {
+        if (empty($uids)) {
+            return false;
+        }
+
+        return $this->whereIn('uid', $uids)->update(['role' => $role]);
+    }
+
+    /**
+     * Bulk update user active status
+     */
+    public function bulkUpdateStatus(array $uids, string $status): bool
+    {
+        if (empty($uids)) {
+            return false;
+        }
+
+        $activeValue = ($status === 'active') ? 1 : 0;
+        return $this->whereIn('uid', $uids)->update(['active' => $activeValue]);
     }
 }

@@ -45,6 +45,13 @@ class Auth extends BaseController
         $login = trim($this->request->getPost('login') ?? '');
         log_message('debug', 'Admin Auth: login attempt, identifier=' . $login);
 
+        // Block student emails from normal user login - redirect to student login
+        if ($this->isStudentEmail($login)) {
+            log_message('debug', 'Admin Auth: student email detected, redirect to student login=' . $login);
+            return redirect()->to(base_url('student/login'))
+                ->with('error', 'กรุณาเข้าสู่ระบบที่หน้า Student Portal');
+        }
+
         // รับได้ทั้งอีเมลและ login_uid (เช่น admin)
         $rules = [
             'login'    => 'required|string',
@@ -606,5 +613,24 @@ class Auth extends BaseController
     private function base64UrlEncode(string $data): string
     {
         return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+
+    /**
+     * Check if email is a student email format
+     * Student emails: u<student_id>@live.uru.ac.th or @uru.ac.th domain
+     */
+    private function isStudentEmail(string $login): bool
+    {
+        // Check if it's an email format ending with student domain
+        if (str_ends_with($login, '@live.uru.ac.th')) {
+            return true;
+        }
+
+        // Check if it matches student ID pattern: u<number>@...
+        if (preg_match('/^u\d+@/', $login)) {
+            return true;
+        }
+
+        return false;
     }
 }

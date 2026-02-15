@@ -88,25 +88,19 @@ $routes->group('student-admin', ['filter' => 'studentadmin'], function ($routes)
 
 // Admin Routes (protected by adminauth filter)
 $routes->group('admin', ['filter' => 'adminauth'], function ($routes) {
-    // จัดการผู้ใช้ (เฉพาะ Super_admin)
+    // จัดการผู้ใช้ (Super_admin และ Faculty_admin)
     $routes->get('users', 'Admin\UserManagement::index');
-    $routes->get('users/edit-faculty/(:num)', 'Admin\UserManagement::editFaculty/$1');
-    $routes->post('users/update-faculty/(:num)', 'Admin\UserManagement::updateFaculty/$1');
-    $routes->get('users/edit-student/(:num)', 'Admin\UserManagement::editStudent/$1');
-    $routes->post('users/update-student/(:num)', 'Admin\UserManagement::updateStudent/$1');
-    $routes->post('users/toggle-faculty-status/(:num)', 'Admin\UserManagement::toggleFacultyStatus/$1');
-    $routes->post('users/toggle-student-status/(:num)', 'Admin\UserManagement::toggleStudentStatus/$1');
 
-    // AJAX routes for modal functionality
-    $routes->get('users/get-faculty-data/(:num)', 'Admin\UserManagement::getFacultyData/$1');
+    // AJAX endpoints for user management
+    $routes->get('users/get-users', 'Admin\UserManagement::getUsers');
+    $routes->get('users/get-students', 'Admin\UserManagement::getStudents');
+    $routes->get('users/get-user-data/(:num)', 'Admin\UserManagement::getUserData/$1');
     $routes->get('users/get-student-data/(:num)', 'Admin\UserManagement::getStudentData/$1');
-    $routes->post('users/ajax-update-faculty/(:num)', 'Admin\UserManagement::ajaxUpdateFaculty/$1');
+    $routes->post('users/ajax-update-user/(:num)', 'Admin\UserManagement::ajaxUpdateUser/$1');
     $routes->post('users/ajax-update-student/(:num)', 'Admin\UserManagement::ajaxUpdateStudent/$1');
-
-    // AJAX routes for search functionality
-    $routes->get('users/search-faculty', 'Admin\UserManagement::searchFaculty');
-    $routes->get('users/search-students', 'Admin\UserManagement::searchStudents');
-    $routes->get('users/search-all', 'Admin\UserManagement::searchAllUsers');
+    $routes->post('users/toggle-user-status/(:num)', 'Admin\UserManagement::toggleUserStatus/$1');
+    $routes->post('users/toggle-student-status/(:num)', 'Admin\UserManagement::toggleStudentStatus/$1');
+    $routes->post('users/bulk-update', 'Admin\UserManagement::bulkUpdate');
 
     // News Management
     $routes->get('news', 'Admin\News::index');
@@ -150,6 +144,14 @@ $routes->group('admin', ['filter' => 'adminauth'], function ($routes) {
     $routes->post('events/update/(:num)', 'Admin\Events::update/$1');
     $routes->get('events/delete/(:num)', 'Admin\Events::delete/$1');
 
+    // Site Settings Management
+    $routes->get('settings', 'Admin\Settings::index');
+    $routes->post('settings/store', 'Admin\Settings::store');
+    $routes->get('settings/create', 'Admin\Settings::create');
+    $routes->post('settings/store-new', 'Admin\Settings::storeNew');
+    $routes->get('settings/delete/(:num)', 'Admin\Settings::delete/$1');
+    $routes->get('settings/init-defaults', 'Admin\Settings::initDefaults');
+
     // ไป Research Record โดยไม่ต้อง login ซ้ำ (ส่ง signed token จาก email)
     $routes->get('go-research-record', 'Admin\Auth::goResearchRecord');
 });
@@ -172,7 +174,8 @@ $routes->group('api', function ($routes) {
     $routes->get('news', 'Api::news');
     $routes->get('news/featured', 'Api::newsFeatured');
     $routes->get('news/search', 'Api::newsSearch');
-    $routes->get('news/category/(:segment)', 'Api::newsByCategory/$1');
+    $routes->get('news/tag/(:segment)', 'Api::newsByTag/$1');
+    $routes->get('news/research', 'Api::newsResearch');
     $routes->get('news-tags', 'Api::newsTags');
     $routes->get('news/(:num)', 'Api::newsDetail/$1');
 
