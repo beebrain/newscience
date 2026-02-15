@@ -21,7 +21,7 @@
             <span class="section-header__subtitle">Research Excellence</span>
             <h2 class="section-header__title">Driving Innovation & Discovery</h2>
             <p class="section-header__description">
-                Our researchers are tackling the world's most pressing challenges, from climate 
+                Our researchers are tackling the world's most pressing challenges, from climate
                 change to healthcare, from technology to social justice.
             </p>
         </div>
@@ -35,7 +35,7 @@
             <span class="section-header__subtitle">Areas of Focus</span>
             <h2 class="section-header__title">Research That Matters</h2>
         </div>
-        
+
         <div class="grid grid-3">
             <div class="card animate-on-scroll">
                 <img src="https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=400&h=200&fit=crop" alt="AI Research" class="card__image">
@@ -47,7 +47,7 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="card animate-on-scroll">
                 <img src="https://images.unsplash.com/photo-1576086213369-97a306d36557?w=400&h=200&fit=crop" alt="Healthcare Research" class="card__image">
                 <div class="card__content">
@@ -58,7 +58,7 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="card animate-on-scroll">
                 <img src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=400&h=200&fit=crop" alt="Climate Research" class="card__image">
                 <div class="card__content">
@@ -69,7 +69,7 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="card animate-on-scroll">
                 <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=200&fit=crop" alt="Social Sciences" class="card__image">
                 <div class="card__content">
@@ -80,7 +80,7 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="card animate-on-scroll">
                 <img src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400&h=200&fit=crop" alt="Space Research" class="card__image">
                 <div class="card__content">
@@ -91,7 +91,7 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="card animate-on-scroll">
                 <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=200&fit=crop" alt="Engineering" class="card__image">
                 <div class="card__content">
@@ -141,7 +141,7 @@
                 <span class="feature-section__subtitle">Infrastructure</span>
                 <h2 class="feature-section__title">World-Class Research Facilities</h2>
                 <p class="feature-section__description">
-                    Our state-of-the-art research centers provide the infrastructure and 
+                    Our state-of-the-art research centers provide the infrastructure and
                     resources needed to conduct groundbreaking research across all disciplines.
                 </p>
                 <ul class="feature-list">
@@ -188,4 +188,3 @@
 </section>
 
 <?= $this->endSection() ?>
-

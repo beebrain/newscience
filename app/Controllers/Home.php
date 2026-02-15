@@ -7,6 +7,8 @@ use App\Models\ProgramModel;
 use App\Models\SiteSettingModel;
 use App\Models\PersonnelModel;
 use App\Models\HeroSlideModel;
+use App\Models\EventModel;
+use App\Libraries\OrganizationRoles;
 
 class Home extends BaseController
 {
@@ -17,6 +19,7 @@ class Home extends BaseController
         $settingsModel = new SiteSettingModel();
         $personnelModel = new PersonnelModel();
         $heroSlideModel = new HeroSlideModel();
+        $eventModel = new EventModel();
 
         // Get site settings
         $settings = $settingsModel->getAll();
@@ -32,8 +35,32 @@ class Home extends BaseController
         $masterPrograms = $programModel->getMaster();
         $doctoratePrograms = $programModel->getDoctorate();
 
-        // Get dean
-        $dean = $personnelModel->getDean();
+        // ทีมผู้บริหาร: ดึงจาก personnel (คณบดี = tier 1, รองคณบดี = tier 2)
+        $personnel = $personnelModel->getActiveWithDepartment();
+        $dean = null;
+        $viceDeans = [];
+        foreach ($personnel as $p) {
+            $tier = OrganizationRoles::getTier(['position' => $p['position'] ?? '', 'position_en' => $p['position_en'] ?? '']);
+            if ($tier === 1) {
+                $dean = $p;
+                break;
+            }
+        }
+        foreach ($personnel as $p) {
+            $tier = OrganizationRoles::getTier(['position' => $p['position'] ?? '', 'position_en' => $p['position_en'] ?? '']);
+            if ($tier === 2) {
+                $viceDeans[] = $p;
+            }
+        }
+        usort($viceDeans, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
+
+        // Get upcoming events from events table (for "กิจกรรมที่จะมาถึง" section)
+        $upcomingEvents = [];
+        try {
+            $upcomingEvents = $eventModel->getUpcoming(4);
+        } catch (\Exception $e) {
+            $upcomingEvents = [];
+        }
 
         // Get active hero slides
         try {
@@ -46,7 +73,7 @@ class Home extends BaseController
         $formattedSlides = [];
         foreach ($heroSlides as $slide) {
             $formattedSlides[] = [
-                'image' => base_url($slide['image']),
+                'image' => $slide['image'] ? base_url('serve/uploads/hero/' . basename($slide['image'])) : '',
                 'title' => $slide['title'] ?? '',
                 'subtitle' => $slide['subtitle'] ?? '',
                 'description' => $slide['description'] ?? '',
@@ -73,10 +100,11 @@ class Home extends BaseController
             'master_programs' => $masterPrograms,
             'doctorate_programs' => $doctoratePrograms,
             'dean' => $dean,
+            'vice_deans' => $viceDeans,
             'hero_slides' => $formattedSlides,
+            'upcoming_events' => $upcomingEvents,
         ];
 
         return view('pages/home', $data);
     }
 }
-

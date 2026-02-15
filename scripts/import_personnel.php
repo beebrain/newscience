@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Import Personnel from sci.uru.ac.th/personnel to Database
  * 
@@ -37,13 +38,14 @@ if (!is_dir($personnelImageDir)) {
  * Download image from URL and save to personnel image folder.
  * Returns local filename (e.g. "john-doe-123.jpg") or empty string on failure.
  */
-function downloadPersonnelImage($imageUrl, $firstName, $lastName, $personId = null) {
+function downloadPersonnelImage($imageUrl, $firstName, $lastName, $personId = null)
+{
     global $personnelImageDir;
-    
+
     if (empty($imageUrl) || strpos($imageUrl, 'http') !== 0) {
         return '';
     }
-    
+
     $ch = curl_init($imageUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -54,11 +56,11 @@ function downloadPersonnelImage($imageUrl, $firstName, $lastName, $personId = nu
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
     curl_close($ch);
-    
+
     if ($httpCode !== 200 || empty($data)) {
         return '';
     }
-    
+
     // Determine extension from URL or Content-Type
     $ext = 'jpg';
     if (preg_match('/\.(jpe?g|png|gif|webp)(\?|$)/i', $imageUrl, $m)) {
@@ -68,13 +70,13 @@ function downloadPersonnelImage($imageUrl, $firstName, $lastName, $personId = nu
         $ext = strtolower($m[1]);
         if ($ext === 'jpeg') $ext = 'jpg';
     }
-    
+
     // Safe filename: firstname-lastname[-id].ext
     $slug = preg_replace('/[^a-zA-Z0-9\x{0E00}-\x{0E7F}\-]/u', '-', $firstName . '-' . $lastName);
     $slug = trim($slug, '-') ?: 'personnel';
     $baseName = $slug . ($personId ? "-$personId" : '-' . time());
     $filename = $baseName . '.' . $ext;
-    
+
     // Avoid overwrite: add number if file exists
     $path = $personnelImageDir . DIRECTORY_SEPARATOR . $filename;
     $n = 0;
@@ -83,16 +85,17 @@ function downloadPersonnelImage($imageUrl, $firstName, $lastName, $personId = nu
         $filename = $baseName . '-' . $n . '.' . $ext;
         $path = $personnelImageDir . DIRECTORY_SEPARATOR . $filename;
     }
-    
+
     if (file_put_contents($path, $data) !== false) {
         return $filename;
     }
-    
+
     return '';
 }
 
 // Function to fetch web page
-function fetchPage($url) {
+function fetchPage($url)
+{
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -107,19 +110,26 @@ function fetchPage($url) {
 }
 
 // Function to parse personnel name (extract title, first name, last name)
-function parsePersonName($fullName) {
+function parsePersonName($fullName)
+{
     $fullName = trim($fullName);
-    
+
     // Common Thai titles
     $titles = [
-        'ผู้ช่วยศาสตราจารย์ ดร.', 'ผู้ช่วยศาสตราจารย์', 'รองศาสตราจารย์ ดร.', 
-        'รองศาสตราจารย์', 'ศาสตราจารย์ ดร.', 'ศาสตราจารย์', 
-        'อาจารย์ ดร.', 'อาจารย์', 'ดร.'
+        'ผู้ช่วยศาสตราจารย์ ดร.',
+        'ผู้ช่วยศาสตราจารย์',
+        'รองศาสตราจารย์ ดร.',
+        'รองศาสตราจารย์',
+        'ศาสตราจารย์ ดร.',
+        'ศาสตราจารย์',
+        'อาจารย์ ดร.',
+        'อาจารย์',
+        'ดร.'
     ];
-    
+
     $title = '';
     $name = $fullName;
-    
+
     // Extract title
     foreach ($titles as $t) {
         if (strpos($fullName, $t) === 0) {
@@ -128,12 +138,12 @@ function parsePersonName($fullName) {
             break;
         }
     }
-    
+
     // Split name into first and last
     $nameParts = explode(' ', $name);
     $firstName = $nameParts[0] ?? '';
     $lastName = implode(' ', array_slice($nameParts, 1)) ?? '';
-    
+
     return [
         'title' => $title,
         'first_name' => $firstName,
@@ -142,7 +152,8 @@ function parsePersonName($fullName) {
 }
 
 // Function to get department ID from database by name
-function getDepartmentId($mysqli, $departmentName) {
+function getDepartmentId($mysqli, $departmentName)
+{
     // Map Thai department names to database names
     $departmentMap = [
         'ผู้บริหาร' => 'สำนักงานคณบดี',
@@ -159,20 +170,20 @@ function getDepartmentId($mysqli, $departmentName) {
         'อาหารและโภชนาการ' => 'อาหารและโภชนาการ',
         'สายสนับสนุน' => 'สายสนับสนุน'
     ];
-    
+
     // Try to find exact match first
     $searchNames = [$departmentName];
     if (isset($departmentMap[$departmentName])) {
         $searchNames[] = $departmentMap[$departmentName];
     }
-    
+
     // Also try with common prefixes
     foreach (['สาขาวิชา', 'ภาควิชา', 'แผนก'] as $prefix) {
         foreach ($searchNames as $name) {
             $searchNames[] = $prefix . $name;
         }
     }
-    
+
     foreach ($searchNames as $searchName) {
         $stmt = $mysqli->prepare("SELECT id FROM departments WHERE name_th LIKE ? AND status = 'active' LIMIT 1");
         $searchPattern = '%' . $searchName . '%';
@@ -185,7 +196,7 @@ function getDepartmentId($mysqli, $departmentName) {
         }
         $stmt->close();
     }
-    
+
     return null;
 }
 
@@ -240,7 +251,7 @@ foreach ($knownFirst as $k) {
 $body = $xpath->query("//body")->item(0);
 if ($body) {
     $bodyText = $body->textContent;
-    
+
     // Department sections to look for
     $departmentSections = [
         'ผู้บริหารคณะวิทยาศาสตร์และเทคโนโลยี' => 'ผู้บริหาร',
@@ -257,50 +268,50 @@ if ($body) {
         'อาหารและโภชนาการ' => 'อาหารและโภชนาการ',
         'สายสนับสนุน' => 'สายสนับสนุน'
     ];
-    
+
     // Strategy: Parse the entire page text and identify sections
     $allText = $body->textContent;
-    
+
     // Split text by department sections
     $sectionPattern = '/(' . implode('|', array_keys($departmentSections)) . ')/u';
     $sections = preg_split($sectionPattern, $allText, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_OFFSET_CAPTURE);
-    
+
     $currentSection = null;
     $currentDeptId = null;
-    
+
     for ($i = 0; $i < count($sections); $i += 2) {
         if ($i + 1 < count($sections)) {
             $sectionName = trim($sections[$i + 1][0]);
             $sectionContent = $sections[$i + 2][0] ?? '';
-            
+
             // Find matching department
             foreach ($departmentSections as $key => $deptName) {
                 if (strpos($sectionName, $key) !== false || strpos($sectionName, $deptName) !== false) {
                     $currentSection = $deptName;
                     $currentDeptId = getDepartmentId($mysqli, $deptName);
                     echo "Found department section: $deptName (ID: " . ($currentDeptId ?? 'null') . ")\n";
-                    
+
                     // Parse personnel in this section
                     // Look for patterns: Title + Name (may or may not have position)
                     preg_match_all('/(ผู้ช่วยศาสตราจารย์(?:\s+ดร\.)?|รองศาสตราจารย์(?:\s+ดร\.)?|ศาสตราจารย์(?:\s+ดร\.)?|อาจารย์(?:\s+ดร\.)?|ดร\.)\s+([^\s]+(?:\s+[^\s]+){0,3})/u', $sectionContent, $matches, PREG_SET_ORDER);
-                    
+
                     $personCount = 0;
                     foreach ($matches as $match) {
                         $title = trim($match[1]);
                         $name = trim($match[2]);
-                        
+
                         // Skip if name is too short or is a department name
                         if (strlen($name) < 3 || in_array($name, array_keys($departmentSections))) {
                             continue;
                         }
-                        
+
                         $nameParts = parsePersonName($title . ' ' . $name);
-                        
+
                         // Skip if first name is too short
                         if (strlen($nameParts['first_name']) < 2) {
                             continue;
                         }
-                        
+
                         // Try to find position in the text after the name
                         $position = 'อาจารย์'; // default
                         $namePattern = preg_quote($name, '/');
@@ -310,7 +321,7 @@ if ($body) {
                                 $position = $possiblePos;
                             }
                         }
-                        
+
                         // Check if already exists
                         $exists = false;
                         $existingIdx = null;
@@ -321,7 +332,7 @@ if ($body) {
                                 break;
                             }
                         }
-                        
+
                         if ($exists && $currentDeptId) {
                             // Update department if found in a specific department
                             if (!$personnel[$existingIdx]['department_id']) {
@@ -344,7 +355,7 @@ if ($body) {
                             $personCount++;
                         }
                     }
-                    
+
                     if ($personCount > 0) {
                         echo "  Found $personCount personnel in $currentSection\n";
                     }
@@ -353,18 +364,18 @@ if ($body) {
             }
         }
     }
-    
+
     // Also look for personnel patterns in the entire page (fallback)
     $allText = $body->textContent;
     preg_match_all('/(ผู้ช่วยศาสตราจารย์(?:\s+ดร\.)?|รองศาสตราจารย์(?:\s+ดร\.)?|ศาสตราจารย์(?:\s+ดร\.)?|อาจารย์(?:\s+ดร\.)?|ดร\.)\s+([^\s]+(?:\s+[^\s]+)*?)\s+(คณบดี|รองคณบดี|ผู้ช่วยคณบดี|หัวหน้าหน่วยจัดการงานวิจัย)/u', $allText, $matches, PREG_SET_ORDER);
-    
+
     foreach ($matches as $match) {
         $title = trim($match[1]);
         $name = trim($match[2]);
         $position = trim($match[3]);
-        
+
         $nameParts = parsePersonName($title . ' ' . $name);
-        
+
         // Check if already exists
         $exists = false;
         foreach ($personnel as $p) {
@@ -373,7 +384,7 @@ if ($body) {
                 break;
             }
         }
-        
+
         if (!$exists) {
             $personnel[] = [
                 'title' => $nameParts['title'],
@@ -390,7 +401,7 @@ if ($body) {
             ];
         }
     }
-    
+
     // Also try to find in table format (and update image/email for existing personnel)
     $tables = $xpath->query("//table");
     foreach ($tables as $table) {
@@ -400,10 +411,10 @@ if ($body) {
             if ($cells->length >= 2) {
                 $nameText = trim($cells->item(0)->textContent);
                 $positionText = trim($cells->item(1)->textContent ?? '');
-                
+
                 if (strlen($nameText) > 5 && !in_array($nameText, ['ชื่อ', 'Name', 'ตำแหน่ง', 'Position'])) {
                     $nameParts = parsePersonName($nameText);
-                    
+
                     // Extract image from row (do this for both new and existing)
                     $img = $xpath->query(".//img", $row)->item(0);
                     $imageUrl = '';
@@ -413,10 +424,10 @@ if ($body) {
                             $imageUrl = strpos($src, 'http') === 0 ? $src : 'https://sci.uru.ac.th' . ltrim($src, '/');
                         }
                     }
-                    
+
                     $emailLink = $xpath->query(".//a[starts-with(@href, 'mailto:')]", $row)->item(0);
                     $email = $emailLink ? str_replace('mailto:', '', $emailLink->getAttribute('href')) : '';
-                    
+
                     $existingIdx = null;
                     foreach ($personnel as $idx => $p) {
                         if ($p['first_name'] === $nameParts['first_name'] && $p['last_name'] === $nameParts['last_name']) {
@@ -424,7 +435,7 @@ if ($body) {
                             break;
                         }
                     }
-                    
+
                     if ($existingIdx !== null) {
                         // Update existing: set image and email from this row
                         if ($imageUrl) {
@@ -455,14 +466,14 @@ if ($body) {
             }
         }
     }
-    
+
     // Pass 2: Find all img in page and match to personnel by nearby text
     $allImgs = $xpath->query("//img[contains(@src, 'http') or contains(@src, '/')]");
     foreach ($allImgs as $img) {
         $src = $img->getAttribute('src') ?: $img->getAttribute('data-src');
         if (!$src || strlen($src) < 10) continue;
         $imageUrl = strpos($src, 'http') === 0 ? $src : 'https://sci.uru.ac.th' . ltrim($src, '/');
-        
+
         $parent = $img->parentNode;
         $walk = 0;
         while ($parent && $walk < 5) {
@@ -472,7 +483,8 @@ if ($body) {
                 $fn = $p['first_name'] ?? '';
                 $ln = $p['last_name'] ?? '';
                 if (($fn && $ln && (strpos($blockText, $fn) !== false && strpos($blockText, $ln) !== false))
-                    || (strpos($blockText, $fullName) !== false)) {
+                    || (strpos($blockText, $fullName) !== false)
+                ) {
                     if (empty($personnel[$idx]['image'])) {
                         $personnel[$idx]['image'] = $imageUrl;
                     }
@@ -509,7 +521,7 @@ foreach ($personnel as $person) {
             echo "  [Image saved] {$person['first_name']} {$person['last_name']} -> $localFile\n";
         }
     }
-    
+
     // Check if exists (by name)
     $stmt = $mysqli->prepare("SELECT id FROM personnel WHERE first_name = ? AND last_name = ?");
     $stmt->bind_param('ss', $person['first_name'], $person['last_name']);
@@ -517,7 +529,7 @@ foreach ($personnel as $person) {
     $result = $stmt->get_result();
     $existing = $result->fetch_assoc();
     $stmt->close();
-    
+
     if ($existing) {
         // If we had URL but failed above, try again with existing id
         if (($person['image'] ?? '') && strpos($person['image'], 'http') === 0 && empty($imageValue)) {
@@ -531,11 +543,12 @@ foreach ($personnel as $person) {
                 echo "  [Image saved] {$person['first_name']} {$person['last_name']} -> $imageValue\n";
             }
         }
-        
+
         // Update existing
         $deptId = $person['department_id'];
         $stmt = $mysqli->prepare("UPDATE personnel SET title = ?, position = ?, position_en = ?, department_id = ?, email = ?, phone = ?, image = ?, status = ?, sort_order = ?, updated_at = NOW() WHERE id = ?");
-        $stmt->bind_param('sssissssii',
+        $stmt->bind_param(
+            'sssissssii',
             $person['title'],
             $person['position'],
             $person['position_en'],
@@ -557,7 +570,8 @@ foreach ($personnel as $person) {
         $firstNameEn = $person['first_name_en'] ?? '';
         $lastNameEn = $person['last_name_en'] ?? '';
         $stmt = $mysqli->prepare("INSERT INTO personnel (title, first_name, last_name, first_name_en, last_name_en, position, position_en, department_id, email, phone, image, status, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
-        $stmt->bind_param('sssssssissssi',
+        $stmt->bind_param(
+            'sssssssissssi',
             $person['title'],
             $person['first_name'],
             $person['last_name'],

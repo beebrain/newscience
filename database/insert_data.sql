@@ -63,7 +63,9 @@ INSERT INTO `departments` (`id`, `name_th`, `name_en`, `code`, `sort_order`, `st
 (8, 'สาขาวิชาวิทยาศาสตร์การกีฬาและการออกกำลังกาย', 'Sports and Exercise Science', 'SPORT', 8, 'active'),
 (9, 'สาขาวิชาวิทยาศาสตร์สิ่งแวดล้อม', 'Environmental Science', 'ENV', 9, 'active'),
 (10, 'สาขาวิชาสาธารณสุขศาสตร์', 'Public Health', 'PH', 10, 'active'),
-(11, 'สาขาวิชาอาหารและโภชนาการ', 'Food and Nutrition', 'FOOD', 11, 'active');
+(11, 'สาขาวิชาอาหารและโภชนาการ', 'Food and Nutrition', 'FOOD', 11, 'active'),
+(12, 'สาขาวิทยาศาสตร์ประยุกต์', 'Applied Science', 'AS', 12, 'active'),
+(13, 'สาขาวิชาวิศวกรรมคอมพิวเตอร์', 'Computer Engineering', 'CE', 13, 'active');
 
 -- =====================================================
 -- PROGRAMS

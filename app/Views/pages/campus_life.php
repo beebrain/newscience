@@ -21,7 +21,7 @@
             <span class="section-header__subtitle">Experience</span>
             <h2 class="section-header__title">A Vibrant Community</h2>
             <p class="section-header__description">
-                Life at our university extends far beyond the classroom. Discover a thriving 
+                Life at our university extends far beyond the classroom. Discover a thriving
                 campus culture with diverse activities, organizations, and opportunities for growth.
             </p>
         </div>
@@ -39,8 +39,8 @@
                 <span class="feature-section__subtitle">Student Life</span>
                 <h2 class="feature-section__title">Find Your Community</h2>
                 <p class="feature-section__description">
-                    With over 600 student organizations, there's something for everyone. 
-                    Whether you're passionate about arts, culture, service, or athletics, 
+                    With over 600 student organizations, there's something for everyone.
+                    Whether you're passionate about arts, culture, service, or athletics,
                     you'll find your place here.
                 </p>
                 <ul class="feature-list">
@@ -85,7 +85,7 @@
                 <span class="feature-section__subtitle">Living on Campus</span>
                 <h2 class="feature-section__title">Housing & Dining</h2>
                 <p class="feature-section__description">
-                    Experience the convenience and community of campus living. Our residential 
+                    Experience the convenience and community of campus living. Our residential
                     communities are designed to foster connections and support your academic success.
                 </p>
                 <ul class="feature-list">
@@ -126,7 +126,7 @@
             <span class="section-header__subtitle">Recreation & Wellness</span>
             <h2 class="section-header__title">Stay Active & Healthy</h2>
         </div>
-        
+
         <div class="grid grid-3">
             <div class="card animate-on-scroll">
                 <img src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=400&h=250&fit=crop" alt="Fitness Center" class="card__image">
@@ -137,7 +137,7 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="card animate-on-scroll">
                 <img src="https://images.unsplash.com/photo-1461896836934- voices-of-the-voices-06d9d1f3c?w=400&h=250&fit=crop" alt="Outdoor Activities" class="card__image">
                 <div class="card__content">
@@ -147,7 +147,7 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="card animate-on-scroll">
                 <img src="<?= base_url('assets/images/wellness_recreation.png') ?>" alt="Wellness" class="card__image">
                 <div class="card__content">
@@ -173,4 +173,3 @@
 </section>
 
 <?= $this->endSection() ?>
-

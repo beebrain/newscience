@@ -5,25 +5,35 @@ namespace App\Controllers;
 use App\Libraries\FacultyPersonnelApi;
 use App\Models\SiteSettingModel;
 use App\Models\NewsModel;
+use App\Models\NewsImageModel;
+use App\Models\NewsTagModel;
 use App\Models\ProgramModel;
 use App\Models\PersonnelModel;
-use App\Models\DepartmentModel;
+use App\Models\PersonnelProgramModel;
+use App\Models\OrganizationUnitModel;
+use App\Models\EventModel;
 
 class Pages extends BaseController
 {
     protected $siteSettingModel;
     protected $newsModel;
+    protected $newsTagModel;
     protected $programModel;
     protected $personnelModel;
-    protected $departmentModel;
+    protected $personnelProgramModel;
+    protected $organizationUnitModel;
+    protected $eventModel;
 
     public function __construct()
     {
         $this->siteSettingModel = new SiteSettingModel();
         $this->newsModel = new NewsModel();
+        $this->newsTagModel = new NewsTagModel();
         $this->programModel = new ProgramModel();
         $this->personnelModel = new PersonnelModel();
-        $this->departmentModel = new DepartmentModel();
+        $this->personnelProgramModel = new PersonnelProgramModel();
+        $this->organizationUnitModel = new OrganizationUnitModel();
+        $this->eventModel = new EventModel();
     }
 
     /**
@@ -55,7 +65,7 @@ class Pages extends BaseController
             'philosophy' => $siteInfo['philosophy_th'] ?? '',
             'identity' => $siteInfo['identity_th'] ?? '',
             'history' => $siteInfo['history_th'] ?? '',
-            'departments' => $this->departmentModel->getActive(),
+            'departments' => $this->organizationUnitModel->getOrdered(),
         ]);
 
         return view('pages/about', $data);
@@ -65,8 +75,56 @@ class Pages extends BaseController
     {
         $siteInfo = $this->siteSettingModel->getAll();
 
-        // Get programs by level
+        // Get programs by level (with department)
         $programs = $this->programModel->getWithDepartment();
+
+        // โหลดประธานหลักสูตร: ใช้ programs.chair_personnel_id ก่อน แล้ว fallback เป็น coordinator_id / personnel_programs
+        $coordinatorIds = array_values(array_unique(array_filter(array_map(function ($p) {
+            $id = (int)($p['chair_personnel_id'] ?? $p['coordinator_id'] ?? 0);
+            return $id > 0 ? $id : null;
+        }, $programs))));
+
+        $chairByProgramId = [];
+        foreach ($programs as $prog) {
+            $pid = (int)($prog['id'] ?? 0);
+            if ($pid <= 0) continue;
+            $cid = (int)($prog['chair_personnel_id'] ?? 0);
+            if ($cid > 0) {
+                $chairByProgramId[$pid] = $cid;
+                continue;
+            }
+            $cid = (int)($prog['coordinator_id'] ?? 0);
+            if ($cid > 0) {
+                $chairByProgramId[$pid] = $cid;
+                $coordinatorIds[] = $cid;
+                continue;
+            }
+            if ($this->personnelProgramModel->db->tableExists('personnel_programs')) {
+                $ppRows = $this->personnelProgramModel->getByProgramId($pid);
+                foreach ($ppRows as $row) {
+                    if (mb_strpos(trim($row['role_in_curriculum'] ?? ''), 'ประธาน') !== false) {
+                        $chairByProgramId[$pid] = (int)($row['personnel_id'] ?? 0);
+                        $coordinatorIds[] = $chairByProgramId[$pid];
+                        break;
+                    }
+                }
+            }
+        }
+        $coordinatorIds = array_values(array_unique(array_filter($coordinatorIds, fn($id) => $id > 0)));
+
+        $coordinatorsById = [];
+        if ($coordinatorIds !== []) {
+            $personnel = $this->personnelModel->where('status', 'active')->whereIn('id', $coordinatorIds)->findAll();
+            foreach ($personnel as $p) {
+                $coordinatorsById[(int)($p['id'] ?? 0)] = $p;
+            }
+        }
+        foreach ($programs as &$p) {
+            $chairId = $chairByProgramId[(int)($p['id'] ?? 0)] ?? (int)($p['chair_personnel_id'] ?? $p['coordinator_id'] ?? 0);
+            $p['coordinator'] = $chairId > 0 ? ($coordinatorsById[$chairId] ?? null) : null;
+        }
+        unset($p);
+
         $bachelorPrograms = array_filter($programs, fn($p) => ($p['level'] ?? 'bachelor') === 'bachelor');
         $masterPrograms = array_filter($programs, fn($p) => ($p['level'] ?? 'bachelor') === 'master');
         $doctoratePrograms = array_filter($programs, fn($p) => ($p['level'] ?? 'bachelor') === 'doctorate');
@@ -79,7 +137,7 @@ class Pages extends BaseController
             'master_programs' => $masterPrograms,
             'doctorate_programs' => $doctoratePrograms,
             'total_programs' => count($programs),
-            'departments' => $this->departmentModel->getActive(),
+            'departments' => $this->organizationUnitModel->getOrdered(),
         ]);
 
         return view('pages/academics', $data);
@@ -115,15 +173,19 @@ class Pages extends BaseController
     {
         $siteInfo = $this->siteSettingModel->getAll();
 
-        // Get programs for admission page
+        // Get programs by level for admission page
         $programs = $this->programModel->getWithDepartment();
         $bachelorPrograms = array_filter($programs, fn($p) => ($p['level'] ?? 'bachelor') === 'bachelor');
+        $masterPrograms = array_filter($programs, fn($p) => ($p['level'] ?? 'bachelor') === 'master');
+        $doctoratePrograms = array_filter($programs, fn($p) => ($p['level'] ?? 'bachelor') === 'doctorate');
 
         $data = array_merge($this->getCommonData(), [
             'page_title' => 'รับสมัครนักศึกษา | ' . ($siteInfo['site_name_th'] ?? 'Admission'),
             'meta_description' => 'เปิดรับสมัครนักศึกษาใหม่ คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์',
             'active_page' => 'admission',
             'programs' => $bachelorPrograms,
+            'master_programs' => $masterPrograms,
+            'doctorate_programs' => $doctoratePrograms,
         ]);
 
         return view('pages/admission', $data);
@@ -168,11 +230,26 @@ class Pages extends BaseController
         // Get related news
         $relatedNews = $this->newsModel->getPublished(4);
 
+        // Get tags for this news
+        $db = \Config\Database::connect();
+        $newsTags = [];
+        if ($db->tableExists('news_tags') && $db->tableExists('news_news_tags')) {
+            $newsTags = $this->newsTagModel->getTagsByNewsId((int) $newsItem['id']);
+        }
+
+        // รูปภาพประกอบ (จาก news_images)
+        $newsImageModel = new NewsImageModel();
+        $newsImages = $db->tableExists('news_images') ? $newsImageModel->getImagesByNewsId((int) $newsItem['id']) : [];
+        $newsDocuments = $db->tableExists('news_images') ? $newsImageModel->getDocumentsByNewsId((int) $newsItem['id']) : [];
+
         $data = array_merge($this->getCommonData(), [
             'page_title' => $newsItem['title'] . ' | ข่าวสาร',
             'meta_description' => $newsItem['excerpt'] ?? mb_substr($newsItem['title'], 0, 160),
             'active_page' => 'news',
             'news' => $newsItem,
+            'news_tags' => $newsTags,
+            'news_images' => $newsImages,
+            'news_documents' => $newsDocuments,
             'related_news' => $relatedNews,
         ]);
 
@@ -182,14 +259,37 @@ class Pages extends BaseController
     public function events(): string
     {
         $siteInfo = $this->siteSettingModel->getAll();
+        $events = $this->eventModel->getUpcoming(50);
 
         $data = array_merge($this->getCommonData(), [
             'page_title' => 'กิจกรรม | ' . ($siteInfo['site_name_th'] ?? 'Events'),
             'meta_description' => 'กิจกรรมและโครงการต่างๆ ของคณะวิทยาศาสตร์และเทคโนโลยี',
             'active_page' => 'events',
+            'events' => $events,
         ]);
 
         return view('pages/events', $data);
+    }
+
+    /**
+     * Single event detail page
+     */
+    public function eventDetail($id): string
+    {
+        $event = $this->eventModel->find($id);
+        if (!$event || $event['status'] !== 'published') {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $siteInfo = $this->siteSettingModel->getAll();
+        $data = array_merge($this->getCommonData(), [
+            'page_title' => esc($event['title']) . ' | ' . ($siteInfo['site_name_th'] ?? 'Events'),
+            'meta_description' => $event['excerpt'] ?: mb_substr(strip_tags($event['content'] ?? ''), 0, 160),
+            'active_page' => 'events',
+            'event' => $event,
+        ]);
+
+        return view('pages/event_detail', $data);
     }
 
     public function contact(): string
@@ -219,6 +319,8 @@ class Pages extends BaseController
     private static function personnelPositionTier(string $position): int
     {
         $p = $position ?: '';
+        // ผู้อำนวยการ (เช่น ผู้อำนวยการสำนักงานคณบดี) ให้เป็น tier 4 ก่อน ไม่งั้นจะไปติด tier 1 เพราะมีคำว่า "คณบดี"
+        if (mb_strpos($p, 'ผู้อำนวยการ') !== false) return 4;
         $hasDean = mb_strpos($p, 'คณบดี') !== false;
         $hasVice = mb_strpos($p, 'รอง') !== false;
         $hasAssistant = mb_strpos($p, 'ผู้ช่วย') !== false;
@@ -233,6 +335,7 @@ class Pages extends BaseController
     private static function personnelPositionTierEn(string $position): int
     {
         $p = strtolower($position ?: '');
+        if (strpos($p, 'director') !== false) return 4;  // ผู้อำนวยการ
         if (strpos($p, 'associate dean') !== false || strpos($p, 'vice dean') !== false) return 2;
         if (strpos($p, 'assistant dean') !== false) return 3;
         if (strpos($p, 'dean') !== false) return 1;
@@ -278,62 +381,166 @@ class Pages extends BaseController
 
     public function personnel(): string
     {
-        $siteInfo = $this->siteSettingModel->getAll();
+        $common = $this->getCommonData();
+        $siteInfo = $common['settings'] ?? $this->siteSettingModel->getAll();
 
-        // Get all active personnel with department name
+        // Get all active personnel with department name (1 query)
         $personnel = $this->personnelModel->getActiveWithDepartment();
-        $departments = $this->departmentModel->getActive();
-
-        // เติมหลักสูตร/บทบาท (ประธานหลักสูตรของหลักสูตรใด) จาก personnel_programs
         $personnel = $this->enrichPersonnelWithProgramRoles($personnel);
 
-        // แบ่งตามหลักสูตร: group by department, within each sort by position tier (ใช้ personnel ที่ enrich แล้ว)
-        $personnelByDepartment = [];
+        $programs = $this->programModel->getActive();
         $personnelById = [];
         foreach ($personnel as $p) {
             $personnelById[(int)($p['id'] ?? 0)] = $p;
         }
-        foreach ($departments as $dept) {
-            $deptPersonnel = $this->personnelModel->getByDepartment($dept['id']);
-            $enriched = array_map(fn($p) => $personnelById[(int)($p['id'] ?? 0)] ?? $p, $deptPersonnel);
-            $personnelByDepartment[$dept['id']] = [
-                'department' => $dept,
-                'personnel' => self::sortPersonnelByPositionTier($enriched),
+
+        // บุคลากรแยกตามหลักสูตร: ประธานหลักสูตรด้านบนสุด (เหมือนคณบดี) แล้วตามด้วยอาจารย์ที่ถูก tag ในหลักสูตร
+        // ลำดับบนหน้านี้ = ประธานหลักสูตรสูงสุด ไม่ใช้ลำดับคณบดี/รอง
+        // ประธาน: ใช้ programs.chair_personnel_id ก่อน → personnel_programs role ประธาน → position ประธานหลักสูตร
+        $personnelByProgram = [];
+        $hasChairColumn = $this->programModel->db->fieldExists('chair_personnel_id', 'programs');
+        foreach ($programs as $program) {
+            $programId = (int) $program['id'];
+            $ppRows = $this->personnelProgramModel->getByProgramId($programId);
+            $chair = null;
+
+            // 1) ประธานจาก programs.chair_personnel_id
+            if ($hasChairColumn) {
+                $chairId = (int) ($program['chair_personnel_id'] ?? 0);
+                if ($chairId > 0) {
+                    $chair = $personnelById[$chairId] ?? null;
+                }
+            }
+            // 2) จาก personnel_programs: role ประธาน
+            if ($chair === null) {
+                foreach ($ppRows as $row) {
+                    $pid = (int)($row['personnel_id'] ?? 0);
+                    $role = trim($row['role_in_curriculum'] ?? '');
+                    if (mb_strpos($role, 'ประธาน') !== false) {
+                        $chair = $personnelById[$pid] ?? null;
+                        if ($chair !== null) break;
+                    }
+                }
+            }
+            // 3) จากตำแหน่ง personnel ประธานหลักสูตร ในหลักสูตรนี้
+            if ($chair === null) {
+                foreach ($ppRows as $row) {
+                    $pid = (int)($row['personnel_id'] ?? 0);
+                    $person = $personnelById[$pid] ?? null;
+                    if ($person && mb_strpos($person['position'] ?? '', 'ประธานหลักสูตร') !== false) {
+                        $chair = $person;
+                        break;
+                    }
+                }
+            }
+
+            // รายชื่อบุคลากรในหลักสูตร (ที่ถูก tag) เรียงตาม sort_order ของ personnel_programs — ไม่รวมประธาน
+            $personnelList = [];
+            $chairId = $chair !== null ? (int)($chair['id'] ?? 0) : 0;
+            foreach ($ppRows as $row) {
+                $pid = (int)($row['personnel_id'] ?? 0);
+                if ($pid === $chairId) continue;
+                $person = $personnelById[$pid] ?? null;
+                if ($person !== null) {
+                    $personnelList[] = $person;
+                }
+            }
+
+            $personnelByProgram[] = [
+                'program' => $program,
+                'chair' => $chair,
+                'personnel' => $personnelList,
             ];
         }
-        $noDept = array_filter($personnel, fn($p) => empty($p['department_id']));
-        if (!empty($noDept)) {
-            $personnelByDepartment['_none'] = [
-                'department' => ['id' => null, 'name_th' => 'อื่นๆ', 'name_en' => 'Other'],
-                'personnel' => self::sortPersonnelByPositionTier(array_values($noDept)),
-            ];
+
+        // หัวหน้าหน่วยงาน: โดยตำแหน่ง หรือ organization_unit_id — เรียงหัวหน้าหน่วยขึ้นก่อน (เหมือนประธานหลักสูตร)
+        $hasOrgUnitId = $this->personnelModel->db->fieldExists('organization_unit_id', 'personnel');
+        $researchPersonnel = array_values(array_filter($personnel, function ($p) use ($hasOrgUnitId) {
+            if ($hasOrgUnitId && (int)($p['organization_unit_id'] ?? 0) === 3) {
+                return true;
+            }
+            return mb_strpos($p['position'] ?? '', 'หัวหน้าหน่วยจัดการงานวิจัย') !== false;
+        }));
+        $researchHeadsFirst = array_values(array_filter($researchPersonnel, function ($p) {
+            return mb_strpos($p['position'] ?? '', 'หัวหน้าหน่วยจัดการงานวิจัย') !== false;
+        }));
+        $researchRest = array_values(array_filter($researchPersonnel, function ($p) {
+            return mb_strpos($p['position'] ?? '', 'หัวหน้าหน่วยจัดการงานวิจัย') === false;
+        }));
+        usort($researchHeadsFirst, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
+        usort($researchRest, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
+        $headResearch = array_merge($researchHeadsFirst, $researchRest);
+
+        $officePersonnel = array_values(array_filter($personnel, function ($p) use ($hasOrgUnitId) {
+            if ($hasOrgUnitId && (int)($p['organization_unit_id'] ?? 0) === 2) {
+                return true;
+            }
+            $pos = $p['position'] ?? '';
+            return mb_strpos($pos, 'หัวหน้าสำนักงาน') !== false || mb_strpos($pos, 'เจ้าหน้าที่') !== false;
+        }));
+        $officeHeadsFirst = array_values(array_filter($officePersonnel, function ($p) {
+            return mb_strpos($p['position'] ?? '', 'หัวหน้าสำนักงาน') !== false;
+        }));
+        $officeRest = array_values(array_filter($officePersonnel, function ($p) {
+            return mb_strpos($p['position'] ?? '', 'หัวหน้าสำนักงาน') === false;
+        }));
+        usort($officeHeadsFirst, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
+        usort($officeRest, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
+        $headOffice = array_merge($officeHeadsFirst, $officeRest);
+
+        // หน้า Personnel แสดง 3 หน่วยงาน (icon): หลักสูตร, หน่วยจัดการงานวิจัย, สำนักงานคณบดี — ชื่อจาก organization_units ถ้ามี
+        $bachelorPrograms = [];
+        $graduatePrograms = [];
+        foreach ($personnelByProgram as $block) {
+            $level = $block['program']['level'] ?? 'bachelor';
+            if ($level === 'master' || $level === 'doctorate') {
+                $graduatePrograms[] = $block;
+            } else {
+                $bachelorPrograms[] = $block;
+            }
         }
+        $allPrograms = array_merge($bachelorPrograms, $graduatePrograms);
 
-        // โดยรวม: group by position tier (คณบดี → รองคณบดี → ผู้ช่วยคณบดี → อาจารย์และบุคลากร)
-        $personnelByPositionTier = self::groupPersonnelByPositionTier($personnel);
+        $orgUnits = $this->organizationUnitModel->getOrdered();
+        $unitByCode = [];
+        foreach ($orgUnits as $u) {
+            $unitByCode[$u['code'] ?? ''] = $u;
+        }
+        $researchUnit = $unitByCode['research'] ?? ['id' => 3, 'name_th' => 'หัวหน้าหน่วยการจัดการงานวิจัย', 'name_en' => 'Research Management Unit', 'code' => 'research'];
+        $officeUnit = $unitByCode['office'] ?? ['id' => 2, 'name_th' => 'สำนักงานคณบดี', 'name_en' => "Dean's Office", 'code' => 'office'];
 
-        // ดึงข้อมูลบุคลากรตามหลักสูตรจาก API (Research Record)
-        $apiByCurriculum = FacultyPersonnelApi::fetchGroupedByCurriculum();
+        $organizationSections = [
+            [
+                'unit' => ['id' => 1, 'name_th' => 'หลักสูตร', 'name_en' => 'Programs', 'code' => 'curriculum'],
+                'programs' => $allPrograms,
+                'personnel' => [],
+            ],
+            [
+                'unit' => ['id' => (int)$researchUnit['id'], 'name_th' => $researchUnit['name_th'] ?? 'หน่วยจัดการงานวิจัย', 'name_en' => $researchUnit['name_en'] ?? 'Research Management Unit', 'code' => 'research'],
+                'programs' => [],
+                'personnel' => $headResearch,
+            ],
+            [
+                'unit' => ['id' => (int)$officeUnit['id'], 'name_th' => $officeUnit['name_th'] ?? 'สำนักงานคณบดี', 'name_en' => $officeUnit['name_en'] ?? "Dean's Office", 'code' => 'office'],
+                'programs' => [],
+                'personnel' => $headOffice,
+            ],
+        ];
 
-        $data = array_merge($this->getCommonData(), [
+        $data = array_merge($common, [
             'page_title' => 'บุคลากร | ' . ($siteInfo['site_name_th'] ?? 'Personnel'),
             'meta_description' => 'บุคลากร คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์',
             'active_page' => 'personnel',
-            'personnel' => $personnel,
-            'departments' => $departments,
-            'personnel_by_department' => $personnelByDepartment,
-            'personnel_by_position_tier' => $personnelByPositionTier,
-            'api_personnel_by_curriculum' => $apiByCurriculum['groups'] ?? [],
-            'api_faculty' => $apiByCurriculum['faculty'] ?? null,
-            'api_personnel_total' => $apiByCurriculum['total'] ?? 0,
+            'organization_sections' => $organizationSections,
+            'head_research_personnel' => $headResearch,
+            'head_office_personnel' => $headOffice,
         ]);
 
         return view('pages/personnel', $data);
     }
 
     /**
-     * เติม programs_list_tags (หลักสูตร + บทบาท) ให้แต่ละคน จาก personnel_programs
-     * ใช้แสดง "ประธานของหลักสูตรใด" สำหรับตำแหน่งประธานหลักสูตร
+     * เติม programs_list_tags (หลักสูตร + บทบาท) ให้แต่ละคน จาก personnel_programs (batch load)
      */
     private function enrichPersonnelWithProgramRoles(array $personnel): array
     {
@@ -344,11 +551,29 @@ class Pages extends BaseController
             unset($p);
             return $personnel;
         }
+        $personnelIds = array_values(array_filter(array_map(fn($p) => (int)($p['id'] ?? 0), $personnel), fn($id) => $id > 0));
+        $ppRows = $personnelIds !== [] ? $this->personnelProgramModel->getByPersonnelIds($personnelIds) : [];
+        $programIds = array_values(array_unique(array_filter(array_map(fn($r) => (int)($r['program_id'] ?? 0), $ppRows), fn($id) => $id > 0)));
+        $programsMap = [];
+        if ($programIds !== []) {
+            foreach ($this->programModel->whereIn('id', $programIds)->findAll() as $pr) {
+                $programsMap[(int)$pr['id']] = $pr;
+            }
+        }
+        $ppByPersonnel = [];
+        foreach ($ppRows as $row) {
+            $pid = (int)$row['personnel_id'];
+            if (!isset($ppByPersonnel[$pid])) {
+                $ppByPersonnel[$pid] = [];
+            }
+            $ppByPersonnel[$pid][] = $row;
+        }
         foreach ($personnel as &$p) {
-            $ppList = $this->personnelModel->getProgramsForPersonnel((int)($p['id'] ?? 0));
+            $pid = (int)($p['id'] ?? 0);
+            $ppList = $ppByPersonnel[$pid] ?? [];
             $tags = [];
             foreach ($ppList as $pp) {
-                $pr = $this->programModel->find((int)($pp['program_id'] ?? 0));
+                $pr = $programsMap[(int)($pp['program_id'] ?? 0)] ?? null;
                 if ($pr) {
                     $tags[] = [
                         'name' => $pr['name_th'] ?? $pr['name_en'] ?? '',
@@ -363,23 +588,87 @@ class Pages extends BaseController
     }
 
     /**
-     * หน้าผู้บริหาร – โครงสร้างองค์กร (คณบดี, รองคณบดี, ผู้ช่วยคณบดี)
+     * หน้าผู้บริหาร – โครงสร้างองค์กร (โหลดข้อมูลผ่าน Ajax ค่อยๆ จาก GET /api/executives)
+     * ส่งเฉพาะเปลือกหน้า + placeholder โหลด; ข้อมูลจริง inject ด้วย JS
      */
     public function executives(): string
     {
-        $siteInfo = $this->siteSettingModel->getAll();
-        $personnel = $this->personnelModel->getActiveWithDepartment();
-        $personnel = $this->enrichPersonnelWithProgramRoles($personnel);
-        $personnelByPositionTier = self::groupPersonnelByPositionTier($personnel);
+        $common = $this->getCommonData();
+        $siteInfo = $common['settings'] ?? [];
 
-        $data = array_merge($this->getCommonData(), [
+        $data = array_merge($common, [
             'page_title' => 'ผู้บริหาร | ' . ($siteInfo['site_name_th'] ?? 'Executives'),
             'meta_description' => 'ผู้บริหารคณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์',
             'active_page' => 'executives',
-            'personnel_by_position_tier' => $personnelByPositionTier,
         ]);
 
-        return view('pages/personnel', $data);
+        return view('pages/executives', $data);
+    }
+
+    /**
+     * สร้างรายการประธานหลักสูตรจาก coordinator ของแต่ละหลักสูตร (programs.chair_personnel_id)
+     *
+     * @return array List of ['program_name' => string, 'person' => personnel row]
+     */
+    private function buildProgramChairItemsFromCoordinators(): array
+    {
+        $programs = $this->programModel->getWithDepartment();
+        $chairIds = [];
+        foreach ($programs as $p) {
+            $cid = (int) ($p['chair_personnel_id'] ?? 0);
+            if ($cid > 0) {
+                $chairIds[$cid] = true;
+            }
+            if ($cid <= 0 && $this->programModel->db->fieldExists('coordinator_id', 'programs')) {
+                $cid = (int) ($p['coordinator_id'] ?? 0);
+                if ($cid > 0) {
+                    $chairIds[$cid] = true;
+                }
+            }
+        }
+        if ($this->personnelProgramModel->db->tableExists('personnel_programs')) {
+            $ppModel = $this->personnelProgramModel;
+            foreach ($programs as $p) {
+                $pid = (int) ($p['id'] ?? 0);
+                if ((int)($p['chair_personnel_id'] ?? 0) > 0) continue;
+                $row = $ppModel->where('program_id', $pid)->like('role_in_curriculum', 'ประธาน')->first();
+                if ($row && !empty($row['personnel_id'])) {
+                    $chairIds[(int) $row['personnel_id']] = true;
+                }
+            }
+        }
+        $chairIds = array_keys($chairIds);
+        $personnelMap = [];
+        if (!empty($chairIds)) {
+            $list = $this->personnelModel->getActiveByIdsWithUser($chairIds);
+            foreach ($list as $p) {
+                $personnelMap[(int) ($p['id'] ?? 0)] = $p;
+            }
+        }
+
+        $items = [];
+        foreach ($programs as $program) {
+            $programId = (int) ($program['id'] ?? 0);
+            $chairId = (int) ($program['chair_personnel_id'] ?? 0);
+            if ($chairId <= 0 && $this->programModel->db->fieldExists('coordinator_id', 'programs')) {
+                $chairId = (int) ($program['coordinator_id'] ?? 0);
+            }
+            if ($chairId <= 0 && $this->personnelProgramModel->db->tableExists('personnel_programs')) {
+                $row = $this->personnelProgramModel->where('program_id', $programId)->like('role_in_curriculum', 'ประธาน')->first();
+                $chairId = $row ? (int) ($row['personnel_id'] ?? 0) : 0;
+            }
+            if ($chairId <= 0) continue;
+            $person = $personnelMap[$chairId] ?? null;
+            if (!$person) continue;
+            $programName = trim($program['name_th'] ?? $program['name_en'] ?? '');
+            if ($programName !== '') {
+                $items[] = [
+                    'program_name' => $programName,
+                    'person' => $person,
+                ];
+            }
+        }
+        return $items;
     }
 
     public function supportDocuments(): string

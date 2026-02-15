@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ดึงข้อมูลบุคลากรจาก sci.uru.ac.th ตามหลักสูตร (ucurriculum_id)
  * เก็บลงตาราง personnel และ map กับ department_id
@@ -47,7 +48,8 @@ if (!is_dir($personnelImageDir)) {
  * Download personnel image from sci.uru.ac.th/personnel/getimage/{id} and save as .jpg
  * Filename: personnel-sci-{personId}.jpg (English-only, avoids encoding issues).
  */
-function downloadPersonnelImage($imageUrl, $firstName, $lastName, $personId = null) {
+function downloadPersonnelImage($imageUrl, $firstName, $lastName, $personId = null)
+{
     global $personnelImageDir;
     if (empty($imageUrl) || strpos($imageUrl, 'http') !== 0) return '';
     $ch = curl_init($imageUrl);
@@ -79,7 +81,8 @@ function downloadPersonnelImage($imageUrl, $firstName, $lastName, $personId = nu
     return '';
 }
 
-function fetchHtml($url) {
+function fetchHtml($url)
+{
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
@@ -94,13 +97,22 @@ function fetchHtml($url) {
     return ($code === 200 && $html) ? $html : null;
 }
 
-function parsePersonName($fullName) {
+function parsePersonName($fullName)
+{
     $fullName = trim(preg_replace('/\s+/u', ' ', $fullName));
     $titles = [
-        'ผู้ช่วยศาสตราจารย์ ดร.', 'รองศาสตราจารย์ ดร.', 'ศาสตราจารย์ ดร.',
-        'ผู้ช่วยศาสตราจารย์', 'รองศาสตราจารย์', 'ศาสตราจารย์',
-        'อาจารย์ ดร.', 'อาจารย์', 'ดร.',
-        'นางสาว', 'นาง', 'นาย'  // สายสนับสนุน
+        'ผู้ช่วยศาสตราจารย์ ดร.',
+        'รองศาสตราจารย์ ดร.',
+        'ศาสตราจารย์ ดร.',
+        'ผู้ช่วยศาสตราจารย์',
+        'รองศาสตราจารย์',
+        'ศาสตราจารย์',
+        'อาจารย์ ดร.',
+        'อาจารย์',
+        'ดร.',
+        'นางสาว',
+        'นาง',
+        'นาย'  // สายสนับสนุน
     ];
     $title = '';
     $name = $fullName;
@@ -113,11 +125,22 @@ function parsePersonName($fullName) {
     }
     // ตัดตำแหน่งท้ายชื่อ
     $positions = [
-        ' คณบดี', ' รองคณบดี', ' ผู้ช่วยคณบดี', ' หัวหน้าหน่วยจัดการงานวิจัย',
-        ' ประธานหลักสูตร', ' กรรมการหลักสูตร', ' อาจารย์ประจำหลักสูตร',
-        ' เจ้าหน้าที่บริหารงานทั่วไป', ' นักวิชาการศึกษา', ' บรรณารักษ์',
-        ' นักจัดการงานทั่วไป', ' ผู้ปฏิบัติงานบริหาร', ' นักวิชาการโสตทัศนศึกษา',
-        ' ช่างเครื่องคอมพิวเตอร์', ' ผู้ปฏิบัติงานวิทยาศาสตร์', ' พนักงานทั่วไป',
+        ' คณบดี',
+        ' รองคณบดี',
+        ' ผู้ช่วยคณบดี',
+        ' หัวหน้าหน่วยจัดการงานวิจัย',
+        ' ประธานหลักสูตร',
+        ' กรรมการหลักสูตร',
+        ' อาจารย์ประจำหลักสูตร',
+        ' เจ้าหน้าที่บริหารงานทั่วไป',
+        ' นักวิชาการศึกษา',
+        ' บรรณารักษ์',
+        ' นักจัดการงานทั่วไป',
+        ' ผู้ปฏิบัติงานบริหาร',
+        ' นักวิชาการโสตทัศนศึกษา',
+        ' ช่างเครื่องคอมพิวเตอร์',
+        ' ผู้ปฏิบัติงานวิทยาศาสตร์',
+        ' พนักงานทั่วไป',
     ];
     foreach ($positions as $pos) {
         if (mb_strpos($name, $pos) !== false) {
@@ -131,13 +154,25 @@ function parsePersonName($fullName) {
     return compact('title', 'firstName', 'lastName');
 }
 
-function extractPositionFromLinkText($linkText) {
+function extractPositionFromLinkText($linkText)
+{
     $positions = [
-        'คณบดี', 'รองคณบดี', 'ผู้ช่วยคณบดี', 'หัวหน้าหน่วยจัดการงานวิจัย',
-        'ประธานหลักสูตร', 'กรรมการหลักสูตร', 'อาจารย์ประจำหลักสูตร',
-        'เจ้าหน้าที่บริหารงานทั่วไป', 'นักวิชาการศึกษา', 'บรรณารักษ์',
-        'นักจัดการงานทั่วไป', 'ผู้ปฏิบัติงานบริหาร', 'นักวิชาการโสตทัศนศึกษา',
-        'ช่างเครื่องคอมพิวเตอร์', 'ผู้ปฏิบัติงานวิทยาศาสตร์', 'พนักงานทั่วไป',
+        'คณบดี',
+        'รองคณบดี',
+        'ผู้ช่วยคณบดี',
+        'หัวหน้าหน่วยจัดการงานวิจัย',
+        'ประธานหลักสูตร',
+        'กรรมการหลักสูตร',
+        'อาจารย์ประจำหลักสูตร',
+        'เจ้าหน้าที่บริหารงานทั่วไป',
+        'นักวิชาการศึกษา',
+        'บรรณารักษ์',
+        'นักจัดการงานทั่วไป',
+        'ผู้ปฏิบัติงานบริหาร',
+        'นักวิชาการโสตทัศนศึกษา',
+        'ช่างเครื่องคอมพิวเตอร์',
+        'ผู้ปฏิบัติงานวิทยาศาสตร์',
+        'พนักงานทั่วไป',
     ];
     foreach ($positions as $pos) {
         if (mb_strpos($linkText, $pos) !== false) {
@@ -148,7 +183,8 @@ function extractPositionFromLinkText($linkText) {
 }
 
 // ดึงรายละเอียดจากหน้า viewperson (ชื่อ, อีเมล, หลักสูตร, รูป)
-function fetchPersonDetail($baseUrl, $personId) {
+function fetchPersonDetail($baseUrl, $personId)
+{
     $url = $baseUrl . '/personnel/viewperson/' . $personId;
     $html = fetchHtml($url);
     if (!$html) return null;
@@ -301,7 +337,8 @@ foreach ($allPersonnel as $person) {
     $stmtSelect->free_result();
     if ($row) {
         $imgVal = $person['image'] ?? '';
-        $stmtUpdate->bind_param('ssissii',
+        $stmtUpdate->bind_param(
+            'ssissii',
             $person['title'],
             $person['position'],
             $person['department_id'],
@@ -318,7 +355,8 @@ foreach ($allPersonnel as $person) {
         $lnEn = '';
         $posEn = '';
         $phone = '';
-        $stmtInsert->bind_param('sssssssisssi',  // 12 params
+        $stmtInsert->bind_param(
+            'sssssssisssi',  // 12 params
             $person['title'],
             $person['first_name'],
             $person['last_name'],

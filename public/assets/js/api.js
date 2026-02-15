@@ -95,6 +95,16 @@ const UniversityAPI = (function ($) {
         },
 
         /**
+         * Get news by category/tag slug (1 ข่าวมีได้หลาย tag)
+         */
+        getByCategory: function (categorySlug, limit = config.defaultLimit, options = {}) {
+            return request('news/category/' + encodeURIComponent(categorySlug), {
+                data: { limit },
+                ...options
+            });
+        },
+
+        /**
          * Search news
          */
         search: function (query, limit = 10, options = {}) {
@@ -103,6 +113,15 @@ const UniversityAPI = (function ($) {
                 cache: false,
                 ...options
             });
+        }
+    };
+
+    /**
+     * News Tags API (ชนิดข่าว)
+     */
+    const NewsTags = {
+        list: function (options = {}) {
+            return request('news-tags', options);
         }
     };
 
@@ -123,8 +142,9 @@ const UniversityAPI = (function ($) {
          * Render news card HTML
          */
         newsCard: function (article, size = 'medium') {
-            const imageHtml = article.featured_image
-                ? `<img src="${article.featured_image}" alt="${article.title}" loading="lazy">`
+            const imgUrl = (article.featured_image_thumb && article.featured_image_thumb.trim()) ? article.featured_image_thumb : article.featured_image;
+            const imageHtml = imgUrl
+                ? `<img src="${imgUrl}" alt="${article.title}" loading="lazy">`
                 : `<div class="placeholder-image"><svg viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zM9 17l-4-4 1.41-1.41L9 14.17l7.59-7.59L18 8l-9 9z"/></svg></div>`;
 
             return `
@@ -456,6 +476,7 @@ const UniversityAPI = (function ($) {
     // Public API
     return {
         News,
+        NewsTags,
         Stats,
         UI,
         showNewsModal,

@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+    <meta name="theme-color" content="#1a1a1a">
     <meta name="description" content="<?= $meta_description ?? 'คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์' ?>">
     <title><?= $page_title ?? 'คณะวิทยาศาสตร์และเทคโนโลยี' ?> | มหาวิทยาลัยราชภัฏอุตรดิตถ์</title>
-    
-    <!-- Google Fonts - Thai Support -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo250.png') ?>" sizes="32x32">
+
+    <!-- ฟอนต์ Sarabun + Noto Sans Thai (โหลดจากโปรเจกต์) -->
+    <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>?v=<?= (defined('FCPATH') && is_file(FCPATH . 'assets/css/fonts.css')) ? filemtime(FCPATH . 'assets/css/fonts.css') : '1' ?>">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -21,152 +22,139 @@
                         'sarabun': ['Sarabun', 'Noto Sans Thai', 'sans-serif'],
                     },
                     colors: {
-                        primary: '#1e3a5f',
-                        'primary-dark': '#0f2744',
+                        primary: '#eab308',
+                        'primary-dark': '#ca8a04',
                         secondary: '#2d7d46',
-                        accent: '#f5a623',
+                        accent: '#eab308',
                     }
                 }
             }
         }
     </script>
-    
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Styles -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/style.css?v=' . time()) ?>">
-    
+
+    <?php
+    $is_home = ($active_page ?? '') === 'home';
+    $css_ver = (defined('FCPATH') && is_file(FCPATH . 'assets/css/base.css'))
+        ? filemtime(FCPATH . 'assets/css/base.css') : '1';
+    ?>
+    <!-- Central CSS: theme + base + components (โหลด parallel), home/pages ตามหน้าที่ใช้ -->
+    <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>?v=<?= $css_ver ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/base.css') ?>?v=<?= $css_ver ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/components.css') ?>?v=<?= $css_ver ?>">
+    <?php if ($is_home): ?>
+        <link rel="stylesheet" href="<?= base_url('assets/css/home.css') ?>?v=<?= $css_ver ?>">
+    <?php else: ?>
+        <link rel="stylesheet" href="<?= base_url('assets/css/pages.css') ?>?v=<?= $css_ver ?>">
+    <?php endif; ?>
     <style>
-        /* Thai Font - Sarabun Style */
-        body {
-            font-family: 'Sarabun', sans-serif;
-            font-weight: 400;
-            color: #4a5568;
-        }
-        
-        h1, h2, h3, h4, h5, h6,
-        .hero__title,
-        .section-header__title {
-            font-family: 'Sarabun', sans-serif;
-            font-weight: 600;
-            color: #1e3a5f;
-        }
-        
-        .section-header__subtitle,
-        .section-header__description {
-            font-family: 'Sarabun', sans-serif;
-            font-weight: 400;
-            color: #64748b;
-        }
-        
-        /* Science Theme Colors */
-        :root {
-            --primary: #1e3a5f;
-            --primary-dark: #0f2744;
-            --secondary: #2d7d46;
-            --accent: #f5a623;
-            --accent-hover: #e09000;
-            --text-primary: #1e3a5f;
-            --text-secondary: #64748b;
-        }
-        
-        .hero--science {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-        }
-        
-        .hero--science::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('<?= base_url('assets/images/hero_background.png') ?>') center/cover;
-            opacity: 0.15;
+        html {
+            --hero-bg-url: url('<?= base_url('assets/images/hero_background.png') ?>');
         }
 
-        /* Dropdown Menu */
-
-        .nav__item--has-dropdown {
-            position: relative;
-        }
-        
-        .nav__dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: white;
-            min-width: 280px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            padding: 0.5rem 0;
+        /* ซ่อนเนื้อหาจนกว่า CSS จะโหลดครบ (ป้องกัน FOUC) */
+        .css-loading {
             opacity: 0;
-            visibility: hidden;
-            transform: translateY(10px);
-            transition: all 0.2s ease;
-            z-index: 100;
         }
-        
-        .nav__item--has-dropdown:hover .nav__dropdown {
+
+        .css-loaded {
             opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
+            transition: opacity 0.15s ease-in;
         }
-        
-        .nav__dropdown-link {
-            display: block;
-            padding: 0.75rem 1.5rem;
-            color: var(--text-primary);
-            text-decoration: none;
-            transition: background 0.2s;
-            font-size: 0.95rem;
-            border-bottom: 1px solid #f1f5f9;
+
+        @media (prefers-reduced-motion: reduce) {
+            .css-loaded {
+                transition: none;
+            }
         }
-        
-        .nav__dropdown-link:last-child {
-            border-bottom: none;
-        }
-        
-        .nav__dropdown-link:hover {
-            background: #f8fafc;
-            color: var(--secondary);
-            padding-left: 1.75rem;
+
+        /* Fallback: ถ้า JavaScript ปิด ให้แสดงเนื้อหาเลย */
+        noscript+body,
+        .no-js body {
+            opacity: 1 !important;
         }
     </style>
-</head>
-<body>
-    <!-- Top Bar -->
-    <div class="top-bar">
-        <div class="container">
-            <nav class="top-bar__links">
-                <a href="#" class="top-bar__link">นักศึกษา</a>
-                <a href="#" class="top-bar__link">บุคลากร</a>
-                <a href="#" class="top-bar__link">ศิษย์เก่า</a>
-                <a href="<?= base_url('admin/login') ?>" class="top-bar__link">เข้าสู่ระบบ</a>
-            </nav>
-        </div>
-    </div>
+    <script>
+        (function() {
+            function showContent() {
+                if (document.body) {
+                    document.body.classList.remove('css-loading');
+                    document.body.classList.add('css-loaded');
+                }
+            }
 
-    <!-- Header -->
+            function waitForStyles() {
+                var links = document.querySelectorAll('link[rel="stylesheet"]');
+                var total = links.length;
+                if (total === 0) {
+                    showContent();
+                    return;
+                }
+                var loaded = 0;
+
+                function checkDone() {
+                    loaded++;
+                    if (loaded >= total) showContent();
+                }
+                for (var i = 0; i < links.length; i++) {
+                    var link = links[i];
+                    if (link.sheet) checkDone();
+                    else link.onload = checkDone;
+                }
+                setTimeout(showContent, 4000);
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', waitForStyles);
+            } else {
+                waitForStyles();
+            }
+        })();
+    </script>
+</head>
+
+<body class="css-loading">
+    <script>
+        (function() {
+            var w = window.innerWidth;
+            var h = window.innerHeight;
+            var dpr = window.devicePixelRatio || 1;
+            var body = document.body;
+            if (w < 480) body.classList.add('is-small-phone');
+            else if (w < 640) body.classList.add('is-phone');
+            else if (w < 768) body.classList.add('is-phablet');
+            else if (w < 1024) body.classList.add('is-tablet');
+            else if (w < 1200) body.classList.add('is-laptop');
+            else if (w < 1440) body.classList.add('is-desktop');
+            else body.classList.add('is-large-desktop');
+            body.classList.add(w < 768 ? 'is-mobile' : 'is-desktop-view');
+            if ('ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0)) body.classList.add('is-touch');
+            else body.classList.add('is-no-touch');
+            if (dpr >= 2) {
+                body.classList.add('is-hidpi');
+                if (dpr >= 3) body.classList.add('is-retina-3x');
+            }
+            body.classList.add(w > h ? 'is-landscape' : 'is-portrait');
+            document.documentElement.style.setProperty('--device-width', w + 'px');
+            document.documentElement.style.setProperty('--device-height', h + 'px');
+            document.documentElement.style.setProperty('--device-dpr', String(dpr));
+            document.documentElement.style.setProperty('--screen-width', (window.screen && window.screen.width ? window.screen.width : w) + 'px');
+            document.documentElement.style.setProperty('--screen-height', (window.screen && window.screen.height ? window.screen.height : h) + 'px');
+        })();
+    </script>
+    <!-- Skip link for main content (accessibility) -->
+    <a href="#main-content" class="skip-link">ข้ามไปเนื้อหา</a>
+
+    <!-- Header (รวม Topbar เข้าใน Menubar) -->
     <header class="header">
         <div class="container">
             <!-- Logo -->
             <a href="<?= base_url() ?>" class="logo">
-                <?php 
-                $logo = $settings['logo'] ?? '';
-                if (!empty($logo)): 
+                <?php
+                $logo = !empty($settings['logo']) ? $settings['logo'] : base_url('assets/images/logo250.png');
                 ?>
-                <img src="<?= esc($logo) ?>" alt="Logo" class="logo__img" style="height: 50px; width: auto;">
-                <?php else: ?>
-                <div class="logo__icon">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor"/>
-                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-                <?php endif; ?>
+                <img src="<?= esc($logo) ?>" alt="Logo คณะวิทยาศาสตร์และเทคโนโลยี" class="logo__img" style="height: 50px; width: auto;">
                 <div class="logo__text">
                     <?= esc($settings['site_name_th'] ?? 'คณะวิทยาศาสตร์และเทคโนโลยี') ?>
                     <span><?= esc($settings['university_name_th'] ?? 'มหาวิทยาลัยราชภัฏอุตรดิตถ์') ?></span>
@@ -175,42 +163,64 @@
 
             <!-- Navigation -->
             <nav class="nav">
+                <?php $navSvg = '<svg style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-left:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>'; ?>
                 <ul class="nav__list">
                     <li><a href="<?= base_url() ?>" class="nav__link <?= ($active_page ?? '') === 'home' ? 'active' : '' ?>">หน้าแรก</a></li>
                     <li><a href="<?= base_url('academics') ?>" class="nav__link <?= ($active_page ?? '') === 'academics' ? 'active' : '' ?>">หลักสูตร</a></li>
                     <li><a href="<?= base_url('research') ?>" class="nav__link <?= ($active_page ?? '') === 'research' ? 'active' : '' ?>">วิจัย</a></li>
-                    <li class="nav__item--has-dropdown">
-                        <a href="#" class="nav__link">
-                            ระบบฐานข้อมูลและวารสาร
-                            <svg style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-left:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                        </a>
-                        <ul class="nav__dropdown">
-                            <li><a href="http://edoc.sci.uru.ac.th/" target="_blank" class="nav__dropdown-link">งานวิชาการ (e-Doc)</a></li>
-                            <li><a href="http://sci.uru.ac.th/scienceadmin" target="_blank" class="nav__dropdown-link">ฐานข้อมูลบริหาร</a></li>
-                            <li><a href="https://advisor.uru.ac.th" target="_blank" class="nav__dropdown-link">อาจารย์ที่ปรึกษา</a></li>
-                            <li><a href="https://workload.uru.ac.th/" target="_blank" class="nav__dropdown-link">ภาระงาน</a></li>
-                            <li><a href="https://sci.uru.ac.th/docs/qa2568.pdf" target="_blank" class="nav__dropdown-link">ประกันคุณภาพ</a></li>
-                            <li><a href="https://ph03.tci-thaijo.org/index.php/ajsas" target="_blank" class="nav__dropdown-link">วารสารวิทยาศาสตร์ฯ (AJSAS)</a></li>
-                            <li><a href="http://www.rmj.uru.ac.th/" target="_blank" class="nav__dropdown-link">วารสารคณิตศาสตร์ (RMS)</a></li>
-                            <li><a href="https://sci.uru.ac.th/academic" target="_blank" class="nav__dropdown-link">ตำแหน่งทางวิชาการ</a></li>
-                        </ul>
-                    </li>
                     <li><a href="<?= base_url('news') ?>" class="nav__link <?= ($active_page ?? '') === 'news' ? 'active' : '' ?>">ข่าว</a></li>
                     <li class="nav__item--has-dropdown">
-                        <a href="<?= base_url('personnel') ?>" class="nav__link <?= in_array($active_page ?? '', ['personnel', 'executives']) ? 'active' : '' ?>">
-                            บุคลากร
-                            <svg style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-left:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                        </a>
+                        <a href="<?= base_url('personnel') ?>" class="nav__link <?= in_array($active_page ?? '', ['personnel', 'executives']) ? 'active' : '' ?>">บุคลากร <?= $navSvg ?></a>
                         <ul class="nav__dropdown">
                             <li><a href="<?= base_url('executives') ?>" class="nav__dropdown-link">ผู้บริหาร</a></li>
                             <li><a href="<?= base_url('personnel') ?>" class="nav__dropdown-link">บุคลากร</a></li>
                         </ul>
                     </li>
                     <li class="nav__item--has-dropdown">
-                        <a href="#" class="nav__link <?= in_array(($active_page ?? ''), ['support-documents', 'official-documents', 'promotion-criteria']) ? 'active' : '' ?>">
-                            เอกสาร
-                            <svg style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-left:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                        </a>
+                        <a href="#" class="nav__link">บริการ <?= $navSvg ?></a>
+                        <ul class="nav__dropdown">
+                            <li class="nav__item--has-dropdown nav__item--has-subdropdown">
+                                <span class="nav__dropdown-link nav__dropdown-link--subtrigger">ระบบและวารสาร</span>
+                                <ul class="nav__dropdown nav__dropdown--sub">
+                                    <li><a href="http://edoc.sci.uru.ac.th/" target="_blank" class="nav__dropdown-link" rel="noopener">งานวิชาการ (e-Doc)</a></li>
+                                    <li><a href="http://sci.uru.ac.th/scienceadmin" target="_blank" class="nav__dropdown-link" rel="noopener">ฐานข้อมูลบริหาร</a></li>
+                                    <li><a href="https://advisor.uru.ac.th" target="_blank" class="nav__dropdown-link" rel="noopener">อาจารย์ที่ปรึกษา</a></li>
+                                    <li><a href="https://workload.uru.ac.th/" target="_blank" class="nav__dropdown-link" rel="noopener">ภาระงาน</a></li>
+                                    <li><a href="https://sci.uru.ac.th/docs/qa2568.pdf" target="_blank" class="nav__dropdown-link" rel="noopener">ประกันคุณภาพ</a></li>
+                                    <li><a href="https://ph03.tci-thaijo.org/index.php/ajsas" target="_blank" class="nav__dropdown-link" rel="noopener">วารสารวิทยาศาสตร์ฯ (AJSAS)</a></li>
+                                    <li><a href="http://www.rmj.uru.ac.th/" target="_blank" class="nav__dropdown-link" rel="noopener">วารสารคณิตศาสตร์ (RMS)</a></li>
+                                    <li><a href="https://sci.uru.ac.th/academic" target="_blank" class="nav__dropdown-link" rel="noopener">ตำแหน่งทางวิชาการ</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav__item--has-dropdown nav__item--has-subdropdown">
+                                <span class="nav__dropdown-link nav__dropdown-link--subtrigger">เว็บหน่วยงาน</span>
+                                <ul class="nav__dropdown nav__dropdown--sub">
+                                    <li><a href="http://202.29.52.60/~dicenter" target="_blank" class="nav__dropdown-link" rel="noopener">ศูนย์ดิจิทัลเพื่อพัฒนาท้องถิ่น</a></li>
+                                    <li><a href="https://www.facebook.com/ScienceRMUURU" target="_blank" class="nav__dropdown-link" rel="noopener">หน่วยจัดการงานวิจัยและพันธกิจสัมพันธ์</a></li>
+                                    <li><a href="https://sci.uru.ac.th/csrm" target="_blank" class="nav__dropdown-link" rel="noopener">ศูนย์ประสานงานโครงการ CSRM</a></li>
+                                    <li><a href="http://scirmu.sci.uru.ac.th/" target="_blank" class="nav__dropdown-link" rel="noopener">ศูนย์พลังงานและสิ่งแวดล้อม</a></li>
+                                    <li><a href="https://sci.uru.ac.th/scienceweek" target="_blank" class="nav__dropdown-link" rel="noopener">สัปดาห์วิทยาศาสตร์แห่งชาติ</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav__item--has-dropdown nav__item--has-subdropdown">
+                                <span class="nav__dropdown-link nav__dropdown-link--subtrigger">ลิงก์ด่วน</span>
+                                <ul class="nav__dropdown nav__dropdown--sub">
+                                    <li><a href="#" class="nav__dropdown-link">นักศึกษา</a></li>
+                                    <li><a href="#" class="nav__dropdown-link">บุคลากร (ม.ราชภัฏ)</a></li>
+                                    <li><a href="#" class="nav__dropdown-link">ศิษย์เก่า</a></li>
+                                    <li><a href="http://old.sci.uru.ac.th" class="nav__dropdown-link" target="_blank" rel="noopener">เว็บคณะเดิม</a></li>
+                                    <?php if (session()->get('admin_logged_in')): ?>
+                                        <li><a href="<?= base_url('dashboard') ?>" class="nav__dropdown-link">การจัดการ</a></li>
+                                        <li><a href="<?= base_url('admin/logout') ?>" class="nav__dropdown-link">ออกจากระบบ</a></li>
+                                    <?php else: ?>
+                                        <li><a href="<?= base_url('admin/login') ?>" class="nav__dropdown-link">เข้าสู่ระบบ</a></li>
+                                    <?php endif; ?>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav__item--has-dropdown">
+                        <a href="<?= base_url('support-documents') ?>" class="nav__link <?= in_array(($active_page ?? ''), ['support-documents', 'official-documents', 'promotion-criteria']) ? 'active' : '' ?>">เอกสาร <?= $navSvg ?></a>
                         <ul class="nav__dropdown">
                             <li><a href="<?= base_url('support-documents') ?>" class="nav__dropdown-link">แบบฟอร์มดาวน์โหลด</a></li>
                             <li><a href="<?= base_url('internal-documents') ?>" class="nav__dropdown-link">เอกสารภายในมหาวิทยาลัย</a></li>
@@ -218,27 +228,15 @@
                             <li><a href="<?= base_url('promotion-criteria') ?>" class="nav__dropdown-link">เกณฑ์การประเมินบุคคล</a></li>
                         </ul>
                     </li>
-                    
                     <li class="nav__item--has-dropdown">
-                        <a href="#" class="nav__link">
-                            เว็บไซต์หน่วยงาน
-                            <svg style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-left:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                        </a>
+                        <a href="<?= base_url('about') ?>" class="nav__link <?= in_array($active_page ?? '', ['about', 'contact']) ? 'active' : '' ?>">เกี่ยวกับ <?= $navSvg ?></a>
                         <ul class="nav__dropdown">
-                            <li><a href="http://202.29.52.60/~dicenter" target="_blank" class="nav__dropdown-link">ศูนย์ดิจิทัลเพื่อพัฒนาท้องถิ่น</a></li>
-                            <li><a href="https://www.facebook.com/ScienceRMUURU" target="_blank" class="nav__dropdown-link">หน่วยจัดการงานวิจัยและพันธกิจสัมพันธ์</a></li>
-                            <li><a href="https://ph03.tci-thaijo.org/index.php/ajsas" target="_blank" class="nav__dropdown-link">วารสารวิชาการวิทยาศาสตร์ฯ</a></li>
-                            <li><a href="http://www.rmj.uru.ac.th/" target="_blank" class="nav__dropdown-link">วารสารคณิตศาสตร์ราชภัฏ</a></li>
-                            <li><a href="https://sci.uru.ac.th/csrm" target="_blank" class="nav__dropdown-link">ศูนย์ประสานงานโครงการ CSRM</a></li>
-                            <li><a href="http://scirmu.sci.uru.ac.th/" target="_blank" class="nav__dropdown-link">ศูนย์พลังงานและสิ่งแวดล้อม</a></li>
-                            <li><a href="https://sci.uru.ac.th/scienceweek" target="_blank" class="nav__dropdown-link">สัปดาห์วิทยาศาสตร์แห่งชาติ</a></li>
+                            <li><a href="<?= base_url('about') ?>" class="nav__dropdown-link">เกี่ยวกับเรา</a></li>
+                            <li><a href="<?= base_url('contact') ?>" class="nav__dropdown-link">ติดต่อ</a></li>
                         </ul>
                     </li>
-
-                    <li><a href="<?= base_url('about') ?>" class="nav__link <?= ($active_page ?? '') === 'about' ? 'active' : '' ?>">เกี่ยวกับ</a></li>
-                    <li><a href="<?= base_url('contact') ?>" class="nav__link <?= ($active_page ?? '') === 'contact' ? 'active' : '' ?>">ติดต่อ</a></li>
                 </ul>
-                
+
                 <!-- Search Button -->
                 <button class="nav__search" aria-label="ค้นหา">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -246,7 +244,7 @@
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
                 </button>
-                
+
                 <!-- Mobile Menu Toggle -->
                 <button class="menu-toggle" aria-label="เมนู">
                     <span></span>
@@ -261,13 +259,7 @@
     <div class="mobile-nav">
         <div class="mobile-nav__header">
             <a href="<?= base_url() ?>" class="logo">
-                <div class="logo__icon">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor"/>
-                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2"/>
-                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                </div>
+                <img src="<?= esc($logo) ?>" alt="Logo คณะวิทยาศาสตร์และเทคโนโลยี" class="logo__img" style="height: 40px; width: auto;">
                 <div class="logo__text">คณะวิทยาศาสตร์ฯ</div>
             </a>
             <button class="mobile-nav__close" aria-label="ปิดเมนู">
@@ -278,6 +270,11 @@
             </button>
         </div>
         <ul class="mobile-nav__list">
+            <li><a href="#" class="mobile-nav__link">นักศึกษา</a></li>
+            <li><a href="#" class="mobile-nav__link">บุคลากร</a></li>
+            <li><a href="#" class="mobile-nav__link">ศิษย์เก่า</a></li>
+            <li><a href="http://old.sci.uru.ac.th" class="mobile-nav__link" target="_blank" rel="noopener noreferrer">เว็บคณะเดิม</a></li>
+            <li class="mobile-nav__divider" role="presentation"></li>
             <li><a href="<?= base_url() ?>" class="mobile-nav__link">หน้าแรก</a></li>
             <li><a href="<?= base_url('academics') ?>" class="mobile-nav__link">หลักสูตร</a></li>
             <li><a href="<?= base_url('research') ?>" class="mobile-nav__link">วิจัย</a></li>
@@ -291,14 +288,20 @@
             <li><a href="<?= base_url('promotion-criteria') ?>" class="mobile-nav__link" style="padding-left: 2rem;">เกณฑ์การประเมินบุคคล</a></li>
             <li><a href="<?= base_url('about') ?>" class="mobile-nav__link">เกี่ยวกับ</a></li>
             <li><a href="<?= base_url('contact') ?>" class="mobile-nav__link">ติดต่อ</a></li>
-            <li><a href="<?= base_url('admission') ?>" class="mobile-nav__link">สมัครเรียน</a></li>
+            <li><a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener noreferrer" class="mobile-nav__link">สมัครเรียน</a></li>
+            <?php if (session()->get('admin_logged_in')): ?>
+                <li><a href="<?= base_url('dashboard') ?>" class="mobile-nav__link">การจัดการ</a></li>
+                <li><a href="<?= base_url('admin/logout') ?>" class="mobile-nav__link">ออกจากระบบ</a></li>
+            <?php else: ?>
+                <li><a href="<?= base_url('admin/login') ?>" class="mobile-nav__link">เข้าสู่ระบบ</a></li>
+            <?php endif; ?>
         </ul>
     </div>
 
     <!-- Search Modal -->
     <div class="search-modal">
         <div class="search-modal__content">
-            <input type="text" class="search-modal__input" placeholder="ค้นหา...">
+            <input type="text" class="search-modal__input" placeholder="ค้นหา…">
         </div>
     </div>
 
@@ -323,9 +326,11 @@
                     </p>
                     <div class="footer__social">
                         <?php if (!empty($settings['facebook'])): ?>
-                        <a href="<?= esc($settings['facebook']) ?>" class="footer__social-link" aria-label="Facebook" target="_blank">
-                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-                        </a>
+                            <a href="<?= esc($settings['facebook']) ?>" class="footer__social-link" aria-label="Facebook" target="_blank">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                                </svg>
+                            </a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -334,9 +339,9 @@
                 <div class="footer__column">
                     <h4>หลักสูตร</h4>
                     <ul class="footer__links">
-                        <li><a href="<?= base_url('academics') ?>" class="footer__link">ปริญญาตรี</a></li>
-                        <li><a href="<?= base_url('academics') ?>" class="footer__link">ปริญญาโท</a></li>
-                        <li><a href="<?= base_url('academics') ?>" class="footer__link">ปริญญาเอก</a></li>
+                        <li><a href="<?= base_url('academics#bachelor') ?>" class="footer__link">ปริญญาตรี</a></li>
+                        <li><a href="<?= base_url('academics#master') ?>" class="footer__link">ปริญญาโท</a></li>
+                        <li><a href="<?= base_url('academics#doctorate') ?>" class="footer__link">ปริญญาเอก</a></li>
                     </ul>
                 </div>
 
@@ -358,7 +363,7 @@
                     <ul class="footer__links">
                         <li><a href="<?= base_url('news') ?>" class="footer__link">ข่าวประชาสัมพันธ์</a></li>
                         <li><a href="<?= base_url('research') ?>" class="footer__link">งานวิจัย</a></li>
-                        <li><a href="<?= base_url('admission') ?>" class="footer__link">สมัครเรียน</a></li>
+                        <li><a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener noreferrer" class="footer__link">สมัครเรียน</a></li>
                         <li><a href="<?= base_url('contact') ?>" class="footer__link">ติดต่อเรา</a></li>
                     </ul>
                 </div>
@@ -391,20 +396,79 @@
     </footer>
 
     <!-- Scripts -->
+    <!-- อัปเดต Resolution เมื่อ resize / orientation / visualViewport (มือถือ) -->
+    <script>
+        (function() {
+            var body = document.body;
+
+            function applyResolution() {
+                var w = window.innerWidth;
+                var h = window.innerHeight;
+                var dpr = window.devicePixelRatio || 1;
+                if (typeof window.visualViewport !== 'undefined') {
+                    w = window.visualViewport.width;
+                    h = window.visualViewport.height;
+                }
+                var sizeClasses = ['is-small-phone', 'is-phone', 'is-phablet', 'is-tablet', 'is-laptop', 'is-desktop', 'is-large-desktop', 'is-mobile', 'is-desktop-view', 'is-landscape', 'is-portrait'];
+                sizeClasses.forEach(function(c) {
+                    body.classList.remove(c);
+                });
+                if (w < 480) body.classList.add('is-small-phone');
+                else if (w < 640) body.classList.add('is-phone');
+                else if (w < 768) body.classList.add('is-phablet');
+                else if (w < 1024) body.classList.add('is-tablet');
+                else if (w < 1200) body.classList.add('is-laptop');
+                else if (w < 1440) body.classList.add('is-desktop');
+                else body.classList.add('is-large-desktop');
+                body.classList.add(w < 768 ? 'is-mobile' : 'is-desktop-view');
+                body.classList.add(w > h ? 'is-landscape' : 'is-portrait');
+                document.documentElement.style.setProperty('--device-width', w + 'px');
+                document.documentElement.style.setProperty('--device-height', h + 'px');
+                document.documentElement.style.setProperty('--device-dpr', String(dpr));
+                document.documentElement.style.setProperty('--screen-width', (window.screen && window.screen.width ? window.screen.width : w) + 'px');
+                document.documentElement.style.setProperty('--screen-height', (window.screen && window.screen.height ? window.screen.height : h) + 'px');
+            }
+            var timer;
+
+            function debouncedApply() {
+                clearTimeout(timer);
+                timer = setTimeout(applyResolution, 100);
+            }
+            window.addEventListener('resize', debouncedApply);
+            window.addEventListener('orientationchange', function() {
+                setTimeout(applyResolution, 150);
+            });
+            if (typeof window.visualViewport !== 'undefined') {
+                window.visualViewport.addEventListener('resize', debouncedApply);
+                window.visualViewport.addEventListener('scroll', debouncedApply);
+            }
+        })();
+    </script>
+
     <!-- jQuery (Local) -->
     <script src="<?= base_url('assets/js/jquery.min.js') ?>"></script>
-    
+
     <!-- Base URL for API -->
     <script>
         window.BASE_URL = '<?= base_url() ?>';
     </script>
-    
+
     <!-- University API Module -->
     <script src="<?= base_url('assets/js/api.js') ?>"></script>
-    
+
     <!-- Main Scripts -->
     <script src="<?= base_url('assets/js/main.js') ?>"></script>
+    <!-- Silent Auto-Login Iframes (trigger login on other apps) -->
+    <?php if (session()->getFlashdata('sso_autologin_urls')): ?>
+        <div style="width:0;height:0;overflow:hidden;position:absolute;">
+            <?php foreach (session()->getFlashdata('sso_autologin_urls') as $ssoUrl): ?>
+                <iframe src="<?= esc($ssoUrl) ?>" style="width:0;height:0;border:0;"></iframe>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
     <!-- SPA Logic -->
     <script src="<?= base_url('assets/js/app.js') ?>"></script>
 </body>
+
 </html>

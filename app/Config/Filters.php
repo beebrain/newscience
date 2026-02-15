@@ -35,6 +35,10 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'adminauth'     => \App\Filters\AdminAuthFilter::class,
+        'loggedin'      => \App\Filters\LoggedInFilter::class,
+        'studentauth'   => \App\Filters\StudentAuthFilter::class,
+        'studentadmin'  => \App\Filters\StudentAdminFilter::class,
+        'programadmin'  => \App\Filters\ProgramAdminFilter::class,
     ];
 
     /**

@@ -1,0 +1,1312 @@
+/* pages.css - part of style.css split */
+
+/* ================================
+   Page: Personnel (บุคลากรตามหลักสูตร)
+   ================================ */
+.personnel-page {
+    font-family: var(--font-primary);
+    background: var(--color-gray-100);
+    min-height: 100vh;
+    padding: 2rem 1.5rem;
+}
+
+.personnel-page * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.personnel-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.personnel-header__title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-gray-900);
+}
+
+.personnel-header__subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+/* แถบไอคอน 3 หน่วยงาน: หลักสูตร, หน่วยจัดการงานวิจัย, สำนักงานคณบดี */
+.personnel-unit-icons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.personnel-unit-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+    min-width: 100px;
+    border-radius: 12px;
+    border: 2px solid var(--color-gray-200, #e5e7eb);
+    background: #fff;
+    color: var(--color-gray-700);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+    cursor: pointer;
+    font-family: inherit;
+}
+button.personnel-unit-icon {
+    appearance: none;
+    -webkit-appearance: none;
+}
+.personnel-unit-icon:hover {
+    border-color: var(--color-primary, #2563eb);
+    background: rgba(37, 99, 235, 0.06);
+    color: var(--color-primary, #2563eb);
+}
+.personnel-unit-icon--active,
+.personnel-unit-icon:focus {
+    border-color: var(--color-primary, #2563eb);
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--color-primary, #2563eb);
+}
+.personnel-unit-icon__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+}
+.personnel-unit-icon__icon svg {
+    flex-shrink: 0;
+}
+.personnel-unit-icon__label {
+    text-align: center;
+    line-height: 1.2;
+}
+
+.personnel-unit-heads {
+    max-width: 1200px;
+    margin: 0 auto 3rem;
+}
+
+.personnel-unit-heads__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-gray-800);
+    margin: 2rem 0 1rem;
+    text-align: center;
+}
+
+.personnel-unit-heads__title:first-child {
+    margin-top: 0;
+}
+
+.personnel-unit-heads__grid {
+    margin-bottom: 1rem;
+}
+
+.personnel-section-title {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 0 0 1rem;
+    text-align: center;
+}
+
+/* บุคลากรตามหลักสูตร / หน่วยงาน — merge ตาม department */
+.personnel-dept-section {
+    max-width: 1200px;
+    margin: 0 auto 2.5rem;
+    scroll-margin-top: 1rem;
+}
+.personnel-dept-section__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-gray-800);
+    margin: 1.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--color-gray-200, #e5e7eb);
+}
+.personnel-dept-section:first-child .personnel-dept-section__title {
+    margin-top: 0;
+}
+.personnel-dept-section--hidden {
+    display: none;
+}
+
+.program-icons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* แท็บชื่อหลักสูตร (หน้า personnel) — แสดงชื่อตรงๆ เล็ก กระชับ */
+.program-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.program-tabs--names {
+    gap: 0.4rem;
+}
+
+.program-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.85rem;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    font-family: inherit;
+    color: var(--color-gray-600);
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.program-tab:hover {
+    color: var(--color-gray-800);
+    border-color: var(--color-chair);
+    background: rgba(237, 233, 254, 0.4);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.program-tab.active {
+    color: var(--color-chair);
+    font-weight: 600;
+    border-color: var(--color-chair);
+    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
+}
+
+.program-tab__label {
+    max-width: 12em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+    .program-tabs--names .program-tab {
+        padding: 0.4rem 0.7rem;
+        font-size: 0.75rem;
+    }
+    .program-tab__label {
+        max-width: 10em;
+    }
+}
+
+/* Events list page: row on desktop, column on mobile */
+.event-list-card {
+    display: flex;
+    flex-direction: row;
+}
+.event-list-card__date-block {
+    background: var(--color-primary);
+    padding: var(--spacing-6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+}
+.event-list-card__date-block span:first-child {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--color-dark);
+}
+.event-list-card__date-block span:last-child {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-dark);
+    text-transform: uppercase;
+}
+.event-list-card .card__content {
+    flex: 1;
+}
+@media (max-width: 768px) {
+    .event-list-card {
+        flex-direction: column;
+    }
+    .event-list-card__date-block {
+        min-width: 100%;
+        flex-direction: row;
+        gap: var(--spacing-4);
+    }
+}
+
+/* ไอคอนหลักสูตรแบบเล็ก (ใช้ที่อื่นถ้ามี) */
+.program-icons--compact {
+    gap: 0.6rem;
+    margin-bottom: 2rem;
+}
+
+.program-icon--compact {
+    width: 48px;
+    min-height: 48px;
+    padding: 0.4rem;
+    border-radius: 12px;
+}
+
+.program-icon__name--tooltip-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.program-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 90px;
+    min-height: 90px;
+    padding: 0.75rem;
+    background: var(--color-white);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 2px solid transparent;
+    text-decoration: none;
+    color: var(--color-gray-600);
+}
+
+.program-icon:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-3px);
+    color: var(--color-gray-800);
+}
+
+.program-icon.active {
+    border-color: var(--color-chair);
+    background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+    color: var(--color-chair);
+    font-weight: 600;
+}
+
+.program-icon__symbol {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #c4b5fd, var(--color-chair));
+    color: var(--color-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.program-icon__name {
+    font-size: 0.7rem;
+    line-height: 1.3;
+    text-align: center;
+    word-break: break-word;
+}
+
+.program-content {
+    display: none;
+    max-width: 1300px;
+    margin: 0 auto 3rem;
+}
+
+.program-content.active {
+    display: block;
+}
+
+.program-content__title {
+    text-align: center;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.personnel-main-grid {
+    display: flex;
+    flex-direction: column;
+    max-width: 1300px;
+    margin: 0 auto;
+    gap: 0;
+}
+
+.personnel-chair-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 200px;
+    padding-bottom: 1rem;
+}
+
+.personnel-list-area {
+    width: 100%;
+    padding-top: 80px;
+}
+
+.personnel-list-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6rem 1.5rem;
+    justify-content: center;
+}
+
+/* Layout เหมือนหน้าโครงสร้างองค์กร: การ์ดใหญ่ซ้าย + กริดการ์ดขวา (team-card + ป้ายสีเหลือง) */
+.personnel-main-grid--exec-style {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    grid-template-rows: auto;
+    gap: 2rem;
+    max-width: 1300px;
+    margin: 0 auto;
+    align-items: start;
+    padding-top: 0;
+}
+
+.personnel-main-grid--exec-style .personnel-chair-area {
+    grid-column: 1;
+    padding-top: 0;
+    padding-bottom: 0;
+    justify-content: center;
+    align-items: stretch;
+}
+
+.personnel-main-grid--exec-style .personnel-chair-area .team-card {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    display: block;
+}
+
+.personnel-main-grid--exec-style .personnel-chair-area .team-card__image-wrap {
+    aspect-ratio: auto;
+    min-height: 320px;
+}
+
+.personnel-main-grid--exec-style .personnel-list-area {
+    grid-column: 2;
+    padding-top: 0;
+}
+
+.personnel-main-grid--exec-style .personnel-list-area .team-grid.personnel-team-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem 1.25rem;
+    padding-top: 0;
+}
+
+/* Layout บุคลากร: ประธานหลักสูตรตรงกลางบนสุด, อาจารย์ด้านล่าง 4 คอลัมน์ ขนาดรูปเท่ากัน */
+.personnel-grid-4col {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem 1.25rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: start;
+}
+
+.personnel-grid-4col .personnel-grid-cell--chair {
+    grid-column: 2 / 4;
+    grid-row: 1;
+    justify-self: center;
+    max-width: 280px;
+}
+
+.personnel-grid-4col .personnel-grid-cell--chair .team-card,
+.personnel-grid-4col .personnel-grid-cell .team-card {
+    width: 100%;
+}
+
+/* ทุกการ์ด (ประธาน + อาจารย์) ขนาดรูปเท่ากัน */
+.personnel-grid-4col .personnel-grid-cell--chair .team-card__image-wrap,
+.personnel-grid-4col .personnel-grid-cell .team-card__image-wrap {
+    aspect-ratio: 4 / 5;
+    min-height: 220px;
+}
+
+.personnel-grid-4col .personnel-empty-hint.personnel-grid-cell--full {
+    grid-column: 1 / -1;
+}
+
+/* Legacy 3col (เก็บไว้ถ้ามีที่อื่นใช้) */
+.personnel-grid-3col {
+    display: grid;
+    grid-template-columns: 320px 1fr 1fr;
+    gap: 1.5rem 1.25rem;
+    max-width: 1300px;
+    margin: 0 auto;
+    align-items: start;
+}
+
+.personnel-grid-3col .personnel-grid-cell--chair {
+    grid-column: 1;
+    grid-row: 1 / 3;
+}
+
+.personnel-grid-3col .personnel-grid-cell--chair .team-card__image-wrap {
+    aspect-ratio: auto;
+    min-height: 300px;
+}
+
+.personnel-grid-3col .personnel-grid-cell--r1c2 { grid-column: 2; grid-row: 1; }
+.personnel-grid-3col .personnel-grid-cell--r1c3 { grid-column: 3; grid-row: 1; }
+.personnel-grid-3col .personnel-grid-cell--r2c2 { grid-column: 2; grid-row: 2; }
+.personnel-grid-3col .personnel-grid-cell--r2c3 { grid-column: 3; grid-row: 2; }
+
+.personnel-empty-hint {
+    text-align: center;
+    color: var(--text-secondary, #94a3b8);
+    padding: 2rem;
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .personnel-grid-4col {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .personnel-grid-4col .personnel-grid-cell--chair {
+        grid-column: 1 / -1;
+        justify-self: center;
+    }
+
+    .personnel-grid-4col .personnel-grid-cell[style*="grid-column"] {
+        grid-column: auto !important;
+        grid-row: auto !important;
+    }
+
+    .personnel-grid-3col {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .personnel-grid-3col .personnel-grid-cell--chair {
+        grid-column: 1 / -1;
+        grid-row: auto;
+        max-width: 280px;
+        margin: 0 auto;
+    }
+
+    .personnel-grid-3col .personnel-grid-cell--r1c2,
+    .personnel-grid-3col .personnel-grid-cell--r1c3,
+    .personnel-grid-3col .personnel-grid-cell--r2c2,
+    .personnel-grid-3col .personnel-grid-cell--r2c3,
+    .personnel-grid-3col .personnel-grid-cell[style*="grid-row"] {
+        grid-column: span 1 !important;
+        grid-row: auto !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .personnel-grid-4col {
+        grid-template-columns: 1fr;
+    }
+
+    .personnel-grid-4col .personnel-grid-cell--chair {
+        max-width: 100%;
+    }
+
+    .personnel-grid-3col {
+        grid-template-columns: 1fr;
+    }
+
+    .personnel-grid-3col .personnel-grid-cell--chair {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 900px) {
+    .personnel-main-grid--exec-style {
+        grid-template-columns: 1fr;
+    }
+
+    .personnel-main-grid--exec-style .personnel-chair-area {
+        grid-column: 1;
+        max-width: 320px;
+        margin: 0 auto;
+    }
+
+    .personnel-main-grid--exec-style .personnel-list-area {
+        grid-column: 1;
+    }
+
+    .personnel-main-grid--exec-style .personnel-list-area .team-grid.personnel-team-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .personnel-main-grid--exec-style .personnel-list-area .team-grid.personnel-team-grid {
+        grid-template-columns: 1fr;
+        max-width: 280px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+.personnel-footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.8rem;
+    color: var(--color-gray-500);
+}
+
+.exec-card {
+    background: var(--color-white);
+    border-radius: 24px;
+    padding: 7.5rem 1.25rem 1.25rem;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s ease;
+    border: none;
+    min-width: 200px;
+    flex: 1 1 200px;
+    position: relative;
+}
+
+.exec-card:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    transform: translateY(-6px);
+}
+
+.exec-card--chair {
+    width: 260px;
+    padding: 9rem 1.5rem 1.5rem;
+}
+
+.exec-card--chair .exec-card__name {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.exec-card--chair .exec-card__position {
+    font-size: 0.8rem;
+    color: var(--color-chair);
+}
+
+.exec-card__photo-wrap {
+    width: 120px;
+    height: 160px;
+    border-radius: 12px;
+    padding: 4px;
+    background: linear-gradient(135deg, var(--color-gray-200), var(--color-gray-300));
+    position: absolute;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.exec-card__photo-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--color-gray-100);
+    transition: transform 0.4s ease;
+}
+.exec-card:hover .exec-card__photo-inner {
+    transform: scale(1.05);
+}
+
+.exec-card__photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 15%;
+    transform: scale(1.35);
+    transform-origin: center 25%;
+}
+
+.exec-card__photo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-gray-200);
+}
+
+.exec-card__photo-placeholder svg {
+    fill: var(--color-gray-500);
+}
+
+.exec-card__name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-gray-800);
+    line-height: 1.4;
+    margin-bottom: 0.25rem;
+    position: relative;
+    z-index: 1;
+}
+
+.exec-card__position {
+    font-size: 0.7rem;
+    font-weight: 500;
+    line-height: 1.4;
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 900px) {
+    .personnel-chair-area {
+        padding-top: 160px;
+    }
+
+    .personnel-list-row {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 640px) {
+    .personnel-page {
+        padding: 1rem;
+    }
+
+    .program-icon {
+        width: 80px;
+        min-height: 80px;
+    }
+
+    .program-icon__name {
+        font-size: 0.65rem;
+    }
+
+    .program-icon--compact {
+        width: 44px;
+        min-height: 44px;
+    }
+
+    .program-icon--compact .program-icon__symbol {
+        width: 24px;
+        height: 24px;
+        font-size: 0.85rem;
+    }
+}
+
+/* ================================
+   Page: Executives (โครงสร้างองค์กร)
+   ================================ */
+.exec-page {
+    font-family: var(--font-primary);
+    background: var(--color-gray-100);
+    min-height: 100vh;
+    padding: 2rem 1.5rem;
+}
+
+.exec-page * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.exec-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.exec-header__title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-gray-900);
+}
+
+.exec-header__subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.executives-error {
+    text-align: center;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    background: var(--color-gray-200, #e2e8f0);
+    border-radius: 8px;
+    color: var(--color-gray-800, #1e293b);
+}
+
+.executives-error p {
+    margin: 0 0 0.75rem;
+}
+
+.executives-retry-btn {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    background: var(--color-primary, #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+}
+
+.executives-retry-btn:hover {
+    opacity: 0.9;
+}
+
+.executives-loading {
+    color: var(--text-secondary, #64748b);
+    font-size: 0.95rem;
+}
+
+.executives-empty {
+    text-align: center;
+    padding: 4rem;
+    color: var(--text-secondary, #94a3b8);
+}
+
+.exec-main-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2rem;
+    max-width: 1300px;
+    margin: 0 auto 3rem;
+    align-items: stretch;
+    min-height: 600px;
+}
+
+.exec-dean-area {
+    grid-row: 1 / 3;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    padding-top: 0;
+}
+
+/* คณบดี: การ์ดเต็มความสูง 2 แถว */
+.exec-dean-area .team-card {
+    width: 100%;
+    max-width: 320px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+}
+
+.exec-dean-area .team-card__image-wrap {
+    aspect-ratio: auto;
+    flex: 1;
+    min-height: 280px;
+}
+
+.exec-vice-area {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.exec-asst-area {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.exec-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 1.25rem;
+    justify-content: flex-start;
+    padding-top: 1rem;
+}
+
+.exec-row .team-card {
+    flex: 1 1 200px;
+    max-width: 280px;
+    min-width: 180px;
+}
+
+.tier-section {
+    max-width: 1200px;
+    margin: 0 auto 2rem;
+}
+
+/* Humaan-style About Team section (page_about-team): grid of equal cards, image on top */
+.page-about-team {
+    max-width: 1200px;
+    margin: 0 auto 3rem;
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem 1.25rem;
+    padding-top: 1rem;
+}
+
+.team-card {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    text-align: center;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.team-card:hover {
+    transform: translateY(-4px);
+}
+
+.team-card__image-wrap {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--color-gray-200);
+    position: relative;
+    transition: transform 0.4s ease;
+}
+
+.team-card:hover .team-card__image-wrap {
+    transform: scale(1.03);
+}
+
+.team-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 15%;
+    display: block;
+}
+
+/* ป้ายชื่อภายในกรอบรูป: พื้นหลังสีเหลือง ลอยจากขอบล่าง ตำแหน่งสีต่างจากชื่อ */
+.team-card__label {
+    position: absolute;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: linear-gradient(135deg, #fef9c3 0%, #fde047 50%, #facc15 100%);
+    color: var(--color-gray-900);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    border-radius: 12px;
+    line-height: 1.3;
+    border: 1px solid rgba(253, 224, 71, 0.6);
+    box-shadow: 0 4px 14px rgba(234, 179, 8, 0.22), 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.team-card__label-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-gray-900);
+}
+
+.team-card__label-role {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--color-gray-600);
+}
+
+@media (max-width: 1024px) {
+    .team-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .team-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .team-grid {
+        grid-template-columns: 1fr;
+        max-width: 280px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+.tier-title {
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 4rem 0 2rem;
+    position: relative;
+}
+
+.tier-title::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 4px;
+    background: var(--color-gray-300);
+    margin: 0.75rem auto 0;
+    border-radius: 2px;
+}
+
+.exec-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6rem 1.5rem;
+    padding-top: 80px;
+}
+
+.exec-card--dean {
+    width: 260px;
+    padding: 11.5rem 1.5rem 1.5rem;
+}
+
+.exec-card--dean .exec-card__name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.exec-card--dean .exec-card__position {
+    font-size: 0.8rem;
+}
+
+.exec-card--dean .exec-card__photo-wrap {
+    width: 240px;
+    height: 320px;
+    top: -180px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #fda4af, var(--color-dean));
+}
+
+.exec-card--dean .exec-card__photo-inner {
+    border-radius: 12px;
+}
+
+@media (max-width: 900px) {
+    .exec-main-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+
+    .exec-dean-area {
+        grid-row: auto;
+        grid-column: 1;
+    }
+
+    .exec-dean-area .team-card {
+        height: auto;
+    }
+
+    .exec-dean-area .team-card__image-wrap {
+        flex: none;
+        aspect-ratio: 4 / 5;
+        min-height: 0;
+    }
+
+    .exec-vice-area,
+    .exec-asst-area {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .exec-row {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 640px) {
+    .exec-page {
+        padding: 1rem;
+    }
+
+    .exec-card {
+        width: 100%;
+        max-width: 280px;
+    }
+}
+
+/* ================================
+   Page: Academics (หลักสูตร) — Web Interface Guidelines
+   ================================ */
+/* Anchor targets: scroll-margin for focus/keyboard */
+#bachelor,
+#master,
+#doctorate {
+    scroll-margin-top: 2rem;
+}
+
+.academics-empty-hint {
+    text-align: center;
+    margin-top: 0.5rem;
+    color: var(--color-gray-600);
+}
+
+.program-department {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--color-gray-500);
+    margin-bottom: 0.25rem;
+}
+
+.program-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--color-primary-light), var(--primary));
+    border-radius: 16px;
+    color: var(--color-white);
+}
+
+.program-stat {
+    text-align: center;
+}
+
+.program-stat__number {
+    display: block;
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.program-stat__label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-top: 0.5rem;
+}
+
+/* Breadcrumb & CTA: focus-visible (never outline-none without replacement) */
+.page-header__breadcrumb a:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.program-degree-badge {
+    display: inline-block;
+    background: var(--color-primary-light);
+    color: var(--primary);
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    align-self: flex-start;
+}
+
+.program-degree-badge--master {
+    background: #DCFCE7;
+    color: #166534;
+}
+
+.program-degree-badge--doctorate {
+    background: #F3E8FF;
+    color: #6B21A8;
+}
+
+.program-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-gray-200);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.program-coordinator {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-gray-200);
+}
+
+.program-coordinator__label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.program-coordinator__person {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.program-coordinator__photo,
+.program-coordinator__photo-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.program-coordinator__photo-placeholder {
+    background: var(--color-gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-500);
+    font-size: 1rem;
+}
+
+.program-coordinator__name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--primary);
+}
+
+.program-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: var(--color-gray-100);
+    color: var(--primary);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.program-link:hover {
+    background-color: var(--primary);
+    color: var(--color-white);
+    text-decoration: none;
+}
+
+.program-link:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.cta-section__btn:focus-visible {
+    outline: 2px solid var(--color-white);
+    outline-offset: 2px;
+}
+
+.academics-page .program-card {
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--color-white);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.academics-page .program-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+.academics-page .card__image-wrapper {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+}
+
+.academics-page .card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.academics-page .program-card:hover .card__image {
+    transform: scale(1.1);
+}
+
+/* Honor prefers-reduced-motion (animation guidelines) */
+@media (prefers-reduced-motion: reduce) {
+    .academics-page .program-card,
+    .academics-page .program-card:hover {
+        transform: none;
+    }
+    .academics-page .card__image {
+        transition: none;
+    }
+    .academics-page .program-card:hover .card__image {
+        transform: none;
+    }
+}
+
+.academics-page .card__content {
+    padding: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.academics-page .section-header .section-header__title {
+    text-wrap: balance;
+}
+
+.academics-page .program-card .card__title {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+    min-height: 3rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.academics-page .program-card .card__excerpt {
+    font-size: 0.85rem;
+    color: var(--color-gray-600);
+    line-height: 1.6;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.academics-page .page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--hero-bg-url, url('../images/hero_background.png')) center/cover;
+    opacity: 0.15;
+}
+
+@media (max-width: 768px) {
+    .program-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}

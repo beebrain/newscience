@@ -31,10 +31,6 @@
                     <td><?= $results['counts']['site_settings'] ?></td>
                 </tr>
                 <tr>
-                    <th>Departments</th>
-                    <td><?= $results['counts']['departments'] ?></td>
-                </tr>
-                <tr>
                     <th>Programs</th>
                     <td><?= $results['counts']['programs'] ?></td>
                 </tr>

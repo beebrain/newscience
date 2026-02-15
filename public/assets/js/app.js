@@ -1,5 +1,8 @@
 $(document).ready(function () {
-    // SPA Logic: Intercept all internal links
+    // SPA Logic: Intercept all internal links (except admin pages which use different layout)
+    // SPA Logic: Intercept all internal links (except admin pages which use different layout)
+    /* 
+    // DISABLE SPA to ensure CSS loads correctly on every page change
     $(document).on('click', 'a', function (e) {
         let href = $(this).attr('href');
         let target = $(this).attr('target');
@@ -9,14 +12,22 @@ $(document).ready(function () {
             return;
         }
 
+        // Exclude admin pages - they use different layout, must do full page navigation
+        if (href.includes('/admin')) {
+            return; // Let browser handle normally
+        }
+
         // Check if link is internal (same domain)
         if (href.startsWith(window.BASE_URL) || href.startsWith('/')) {
             e.preventDefault();
             loadPage(href);
         }
     });
+    */
 
     // Handle Back/Forward buttons
+    // Handle Back/Forward buttons
+    /*
     window.onpopstate = function (event) {
         if (event.state && event.state.path) {
             loadPage(event.state.path, false);
@@ -25,6 +36,7 @@ $(document).ready(function () {
             window.location.reload();
         }
     };
+    */
 
     function loadPage(url, pushState = true) {
         // Show loading state (optional: add visible loader)

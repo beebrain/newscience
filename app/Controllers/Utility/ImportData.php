@@ -31,10 +31,10 @@ class ImportData extends BaseController
         $isCli = is_cli();
         
         if (!$isCli) {
-            // Web access - require admin auth
+            // Web access – ปกติใช้ filter adminauth; ตรวจสอบ session เดียวกับ Admin
             $session = session();
-            if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
-                return redirect()->to('/admin/auth/login')->with('error', 'Please login as admin');
+            if (!$session->get('admin_logged_in') || ($session->get('admin_role') !== 'admin' && $session->get('admin_role') !== 'editor')) {
+                return redirect()->to(base_url('admin/login'))->with('error', 'Please login to access.');
             }
         }
         
@@ -57,7 +57,6 @@ class ImportData extends BaseController
             'messages' => [],
             'counts' => [
                 'site_settings' => 0,
-                'departments' => 0,
                 'programs' => 0,
                 'news' => 0,
                 'quick_links' => 0,
@@ -92,13 +91,6 @@ class ImportData extends BaseController
             $count = $this->importSiteSettings($data['site_settings']);
             $results['counts']['site_settings'] = $count;
             $results['messages'][] = "Imported {$count} site settings";
-        }
-        
-        // Import departments
-        if (!empty($data['departments'])) {
-            $count = $this->importDepartments($data['departments']);
-            $results['counts']['departments'] = $count;
-            $results['messages'][] = "Imported {$count} departments";
         }
         
         // Import programs (new format with bachelor/master/doctorate)
@@ -211,43 +203,8 @@ class ImportData extends BaseController
     }
     
     /**
-     * Import departments
-     */
-    protected function importDepartments(array $departments): int
-    {
-        $count = 0;
-        
-        foreach ($departments as $index => $dept) {
-            $data = [
-                'name_th' => $dept['name_th'] ?? '',
-                'name_en' => $dept['name_en'] ?? '',
-                'code' => $dept['code'] ?? strtoupper(substr($dept['name_en'] ?? 'DEPT', 0, 4)),
-                'sort_order' => $index + 1,
-                'status' => 'active',
-            ];
-            
-            // Check if exists by code
-            $existing = $this->db->table('departments')
-                ->where('code', $data['code'])
-                ->get()
-                ->getRow();
-            
-            if ($existing) {
-                $this->db->table('departments')
-                    ->where('id', $existing->id)
-                    ->update($data);
-            } else {
-                $this->db->table('departments')->insert($data);
-            }
-            
-            $count++;
-        }
-        
-        return $count;
-    }
-    
-    /**
      * Import programs from organized format (bachelor/master/doctorate)
+     * Uses organization_unit_id: 4=bachelor, 5=graduate (master/doctorate)
      */
     protected function importProgramsOrganized(array $programs): int
     {
@@ -260,40 +217,31 @@ class ImportData extends BaseController
                 continue;
             }
             
+            $orgUnitId = ($level === 'bachelor') ? 4 : 5;
             foreach ($programs[$level] as $index => $prog) {
-                // Find department by code
-                $deptId = null;
-                if (!empty($prog['department_code'])) {
-                    $dept = $this->db->table('departments')
-                        ->where('code', $prog['department_code'])
-                        ->get()
-                        ->getRow();
-                    if ($dept) {
-                        $deptId = $dept->id;
-                    }
-                }
-                
                 $data = [
                     'name_th' => $prog['name_th'] ?? '',
                     'name_en' => $prog['name_en'] ?? '',
                     'degree_th' => $prog['degree_th'] ?? 'วิทยาศาสตรบัณฑิต',
                     'degree_en' => $prog['degree_en'] ?? 'Bachelor of Science',
                     'level' => $level,
-                    'department_id' => $deptId,
+                    'organization_unit_id' => $this->db->fieldExists('organization_unit_id', 'programs') ? $orgUnitId : null,
                     'description' => $prog['description_th'] ?? $prog['description'] ?? '',
                     'duration' => $prog['duration'] ?? ($level === 'bachelor' ? 4 : ($level === 'master' ? 2 : 3)),
                     'credits' => $prog['credits'] ?? 0,
                     'sort_order' => $count + 1,
                     'status' => 'active',
                 ];
-                
-                // Check if exists
+                if (! $this->db->fieldExists('organization_unit_id', 'programs')) {
+                    unset($data['organization_unit_id']);
+                }
+
                 $existing = $this->db->table('programs')
                     ->where('name_th', $data['name_th'])
                     ->where('level', $data['level'])
                     ->get()
                     ->getRow();
-                
+
                 if ($existing) {
                     $this->db->table('programs')
                         ->where('id', $existing->id)

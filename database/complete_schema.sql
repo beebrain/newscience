@@ -6,17 +6,20 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 -- ============================================
 -- User Table (already exists, included for reference)
+-- email = UNIQUE key สำหรับเชื่อมกับ App ภายนอกและ personnel
 -- ============================================
 CREATE TABLE IF NOT EXISTS `user` (
     `uid` INT(3) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     `login_uid` VARCHAR(255) DEFAULT NULL,
-    `email` VARCHAR(255) NOT NULL,
+    `email` VARCHAR(255) NOT NULL COMMENT 'UNIQUE; ใช้เป็น key เชื่อมกับ App ภายนอก',
     `password` VARCHAR(255) DEFAULT NULL,
     `title` VARCHAR(255) DEFAULT NULL,
     `gf_name` VARCHAR(255) DEFAULT NULL,
     `gl_name` VARCHAR(255) DEFAULT NULL,
     `tf_name` VARCHAR(255) DEFAULT NULL,
     `tl_name` VARCHAR(255) DEFAULT NULL,
+    `th_name` VARCHAR(255) DEFAULT NULL COMMENT 'ชื่อ (ไทย) แสดงเป็นหลัก',
+    `thai_lastname` VARCHAR(255) DEFAULT NULL COMMENT 'นามสกุล (ไทย)',
     `role` ENUM('admin', 'editor', 'user') DEFAULT 'user',
     `profile_image` VARCHAR(255) DEFAULT NULL,
     `status` ENUM('active', 'inactive') DEFAULT 'active',
@@ -34,40 +37,42 @@ CREATE TABLE IF NOT EXISTS `site_settings` (
     `setting_key` VARCHAR(100) NOT NULL,
     `setting_value` TEXT,
     `setting_type` ENUM('text', 'textarea', 'image', 'json') DEFAULT 'text',
+    `category` VARCHAR(100) DEFAULT 'general',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `setting_key` (`setting_key`)
+    UNIQUE KEY `setting_key` (`setting_key`),
+    KEY `category` (`category`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert default site settings
-INSERT INTO `site_settings` (`setting_key`, `setting_value`, `setting_type`) VALUES
-('site_name_th', 'คณะวิทยาศาสตร์และเทคโนโลยี', 'text'),
-('site_name_en', 'Faculty of Science and Technology', 'text'),
-('university_name_th', 'มหาวิทยาลัยราชภัฏอุตรดิตถ์', 'text'),
-('university_name_en', 'Uttaradit Rajabhat University', 'text'),
-('phone', '055-411096', 'text'),
-('fax', '055-411096 ต่อ 1700', 'text'),
-('email', 'sci@uru.ac.th', 'text'),
-('address_th', 'คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์ 27 ถ.อินใจมี ต.ท่าอิฐ อ.เมือง จ.อุตรดิตถ์ 53000', 'textarea'),
-('address_en', 'Faculty of Science and Technology, Uttaradit Rajabhat University, 27 Injaimee Rd., Tha-It, Muang, Uttaradit 53000, Thailand', 'textarea'),
-('facebook', 'https://www.facebook.com/scienceuru', 'text'),
-('website', 'https://sci.uru.ac.th', 'text'),
-('logo', '', 'image'),
-('vision_th', '', 'textarea'),
-('vision_en', '', 'textarea'),
-('mission_th', '', 'textarea'),
-('mission_en', '', 'textarea'),
-('about_th', '', 'textarea'),
-('about_en', '', 'textarea'),
-('hero_title_th', 'ยินดีต้อนรับสู่คณะวิทยาศาสตร์และเทคโนโลยี', 'text'),
-('hero_title_en', 'Welcome to Faculty of Science and Technology', 'text'),
-('hero_subtitle_th', 'มหาวิทยาลัยราชภัฏอุตรดิตถ์', 'text'),
-('hero_subtitle_en', 'Uttaradit Rajabhat University', 'text'),
-('hero_description_th', 'สร้างบัณฑิตที่มีความรู้ความสามารถ พัฒนางานวิจัยและนวัตกรรม เพื่อรับใช้ชุมชนและท้องถิ่น', 'textarea'),
-('hero_description_en', 'Producing knowledgeable and capable graduates, developing research and innovation to serve communities and local areas.', 'textarea'),
-('hero_image', '', 'image')
-ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`);
+INSERT INTO `site_settings` (`setting_key`, `setting_value`, `setting_type`, `category`) VALUES
+('site_name_th', 'คณะวิทยาศาสตร์และเทคโนโลยี', 'text', 'general'),
+('site_name_en', 'Faculty of Science and Technology', 'text', 'general'),
+('university_name_th', 'มหาวิทยาลัยราชภัฏอุตรดิตถ์', 'text', 'general'),
+('university_name_en', 'Uttaradit Rajabhat University', 'text', 'general'),
+('phone', '055-411096', 'text', 'contact'),
+('fax', '055-411096 ต่อ 1700', 'text', 'contact'),
+('email', 'sci@uru.ac.th', 'text', 'contact'),
+('address_th', 'คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์ 27 ถ.อินใจมี ต.ท่าอิฐ อ.เมือง จ.อุตรดิตถ์ 53000', 'textarea', 'contact'),
+('address_en', 'Faculty of Science and Technology, Uttaradit Rajabhat University, 27 Injaimee Rd., Tha-It, Muang, Uttaradit 53000, Thailand', 'textarea', 'contact'),
+('facebook', 'https://www.facebook.com/scienceuru', 'text', 'social'),
+('website', 'https://sci.uru.ac.th', 'text', 'general'),
+('logo', '', 'image', 'general'),
+('vision_th', '', 'textarea', 'about'),
+('vision_en', '', 'textarea', 'about'),
+('mission_th', '', 'textarea', 'about'),
+('mission_en', '', 'textarea', 'about'),
+('about_th', '', 'textarea', 'about'),
+('about_en', '', 'textarea', 'about'),
+('hero_title_th', 'ยินดีต้อนรับสู่คณะวิทยาศาสตร์และเทคโนโลยี', 'text', 'hero'),
+('hero_title_en', 'Welcome to Faculty of Science and Technology', 'text', 'hero'),
+('hero_subtitle_th', 'มหาวิทยาลัยราชภัฏอุตรดิตถ์', 'text', 'hero'),
+('hero_subtitle_en', 'Uttaradit Rajabhat University', 'text', 'hero'),
+('hero_description_th', 'สร้างบัณฑิตที่มีความรู้ความสามารถ พัฒนางานวิจัยและนวัตกรรม เพื่อรับใช้ชุมชนและท้องถิ่น', 'textarea', 'hero'),
+('hero_description_en', 'Producing knowledgeable and capable graduates, developing research and innovation to serve communities and local areas.', 'textarea', 'hero'),
+('hero_image', '', 'image', 'hero')
+ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`), `category` = VALUES(`category`);
 
 -- ============================================
 -- Departments Table
@@ -105,7 +110,9 @@ INSERT INTO `departments` (`name_th`, `name_en`, `code`, `sort_order`, `status`)
 ('สาขาวิชาวิทยาศาสตร์การกีฬาและการออกกำลังกาย', 'Sports and Exercise Science', 'SPORT', 8, 'active'),
 ('สาขาวิชาวิทยาศาสตร์สิ่งแวดล้อม', 'Environmental Science', 'ENV', 9, 'active'),
 ('สาขาวิชาสาธารณสุขศาสตร์', 'Public Health', 'PH', 10, 'active'),
-('สาขาวิชาอาหารและโภชนาการ', 'Food and Nutrition', 'FOOD', 11, 'active')
+('สาขาวิชาอาหารและโภชนาการ', 'Food and Nutrition', 'FOOD', 11, 'active'),
+('สาขาวิทยาศาสตร์ประยุกต์', 'Applied Science', 'AS', 12, 'active'),
+('สาขาวิชาวิศวกรรมคอมพิวเตอร์', 'Computer Engineering', 'CE', 13, 'active')
 ON DUPLICATE KEY UPDATE `name_th` = VALUES(`name_th`);
 
 -- ============================================
@@ -113,15 +120,15 @@ ON DUPLICATE KEY UPDATE `name_th` = VALUES(`name_th`);
 -- ============================================
 CREATE TABLE IF NOT EXISTS `personnel` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `title` VARCHAR(50) DEFAULT NULL COMMENT 'Academic title (ศ.ดร., รศ.ดร., etc.)',
-    `first_name` VARCHAR(100) NOT NULL,
-    `last_name` VARCHAR(100) NOT NULL,
-    `first_name_en` VARCHAR(100) DEFAULT NULL,
-    `last_name_en` VARCHAR(100) DEFAULT NULL,
+    `name` VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'ชื่อ-นามสกุล (ไทย)',
+    `name_en` VARCHAR(255) DEFAULT NULL COMMENT 'ชื่อ-นามสกุล (อังกฤษ)',
     `position` VARCHAR(255) DEFAULT NULL COMMENT 'Administrative position',
     `position_en` VARCHAR(255) DEFAULT NULL,
+    `position_detail` VARCHAR(255) DEFAULT NULL COMMENT 'รายละเอียดตำแหน่ง เช่น รองคณบดี ฝ่ายกิจกรรมนักศึกษา',
     `department_id` INT UNSIGNED DEFAULT NULL,
-    `email` VARCHAR(255) DEFAULT NULL,
+    `program_id` INT UNSIGNED DEFAULT NULL COMMENT 'Deprecated: use personnel_programs.is_primary instead',
+    `email` VARCHAR(255) DEFAULT NULL COMMENT 'Unique per person; ใช้เป็น key เชื่อมกับ user และ App ภายนอก',
+    `user_uid` INT UNSIGNED DEFAULT NULL COMMENT 'ลิงก์ user (อ้างอิงโดย email)',
     `phone` VARCHAR(50) DEFAULT NULL,
     `image` VARCHAR(255) DEFAULT NULL,
     `bio` TEXT,
@@ -133,10 +140,14 @@ CREATE TABLE IF NOT EXISTS `personnel` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
+    UNIQUE KEY `email` (`email`),
     KEY `department_id` (`department_id`),
+    KEY `program_id` (`program_id`),
+    KEY `user_uid` (`user_uid`),
     KEY `status` (`status`),
     KEY `sort_order` (`sort_order`),
-    CONSTRAINT `fk_personnel_department` FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`) ON DELETE SET NULL
+    CONSTRAINT `fk_personnel_department` FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_personnel_user` FOREIGN KEY (`user_uid`) REFERENCES `user`(`uid`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
@@ -157,7 +168,8 @@ CREATE TABLE IF NOT EXISTS `programs` (
     `website` VARCHAR(500) DEFAULT NULL,
     `curriculum_file` VARCHAR(255) DEFAULT NULL,
     `image` VARCHAR(255) DEFAULT NULL,
-    `coordinator_id` INT UNSIGNED DEFAULT NULL,
+    `coordinator_id` INT UNSIGNED DEFAULT NULL COMMENT 'Deprecated: use chair_personnel_id instead',
+    `chair_personnel_id` INT UNSIGNED DEFAULT NULL COMMENT 'ประธานหลักสูตร (personnel.id)',
     `sort_order` INT DEFAULT 0,
     `status` ENUM('active', 'inactive') DEFAULT 'active',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -166,7 +178,9 @@ CREATE TABLE IF NOT EXISTS `programs` (
     KEY `department_id` (`department_id`),
     KEY `level` (`level`),
     KEY `status` (`status`),
-    CONSTRAINT `fk_programs_department` FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`) ON DELETE SET NULL
+    KEY `chair_personnel_id` (`chair_personnel_id`),
+    CONSTRAINT `fk_programs_department` FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_programs_chair_personnel` FOREIGN KEY (`chair_personnel_id`) REFERENCES `personnel`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert default programs
@@ -185,6 +199,33 @@ INSERT INTO `programs` (`name_th`, `name_en`, `degree_th`, `degree_en`, `level`,
 ('วิทยาศาสตร์ประยุกต์', 'Applied Science', 'ปรัชญาดุษฎีบัณฑิต', 'Doctor of Philosophy', 'doctorate', NULL, '3 ปี', 12, 'active'),
 ('วิศวกรรมคอมพิวเตอร์และปัญญาประดิษฐ์', 'Computer Engineering and AI', 'วิศวกรรมศาสตรมหาบัณฑิต', 'Master of Engineering', 'master', 6, '2 ปี', 13, 'active')
 ON DUPLICATE KEY UPDATE `name_th` = VALUES(`name_th`);
+
+-- ============================================
+-- Personnel-Programs Pivot (บุคลากรสังกัดหลายหลักสูตร + บทบาท)
+-- กฎธุรกิจ (Relation):
+--   - อาจารย์ 1 คน เป็นประธานหลักสูตรได้เพียง 1 หลักสูตร
+--   - อาจารย์ 1 คน เป็นอาจารย์ประจำได้หลายหลักสูตร
+--   - หลักสูตร 1 หลักสูตร มีประธานหลักสูตรได้เพียง 1 คน
+-- DB: UNIQUE(personnel_id, program_id) = คนหนึ่งต่อหลักสูตรหนึ่ง 1 แถว
+-- การบังคับ 1 ประธาน/หลักสูตร และ 1 คน/ประธาน ทำในแอป (PersonnelProgramModel)
+-- ============================================
+CREATE TABLE IF NOT EXISTS `personnel_programs` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `personnel_id` INT UNSIGNED NOT NULL,
+    `program_id` INT UNSIGNED NOT NULL,
+    `role_in_curriculum` VARCHAR(100) DEFAULT NULL COMMENT 'ประธานหลักสูตร, กรรมการหลักสูตร, อาจารย์ประจำหลักสูตร',
+    `is_primary` TINYINT(1) DEFAULT 0 COMMENT 'หลักสูตรหลักของบุคลากร (1=primary)',
+    `sort_order` INT DEFAULT 0,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `personnel_program` (`personnel_id`, `program_id`),
+    KEY `program_id` (`program_id`),
+    KEY `personnel_id` (`personnel_id`),
+    KEY `idx_pp_primary` (`personnel_id`, `is_primary`),
+    CONSTRAINT `fk_pp_personnel` FOREIGN KEY (`personnel_id`) REFERENCES `personnel`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `fk_pp_program` FOREIGN KEY (`program_id`) REFERENCES `programs`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
 -- News Table (already exists, included for reference)
@@ -206,7 +247,8 @@ CREATE TABLE IF NOT EXISTS `news` (
     UNIQUE KEY `slug` (`slug`),
     KEY `status` (`status`),
     KEY `published_at` (`published_at`),
-    KEY `author_id` (`author_id`)
+    KEY `author_id` (`author_id`),
+    CONSTRAINT `fk_news_author` FOREIGN KEY (`author_id`) REFERENCES `user`(`uid`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================

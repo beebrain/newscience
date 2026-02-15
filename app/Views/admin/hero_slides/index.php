@@ -49,7 +49,7 @@
                                 </svg>
                             </td>
                             <td>
-                                <img src="<?= base_url($slide['image']) ?>" 
+                                <img src="<?= base_url('serve/uploads/hero/' . basename($slide['image'])) ?>" 
                                      alt="" style="width: 100px; height: 60px; object-fit: cover; border-radius: 4px;">
                             </td>
                             <td>

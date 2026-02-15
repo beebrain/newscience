@@ -16,7 +16,7 @@
                 <label for="image" class="form-label">รูปภาพ</label>
                 <?php if ($slide['image']): ?>
                     <div style="margin-bottom: 10px;">
-                        <img src="<?= base_url($slide['image']) ?>" 
+                        <img src="<?= base_url('serve/uploads/hero/' . basename($slide['image'])) ?>" 
                              style="max-width: 400px; max-height: 200px; border-radius: 8px;">
                     </div>
                 <?php endif; ?>

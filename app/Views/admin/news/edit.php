@@ -2,103 +2,291 @@
 
 <?= $this->section('content') ?>
 
-<div class="card">
-    <div class="card-header">
-        <h2>Edit News Article</h2>
-        <a href="<?= base_url('admin/news') ?>" class="btn btn-secondary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            Back to List
-        </a>
+<div class="card card--edit-news">
+    <div class="card-header card-header--with-context">
+        <div>
+            <h2>แก้ไขข่าว</h2>
+            <p class="card-header__context">กำลังแก้ไข: <?= esc(mb_strlen($news['title']) > 50 ? mb_substr($news['title'], 0, 50) . '…' : $news['title']) ?></p>
+        </div>
+        <div class="card-header__actions">
+            <?php if (($news['status'] ?? '') === 'published'): ?>
+                <a href="<?= base_url('news/' . $news['id']) ?>" target="_blank" rel="noopener" class="btn btn-outline btn-sm" title="เปิดหน้ารายละเอียดข่าวบนเว็บ">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                    ดูบนเว็บ
+                </a>
+            <?php endif; ?>
+            <a href="<?= base_url('admin/news') ?>" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                กลับรายการข่าว
+            </a>
+        </div>
     </div>
-    
-    <div class="card-body">
+
+    <div class="card-body" style="padding: 1.5rem 2rem;">
         <form action="<?= base_url('admin/news/update/' . $news['id']) ?>" method="post" enctype="multipart/form-data" id="newsForm">
             <?= csrf_field() ?>
-            
-            <div class="form-group">
-                <label for="title" class="form-label">Title *</label>
-                <input type="text" id="title" name="title" class="form-control" 
-                       value="<?= old('title', $news['title']) ?>" placeholder="Enter news title" required>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="status" class="form-label">Status *</label>
-                    <select id="status" name="status" class="form-control" required>
-                        <option value="draft" <?= old('status', $news['status']) === 'draft' ? 'selected' : '' ?>>Draft</option>
-                        <option value="published" <?= old('status', $news['status']) === 'published' ? 'selected' : '' ?>>Published</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="featured_image" class="form-label">Featured Image</label>
-                    <?php if ($news['featured_image']): ?>
-                        <div style="margin-bottom: 0.5rem;">
-                            <img src="<?= base_url('uploads/news/' . $news['featured_image']) ?>" 
-                                 alt="" style="max-width: 200px; border-radius: 8px;">
-                        </div>
-                    <?php endif; ?>
-                    <input type="file" id="featured_image" name="featured_image" class="form-control" accept="image/*">
-                    <small style="color: #6B7280;">Leave empty to keep current image</small>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="excerpt" class="form-label">Excerpt</label>
-                <textarea id="excerpt" name="excerpt" class="form-control" rows="3" 
-                          placeholder="Brief summary of the article"><?= old('excerpt', $news['excerpt']) ?></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="content" class="form-label">Content *</label>
-                <textarea id="content" name="content" class="form-control" rows="15" 
-                          placeholder="Write your article content here..." required><?= old('content', $news['content']) ?></textarea>
-            </div>
-            
-            <!-- Existing Images -->
-            <?php if (!empty($images)): ?>
-            <div class="form-group">
-                <label class="form-label">Current Images</label>
-                <div class="image-preview-grid" id="existingImages">
-                    <?php foreach ($images as $image): ?>
-                        <div class="image-preview-item" data-id="<?= $image['id'] ?>">
-                            <img src="<?= base_url('uploads/news/' . $image['image_path']) ?>" alt="">
-                            <button type="button" class="remove-btn delete-existing" data-id="<?= $image['id'] ?>">×</button>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <?php endif; ?>
-            
-            <!-- Additional Images -->
-            <div class="form-group">
-                <label class="form-label">Add More Images</label>
-                <div class="file-upload" id="dropZone">
-                    <input type="file" name="images[]" id="additionalImages" multiple accept="image/*">
-                    <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
+
+            <section class="form-section">
+                <h3 class="form-section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
                     </svg>
-                    <p>Click to upload or drag and drop</p>
-                    <small>PNG, JPG, GIF, WebP up to 5MB each</small>
+                    ข้อมูลหลัก
+                </h3>
+                <div class="form-group">
+                    <label for="title" class="form-label">หัวข้อข่าว *</label>
+                    <input type="text" id="title" name="title" class="form-control"
+                        value="<?= old('title', $news['title']) ?>" placeholder="เช่น ประกาศรับสมัคร…" required>
                 </div>
-                <div class="image-preview-grid" id="imagePreview"></div>
-            </div>
-            
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" class="btn btn-primary">
+                <div class="form-row form-row--status-tags">
+                    <div class="form-group form-group--status">
+                        <label for="status" class="form-label">สถานะ *</label>
+                        <select id="status" name="status" class="form-control" required>
+                            <option value="draft" <?= old('status', $news['status']) === 'draft' ? 'selected' : '' ?>>ร่าง</option>
+                            <option value="published" <?= old('status', $news['status']) === 'published' ? 'selected' : '' ?>>เผยแพร่</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group--tags">
+                        <label class="form-label">ประเภทข่าว (Tags)</label>
+                        <?php
+                        $tags_category = array_filter($tags ?? [], fn($t) => strpos($t['slug'] ?? '', 'program_') !== 0);
+                        $tags_program  = array_filter($tags ?? [], fn($t) => strpos($t['slug'] ?? '', 'program_') === 0);
+                        ?>
+                        <?php if (!empty($tags)): ?>
+                            <?php if (!empty($tags_category)): ?>
+                                <p class="form-label form-label--sub">ประเภท</p>
+                                <div class="form-check-group">
+                                    <?php foreach ($tags_category as $tag): ?>
+                                        <?php $checked = in_array($tag['id'], old('tag_ids', $news_tag_ids ?? [])); ?>
+                                        <label class="form-check-inline">
+                                            <input type="checkbox" name="tag_ids[]" value="<?= (int) $tag['id'] ?>" <?= $checked ? 'checked' : '' ?>>
+                                            <span><?= esc($tag['name']) ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($tags_program)): ?>
+                                <p class="form-label form-label--sub">หลักสูตร</p>
+                                <div class="form-check-group form-check-group--programs">
+                                    <?php foreach ($tags_program as $tag): ?>
+                                        <?php $checked = in_array($tag['id'], old('tag_ids', $news_tag_ids ?? [])); ?>
+                                        <label class="form-check-inline">
+                                            <input type="checkbox" name="tag_ids[]" value="<?= (int) $tag['id'] ?>" <?= $checked ? 'checked' : '' ?>>
+                                            <span><?= esc($tag['name']) ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <p class="form-hint form-hint--warning">ยังไม่มีประเภทข่าวในระบบ — กรุณารัน <code>database/add_news_tags.sql</code> และ <code>scripts/sync_news_tags_from_programs.php</code></p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h3 class="form-section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    ภาพปก
+                </h3>
+                <div class="form-group">
+                    <label for="featured_image" class="form-label">รูปภาพหลัก</label>
+                    <div class="featured-image-box <?= !empty($news['featured_image']) ? 'has-image' : '' ?>" id="featuredImageBox" data-has-original="<?= !empty($news['featured_image']) ? '1' : '0' ?>" role="button" tabindex="0" aria-label="เลือกภาพปก">
+                        <div id="featuredImagePlaceholder">
+                            <?php if (!empty($news['featured_image'])): ?>
+                                <?php $imgUrl = base_url('serve/uploads/news/' . basename($news['featured_image'])); ?>
+                                <div class="featured-image-preview">
+                                    <img src="<?= $imgUrl ?>" alt="" width="280" height="157">
+                                </div>
+                                <p style="margin: 0.5rem 0 0; font-size: 0.875rem; color: var(--color-gray-500);">คลิกกล่องด้านบนเพื่อเปลี่ยนภาพ (ไม่เลือกไฟล์ใหม่ = ใช้ภาพเดิม)</p>
+                            <?php else: ?>
+                                <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 0.5rem;" aria-hidden="true">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                    <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                                <p style="margin: 0; color: var(--color-gray-600);">คลิกเพื่อเลือกภาพ หรือลากวาง</p>
+                                <small style="color: var(--color-gray-500);">PNG, JPG, WebP ไม่เกิน 5MB</small>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <input type="file" id="featured_image" name="featured_image" accept="image/*" class="input-file-hidden" aria-describedby="featuredImagePlaceholder">
+                </div>
+            </section>
+
+            <?php $displayAsEvent = (int) (old('display_as_event') ?? $news['display_as_event'] ?? 0); ?>
+            <section class="form-section">
+                <h3 class="form-section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    การแสดงผล
+                </h3>
+                <div class="form-group">
+                    <label class="form-label">แสดงใน section กิจกรรมที่จะมาถึง</label>
+                    <p class="form-hint">เลือกประเภทข่าว: ข่าวทั่วไป หรือข่าวเกี่ยวกับ Event ที่จะเกิดขึ้น</p>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="display_as_event" value="0" <?= $displayAsEvent === 0 ? 'checked' : '' ?>>
+                            <span>ข่าวประชาสัมพันธ์ / กิจกรรมทั่วไป</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="display_as_event" value="1" <?= $displayAsEvent === 1 ? 'checked' : '' ?>>
+                            <span>ข่าว Event ที่จะเกิดขึ้น</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h3 class="form-section-title">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:1.25em;height:1.25em;">
+                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                    </svg>
+                    ลิงก์ Facebook
+                </h3>
+                <div class="form-group">
+                    <label for="facebook_url" class="form-label">URL โพสต์หรือหน้าข่าวบน Facebook</label>
+                    <p class="form-hint">ไม่บังคับ — ถ้ากรอก ลิงก์จะแสดงในหน้ารายละเอียดข่าว และเมื่อกดจะแจ้งว่าพาท่านไปยัง Facebook</p>
+                    <input type="url" id="facebook_url" name="facebook_url" class="form-control"
+                        value="<?= old('facebook_url', $news['facebook_url'] ?? '') ?>" placeholder="https://www.facebook.com/...">
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h3 class="form-section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                    เนื้อหา
+                </h3>
+                <div class="form-group">
+                    <label for="excerpt" class="form-label">สรุปย่อ</label>
+                    <p class="form-hint">ใช้ประมาณ 1–2 ประโยค จะแสดงในรายการข่าวและผลค้นหา</p>
+                    <textarea id="excerpt" name="excerpt" class="form-control" rows="3"
+                        placeholder="สรุปสั้นๆ ของข่าว"><?= old('excerpt', $news['excerpt']) ?></textarea>
+                </div>
+                <div class="form-group form-group--content">
+                    <label for="news-content-editor" class="form-label">เนื้อหาข่าว *</label>
+                    <p class="form-hint">ใช้แถบเครื่องมือด้านบนสำหรับ <strong>ตัวหนา</strong> <em>ตัวเอียง</em> ขีดเส้นใต้ และรายการ</p>
+                    <div id="news-content-editor" class="news-rich-editor" style="min-height: 320px; background: #fff; border: 1px solid var(--color-gray-200); border-radius: 8px;"></div>
+                    <textarea id="content" name="content" class="form-control" style="display: none;" required><?= old('content', $news['content']) ?></textarea>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h3 class="form-section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    รูปภาพ
+                </h3>
+                <?php if (!empty($images)): ?>
+                    <div class="form-group">
+                        <label class="form-label">รูปภาพปัจจุบัน</label>
+                        <div class="attachment-list" id="existingImages">
+                            <?php foreach ($images as $img): ?>
+                                <div class="attachment-preview-item attachment-preview-item--image" data-id="<?= $img['id'] ?>">
+                                    <img src="<?= base_url('serve/uploads/news/' . basename($img['image_path'])) ?>" alt="">
+                                    <button type="button" class="remove-btn delete-existing" data-id="<?= $img['id'] ?>" title="ลบรูปภาพนี้" aria-label="ลบรูปภาพนี้">×</button>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                <div class="form-group">
+                    <label class="form-label">เพิ่มรูปภาพ</label>
+                    <p class="form-hint">JPG, PNG, GIF, WebP</p>
+                    <div class="file-upload" id="dropZoneImages">
+                        <input type="file" name="attachments_images[]" id="additionalImages" multiple accept="image/*">
+                        <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                        <p>คลิกหรือลากวางเพื่ออัปโหลดรูปภาพ</p>
+                        <small>JPG, PNG, WebP</small>
+                    </div>
+                    <div class="attachment-preview-list" id="imagePreview"></div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h3 class="form-section-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                    ไฟล์แนบ
+                </h3>
+                <?php if (!empty($documents)): ?>
+                    <div class="form-group">
+                        <label class="form-label">ไฟล์แนบปัจจุบัน</label>
+                        <div class="attachment-list attachment-list--docs" id="existingDocuments">
+                            <?php foreach ($documents as $doc): ?>
+                                <div class="attachment-preview-item attachment-preview-item--doc" data-id="<?= $doc['id'] ?>">
+                                    <div class="attachment-doc-preview">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="40" height="40"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                        <span class="attachment-doc-name"><?= esc($doc['caption'] ?? basename($doc['image_path'])) ?></span>
+                                    </div>
+                                    <button type="button" class="remove-btn delete-existing" data-id="<?= $doc['id'] ?>" title="ลบไฟล์แนบนี้" aria-label="ลบไฟล์แนบนี้">×</button>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                <div class="form-group">
+                    <label class="form-label">เพิ่มไฟล์แนบ</label>
+                    <p class="form-hint">PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX</p>
+                    <div class="file-upload" id="dropZoneDocs">
+                        <input type="file" name="attachments_docs[]" id="additionalDocs" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
+                        <svg class="file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                        </svg>
+                        <p>คลิกหรือลากวางเพื่ออัปโหลดเอกสาร</p>
+                        <small>PDF, DOC, DOCX, XLS, PPT</small>
+                    </div>
+                    <div class="attachment-preview-list attachment-preview-list--docs" id="docPreview"></div>
+                </div>
+            </section>
+
+            <div class="form-actions-bar form-actions-bar--sticky" id="formActionsBar">
+                <button type="submit" class="btn btn-primary" id="submitBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-                        <polyline points="17 21 17 13 7 13 7 21"/>
-                        <polyline points="7 3 7 8 15 8"/>
+                        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                        <polyline points="17 21 17 13 7 13 7 21" />
+                        <polyline points="7 3 7 8 15 8" />
                     </svg>
-                    Update Article
+                    บันทึกการแก้ไข
                 </button>
-                <a href="<?= base_url('admin/news') ?>" class="btn btn-secondary">Cancel</a>
+                <a href="<?= base_url('admin/news') ?>" class="btn btn-secondary">ยกเลิก</a>
             </div>
         </form>
     </div>
@@ -107,100 +295,193 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<link href="<?= base_url('assets/vendor/quill/quill.snow.css') ?>" rel="stylesheet">
+<script src="<?= base_url('assets/vendor/quill/quill.js') ?>"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('additionalImages');
-    const imagePreview = document.getElementById('imagePreview');
-    let selectedFiles = [];
-    
-    // Click to upload
-    dropZone.addEventListener('click', () => fileInput.click());
-    
-    // Drag and drop
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.style.borderColor = '#FFD700';
-    });
-    
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.style.borderColor = '#D1D5DB';
-    });
-    
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.style.borderColor = '#D1D5DB';
-        handleFiles(e.dataTransfer.files);
-    });
-    
-    fileInput.addEventListener('change', (e) => {
-        handleFiles(e.target.files);
-    });
-    
-    function handleFiles(files) {
-        for (let file of files) {
-            if (file.type.startsWith('image/')) {
-                selectedFiles.push(file);
-                displayPreview(file, selectedFiles.length - 1);
-            }
-        }
-        updateFileInput();
-    }
-    
-    function displayPreview(file, index) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const div = document.createElement('div');
-            div.className = 'image-preview-item';
-            div.innerHTML = `
-                <img src="${e.target.result}" alt="">
-                <button type="button" class="remove-btn" data-index="${index}">×</button>
-            `;
-            div.querySelector('.remove-btn').addEventListener('click', () => {
-                selectedFiles.splice(index, 1);
-                imagePreview.innerHTML = '';
-                selectedFiles.forEach((f, i) => displayPreview(f, i));
-                updateFileInput();
+    document.addEventListener('DOMContentLoaded', function() {
+        var contentTextarea = document.getElementById('content');
+        var editorEl = document.getElementById('news-content-editor');
+        if (editorEl && contentTextarea) {
+            var quill = new Quill(editorEl, {
+                theme: 'snow',
+                placeholder: 'เขียนเนื้อหาข่าวที่นี่...',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'align': [] }],
+                        ['link'],
+                        ['clean']
+                    ]
+                }
             });
-            imagePreview.appendChild(div);
-        };
-        reader.readAsDataURL(file);
-    }
-    
-    function updateFileInput() {
-        const dt = new DataTransfer();
-        selectedFiles.forEach(file => dt.items.add(file));
-        fileInput.files = dt.files;
-    }
-    
-    // Delete existing images
-    document.querySelectorAll('.delete-existing').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (!confirm('Are you sure you want to delete this image?')) return;
-            
-            const imageId = this.dataset.id;
-            const item = this.closest('.image-preview-item');
-            
-            fetch('<?= base_url('utility/upload/delete/') ?>' + imageId, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+            quill.root.innerHTML = contentTextarea.value || '';
+            document.getElementById('newsForm').addEventListener('submit', function() {
+                contentTextarea.value = quill.root.innerHTML;
+            });
+        }
+
+        const featuredImage = document.getElementById('featured_image');
+        const featuredImageBox = document.getElementById('featuredImageBox');
+        const featuredImagePlaceholder = document.getElementById('featuredImagePlaceholder');
+        if (featuredImage && featuredImageBox && featuredImagePlaceholder) {
+            const hasOriginal = featuredImageBox.dataset.hasOriginal === '1';
+            var originalPlaceholderContent = featuredImagePlaceholder.innerHTML;
+            featuredImageBox.style.cursor = 'pointer';
+            featuredImageBox.addEventListener('click', function(e) {
+                if (e.target.closest('.btn-featured-reset')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    item.remove();
-                } else {
-                    alert(data.message || 'Failed to delete image');
+                featuredImage.click();
+            });
+            featuredImageBox.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (!e.target.closest('.btn-featured-reset')) featuredImage.click();
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred');
+            });
+            featuredImage.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        featuredImageBox.classList.add('has-image');
+                        featuredImagePlaceholder.innerHTML = '<div class="featured-image-preview"><img src="' + e.target.result + '" alt="" width="280" height="157"></div><p style="margin:0.5rem 0 0;font-size:0.875rem;color:var(--color-gray-500);">คลิกเพื่อเปลี่ยนภาพ</p>' +
+                            (hasOriginal ? '<button type="button" class="btn-featured-reset" style="margin-top:0.5rem;font-size:0.8125rem;color:var(--color-gray-500);background:none;border:none;cursor:pointer;text-decoration:underline;">ใช้ภาพเดิม</button>' : '');
+                        featuredImagePlaceholder.querySelector('.btn-featured-reset')?.addEventListener('click', function(ev) {
+                            ev.stopPropagation();
+                            featuredImage.value = '';
+                            featuredImagePlaceholder.innerHTML = originalPlaceholderContent;
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        var dropZoneImages = document.getElementById('dropZoneImages');
+        var fileInputImages = document.getElementById('additionalImages');
+        var imagePreview = document.getElementById('imagePreview');
+        var selectedImageFiles = [];
+
+        if (dropZoneImages) dropZoneImages.addEventListener('click', function() { fileInputImages.click(); });
+        if (dropZoneImages) {
+            dropZoneImages.addEventListener('dragover', function(e) { e.preventDefault(); dropZoneImages.style.borderColor = 'var(--primary)'; });
+            dropZoneImages.addEventListener('dragleave', function() { dropZoneImages.style.borderColor = ''; });
+            dropZoneImages.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropZoneImages.style.borderColor = '';
+                var files = e.dataTransfer.files;
+                for (var i = 0; i < files.length; i++) {
+                    if (files[i].type.startsWith('image/')) {
+                        selectedImageFiles.push(files[i]);
+                        addImagePreview(files[i], selectedImageFiles.length - 1);
+                    }
+                }
+                updateImageInput();
+            });
+        }
+        if (fileInputImages) fileInputImages.addEventListener('change', function(e) {
+            var files = e.target.files;
+            for (var i = 0; i < files.length; i++) {
+                selectedImageFiles.push(files[i]);
+                addImagePreview(files[i], selectedImageFiles.length - 1);
+            }
+            updateImageInput();
+        });
+
+        function addImagePreview(file, index) {
+            var div = document.createElement('div');
+            div.className = 'image-preview-item';
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                div.innerHTML = '<img src="' + ev.target.result + '" alt="" width="120" height="120"><button type="button" class="remove-btn" data-index="' + index + '" aria-label="ลบรูป">×</button>';
+                div.querySelector('.remove-btn').addEventListener('click', function() {
+                    selectedImageFiles.splice(index, 1);
+                    imagePreview.innerHTML = '';
+                    for (var j = 0; j < selectedImageFiles.length; j++) addImagePreview(selectedImageFiles[j], j);
+                    updateImageInput();
+                });
+                imagePreview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        }
+        function updateImageInput() {
+            var dt = new DataTransfer();
+            for (var i = 0; i < selectedImageFiles.length; i++) dt.items.add(selectedImageFiles[i]);
+            fileInputImages.files = dt.files;
+        }
+
+        var dropZoneDocs = document.getElementById('dropZoneDocs');
+        var fileInputDocs = document.getElementById('additionalDocs');
+        var docPreview = document.getElementById('docPreview');
+        var selectedDocFiles = [];
+        var allowedDocExt = ['pdf','doc','docx','xls','xlsx','ppt','pptx'];
+        function isDoc(file) {
+            var ext = (file.name.split('.').pop() || '').toLowerCase();
+            return allowedDocExt.indexOf(ext) !== -1;
+        }
+        if (dropZoneDocs) dropZoneDocs.addEventListener('click', function() { fileInputDocs.click(); });
+        if (dropZoneDocs) {
+            dropZoneDocs.addEventListener('dragover', function(e) { e.preventDefault(); dropZoneDocs.style.borderColor = 'var(--primary)'; });
+            dropZoneDocs.addEventListener('dragleave', function() { dropZoneDocs.style.borderColor = ''; });
+            dropZoneDocs.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropZoneDocs.style.borderColor = '';
+                var files = e.dataTransfer.files;
+                for (var i = 0; i < files.length; i++) {
+                    if (isDoc(files[i])) { selectedDocFiles.push(files[i]); addDocPreview(files[i], selectedDocFiles.length - 1); }
+                }
+                updateDocInput();
+            });
+        }
+        if (fileInputDocs) fileInputDocs.addEventListener('change', function(e) {
+            var files = e.target.files;
+            for (var i = 0; i < files.length; i++) {
+                if (isDoc(files[i])) { selectedDocFiles.push(files[i]); addDocPreview(files[i], selectedDocFiles.length - 1); }
+            }
+            updateDocInput();
+        });
+        function addDocPreview(file, index) {
+            var div = document.createElement('div');
+            div.className = 'image-preview-item image-preview-item--doc';
+            div.innerHTML = '<div class="attachment-doc-preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="40" height="40"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span class="attachment-doc-name">' + (file.name || 'เอกสาร') + '</span></div><button type="button" class="remove-btn" data-index="' + index + '" aria-label="ลบไฟล์">×</button>';
+            div.querySelector('.remove-btn').addEventListener('click', function() {
+                selectedDocFiles.splice(index, 1);
+                docPreview.innerHTML = '';
+                for (var j = 0; j < selectedDocFiles.length; j++) addDocPreview(selectedDocFiles[j], j);
+                updateDocInput();
+            });
+            docPreview.appendChild(div);
+        }
+        function updateDocInput() {
+            var dt = new DataTransfer();
+            for (var i = 0; i < selectedDocFiles.length; i++) dt.items.add(selectedDocFiles[i]);
+            fileInputDocs.files = dt.files;
+        }
+
+        document.querySelectorAll('.delete-existing').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (!confirm('ต้องการลบไฟล์นี้หรือไม่?')) return;
+                var imageId = this.dataset.id;
+                var item = this.closest('.image-preview-item') || this.closest('.attachment-preview-item');
+                fetch('<?= base_url('utility/upload/delete/') ?>' + imageId, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(r => r.json())
+                    .then(function(data) {
+                        if (data.success && item) item.remove();
+                        else alert(data.message || 'ลบไฟล์ไม่สำเร็จ');
+                    })
+                    .catch(() => alert('เกิดข้อผิดพลาด'));
             });
         });
     });
-});
 </script>
 <?= $this->endSection() ?>

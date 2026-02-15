@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Rename personnel image files to English-only: personnel-{id}.ext
  * Updates DB column personnel.image. Run once to fix existing Thai-named files.

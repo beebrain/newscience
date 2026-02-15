@@ -1,4 +1,5 @@
--- Pivot: อาจารย์ 1 คน สังกัดได้หลายหลักสูตร
+-- Pivot: บุคลากร–หลักสูตร (อาจารย์ 1 คน สังกัดได้หลายหลักสูตร)
+-- กฎธุรกิจ: อาจารย์ 1 คน เป็นประธานได้ 1 หลักสูตร | เป็นอาจารย์ประจำได้หลายหลักสูตร | หลักสูตร 1 หลักสูตร มีประธานได้ 1 คน
 -- Run: mysql -u root -p newscience < database/add_personnel_programs_table.sql
 -- Or: php scripts/run_add_personnel_programs_table.php
 

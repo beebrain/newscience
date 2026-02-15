@@ -21,7 +21,7 @@
             <span class="section-header__subtitle">Join Our Community</span>
             <h2 class="section-header__title">Begin Your Journey</h2>
             <p class="section-header__description">
-                Explore the possibilities of an education at our university. We look for distinctive 
+                Explore the possibilities of an education at our university. We look for distinctive
                 students who exhibit an abundance of energy and curiosity.
             </p>
         </div>
@@ -38,8 +38,8 @@
                     <span class="card__category">Undergraduate</span>
                     <h3 class="card__title">Undergraduate Admission</h3>
                     <p class="card__excerpt">
-                        Join a diverse community of learners and discover your passion through 
-                        our world-class undergraduate programs. We offer over 90 majors across 
+                        Join a diverse community of learners and discover your passion through
+                        our world-class undergraduate programs. We offer over 90 majors across
                         seven schools.
                     </p>
                     <ul class="feature-list" style="margin-top: var(--spacing-4);">
@@ -63,14 +63,14 @@
                     <a href="#" class="btn btn-primary" style="margin-top: var(--spacing-4);">Apply Now</a>
                 </div>
             </div>
-            
+
             <div class="card animate-on-scroll">
                 <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=600&h=300&fit=crop" alt="Graduate Students" class="card__image">
                 <div class="card__content">
                     <span class="card__category">Graduate</span>
                     <h3 class="card__title">Graduate Admission</h3>
                     <p class="card__excerpt">
-                        Advance your career and expertise through our rigorous graduate programs. 
+                        Advance your career and expertise through our rigorous graduate programs.
                         Join a community of scholars and researchers pushing the boundaries of knowledge.
                     </p>
                     <ul class="feature-list" style="margin-top: var(--spacing-4);">
@@ -109,8 +109,8 @@
                 <span class="feature-section__subtitle">Financial Aid</span>
                 <h2 class="feature-section__title">Making Education Accessible</h2>
                 <p class="feature-section__description">
-                    We meet the full financial need of every admitted undergraduate who qualifies 
-                    for assistance. More than two-thirds of undergrads receive some form of 
+                    We meet the full financial need of every admitted undergraduate who qualifies
+                    for assistance. More than two-thirds of undergrads receive some form of
                     financial assistance.
                 </p>
                 <div class="card" style="margin-bottom: var(--spacing-6); background: var(--color-primary-light);">
@@ -133,7 +133,7 @@
             <span class="section-header__subtitle">How to Apply</span>
             <h2 class="section-header__title">Application Process</h2>
         </div>
-        
+
         <div class="grid grid-4">
             <div class="card animate-on-scroll">
                 <div class="card__content text-center">
@@ -144,7 +144,7 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="card animate-on-scroll">
                 <div class="card__content text-center">
                     <div class="stat__number" style="color: var(--color-primary-dark);">2</div>
@@ -154,7 +154,7 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="card animate-on-scroll">
                 <div class="card__content text-center">
                     <div class="stat__number" style="color: var(--color-primary-dark);">3</div>
@@ -164,7 +164,7 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="card animate-on-scroll">
                 <div class="card__content text-center">
                     <div class="stat__number" style="color: var(--color-primary-dark);">4</div>
@@ -193,4 +193,3 @@
 </section>
 
 <?= $this->endSection() ?>
-

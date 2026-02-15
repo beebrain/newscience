@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:/xampp/mysql/bin/mysql.exe\":*)",
+      "Bash(find:*)",
+      "Bash(php -r:*)",
+      "Bash(php:*)",
+      "Bash(grep:*)",
+      "Bash(curl:*)",
+      "Bash(C:/xampp/mysql/bin/mysql -u root -e \"SELECT COUNT\\(*\\) as cnt FROM personnel WHERE status = ''active''\" newscience)"
+    ]
+  }
+}

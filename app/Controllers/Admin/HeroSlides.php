@@ -76,7 +76,7 @@ class HeroSlides extends BaseController
         // Handle image upload
         if ($imageFile && $imageFile->isValid() && !$imageFile->hasMoved()) {
             $newName = $imageFile->getRandomName();
-            $imageFile->move(FCPATH . 'uploads/hero', $newName);
+            $imageFile->move(rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'hero', $newName);
             $slideData['image'] = 'uploads/hero/' . $newName;
         }
 
@@ -140,13 +140,16 @@ class HeroSlides extends BaseController
         // Handle image upload
         $imageFile = $this->request->getFile('image');
         if ($imageFile && $imageFile->isValid() && !$imageFile->hasMoved()) {
-            // Delete old image
-            if ($slide['image'] && file_exists(FCPATH . $slide['image'])) {
+            $heroDir = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'hero';
+            $oldPath = $slide['image'] ? $heroDir . DIRECTORY_SEPARATOR . basename($slide['image']) : '';
+            if ($oldPath && file_exists($oldPath)) {
+                @unlink($oldPath);
+            } elseif ($slide['image'] && file_exists(FCPATH . $slide['image'])) {
                 @unlink(FCPATH . $slide['image']);
             }
-            
+
             $newName = $imageFile->getRandomName();
-            $imageFile->move(FCPATH . 'uploads/hero', $newName);
+            $imageFile->move($heroDir, $newName);
             $slideData['image'] = 'uploads/hero/' . $newName;
         }
 
@@ -168,9 +171,16 @@ class HeroSlides extends BaseController
                             ->with('error', 'ไม่พบข้อมูล');
         }
 
-        // Delete image file
-        if ($slide['image'] && file_exists(FCPATH . $slide['image'])) {
-            @unlink(FCPATH . $slide['image']);
+        // Delete image file (writable first, then public fallback)
+        $heroDir = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'hero';
+        $fn = $slide['image'] ? basename($slide['image']) : '';
+        if ($fn) {
+            $path = $heroDir . DIRECTORY_SEPARATOR . $fn;
+            if (file_exists($path)) {
+                @unlink($path);
+            } elseif (file_exists(FCPATH . $slide['image'])) {
+                @unlink(FCPATH . $slide['image']);
+            }
         }
 
         $this->heroSlideModel->delete($id);

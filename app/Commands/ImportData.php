@@ -37,7 +37,6 @@ class ImportData extends BaseCommand
         CLI::newLine();
         CLI::write('Import Summary:', 'white');
         CLI::write('  Site Settings: ' . $results['counts']['site_settings'], 'light_gray');
-        CLI::write('  Departments: ' . $results['counts']['departments'], 'light_gray');
         CLI::write('  Programs: ' . $results['counts']['programs'], 'light_gray');
         CLI::write('  News Articles: ' . $results['counts']['news'], 'light_gray');
     }

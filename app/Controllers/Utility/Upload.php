@@ -54,13 +54,17 @@ class Upload extends BaseController
         }
 
         try {
+            $uploadDir = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'news';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0755, true);
+            }
             $newName = $file->getRandomName();
-            $file->move(FCPATH . 'uploads/news', $newName);
+            $file->move($uploadDir, $newName);
 
             return $this->response->setJSON([
                 'success' => true,
                 'filename' => $newName,
-                'url' => base_url('uploads/news/' . $newName)
+                'url' => base_url('serve/uploads/news/' . $newName)
             ]);
         } catch (\Exception $e) {
             return $this->response->setJSON([
@@ -111,13 +115,17 @@ class Upload extends BaseController
                 }
 
                 try {
+                    $uploadDir = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'news';
+                    if (!is_dir($uploadDir)) {
+                        @mkdir($uploadDir, 0755, true);
+                    }
                     $newName = $file->getRandomName();
-                    $file->move(FCPATH . 'uploads/news', $newName);
-                    
+                    $file->move($uploadDir, $newName);
+
                     $uploaded[] = [
                         'filename' => $newName,
                         'original' => $file->getClientName(),
-                        'url' => base_url('uploads/news/' . $newName)
+                        'url' => base_url('serve/uploads/news/' . $newName)
                     ];
                 } catch (\Exception $e) {
                     $errors[] = $file->getClientName() . ': ' . $e->getMessage();
@@ -182,9 +190,12 @@ class Upload extends BaseController
             ]);
         }
 
-        $filePath = FCPATH . 'uploads/news/' . basename($filename);
-        
-        if (file_exists($filePath)) {
+        $fn = basename($filename);
+        $writablePath = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'news' . DIRECTORY_SEPARATOR . $fn;
+        $publicPath = FCPATH . 'uploads/news/' . $fn;
+        $filePath = is_file($writablePath) ? $writablePath : (is_file($publicPath) ? $publicPath : null);
+
+        if ($filePath && file_exists($filePath)) {
             unlink($filePath);
             return $this->response->setJSON([
                 'success' => true,

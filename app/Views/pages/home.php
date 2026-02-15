@@ -66,6 +66,13 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
     // Hero slides - can be managed from admin or hardcoded
     $heroSlides = $hero_slides ?? [
         [
+            'image' => 'https://sci.uru.ac.th/image/getimage/660',
+            'title' => 'รับสมัครนักศึกษา',
+            'subtitle' => 'Student Recruitment',
+            'description' => 'คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์ เปิดรับสมัครนักศึกษาใหม่ สร้างบัณฑิตที่มีความรู้ความสามารถ',
+            'show_buttons' => true,
+        ],
+        [
             'image' => base_url('assets/images/hero_background.png'),
             'title' => $heroTitle,
             'subtitle' => $universityEn,
@@ -120,7 +127,7 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                             <?php if (!empty($slide['show_buttons'])): ?>
                                 <div class="hero__actions">
                                     <a href="<?= base_url('about') ?>" class="btn btn-primary btn-lg">เกี่ยวกับเรา</a>
-                                    <a href="<?= base_url('admission') ?>" class="btn btn-outline btn-lg">สมัครเรียน</a>
+                                    <a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-lg">สมัครเรียน</a>
                                 </div>
                             <?php endif; ?>
                             <?php if (!empty($slide['link'])): ?>
@@ -159,493 +166,26 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
     </div>
 </section>
 
-<!-- Service Grid Section (Database & Journals) -->
-<section class="section section-blue-light" style="padding: var(--spacing-6) 0;">
+<!-- Link to old faculty website -->
+<div class="container" style="padding: 0.5rem 1rem; text-align: center;">
+    <a href="http://old.sci.uru.ac.th" target="_blank" rel="noopener noreferrer" aria-label="เว็บคณะเดิม (เปิดในแท็บใหม่)" style="display: inline-block; font-size: 0.875rem; color: var(--color-gray-600, #6b7280); text-decoration: none;">เว็บคณะเดิม (old.sci.uru.ac.th)</a>
+</div>
+
+<!-- Admission CTA Section (เน้นการรับสมัครก่อน) -->
+<section class="cta-section section-dark-blue">
     <div class="container">
-        <div class="section-header" style="margin-bottom: var(--spacing-4);">
-            <h2 class="section-header__title" style="font-size: 1.5rem;">ระบบฐานข้อมูลและวารสาร</h2>
-            <p class="section-header__description" style="font-size: 0.9rem; margin-top: 0.5rem;">เข้าถึงระบบสารสนเทศและวารสารวิชาการได้อย่างรวดเร็ว</p>
-        </div>
-
-        <div class="service-grid animate-on-scroll">
-            <!-- Systems -->
-            <a href="http://edoc.sci.uru.ac.th/" target="_blank" class="service-card">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="12" y1="18" x2="12" y2="12"></line>
-                        <line x1="9" y1="15" x2="15" y2="15"></line>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">งานวิชาการ</h3>
-                    <span class="service-card__desc">e-Doc System</span>
-                </div>
-            </a>
-
-            <a href="http://sci.uru.ac.th/scienceadmin" target="_blank" class="service-card">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                        <line x1="8" y1="21" x2="16" y2="21"></line>
-                        <line x1="12" y1="17" x2="12" y2="21"></line>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">ฐานข้อมูลบริหาร</h3>
-                    <span class="service-card__desc">Management DB</span>
-                </div>
-            </a>
-
-            <a href="https://advisor.uru.ac.th" target="_blank" class="service-card">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">อาจารย์ที่ปรึกษา</h3>
-                    <span class="service-card__desc">Advisor System</span>
-                </div>
-            </a>
-
-            <a href="https://workload.uru.ac.th/" target="_blank" class="service-card">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">ภาระงาน</h3>
-                    <span class="service-card__desc">Workload</span>
-                </div>
-            </a>
-
-            <a href="https://sci.uru.ac.th/docs/qa2568.pdf" target="_blank" class="service-card">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">ประกันคุณภาพ</h3>
-                    <span class="service-card__desc">QA System</span>
-                </div>
-            </a>
-
-            <!-- Journals -->
-            <a href="https://ph03.tci-thaijo.org/index.php/ajsas" target="_blank" class="service-card service-card--journal">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">วารสารวิทยาศาสตร์ฯ</h3>
-                    <span class="service-card__desc">AJSAS Journal</span>
-                </div>
-            </a>
-
-            <a href="http://www.rmj.uru.ac.th/" target="_blank" class="service-card service-card--journal">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">วารสารคณิตศาสตร์</h3>
-                    <span class="service-card__desc">RMS Journal</span>
-                </div>
-            </a>
-
-            <a href="https://sci.uru.ac.th/academic" target="_blank" class="service-card">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
-                        <path d="M12 14l6.16-3.422a12.083 12.083 0 0 1 .665 6.479A11.952 11.952 0 0 0 12 20.055a11.952 11.952 0 0 0-6.824-2.998 12.078 12.078 0 0 1 .665-6.479L12 14z"></path>
-                        <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
-                        <path d="M12 14v6"></path>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">ตำแหน่งทางวิชาการ</h3>
-                    <span class="service-card__desc">Academic Rank</span>
-                </div>
-            </a>
+        <h2 class="cta-section__title">เริ่มต้นเส้นทางของคุณ</h2>
+        <p class="cta-section__description">
+            สำรวจความเป็นไปได้ของการศึกษาที่คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์
+        </p>
+        <div class="flex justify-center gap-4">
+            <a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-lg">สมัครเรียน</a>
+            <a href="<?= base_url('contact') ?>" class="btn btn-outline btn-lg">ติดต่อเรา</a>
         </div>
     </div>
 </section>
 
-<!-- Research Grants & Scholarships Section -->
-<section class="news-section section-blue-light">
-    <div class="container">
-        <div class="news-section__header">
-            <h2 class="news-section__title">ข่าวทุนวิจัยและทุนการศึกษา</h2>
-            <a href="<?= base_url('news') ?>" class="news-section__link">
-                ดูทั้งหมด
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
-            </a>
-        </div>
-
-        <div class="featured-news" data-category="research_grant" data-limit="6">
-            <div class="news-loading" style="text-align: center; padding: 2rem;">
-                <div class="spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                <p style="margin-top: 1rem; color: #64748b;">กำลังโหลดข่าว...</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Student Activities Section -->
-<section class="news-section section-cream">
-    <div class="container">
-        <div class="news-section__header">
-            <h2 class="news-section__title">ข่าวกิจกรรมนักศึกษา</h2>
-            <a href="<?= base_url('news') ?>" class="news-section__link">
-                ดูทั้งหมด
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
-            </a>
-        </div>
-
-        <div class="featured-news" data-category="student_activity" data-limit="6">
-            <div class="news-loading" style="text-align: center; padding: 2rem;">
-                <div class="spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                <p style="margin-top: 1rem; color: #64748b;">กำลังโหลดข่าว...</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<style>
-    /* Hero Carousel Styles */
-    .hero-carousel {
-        position: relative;
-        width: 100%;
-        overflow: hidden;
-    }
-
-    .hero-carousel__container {
-        position: relative;
-        width: 100%;
-    }
-
-    .hero-carousel__slides {
-        position: relative;
-        width: 100%;
-        height: 70vh;
-        min-height: 500px;
-        max-height: 800px;
-    }
-
-    .hero-carousel__slide {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.8s ease, visibility 0.8s ease;
-        display: flex;
-        align-items: center;
-    }
-
-    .hero-carousel__slide.active {
-        opacity: 1;
-        visibility: visible;
-    }
-
-    .hero-carousel__overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, rgba(30, 58, 95, 0.25) 0%, rgba(45, 90, 135, 0.15) 100%);
-    }
-
-    .hero-carousel__slide .container {
-        position: relative;
-        z-index: 2;
-    }
-
-    .hero-carousel__slide .hero__content {
-        max-width: 700px;
-    }
-
-    .hero-carousel__slide .hero__subtitle {
-        display: inline-block;
-        padding: 0.5rem 1.2rem;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border-radius: 50px;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-        color: #1e3a5f;
-    }
-
-    .hero-carousel__slide .hero__title {
-        display: inline-block;
-        font-size: clamp(2rem, 5vw, 3.5rem);
-        font-weight: 700;
-        line-height: 1.3;
-        margin-bottom: 1rem;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        padding: 0.8rem 1.5rem;
-        border-radius: 12px;
-        color: #1e3a5f;
-    }
-
-    .hero-carousel__slide .hero__description {
-        display: inline-block;
-        font-size: 1.1rem;
-        line-height: 1.8;
-        margin-bottom: 2rem;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        padding: 0.8rem 1.2rem;
-        border-radius: 10px;
-        color: #374151;
-    }
-
-    /* Navigation Arrows */
-    .hero-carousel__nav {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 50px;
-        height: 50px;
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        border-radius: 50%;
-        color: white;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-        z-index: 10;
-    }
-
-    .hero-carousel__nav:hover {
-        background: rgba(255, 255, 255, 0.4);
-        transform: translateY(-50%) scale(1.1);
-    }
-
-    .hero-carousel__nav--prev {
-        left: 20px;
-    }
-
-    .hero-carousel__nav--next {
-        right: 20px;
-    }
-
-    /* Dots Indicator */
-    .hero-carousel__dots {
-        position: absolute;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 12px;
-        z-index: 10;
-    }
-
-    .hero-carousel__dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 2px solid rgba(255, 255, 255, 0.6);
-        background: transparent;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .hero-carousel__dot:hover {
-        background: rgba(255, 255, 255, 0.5);
-    }
-
-    .hero-carousel__dot.active {
-        background: white;
-        border-color: white;
-        transform: scale(1.2);
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-        .hero-carousel__slides {
-            height: 60vh;
-            min-height: 400px;
-        }
-
-        .hero-carousel__nav {
-            width: 40px;
-            height: 40px;
-        }
-
-        .hero-carousel__nav--prev {
-            left: 10px;
-        }
-
-        .hero-carousel__nav--next {
-            right: 10px;
-        }
-
-        .hero-carousel__dots {
-            bottom: 20px;
-        }
-
-        .hero-carousel__dot {
-            width: 10px;
-            height: 10px;
-        }
-    }
-</style>
-
-<script>
-    // Hero Carousel JavaScript
-    (function() {
-        let currentSlide = 0;
-        let autoplayInterval;
-        const autoplayDelay = 6000; // 6 seconds
-
-        function getSlides() {
-            return document.querySelectorAll('.hero-carousel__slide');
-        }
-
-        function getDots() {
-            return document.querySelectorAll('.hero-carousel__dot');
-        }
-
-        window.heroCarouselGoto = function(index) {
-            const slides = getSlides();
-            const dots = getDots();
-
-            if (slides.length === 0) return;
-
-            // Wrap around
-            if (index < 0) index = slides.length - 1;
-            if (index >= slides.length) index = 0;
-
-            // Update slides
-            slides.forEach((slide, i) => {
-                slide.classList.toggle('active', i === index);
-            });
-
-            // Update dots
-            dots.forEach((dot, i) => {
-                dot.classList.toggle('active', i === index);
-            });
-
-            currentSlide = index;
-            resetAutoplay();
-        };
-
-        window.heroCarouselNav = function(direction) {
-            heroCarouselGoto(currentSlide + direction);
-        };
-
-        function resetAutoplay() {
-            if (autoplayInterval) {
-                clearInterval(autoplayInterval);
-            }
-            autoplayInterval = setInterval(() => {
-                heroCarouselNav(1);
-            }, autoplayDelay);
-        }
-
-        // Touch/Swipe support
-        document.addEventListener('DOMContentLoaded', function() {
-            const carousel = document.getElementById('heroCarousel');
-            if (!carousel) return;
-
-            let touchStartX = 0;
-            let touchEndX = 0;
-
-            carousel.addEventListener('touchstart', function(e) {
-                touchStartX = e.changedTouches[0].screenX;
-            }, {
-                passive: true
-            });
-
-            carousel.addEventListener('touchend', function(e) {
-                touchEndX = e.changedTouches[0].screenX;
-                const diff = touchStartX - touchEndX;
-
-                if (Math.abs(diff) > 50) { // Minimum swipe distance
-                    if (diff > 0) {
-                        heroCarouselNav(1); // Swipe left = next
-                    } else {
-                        heroCarouselNav(-1); // Swipe right = prev
-                    }
-                }
-            }, {
-                passive: true
-            });
-
-            // Start autoplay
-            resetAutoplay();
-
-            // Pause on hover
-            carousel.addEventListener('mouseenter', () => {
-                if (autoplayInterval) clearInterval(autoplayInterval);
-            });
-
-            carousel.addEventListener('mouseleave', () => {
-                resetAutoplay();
-            });
-        });
-    })();
-</script>
-
-<!-- Campus News Section -->
-<section class="news-section section-white-pattern">
-    <div class="container">
-        <div class="news-section__header">
-            <h2 class="news-section__title">ข่าวประชาสัมพันธ์</h2>
-            <a href="<?= base_url('news') ?>" class="news-section__link">
-                ดูข่าวทั้งหมด
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
-            </a>
-        </div>
-
-        <div class="featured-news" data-category="general" data-limit="6">
-            <div class="news-loading" style="text-align: center; padding: 2rem;">
-                <div class="spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                <p style="margin-top: 1rem; color: #64748b;">กำลังโหลดข่าว...</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-
-
-<!-- Programs Section -->
+<!-- Programs Section (แนะนำหลักสูตรแต่ละหลักสูตร) -->
 <section class="section section-light">
     <div class="container">
         <div class="section-header">
@@ -901,110 +441,308 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
     </div>
 </section>
 
+<!-- Service Grid Section (Database & Journals) -->
+<section class="section section-blue-light" style="padding: var(--spacing-6) 0;">
+    <div class="container">
+        <div class="section-header" style="margin-bottom: var(--spacing-4);">
+            <h2 class="section-header__title" style="font-size: 1.5rem;">ระบบฐานข้อมูลและวารสาร</h2>
+            <p class="section-header__description" style="font-size: 0.9rem; margin-top: 0.5rem;">เข้าถึงระบบสารสนเทศและวารสารวิชาการได้อย่างรวดเร็ว</p>
+        </div>
+
+        <div class="service-grid animate-on-scroll">
+            <!-- Systems -->
+            <a href="http://edoc.sci.uru.ac.th/" target="_blank" class="service-card">
+                <div class="service-card__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                </div>
+                <div class="service-card__content">
+                    <h3 class="service-card__title">งานวิชาการ</h3>
+                    <span class="service-card__desc">e-Doc System</span>
+                </div>
+            </a>
+
+            <a href="http://sci.uru.ac.th/scienceadmin" target="_blank" class="service-card">
+                <div class="service-card__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                </div>
+                <div class="service-card__content">
+                    <h3 class="service-card__title">ฐานข้อมูลบริหาร</h3>
+                    <span class="service-card__desc">Management DB</span>
+                </div>
+            </a>
+
+            <a href="https://advisor.uru.ac.th" target="_blank" class="service-card">
+                <div class="service-card__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <div class="service-card__content">
+                    <h3 class="service-card__title">อาจารย์ที่ปรึกษา</h3>
+                    <span class="service-card__desc">Advisor System</span>
+                </div>
+            </a>
+
+            <a href="https://workload.uru.ac.th/" target="_blank" class="service-card">
+                <div class="service-card__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                </div>
+                <div class="service-card__content">
+                    <h3 class="service-card__title">ภาระงาน</h3>
+                    <span class="service-card__desc">Workload</span>
+                </div>
+            </a>
+
+            <a href="https://sci.uru.ac.th/docs/qa2568.pdf" target="_blank" class="service-card">
+                <div class="service-card__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <div class="service-card__content">
+                    <h3 class="service-card__title">ประกันคุณภาพ</h3>
+                    <span class="service-card__desc">QA System</span>
+                </div>
+            </a>
+
+            <!-- Journals -->
+            <a href="https://ph03.tci-thaijo.org/index.php/ajsas" target="_blank" class="service-card service-card--journal">
+                <div class="service-card__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                </div>
+                <div class="service-card__content">
+                    <h3 class="service-card__title">วารสารวิทยาศาสตร์ฯ</h3>
+                    <span class="service-card__desc">AJSAS Journal</span>
+                </div>
+            </a>
+
+            <a href="http://www.rmj.uru.ac.th/" target="_blank" class="service-card service-card--journal">
+                <div class="service-card__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                </div>
+                <div class="service-card__content">
+                    <h3 class="service-card__title">วารสารคณิตศาสตร์</h3>
+                    <span class="service-card__desc">RMS Journal</span>
+                </div>
+            </a>
+
+            <a href="https://sci.uru.ac.th/academic" target="_blank" class="service-card">
+                <div class="service-card__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                        <path d="M12 14l6.16-3.422a12.083 12.083 0 0 1 .665 6.479A11.952 11.952 0 0 0 12 20.055a11.952 11.952 0 0 0-6.824-2.998 12.078 12.078 0 0 1 .665-6.479L12 14z"></path>
+                        <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                        <path d="M12 14v6"></path>
+                    </svg>
+                </div>
+                <div class="service-card__content">
+                    <h3 class="service-card__title">ตำแหน่งทางวิชาการ</h3>
+                    <span class="service-card__desc">Academic Rank</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
 
 
+<!-- Campus News Section (ข่าวประชาสัมพันธ์ - แบบกะทัดรัด เนื้อหาครบ) -->
+<section class="news-section news-section--compact section-white-pattern">
+    <div class="container">
+        <div class="news-section__header">
+            <h2 class="news-section__title">ข่าวประชาสัมพันธ์</h2>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem;">
+                <a href="<?= base_url('events') ?>" class="btn btn-outline btn-sm" style="white-space: nowrap;">
+                    กิจกรรม / Event ที่จะเกิดขึ้น
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 0.25rem; vertical-align: -2px;">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                </a>
+                <a href="<?= base_url('news') ?>" class="news-section__link">
+                    ดูข่าวทั้งหมด
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </a>
+            </div>
+        </div>
 
-<style>
-    /* Support Staff & Internal Documents Section Styles */
-    .support-staff-section,
-    .internal-docs-section {
-        background: #fff;
-        padding: 0;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
+        <div class="featured-news" data-category="general" data-limit="6">
+            <div class="news-loading" style="text-align: center; padding: 2rem;">
+                <div class="spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 1rem; color: #64748b;">กำลังโหลดข่าว...</p>
+            </div>
+        </div>
+    </div>
+</section>
 
-    .support-staff-section:hover,
-    .internal-docs-section:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    }
 
-    .support-staff-list,
-    .internal-docs-list {
-        list-style: none;
-        padding: 1.5rem;
-        margin: 0;
-    }
+<!-- Research News Section (ข่าว tag งานวิจัย) -->
+<section class="news-section news-section--compact section-blue-light">
+    <div class="container">
+        <div class="news-section__header">
+            <h2 class="news-section__title">ข่าวงานวิจัย</h2>
+            <a href="<?= base_url('news?tag=research') ?>" class="news-section__link">
+                ดูทั้งหมด
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </a>
+        </div>
 
-    .support-staff-list__item,
-    .internal-docs-list__item {
-        margin-bottom: 0.75rem;
-    }
+        <div class="featured-news" data-category="research" data-limit="6">
+            <div class="news-loading" style="text-align: center; padding: 2rem;">
+                <div class="spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 1rem; color: #64748b;">กำลังโหลดข่าว...</p>
+            </div>
+        </div>
+    </div>
+</section>
 
-    .support-staff-list__item:last-child,
-    .internal-docs-list__item:last-child {
-        margin-bottom: 0;
-    }
+<!-- Student Activities Section (แบบกะทัดรัด) -->
+<section class="news-section news-section--compact section-cream">
+    <div class="container">
+        <div class="news-section__header">
+            <h2 class="news-section__title">ข่าวกิจกรรมนักศึกษา</h2>
+            <a href="<?= base_url('news') ?>" class="news-section__link">
+                ดูทั้งหมด
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </a>
+        </div>
 
-    .support-staff-list__link,
-    .internal-docs-list__link {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.875rem;
-        padding: 1rem;
-        border-radius: 8px;
-        text-decoration: none;
-        color: var(--text-color);
-        background: var(--color-gray-200);
-        transition: all 0.2s ease;
-        border: 1px solid transparent;
-    }
+        <div class="featured-news" data-category="student_activity" data-limit="6">
+            <div class="news-loading" style="text-align: center; padding: 2rem;">
+                <div class="spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 1rem; color: #64748b;">กำลังโหลดข่าว...</p>
+            </div>
+        </div>
+    </div>
+</section>
 
-    .support-staff-list__link:hover,
-    .internal-docs-list__link:hover {
-        background: var(--color-gray-100);
-        border-color: var(--color-primary);
-        color: var(--color-primary);
-        transform: translateX(4px);
-    }
+<script>
+    // Hero Carousel JavaScript
+    (function() {
+        let currentSlide = 0;
+        let autoplayInterval;
+        const autoplayDelay = 6000; // 6 seconds
 
-    .support-staff-list__bullet,
-    .internal-docs-list__bullet {
-        display: inline-block;
-        width: 6px;
-        height: 6px;
-        background: var(--color-gray-700);
-        border-radius: 50%;
-        margin-top: 0.5rem;
-        flex-shrink: 0;
-        transition: all 0.2s ease;
-    }
-
-    .support-staff-list__link:hover .support-staff-list__bullet,
-    .internal-docs-list__link:hover .internal-docs-list__bullet {
-        background: var(--color-primary);
-        transform: scale(1.3);
-    }
-
-    .support-staff-list__link span:last-child,
-    .internal-docs-list__link span:last-child {
-        flex: 1;
-        line-height: 1.6;
-    }
-
-    @media (max-width: 768px) {
-        .grid-2 {
-            grid-template-columns: 1fr;
+        function getSlides() {
+            return document.querySelectorAll('.hero-carousel__slide');
         }
 
-        .support-staff-section,
-        .internal-docs-section {
-            margin-bottom: 2rem;
+        function getDots() {
+            return document.querySelectorAll('.hero-carousel__dot');
         }
 
-        .section-header__title {
-            font-size: 1.25rem !important;
+        window.heroCarouselGoto = function(index) {
+            const slides = getSlides();
+            const dots = getDots();
+
+            if (slides.length === 0) return;
+
+            // Wrap around
+            if (index < 0) index = slides.length - 1;
+            if (index >= slides.length) index = 0;
+
+            // Update slides
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+
+            // Update dots
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+
+            currentSlide = index;
+            resetAutoplay();
+        };
+
+        window.heroCarouselNav = function(direction) {
+            heroCarouselGoto(currentSlide + direction);
+        };
+
+        function resetAutoplay() {
+            if (autoplayInterval) {
+                clearInterval(autoplayInterval);
+            }
+            autoplayInterval = setInterval(() => {
+                heroCarouselNav(1);
+            }, autoplayDelay);
         }
 
-        .support-staff-list,
-        .internal-docs-list {
-            padding: 1rem;
-        }
-    }
-</style>
+        // Touch/Swipe support
+        document.addEventListener('DOMContentLoaded', function() {
+            const carousel = document.getElementById('heroCarousel');
+            if (!carousel) return;
+
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            carousel.addEventListener('touchstart', function(e) {
+                touchStartX = e.changedTouches[0].screenX;
+            }, {
+                passive: true
+            });
+
+            carousel.addEventListener('touchend', function(e) {
+                touchEndX = e.changedTouches[0].screenX;
+                const diff = touchStartX - touchEndX;
+
+                if (Math.abs(diff) > 50) { // Minimum swipe distance
+                    if (diff > 0) {
+                        heroCarouselNav(1); // Swipe left = next
+                    } else {
+                        heroCarouselNav(-1); // Swipe right = prev
+                    }
+                }
+            }, {
+                passive: true
+            });
+
+            // Start autoplay
+            resetAutoplay();
+
+            // Pause on hover
+            carousel.addEventListener('mouseenter', () => {
+                if (autoplayInterval) clearInterval(autoplayInterval);
+            });
+
+            carousel.addEventListener('mouseleave', () => {
+                resetAutoplay();
+            });
+        });
+    })();
+</script>
 
 <!-- Quality Assurance & Academic Journals Section -->
 <!-- <section class="section section-light">
@@ -1088,76 +826,7 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
     </div>
 </section> -->
 
-<style>
-    .qa-compact-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 1rem;
-    }
-
-    .qa-compact-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1rem 1.25rem;
-        background: white;
-        border-radius: 10px;
-        border: 1px solid #e2e8f0;
-        text-decoration: none;
-        transition: all 0.2s ease;
-    }
-
-    .qa-compact-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        border-color: var(--primary, #1e3a5f);
-    }
-
-    .qa-compact-item__icon {
-        flex-shrink: 0;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f1f5f9;
-        border-radius: 8px;
-        color: var(--primary, #1e3a5f);
-    }
-
-    .qa-compact-item__icon--dark {
-        background: #1e293b;
-        color: white;
-    }
-
-    .qa-compact-item__icon--accent {
-        background: #fef3c7;
-        color: #d97706;
-    }
-
-    .qa-compact-item__text h4 {
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: #1e3a5f;
-        margin: 0;
-        line-height: 1.3;
-    }
-
-    .qa-compact-item__text p {
-        font-size: 0.75rem;
-        color: #64748b;
-        margin: 0.15rem 0 0 0;
-    }
-
-    @media (max-width: 768px) {
-        .qa-compact-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-
-
-<!-- Executive Highlight Section -->
+<!-- Executive Highlight Section (ดึงจาก personnel) -->
 <section class="section section-slate-gradient">
     <div class="container">
         <div class="section-header">
@@ -1165,96 +834,88 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
             <h2 class="section-header__title">ทีมผู้บริหาร</h2>
         </div>
 
+        <?php
+        $getPersonnelImageUrl = function ($p) {
+            $img = isset($p['image']) ? trim((string) $p['image']) : '';
+            if ($img === '') return '';
+            if (strpos($img, 'http') === 0) return $img;
+            return base_url('serve/thumb/staff/' . basename(str_replace('\\', '/', $img)));
+        };
+        $dean = $dean ?? null;
+        $viceDeans = $vice_deans ?? [];
+        ?>
         <div class="executive-highlight">
-            <!-- Dean Card -->
-            <div class="dean-card animate-on-scroll">
-                <div class="dean-card__image">
-                    <img src="https://ui-avatars.com/api/?name=ปริญญา+ไ&background=1e3a5f&color=fff&size=200&font-size=0.4" alt="คณบดี">
+            <?php if ($dean): ?>
+                <!-- Dean Card (จาก personnel tier 1) -->
+                <div class="dean-card animate-on-scroll">
+                    <div class="dean-card__image">
+                        <?php
+                        $deanImg = $getPersonnelImageUrl($dean);
+                        $deanName = trim($dean['name'] ?? '');
+                        if ($deanImg): ?>
+                            <img src="<?= esc($deanImg) ?>" alt="<?= esc($deanName) ?>" onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($deanName) ?>&background=1e3a5f&color=fff&size=200&font-size=0.4'">
+                        <?php else: ?>
+                            <img src="https://ui-avatars.com/api/?name=<?= urlencode($deanName) ?>&background=1e3a5f&color=fff&size=200&font-size=0.4" alt="<?= esc($deanName) ?>">
+                        <?php endif; ?>
+                    </div>
+                    <div class="dean-card__content">
+                        <div class="dean-card__badge"><?= esc($dean['position'] ?? 'คณบดี') ?></div>
+                        <h3 class="dean-card__name"><?= esc($deanName) ?></h3>
+                        <p class="dean-card__title"><?= esc($dean['position_en'] ?? 'Dean, Faculty of Science and Technology') ?></p>
+                        <?php if (!empty($dean['bio'])): ?>
+                            <p class="dean-card__message"><?= esc(mb_substr(strip_tags($dean['bio']), 0, 200)) ?><?= mb_strlen(strip_tags($dean['bio'] ?? '')) > 200 ? '…' : '' ?></p>
+                        <?php else: ?>
+                            <p class="dean-card__message">คณะวิทยาศาสตร์และเทคโนโลยี มุ่งมั่นผลิตบัณฑิตที่มีคุณภาพ พร้อมทั้งเป็นแหล่งเรียนรู้และบริการวิชาการแก่ชุมชนท้องถิ่น</p>
+                        <?php endif; ?>
+                    </div>
                 </div>
-                <div class="dean-card__content">
-                    <div class="dean-card__badge">คณบดี</div>
-                    <h3 class="dean-card__name">ผู้ช่วยศาสตราจารย์ปริญญา ไกรวุฒินันท์</h3>
-                    <p class="dean-card__title">Dean, Faculty of Science and Technology</p>
-                    <p class="dean-card__message">
-                        "คณะวิทยาศาสตร์และเทคโนโลยี มุ่งมั่นผลิตบัณฑิตที่มีคุณภาพ พร้อมทั้งเป็นแหล่งเรียนรู้และบริการวิชาการแก่ชุมชนท้องถิ่น"
-                    </p>
-                </div>
-            </div>
+            <?php endif; ?>
 
-            <!-- Vice Deans -->
-            <div class="vice-deans">
-                <div class="vice-dean-card animate-on-scroll">
-                    <img src="https://ui-avatars.com/api/?name=จุฬาลักษณ์+ม&background=2d7d46&color=fff&size=80&font-size=0.4" alt="รองคณบดี">
-                    <div class="vice-dean-card__info">
-                        <span class="vice-dean-card__position">รองคณบดี</span>
-                        <span class="vice-dean-card__name">ผศ.จุฬาลักษณ์ มหาวัน</span>
-                    </div>
+            <!-- Vice Deans (จาก personnel tier 2) -->
+            <?php if (!empty($viceDeans)): ?>
+                <div class="vice-deans">
+                    <?php foreach ($viceDeans as $vd):
+                        $vdName = trim($vd['name'] ?? '');
+                        $vdImg = $getPersonnelImageUrl($vd);
+                    ?>
+                        <div class="vice-dean-card animate-on-scroll">
+                            <?php if ($vdImg): ?>
+                                <img src="<?= esc($vdImg) ?>" alt="<?= esc($vdName) ?>" onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($vdName) ?>&background=2d7d46&color=fff&size=80&font-size=0.4'">
+                            <?php else: ?>
+                                <img src="https://ui-avatars.com/api/?name=<?= urlencode($vdName) ?>&background=2d7d46&color=fff&size=80&font-size=0.4" alt="<?= esc($vdName) ?>">
+                            <?php endif; ?>
+                            <div class="vice-dean-card__info">
+                                <span class="vice-dean-card__position"><?= esc($vd['position'] ?? 'รองคณบดี') ?></span>
+                                <span class="vice-dean-card__name"><?= esc($vdName) ?></span>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-                <div class="vice-dean-card animate-on-scroll">
-                    <img src="https://ui-avatars.com/api/?name=วารุณี+จ&background=2d7d46&color=fff&size=80&font-size=0.4" alt="รองคณบดี">
-                    <div class="vice-dean-card__info">
-                        <span class="vice-dean-card__position">รองคณบดี</span>
-                        <span class="vice-dean-card__name">ผศ.ดร.วารุณี จอมกิติชัย</span>
-                    </div>
-                </div>
-                <div class="vice-dean-card animate-on-scroll">
-                    <img src="https://ui-avatars.com/api/?name=วีระศักดิ์+แ&background=2d7d46&color=fff&size=80&font-size=0.4" alt="รองคณบดี">
-                    <div class="vice-dean-card__info">
-                        <span class="vice-dean-card__position">รองคณบดี</span>
-                        <span class="vice-dean-card__name">อ.ดร.วีระศักดิ์ แก้วทรัพย์</span>
-                    </div>
-                </div>
-            </div>
+            <?php endif; ?>
         </div>
 
         <div class="text-center" style="margin-top: 2rem;">
-            <a href="<?= base_url('about') ?>" class="btn btn-outline">ดูข้อมูลเพิ่มเติม</a>
+            <a href="<?= base_url('executives') ?>" class="btn btn-outline">ดูโครงสร้างองค์กรทั้งหมด</a>
         </div>
     </div>
 </section>
 
-<!-- Research Section -->
+<!-- Event Coming Up Section -->
 <section class="section section-blue-light">
     <div class="container">
-        <div class="feature-section">
-            <div class="feature-section__image animate-on-scroll">
-                <img src="<?= base_url('assets/images/research_laboratory.png') ?>" alt="Research Laboratory">
+        <div class="section-header" style="margin-bottom: var(--spacing-6);">
+            <span class="section-header__subtitle">กิจกรรม</span>
+            <h2 class="section-header__title">กิจกรรมที่จะมาถึง</h2>
+            <p class="section-header__description">Events Coming Up — กิจกรรมและข่าวสารล่าสุดที่กำลังจะมาถึง</p>
+        </div>
+        <div id="events-coming-up" class="events-coming-up" data-limit="4">
+            <div class="news-loading" style="text-align: center; padding: 2rem;">
+                <div class="spinner" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 1rem; color: #64748b;">กำลังโหลดกิจกรรม...</p>
             </div>
-            <div class="feature-section__content animate-on-scroll">
-                <span class="feature-section__subtitle">งานวิจัย</span>
-                <h2 class="feature-section__title">ขับเคลื่อนนวัตกรรมและการค้นพบ</h2>
-                <p class="feature-section__description">
-                    นักวิจัยของเรากำลังแก้ไขปัญหาที่ท้าทายที่สุดของโลก ตั้งแต่การเปลี่ยนแปลงสภาพภูมิอากาศ
-                    ไปจนถึงเทคโนโลยีและสุขภาพ
-                </p>
-                <ul class="feature-list">
-                    <li class="feature-list__item">
-                        <span class="feature-list__icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                        </span>
-                        <span>ศูนย์วิจัยระดับประเทศ</span>
-                    </li>
-                    <li class="feature-list__item">
-                        <span class="feature-list__icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                        </span>
-                        <span>ความร่วมมือแบบสหวิทยาการ</span>
-                    </li>
-                    <li class="feature-list__item">
-                        <span class="feature-list__icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                        </span>
-                        <span>ผลกระทบในโลกจริง</span>
-                    </li>
-                </ul>
-                <a href="<?= base_url('research') ?>" class="btn btn-primary">ค้นพบงานวิจัย</a>
-            </div>
+        </div>
+        <div class="text-center" style="margin-top: var(--spacing-6);">
+            <a href="<?= base_url('events') ?>" class="btn btn-primary">ดูกิจกรรมทั้งหมด</a>
         </div>
     </div>
 </section>
@@ -1304,21 +965,6 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
     </div>
 </section>
 
-
-<!-- Admission CTA Section -->
-<section class="cta-section section-dark-blue">
-    <div class="container">
-        <h2 class="cta-section__title">เริ่มต้นเส้นทางของคุณ</h2>
-        <p class="cta-section__description">
-            สำรวจความเป็นไปได้ของการศึกษาที่คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์
-        </p>
-        <div class="flex justify-center gap-4">
-            <a href="<?= base_url('admission') ?>" class="btn btn-secondary btn-lg">สมัครเรียน</a>
-            <a href="<?= base_url('contact') ?>" class="btn btn-outline btn-lg">ติดต่อเรา</a>
-        </div>
-    </div>
-</section>
-
 <!-- Contact Info Footer -->
 <section class="section section-light">
     <div class="container">
@@ -1352,517 +998,6 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
         </div>
     </div>
 </section>
-
-<style>
-    /* Executive Highlight Section */
-    .executive-highlight {
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-        align-items: center;
-    }
-
-    .dean-card {
-        display: flex;
-        align-items: center;
-        gap: 2rem;
-        background: white;
-        border-radius: 24px;
-        padding: 2rem;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        max-width: 700px;
-        width: 100%;
-    }
-
-    .dean-card__image img {
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 4px solid var(--color-primary);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-    }
-
-    .dean-card__content {
-        flex: 1;
-    }
-
-    .dean-card__badge {
-        display: inline-block;
-        padding: 0.4rem 1rem;
-        background: linear-gradient(135deg, #1e3a5f, #2d5a87);
-        color: white;
-        border-radius: 50px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-bottom: 0.75rem;
-    }
-
-    .dean-card__name {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin: 0 0 0.25rem;
-    }
-
-    .dean-card__title {
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        margin: 0 0 1rem;
-    }
-
-    .dean-card__message {
-        font-size: 0.95rem;
-        color: var(--text-secondary);
-        line-height: 1.6;
-        font-style: italic;
-        margin: 0;
-        padding-left: 1rem;
-        border-left: 3px solid var(--color-primary);
-    }
-
-    .vice-deans {
-        display: flex;
-        gap: 1.5rem;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .vice-dean-card {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        background: white;
-        padding: 1rem 1.5rem;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        transition: all 0.3s ease;
-    }
-
-    .vice-dean-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    }
-
-    .vice-dean-card img {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .vice-dean-card__info {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .vice-dean-card__position {
-        font-size: 0.75rem;
-        color: #2d7d46;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .vice-dean-card__name {
-        font-size: 0.9rem;
-        color: var(--text-primary);
-        font-weight: 500;
-    }
-
-    .text-center {
-        text-align: center;
-    }
-
-    @media (max-width: 768px) {
-        .dean-card {
-            flex-direction: column;
-            text-align: center;
-            padding: 1.5rem;
-        }
-
-        .dean-card__message {
-            border-left: none;
-            border-top: 3px solid var(--color-primary);
-            padding-left: 0;
-            padding-top: 1rem;
-        }
-
-        .vice-deans {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .vice-dean-card {
-            justify-content: flex-start;
-        }
-    }
-
-    /* Degree Badges */
-    .degree-badges {
-        display: flex;
-        justify-content: center;
-        gap: 1.5rem;
-        margin-top: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .degree-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.25rem;
-        background: linear-gradient(135deg, #1e3a5f, #2d5a87);
-        color: white;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 1rem;
-        box-shadow: 0 4px 15px rgba(30, 58, 95, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .degree-badge:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(30, 58, 95, 0.4);
-    }
-
-    .degree-badge svg {
-        stroke: currentColor;
-    }
-
-    .degree-badge--master {
-        background: linear-gradient(135deg, #2d7d46, #3da55d);
-        box-shadow: 0 4px 15px rgba(45, 125, 70, 0.3);
-    }
-
-    .degree-badge--master:hover {
-        box-shadow: 0 6px 20px rgba(45, 125, 70, 0.4);
-    }
-
-    .degree-badge--doctorate {
-        background: linear-gradient(135deg, #9333ea, #a855f7);
-        box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
-    }
-
-    .degree-badge--doctorate:hover {
-        box-shadow: 0 6px 20px rgba(147, 51, 234, 0.4);
-    }
-
-    @media (max-width: 480px) {
-        .degree-badges {
-            gap: 0.75rem;
-        }
-
-        .degree-badge {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-        }
-
-        .degree-badge svg {
-            width: 20px;
-            height: 20px;
-        }
-    }
-
-    /* Programs Carousel Styles */
-    .programs-carousel-wrapper {
-        position: relative;
-        margin: 2rem 0;
-        padding: 0 3rem;
-    }
-
-    .programs-carousel {
-        display: flex;
-        gap: 1.5rem;
-        overflow-x: auto;
-        scroll-behavior: smooth;
-        scrollbar-width: none;
-        /* Firefox */
-        -ms-overflow-style: none;
-        /* IE and Edge */
-        padding: 1rem 0;
-    }
-
-    .programs-carousel::-webkit-scrollbar {
-        display: none;
-        /* Chrome, Safari, Opera */
-    }
-
-    .program-carousel-card {
-        flex: 0 0 320px;
-        background: white;
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-
-    .program-carousel-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    }
-
-    .program-carousel-card__image-wrapper {
-        position: relative;
-        width: 100%;
-        height: 200px;
-        overflow: hidden;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-
-    .program-carousel-card__image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.3s ease;
-    }
-
-    .program-carousel-card:hover .program-carousel-card__image {
-        transform: scale(1.1);
-    }
-
-    .program-carousel-card__overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .program-carousel-card:hover .program-carousel-card__overlay {
-        opacity: 1;
-    }
-
-    .program-icon-square--carousel {
-        width: 80px;
-        height: 80px;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 16px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    .program-icon-square--carousel svg {
-        width: 40px;
-        height: 40px;
-        color: var(--color-primary);
-    }
-
-    .program-carousel-card__content {
-        padding: 1.5rem;
-    }
-
-    .program-carousel-card__degree {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        background: var(--color-primary-light);
-        color: var(--color-primary-dark);
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        margin-bottom: 0.75rem;
-    }
-
-    .program-carousel-card--master .program-carousel-card__degree {
-        background: var(--color-secondary-light, #e8f5e9);
-        color: var(--color-secondary-dark, #2d7d46);
-    }
-
-    .program-carousel-card--doctorate .program-carousel-card__degree {
-        background: #f3e5f5;
-        color: #7b1fa2;
-    }
-
-    .program-carousel-card__name {
-        font-size: 1.125rem;
-        font-weight: 600;
-        margin: 0 0 0.5rem 0;
-        color: var(--text-color);
-        line-height: 1.4;
-    }
-
-    .program-carousel-card__description {
-        font-size: 0.875rem;
-        color: var(--color-gray-600);
-        line-height: 1.6;
-        margin: 0;
-    }
-
-    .carousel-nav {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: white;
-        border: 2px solid var(--color-gray-300);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        z-index: 10;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .carousel-nav:hover {
-        background: var(--color-primary);
-        border-color: var(--color-primary);
-        color: white;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        transform: translateY(-50%) scale(1.1);
-    }
-
-    .carousel-nav--prev {
-        left: 0;
-    }
-
-    .carousel-nav--next {
-        right: 0;
-    }
-
-    .carousel-nav svg {
-        width: 24px;
-        height: 24px;
-    }
-
-    @media (max-width: 768px) {
-        .programs-carousel-wrapper {
-            padding: 0 2.5rem;
-        }
-
-        .program-carousel-card {
-            flex: 0 0 280px;
-        }
-
-        .carousel-nav {
-            width: 40px;
-            height: 40px;
-        }
-
-        .carousel-nav svg {
-            width: 20px;
-            height: 20px;
-        }
-    }
-
-    /* Program Cards - Compact Style */
-    .program-card {
-        background: white;
-        padding: 1rem;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        transition: all 0.3s ease;
-        border-left: 3px solid var(--primary, #1e3a5f);
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .program-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
-    }
-
-    /* Square Icon Styles for Home Page */
-    .program-icon-square {
-        width: 56px;
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, var(--primary, #1e3a5f), #2d5a87);
-        border-radius: 12px;
-        margin-bottom: 0.75rem;
-        color: white;
-        box-shadow: 0 4px 12px rgba(30, 58, 95, 0.2);
-        transition: all 0.3s ease;
-        flex-shrink: 0;
-    }
-
-    .program-card:hover .program-icon-square {
-        transform: scale(1.05) rotate(5deg);
-        box-shadow: 0 6px 20px rgba(30, 58, 95, 0.3);
-    }
-
-    .program-icon-square--master {
-        background: linear-gradient(135deg, #2d7d46, #3da55d);
-        box-shadow: 0 4px 12px rgba(45, 125, 70, 0.2);
-    }
-
-    .program-card--master:hover .program-icon-square--master {
-        box-shadow: 0 6px 20px rgba(45, 125, 70, 0.3);
-    }
-
-    .program-icon-square--doctorate {
-        background: linear-gradient(135deg, #8b5cf6, #9333ea);
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
-    }
-
-    .program-card--doctorate:hover .program-icon-square--doctorate {
-        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
-    }
-
-    .program-icon-square svg {
-        width: 28px;
-        height: 28px;
-        stroke: currentColor;
-    }
-
-    .program-card__degree {
-        display: inline-block;
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: white;
-        background: var(--primary, #1e3a5f);
-        padding: 0.15rem 0.5rem;
-        border-radius: 4px;
-        margin-bottom: 0.5rem;
-    }
-
-    .program-card__name {
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: var(--text-primary, #333);
-        margin: 0;
-        line-height: 1.3;
-    }
-
-    .program-card--master {
-        border-left-color: #2d7d46;
-    }
-
-    .program-card--master .program-card__degree {
-        background: #2d7d46;
-    }
-
-    .program-card--doctorate {
-        border-left-color: #9333ea;
-    }
-
-    .program-card--doctorate .program-card__degree {
-        background: #9333ea;
-    }
-
-    @media (max-width: 768px) {
-        .program-icon-square {
-            width: 48px;
-            height: 48px;
-        }
-
-        .program-icon-square svg {
-            width: 24px;
-            height: 24px;
-        }
-    }
-</style>
 
 <script>
     // Carousel scroll function
@@ -1934,14 +1069,27 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
     // Load news sections via AJAX
     (function() {
         const baseUrl = window.BASE_URL || '<?= base_url() ?>';
-        
-        // Category labels
+
+        // Category labels (slug จาก news_tags)
         const categoryLabels = {
-            'research_grant': { main: 'ทุนวิจัย', secondary: 'ทุนการศึกษา' },
-            'student_activity': { main: 'กิจกรรม', secondary: 'กิจกรรม' },
-            'general': { main: 'ข่าวล่าสุด', secondary: 'ข่าว' }
+            'research': {
+                main: 'งานวิจัย',
+                secondary: 'งานวิจัย'
+            },
+            'research_grant': {
+                main: 'ทุนวิจัย',
+                secondary: 'ทุนการศึกษา'
+            },
+            'student_activity': {
+                main: 'กิจกรรม',
+                secondary: 'กิจกรรม'
+            },
+            'general': {
+                main: 'ข่าวล่าสุด',
+                secondary: 'ข่าว'
+            }
         };
-        
+
         // Format date helper (Thai format)
         function formatDate(dateString) {
             if (!dateString) return '';
@@ -1952,20 +1100,20 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
             const year = date.getFullYear();
             return `${day} ${month} ${year}`;
         }
-        
+
         // Render news card (all cards are equal size now)
         function renderNewsCard(article, index = 0) {
             // Use featured_image from database, fallback only if null/empty/undefined
             let imageUrl = '';
-            
+
             // Check if featured_image exists and is not empty
             // API returns empty string '' when no image, so we need to check explicitly
-            const hasImage = article.featured_image !== null && 
-                            article.featured_image !== undefined && 
-                            article.featured_image !== '' &&
-                            typeof article.featured_image === 'string' && 
-                            article.featured_image.trim() !== '';
-            
+            const hasImage = article.featured_image !== null &&
+                article.featured_image !== undefined &&
+                article.featured_image !== '' &&
+                typeof article.featured_image === 'string' &&
+                article.featured_image.trim() !== '';
+
             if (hasImage) {
                 // Use image from database (already formatted with base_url by API)
                 imageUrl = article.featured_image;
@@ -1973,12 +1121,12 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                 // Fallback image only when no image in database
                 imageUrl = 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400&h=200&fit=crop';
             }
-            
+
             const category = article.category || 'general';
             const categoryLabel = categoryLabels[category] || categoryLabels['general'];
             const label = categoryLabel.secondary;
             const title = article.title.length > 100 ? article.title.substring(0, 100) + '...' : article.title;
-            
+
             return `
                 <article class="card animate-on-scroll">
                     <img src="${imageUrl}" alt="${article.title}" class="card__image" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400&h=200&fit=crop';">
@@ -1987,7 +1135,7 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                         <h3 class="card__title">
                             <a href="${baseUrl}news/${article.id}">${title}</a>
                         </h3>
-                        ${article.excerpt ? `<p class="card__excerpt">${article.excerpt.substring(0, 100)}...</p>` : ''}
+                        ${article.excerpt ? `<p class="card__excerpt">${article.excerpt.substring(0, 130)}${article.excerpt.length > 130 ? '…' : ''}</p>` : ''}
                         <div class="card__meta">
                             <span>${formatDate(article.published_at)}</span>
                         </div>
@@ -1995,26 +1143,26 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                 </article>
             `;
         }
-        
+
         // Load news for a section
         function loadNewsSection(container) {
             const category = container.getAttribute('data-category');
             const limit = parseInt(container.getAttribute('data-limit')) || 6;
-            
+
             fetch(`${baseUrl}api/news/category/${category}?limit=${limit}`)
                 .then(response => response.json())
                 .then(result => {
                     if (result.success && result.data && result.data.length > 0) {
                         const news = result.data;
                         let html = '';
-                        
+
                         // Render all 6 news items (equal size, 3 columns x 2 rows)
                         for (let i = 0; i < Math.min(6, news.length); i++) {
                             html += renderNewsCard(news[i], i);
                         }
-                        
+
                         container.innerHTML = html;
-                        
+
                         // Trigger animations
                         if (typeof initAnimations === 'function') {
                             initAnimations();
@@ -2028,26 +1176,114 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                     container.innerHTML = '<div class="text-center py-8"><p class="text-muted">เกิดข้อผิดพลาดในการโหลดข่าว</p></div>';
                 });
         }
-        
+
+        // Format date for event card (day + month short)
+        function formatEventDate(dateString) {
+            if (!dateString) return {
+                day: '',
+                month: ''
+            };
+            const date = new Date(dateString);
+            const day = date.getDate();
+            const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            const month = months[date.getMonth()];
+            return {
+                day: String(day),
+                month
+            };
+        }
+
+        // Escape HTML for safe display
+        function escHtml(s) {
+            if (!s) return '';
+            const div = document.createElement('div');
+            div.textContent = s;
+            return div.innerHTML;
+        }
+
+        // Render event card from table `events` (event_date, link to /events/id)
+        function renderEventCard(ev) {
+            const dateStr = ev.event_date || ev.published_at;
+            const {
+                day,
+                month
+            } = formatEventDate(dateStr);
+            const rawTitle = ev.title || '';
+            const title = rawTitle.length > 80 ? rawTitle.substring(0, 80) + '...' : rawTitle;
+            const rawExcerpt = ev.excerpt || '';
+            const excerpt = rawExcerpt.length > 120 ? rawExcerpt.substring(0, 120) + '...' : rawExcerpt;
+            const linkUrl = ev.event_date ? `${baseUrl}events/${ev.id}` : `${baseUrl}news/${ev.id}`;
+            return `
+                <a href="${linkUrl}" class="event-card animate-on-scroll">
+                    <div class="event-card__date">
+                        <span class="event-card__day">${escHtml(day)}</span>
+                        <span class="event-card__month">${escHtml(month)}</span>
+                    </div>
+                    <div class="event-card__body">
+                        <h3 class="event-card__title">${escHtml(title)}</h3>
+                        ${excerpt ? `<p class="event-card__excerpt">${escHtml(excerpt)}</p>` : ''}
+                        <span class="event-card__link">ดูรายละเอียด →</span>
+                    </div>
+                </a>
+            `;
+        }
+
+        // Load Events Coming Up: ใช้ตาราง events ก่อน (api/events/upcoming) ถ้าไม่มีค่อยใช้ข่าวล่าสุด
+        function loadEventsComingUp() {
+            const container = document.getElementById('events-coming-up');
+            if (!container) return;
+            const limit = parseInt(container.getAttribute('data-limit')) || 4;
+
+            fetch(`${baseUrl}api/events/upcoming?limit=${limit}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success && result.data && result.data.length > 0) {
+                        const events = result.data;
+                        let html = '';
+                        for (let i = 0; i < events.length; i++) {
+                            html += renderEventCard(events[i]);
+                        }
+                        container.innerHTML = html;
+                        if (typeof initAnimations === 'function') initAnimations();
+                        return;
+                    }
+                    // ไม่มีกิจกรรมจากตาราง events — fallback ใช้ข่าวล่าสุด
+                    return fetch(`${baseUrl}api/news?limit=${limit}`)
+                        .then(r => r.json())
+                        .then(newsResult => {
+                            if (newsResult.success && newsResult.data && newsResult.data.length > 0) {
+                                let html = '';
+                                for (let i = 0; i < newsResult.data.length; i++) {
+                                    html += renderEventCard(newsResult.data[i]);
+                                }
+                                container.innerHTML = html;
+                                if (typeof initAnimations === 'function') initAnimations();
+                            } else {
+                                container.innerHTML = '<div class="text-center py-8"><p class="text-muted">ยังไม่มีกิจกรรมในขณะนี้</p></div>';
+                            }
+                        });
+                })
+                .catch(error => {
+                    console.error('Error loading events:', error);
+                    container.innerHTML = '<div class="text-center py-8"><p class="text-muted">เกิดข้อผิดพลาดในการโหลดกิจกรรม</p></div>';
+                });
+        }
+
         // Load all news sections when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             const newsSections = document.querySelectorAll('.featured-news[data-category]');
-            
+
             // Load each section with a small delay to stagger requests
             newsSections.forEach((section, index) => {
                 setTimeout(() => {
                     loadNewsSection(section);
                 }, index * 200); // 200ms delay between each request
             });
+
+            // Load Events Coming Up
+            setTimeout(loadEventsComingUp, 400);
         });
     })();
 </script>
-
-<style>
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-</style>
 
 <?= $this->endSection() ?>
