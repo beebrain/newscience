@@ -36,7 +36,7 @@ class Dashboard extends BaseController
         $user = $this->personnelModel->find($userId);
 
         if (!$user || $user['role'] !== 'faculty') {
-            return redirect()->to(base_url('/admin/dashboard'))->with('error', 'ไม่พบสิทธิ์เพียงการจัดการหลักสูตร');
+            return redirect()->to(base_url('/dashboard'))->with('error', 'ไม่พบสิทธิ์เพียงการจัดการหลักสูตร');
         }
 
         // Get programs where user is chair
