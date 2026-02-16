@@ -39,8 +39,8 @@ class ProgramAdminFilter implements FilterInterface
             $isProgramAdmin = $personnelProgramModel->personnelHasChairRole($user['uid']);
         }
 
-        // Check if user is Super Admin
-        if ($userRole === 'super_admin') {
+        // Check if user is Super Admin or Admin
+        if ($userRole === 'super_admin' || $userRole === 'admin') {
             $isProgramAdmin = true;
         }
 
