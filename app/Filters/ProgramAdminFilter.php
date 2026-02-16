@@ -49,7 +49,7 @@ class ProgramAdminFilter implements FilterInterface
         }
 
         if (!$isProgramAdmin) {
-            return redirect()->to(base_url('/admin/dashboard'))->with('error', 'คุณณมีสิทธิ์เพียงการจัดการหลักสูตร');
+            return redirect()->to(base_url('/dashboard'))->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตร');
         }
 
         return null;
