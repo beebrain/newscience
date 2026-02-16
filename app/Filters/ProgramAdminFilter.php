@@ -48,7 +48,7 @@ class ProgramAdminFilter implements FilterInterface
             return redirect()->to(base_url('/admin/dashboard'))->with('error', 'คุณณมีสิทธิ์เพียงการจัดการหลักสูตร');
         }
 
-        return $request;
+        return null;
     }
 
     /**
