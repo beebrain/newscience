@@ -54,7 +54,7 @@ class ProgramAdminFilter implements FilterInterface
     /**
      * Allow after filter to run
      */
-    public function after(RequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null): ResponseInterface
     {
         return $response;
     }
