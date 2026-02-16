@@ -325,9 +325,15 @@ class ContentBuilder extends BaseController
      */
     protected function checkProgramAuth(int $programId): bool
     {
+        // Check if user is super_admin
+        $userRole = session()->get('admin_role');
+        if ($userRole === 'super_admin' || $userRole === 'admin') {
+            return true;
+        }
+
         $userId = session()->get('admin_id');
         $isChair = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId) === $userId;
-        
+
         if (!$isChair) {
             $program = $this->programModel->find($programId);
             if ($program && $program['chair_personnel_id']) {
