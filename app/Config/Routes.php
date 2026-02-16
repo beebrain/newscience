@@ -42,6 +42,7 @@ $routes->get('/promotion-criteria', 'Pages::promotionCriteria');
 $routes->get('/dev/login-as-admin', 'Dev::loginAsAdmin');
 $routes->get('/dev/login-as-student', 'Dev::loginAsStudent');
 $routes->get('/dev/login-as-student-admin', 'Dev::loginAsStudentAdmin');
+$routes->get('/dev/test-content-builder', 'Dev::testContentBuilder');
 
 // Admin Auth Routes (no filter)
 $routes->get('/admin/login', 'Admin\Auth::login');

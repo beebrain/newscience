@@ -105,4 +105,38 @@ class Dev extends BaseController
         return redirect()->to(base_url('student-admin/barcode-events'))
             ->with('success', '[Local] เข้าสู่ระบบเป็น Student Admin แล้ว');
     }
+
+    /**
+     * เข้าเป็น super_admin และไปที่ Content Builder ทันที (สำหรับทดสอบ)
+     * GET /dev/test-content-builder
+     */
+    public function testContentBuilder()
+    {
+        if (!$this->isLocal()) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $userModel = new UserModel();
+        // หา user ที่เป็น super_admin ก่อน ถ้าไม่มีใช้ user แรกและตั้ง role เป็น super_admin
+        $user = $userModel->where('role', 'super_admin')->where('active', 1)->first();
+
+        if (!$user) {
+            $user = $userModel->first();
+            if (!$user) {
+                return redirect()->to(base_url('admin/login'))
+                    ->with('error', 'ไม่พบ user ในระบบ');
+            }
+        }
+
+        session()->set([
+            'admin_logged_in' => true,
+            'admin_id' => $user['uid'],
+            'admin_email' => $user['email'],
+            'admin_name' => $userModel->getFullName($user),
+            'admin_role' => 'super_admin',
+        ]);
+
+        return redirect()->to(base_url('program-admin'))
+            ->with('success', '[Local] เข้าสู่ระบบเป็น super_admin และไปที่ Content Builder');
+    }
 }
