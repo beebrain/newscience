@@ -22,6 +22,10 @@ class ProgramAdminFilter implements FilterInterface
 
         $userRole = $session->get('admin_role');
 
+        // Debug logging
+        log_message('debug', 'ProgramAdminFilter: userRole = ' . ($userRole ?? 'null'));
+        log_message('debug', 'ProgramAdminFilter: admin_id = ' . ($session->get('admin_id') ?? 'null'));
+
         // Get user info
         $userModel = new \App\Models\UserModel();
         $user = $userModel->find($session->get('admin_id'));
