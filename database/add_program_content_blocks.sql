@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS program_content_blocks (
     is_published BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE,
     UNIQUE KEY unique_block_key (program_id, block_key),
     INDEX idx_program_id (program_id),
     INDEX idx_sort_order (sort_order),

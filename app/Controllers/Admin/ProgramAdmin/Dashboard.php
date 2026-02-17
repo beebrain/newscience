@@ -27,28 +27,65 @@ class Dashboard extends BaseController
     }
 
     /**
-     * Dashboard - แสำหรับแสดงหลักสูตรที่ประธานจัดการ
+     * Check if user can manage this program
+     * super_admin/admin: ได้ทุกหลักสูตร
+     * faculty (chair): เฉพาะหลักสูตรที่เป็นประธาน
+     */
+    protected function canManageProgram(int $programId): bool
+    {
+        $userId = session()->get('admin_id');
+        $userRole = session()->get('admin_role');
+
+        // super_admin และ admin จัดการได้ทุกหลักสูตร
+        if ($userRole === 'super_admin' || $userRole === 'admin') {
+            return true;
+        }
+
+        // faculty ต้องเป็นประธานหลักสูตร
+        $isChair = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId) === $userId;
+        if (!$isChair) {
+            $program = $this->programModel->find($programId);
+            if ($program && $program['chair_personnel_id']) {
+                $isChair = $program['chair_personnel_id'] == $userId;
+            }
+        }
+
+        return $isChair;
+    }
+
+    /**
+     * Dashboard - แสดงหลักสูตรที่ผู้ใช้สามารถจัดการได้
+     * super_admin/admin: แสดงทุกหลักสูตร
+     * faculty (chair): แสดงเฉพาะหลักสูตรที่เป็นประธาน
      */
     public function index()
     {
-        // Get programs that this user is chair of
         $userId = session()->get('admin_id');
-        $user = $this->personnelModel->find($userId);
+        $userRole = session()->get('admin_role');
 
-        if (!$user || $user['role'] !== 'faculty') {
-            return redirect()->to(base_url('/dashboard'))->with('error', 'ไม่พบสิทธิ์เพียงการจัดการหลักสูตร');
-        }
-
-        // Get programs where user is chair
-        $coordinatorIds = $this->personnelProgramModel->getAllCoordinators();
-        $programIds = array_keys($coordinatorIds);
-
-        $programs = [];
-        if (!empty($programIds)) {
+        // super_admin และ admin เห็นทุกหลักสูตร
+        if ($userRole === 'super_admin' || $userRole === 'admin') {
             $programs = $this->programModel->getWithCoordinator();
-            $programs = array_filter($programs, function ($program) use ($programIds) {
-                return in_array($program['id'], $programIds);
-            });
+            $pageTitle = 'จัดการหลักสูตร (ผู้ดูแลระบบ)';
+        } else {
+            // faculty (chair) เห็นเฉพาะหลักสูตรที่เป็นประธาน
+            $user = $this->personnelModel->find($userId);
+            if (!$user || $user['role'] !== 'faculty') {
+                return redirect()->to(base_url('/dashboard'))->with('error', 'ไม่พบสิทธิ์ในการจัดการหลักสูตร');
+            }
+
+            // Get programs where user is chair
+            $coordinatorIds = $this->personnelProgramModel->getAllCoordinators();
+            $programIds = array_keys($coordinatorIds);
+
+            $programs = [];
+            if (!empty($programIds)) {
+                $allPrograms = $this->programModel->getWithCoordinator();
+                $programs = array_filter($allPrograms, function ($program) use ($programIds) {
+                    return in_array($program['id'], $programIds);
+                });
+            }
+            $pageTitle = 'จัดการหลักสูตร (ประธานหลักสูตร)';
         }
 
         // Get program pages for these programs
@@ -61,11 +98,13 @@ class Dashboard extends BaseController
         }
 
         $data = [
-            'page_title' => 'จัดการหลักสูตร (ประธานหลักสูตร)',
+            'page_title' => $pageTitle,
             'programs' => $programs,
             'program_pages' => $programPages,
             'total_programs' => count($programs),
-            'published_pages' => count(array_filter($programPages, fn($p) => $p['is_published'])),
+            'published_pages' => count(array_filter($programPages, fn($p) => $p['is_published'] ?? false)),
+            'user_role' => $userRole,
+            'layout' => 'admin/layouts/admin_layout',
         ];
 
         return view('admin/programs/dashboard', $data);
@@ -81,12 +120,9 @@ class Dashboard extends BaseController
             return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
         }
 
-        // Check if user is chair of this program
-        $userId = session()->get('admin_id');
-        $isChair = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId) === $userId;
-
-        if (!$isChair) {
-            return redirect()->back()->with('error', 'คุณณมีสิทธิ์เพียงการจัดการหลักสูตรนี้');
+        // Check authorization
+        if (!$this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
         }
 
         $programPage = $this->programPageModel->findByProgramId($programId);
@@ -114,6 +150,7 @@ class Dashboard extends BaseController
             'coordinator' => $coordinator,
             'personnel_list' => $personnelList,
             'personnel_programs' => $personnelPrograms,
+            'layout' => 'admin/layouts/admin_layout',
         ];
 
         return view('admin/programs/edit_content', $data);
@@ -129,12 +166,9 @@ class Dashboard extends BaseController
             return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
         }
 
-        // Check if user is chair of this program
-        $userId = session()->get('admin_id');
-        $isChair = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId) === $userId;
-
-        if (!$isChair) {
-            return redirect()->back()->with('error', 'คุณณมีสิทธิ์เพียงการจัดการหลักสูตรนี้');
+        // Check authorization
+        if (!$this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
         }
 
         $rules = [
@@ -181,12 +215,9 @@ class Dashboard extends BaseController
             return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
         }
 
-        // Check if user is chair of this program
-        $userId = session()->get('admin_id');
-        $isChair = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId) === $userId;
-
-        if (!$isChair) {
-            return redirect()->back()->with('error', 'คุณณมีสิทธิ์เพียงการจัดการหลักสูตรนี้');
+        // Check authorization
+        if (!$this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
         }
 
         $rules = [
@@ -245,12 +276,9 @@ class Dashboard extends BaseController
             return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
         }
 
-        // Check if user is chair of this program
-        $userId = session()->get('admin_id');
-        $isChair = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId) === $userId;
-
-        if (!$isChair) {
-            return redirect()->back()->with('error', 'คุณณมีสิทธิ์เพียงการจัดการหลักสูตรนี้');
+        // Check authorization
+        if (!$this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
         }
 
         $programPage = $this->programPageModel->findByProgramId($programId);
@@ -260,6 +288,7 @@ class Dashboard extends BaseController
             'page_title' => 'ตัวอย่างหน้าเว็บไซต์หลักสูตร - ' . ($program['name_th'] ?? $program['name_en']),
             'program' => $program,
             'page' => $programPage,
+            'layout' => 'admin/layouts/admin_layout',
         ];
 
         return view('admin/programs/preview', $data);
@@ -275,16 +304,9 @@ class Dashboard extends BaseController
             return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
         }
 
-        // Check if user is chair of this program
-        $userId = session()->get('admin_id');
-        $isChair = $program['chair_personnel_id'] == $userId;
-        if (!$isChair) {
-            $coordinatorId = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId);
-            $isChair = $coordinatorId === $userId;
-        }
-
-        if (!$isChair) {
-            return redirect()->back()->with('error', 'คุณณมีสิทธิ์เพียงการจัดการดาวน์โหลด');
+        // Check authorization
+        if (!$this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการดาวน์โหลด');
         }
 
         $downloads = $this->programDownloadModel->getByProgramId($programId);
@@ -293,6 +315,7 @@ class Dashboard extends BaseController
             'page_title' => 'จัดการดาวน์โหลด - ' . ($program['name_th'] ?? $program['name_en']),
             'program' => $program,
             'downloads' => $downloads,
+            'layout' => 'admin/layouts/admin_layout',
         ];
 
         return view('admin/programs/downloads', $data);
@@ -386,16 +409,9 @@ class Dashboard extends BaseController
 
         $programId = $download['program_id'];
 
-        // Check if user is chair of this program
-        $userId = session()->get('admin_id');
-        $isChair = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId) === $userId;
-        if (!$isChair) {
-            $coordinatorId = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId);
-            $isChair = $coordinatorId === $userId;
-        }
-
-        if (!$isChair) {
-            return redirect()->back()->with('error', 'คุณณมีสิทธิ์เพียงการดาวน์โหลด');
+        // Check authorization
+        if (!$this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการดาวน์โหลด');
         }
 
         // Delete file from filesystem
@@ -436,15 +452,9 @@ class Dashboard extends BaseController
             return redirect()->back()->with('error', 'ไม่พบหน้าเว็บไซต์หลักสูตร');
         }
 
-        $userId = session()->get('admin_id');
-        $isChair = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId) === $userId;
-        if (!$isChair) {
-            $coordinatorId = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId);
-            $isChair = $coordinatorId === $userId;
-        }
-
-        if (!$isChair) {
-            return redirect()->back()->with('error', 'คุณณมีสิทธิ์เพียงการจัดการหน้าเว็บไซต์หลักสูตร');
+        // Check authorization
+        if (!$this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหน้าเว็บไซต์หลักสูตร');
         }
 
         $isPublished = $programPage['is_published'] ?? 0;
