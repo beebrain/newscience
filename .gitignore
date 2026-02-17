@@ -75,17 +75,24 @@ user_guide_src/cilexer/dist/*
 user_guide_src/cilexer/pycilexer.egg-info/*
 
 #-------------------------
-# Test Files
+# Database Setup & Test Files
 #-------------------------
-tests/coverage*
-
-# Don't save phpunit under version control.
-phpunit
+database/setup_*.sql
+database/*_test_*.sql
+content_builder_test.php
+manual_content_builder_test.php
+scripts/check_db_structure.php
+scripts/check_programs.php
+scripts/run_setup_content_builder_test_users.php
+scripts/setup_personnel_relationships.php
+scripts/setup_test_users.php
+scripts/test_content_builder_access.php
+tests/unit/ContentBuilderAccessTest.php
 
 #-------------------------
 # Composer
 #-------------------------
-vendor/
+#vendor/
 
 #-------------------------
 # IDE / Development Files
