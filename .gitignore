@@ -77,16 +77,19 @@ user_guide_src/cilexer/pycilexer.egg-info/*
 #-------------------------
 # Database Setup & Test Files
 #-------------------------
+# Test setup files only (keep migration files)
 database/setup_*.sql
 database/*_test_*.sql
+# Large data export files
+database/news_data*.sql
+database/news_export.sql
+# Content builder test scripts
 content_builder_test.php
 manual_content_builder_test.php
-scripts/check_db_structure.php
-scripts/check_programs.php
-scripts/run_setup_content_builder_test_users.php
-scripts/setup_personnel_relationships.php
-scripts/setup_test_users.php
-scripts/test_content_builder_access.php
+scripts/check_*.php
+scripts/setup_*.php
+scripts/test_*.php
+scripts/run_setup_*.php
 tests/unit/ContentBuilderAccessTest.php
 
 #-------------------------
