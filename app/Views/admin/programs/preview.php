@@ -21,7 +21,7 @@
                     </svg>
                     แดชบอร์ด
                 </a>
-                <button type="button" class="btn btn-primary btn-sm" onclick="window.open('<?= base_url('program/' . ($page['slug'] ?? 'program-' . $program['id']) ?>', '_blank')">
+                <button type="button" class="btn btn-primary btn-sm" onclick="window.open('<?= base_url('program/' . ($page['slug'] ?? 'program-' . $program['id'])) ?>', '_blank')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                         <circle cx="12" cy="12" r="3" />
@@ -73,79 +73,79 @@
                 <!-- Content Sections -->
                 <div style="max-width: 800px; margin: 0 auto;">
                     <?php if (!empty($page['philosophy'])): ?>
-                    <section style="margin-bottom: 3rem;">
-                        <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">ปรัชญาหลักสูตร</h2>
-                        <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['philosophy'] ?></div>
-                    </section>
+                        <section style="margin-bottom: 3rem;">
+                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">ปรัชญาหลักสูตร</h2>
+                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['philosophy'] ?></div>
+                        </section>
                     <?php endif; ?>
 
                     <?php if (!empty($page['objectives'])): ?>
-                    <section style="margin-bottom: 3rem;">
-                        <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">วัตถุประสงค์</h2>
-                        <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['objectives'] ?></div>
-                    </section>
+                        <section style="margin-bottom: 3rem;">
+                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">วัตถุประสงค์</h2>
+                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['objectives'] ?></div>
+                        </section>
                     <?php endif; ?>
 
                     <?php if (!empty($page['graduate_profile'])): ?>
-                    <section style="margin-bottom: 3rem;">
-                        <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">คุณลักษณะบัณฑิต</h2>
-                        <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['graduate_profile'] ?></div>
-                    </section>
+                        <section style="margin-bottom: 3rem;">
+                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">คุณลักษณะบัณฑิต</h2>
+                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['graduate_profile'] ?></div>
+                        </section>
                     <?php endif; ?>
 
                     <?php if (!empty($page['curriculum_structure'])): ?>
-                    <section style="margin-bottom: 3rem;">
-                        <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">โครงสร้างหลักสูตร</h2>
-                        <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['curriculum_structure'] ?></div>
-                    </section>
+                        <section style="margin-bottom: 3rem;">
+                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">โครงสร้างหลักสูตร</h2>
+                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['curriculum_structure'] ?></div>
+                        </section>
                     <?php endif; ?>
 
                     <?php if (!empty($page['study_plan'])): ?>
-                    <section style="margin-bottom: 3rem;">
-                        <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">แผนการเรียน</h2>
-                        <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['study_plan'] ?></div>
-                    </section>
+                        <section style="margin-bottom: 3rem;">
+                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">แผนการเรียน</h2>
+                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['study_plan'] ?></div>
+                        </section>
                     <?php endif; ?>
 
                     <?php if (!empty($page['career_prospects'])): ?>
-                    <section style="margin-bottom: 3rem;">
-                        <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">อาชีพที่สามารถประกอบได้</h2>
-                        <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['career_prospects'] ?></div>
-                    </section>
+                        <section style="margin-bottom: 3rem;">
+                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">อาชีพที่สามารถประกอบได้</h2>
+                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['career_prospects'] ?></div>
+                        </section>
                     <?php endif; ?>
 
                     <?php if (!empty($page['tuition_fees'])): ?>
-                    <section style="margin-bottom: 3rem;">
-                        <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">ค่าเล่าเรียน/ค่าธรรมเนียม</h2>
-                        <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['tuition_fees'] ?></div>
-                    </section>
+                        <section style="margin-bottom: 3rem;">
+                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">ค่าเล่าเรียน/ค่าธรรมเนียม</h2>
+                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['tuition_fees'] ?></div>
+                        </section>
                     <?php endif; ?>
 
                     <?php if (!empty($page['admission_info'])): ?>
-                    <section style="margin-bottom: 3rem;">
-                        <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">การรับสมัคร</h2>
-                        <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['admission_info'] ?></div>
-                    </section>
+                        <section style="margin-bottom: 3rem;">
+                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">การรับสมัคร</h2>
+                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['admission_info'] ?></div>
+                        </section>
                     <?php endif; ?>
 
                     <?php if (!empty($page['contact_info'])): ?>
-                    <section style="margin-bottom: 3rem;">
-                        <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">ข้อมูลติดต่อ</h2>
-                        <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['contact_info'] ?></div>
-                    </section>
+                        <section style="margin-bottom: 3rem;">
+                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">ข้อมูลติดต่อ</h2>
+                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['contact_info'] ?></div>
+                        </section>
                     <?php endif; ?>
 
                     <?php if (empty($page['philosophy']) && empty($page['objectives']) && empty($page['graduate_profile'])): ?>
-                    <div class="empty-content" style="text-align: center; padding: 3rem; color: var(--color-gray-500);">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 1rem;">
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
-                            <line x1="16" y1="13" x2="8" y2="13" />
-                            <line x1="16" y1="17" x2="8" y2="17" />
-                        </svg>
-                        <h3 style="margin-bottom: 0.5rem;">ยังไม่มีเนื้อหา</h3>
-                        <p>กรุณาเพิ่มเนื้อหาหลักสูตรเพื่อแสดงในหน้าเว็บไซต์</p>
-                    </div>
+                        <div class="empty-content" style="text-align: center; padding: 3rem; color: var(--color-gray-500);">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 1rem;">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                            </svg>
+                            <h3 style="margin-bottom: 0.5rem;">ยังไม่มีเนื้อหา</h3>
+                            <p>กรุณาเพิ่มเนื้อหาหลักสูตรเพื่อแสดงในหน้าเว็บไซต์</p>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -154,96 +154,96 @@
 </div>
 
 <style>
-.preview-container {
-    border: 1px solid var(--color-gray-200);
-    border-radius: 8px;
-    overflow: hidden;
-    background: white;
-}
+    .preview-container {
+        border: 1px solid var(--color-gray-200);
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+    }
 
-.preview-header {
-    background: var(--color-gray-100);
-    padding: 1rem;
-    border-bottom: 1px solid var(--color-gray-200);
-}
+    .preview-header {
+        background: var(--color-gray-100);
+        padding: 1rem;
+        border-bottom: 1px solid var(--color-gray-200);
+    }
 
-.preview-content {
-    padding: 2rem;
-    background: white;
-}
+    .preview-content {
+        padding: 2rem;
+        background: white;
+    }
 
-.hero-section {
-    text-align: center;
-    padding: 3rem 0;
-    background: linear-gradient(135deg, #1e40af 0%, #1e40afdd 100%);
-    color: white;
-    margin: -2rem -2rem 2rem -2rem;
-    border-radius: 0 0 12px 12px;
-}
+    .hero-section {
+        text-align: center;
+        padding: 3rem 0;
+        background: linear-gradient(135deg, #1e40af 0%, #1e40afdd 100%);
+        color: white;
+        margin: -2rem -2rem 2rem -2rem;
+        border-radius: 0 0 12px 12px;
+    }
 
-.empty-content {
-    text-align: center;
-    padding: 3rem;
-    color: var(--color-gray-500);
-}
+    .empty-content {
+        text-align: center;
+        padding: 3rem;
+        color: var(--color-gray-500);
+    }
 
-.btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
-    text-decoration: none;
-}
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
 
-.btn-primary {
-    background: var(--color-primary-600);
-    color: white;
-}
+    .btn-primary {
+        background: var(--color-primary-600);
+        color: white;
+    }
 
-.btn-primary:hover {
-    background: var(--color-primary-700);
-}
+    .btn-primary:hover {
+        background: var(--color-primary-700);
+    }
 
-.btn-secondary {
-    background: var(--color-gray-200);
-    color: var(--color-gray-700);
-}
+    .btn-secondary {
+        background: var(--color-gray-200);
+        color: var(--color-gray-700);
+    }
 
-.btn-secondary:hover {
-    background: var(--color-gray-300);
-}
+    .btn-secondary:hover {
+        background: var(--color-gray-300);
+    }
 
-.btn-outline {
-    background: transparent;
-    border: 1px solid var(--color-gray-300);
-    color: var(--color-gray-700);
-}
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--color-gray-300);
+        color: var(--color-gray-700);
+    }
 
-.btn-outline:hover {
-    background: var(--color-gray-50);
-}
+    .btn-outline:hover {
+        background: var(--color-gray-50);
+    }
 
-.btn-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-}
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
 
-section h2 {
-    color: var(--color-gray-900);
-    margin-bottom: 1rem;
-    font-size: 1.875rem;
-    font-weight: 600;
-}
+    section h2 {
+        color: var(--color-gray-900);
+        margin-bottom: 1rem;
+        font-size: 1.875rem;
+        font-weight: 600;
+    }
 
-section div {
-    color: var(--color-gray-700);
-    line-height: 1.6;
-}
+    section div {
+        color: var(--color-gray-700);
+        line-height: 1.6;
+    }
 </style>
 
 <?= $this->endSection() ?>

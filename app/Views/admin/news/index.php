@@ -50,6 +50,7 @@
                         <tr>
                             <th style="width: 90px;">ภาพ</th>
                             <th>หัวข้อ</th>
+                            <th style="width: 120px;">Tag</th>
                             <th style="width: 120px;">ผู้เขียน</th>
                             <th style="width: 90px;">สถานะ</th>
                             <th style="width: 90px;">กิจกรรม</th>
@@ -74,6 +75,62 @@
                                     </a>
                                     <?php if (!empty($article['excerpt'])): ?>
                                         <p class="news-excerpt"><?= esc(mb_substr($article['excerpt'], 0, 80)) ?>…</p>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if (!empty($article['tags'])): ?>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                                            <?php foreach ($article['tags'] as $tag): ?>
+                                                <?php
+                                                $tagSlug = $tag['slug'] ?? '';
+                                                $badgeStyle = 'background: #6c757d; color: white;';
+
+                                                // ประเภทข่าว
+                                                if ($tagSlug === 'general') {
+                                                    $badgeStyle = 'background: #17a2b8; color: white;';
+                                                } elseif ($tagSlug === 'student_activity') {
+                                                    $badgeStyle = 'background: #28a745; color: white;';
+                                                } elseif ($tagSlug === 'research_grant') {
+                                                    $badgeStyle = 'background: #ffc107; color: #000;';
+                                                } elseif ($tagSlug === 'announcement') {
+                                                    $badgeStyle = 'background: #dc3545; color: white;';
+                                                } elseif ($tagSlug === 'news') {
+                                                    $badgeStyle = 'background: #007bff; color: white;';
+                                                } elseif ($tagSlug === 'event') {
+                                                    $badgeStyle = 'background: #fd7e14; color: white;';
+                                                }
+                                                // หลักสูตร - สี pastel ต่างๆ
+                                                elseif (strpos($tagSlug, 'math') !== false || $tagSlug === 'applied_mathematics') {
+                                                    $badgeStyle = 'background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9;';
+                                                } elseif (strpos($tagSlug, 'biology') !== false || $tagSlug === 'biology') {
+                                                    $badgeStyle = 'background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7;';
+                                                } elseif (strpos($tagSlug, 'chemistry') !== false || $tagSlug === 'chemistry') {
+                                                    $badgeStyle = 'background: #fff3e0; color: #ef6c00; border: 1px solid #ffcc80;';
+                                                } elseif (strpos($tagSlug, 'computer') !== false || strpos($tagSlug, 'it') !== false) {
+                                                    $badgeStyle = 'background: #f3e5f5; color: #6a1b9a; border: 1px solid #ce93d8;';
+                                                } elseif (strpos($tagSlug, 'data') !== false) {
+                                                    $badgeStyle = 'background: #e0f7fa; color: #00838f; border: 1px solid #80deea;';
+                                                } elseif (strpos($tagSlug, 'environment') !== false) {
+                                                    $badgeStyle = 'background: #e8f5e9; color: #1b5e20; border: 1px solid #81c784;';
+                                                } elseif (strpos($tagSlug, 'food') !== false || strpos($tagSlug, 'nutrition') !== false) {
+                                                    $badgeStyle = 'background: #fff8e1; color: #f57f17; border: 1px solid #ffd54f;';
+                                                } elseif (strpos($tagSlug, 'physics') !== false) {
+                                                    $badgeStyle = 'background: #eceff1; color: #37474f; border: 1px solid #90a4ae;';
+                                                } elseif (strpos($tagSlug, 'public_health') !== false) {
+                                                    $badgeStyle = 'background: #fce4ec; color: #c2185b; border: 1px solid #f48fb1;';
+                                                } elseif (strpos($tagSlug, 'biotech') !== false) {
+                                                    $badgeStyle = 'background: #f1f8e9; color: #558b2f; border: 1px solid #aed581;';
+                                                } elseif (strpos($tagSlug, 'tourism') !== false) {
+                                                    $badgeStyle = 'background: #e1f5fe; color: #0277bd; border: 1px solid #81d4fa;';
+                                                } elseif (strpos($tagSlug, 'applied_sci') !== false) {
+                                                    $badgeStyle = 'background: #ede7f6; color: #4527a0; border: 1px solid #b39ddb;';
+                                                }
+                                                ?>
+                                                <span style="padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; white-space: nowrap; <?= $badgeStyle ?>"><?= esc($tag['name'] ?? $tagSlug) ?></span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span style="color: var(--color-gray-400); font-size: 0.875rem;">—</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>

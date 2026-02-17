@@ -25,9 +25,19 @@ class News extends BaseController
      */
     public function index()
     {
+        $db = \Config\Database::connect();
+        $news = $this->newsModel->getAllWithAuthor();
+
+        // Fetch tags for each news article
+        if ($db->tableExists('news_tags') && $db->tableExists('news_news_tags')) {
+            foreach ($news as &$article) {
+                $article['tags'] = $this->newsTagModel->getTagsByNewsId((int)$article['id']);
+            }
+        }
+
         $data = [
             'page_title' => 'Manage News',
-            'news' => $this->newsModel->getAllWithAuthor()
+            'news' => $news
         ];
 
         return view('admin/news/index', $data);
@@ -119,7 +129,7 @@ class News extends BaseController
                 return redirect()->back()->withInput()->with('error', 'อัปโหลดภาพปกไม่สำเร็จ: ' . $e->getMessage());
             }
         } elseif ($featuredImage && !$featuredImage->isValid() && $featuredImage->getError() !== UPLOAD_ERR_NO_FILE) {
-             log_message('error', "News Upload Error: Invalid featured image for News ID $newsId. Error: " . $featuredImage->getErrorString());
+            log_message('error', "News Upload Error: Invalid featured image for News ID $newsId. Error: " . $featuredImage->getErrorString());
             return redirect()->back()->withInput()->with('error', 'ภาพที่เลือกไม่ถูกต้อง: ' . $featuredImage->getErrorString());
         }
 
@@ -300,7 +310,7 @@ class News extends BaseController
                     ->with('error', 'อัปโหลดภาพปกไม่สำเร็จ: ' . $e->getMessage());
             }
         } elseif ($featuredImage && !$featuredImage->isValid() && $featuredImage->getError() !== UPLOAD_ERR_NO_FILE) {
-             log_message('error', "News Update Error: Invalid featured image for News ID $id. Error: " . $featuredImage->getErrorString());
+            log_message('error', "News Update Error: Invalid featured image for News ID $id. Error: " . $featuredImage->getErrorString());
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'ภาพที่เลือกไม่ถูกต้อง: ' . $featuredImage->getErrorString());
@@ -421,9 +431,19 @@ class News extends BaseController
     {
         $allowed = [
             // Images
-            'jpg', 'jpeg', 'png', 'gif', 'webp',
+            'jpg',
+            'jpeg',
+            'png',
+            'gif',
+            'webp',
             // Docs
-            'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'
+            'pdf',
+            'doc',
+            'docx',
+            'xls',
+            'xlsx',
+            'ppt',
+            'pptx'
         ];
         $ext = strtolower($uploadedFile->getClientExtension() ?? '');
         if (in_array($ext, $allowed, true)) {
