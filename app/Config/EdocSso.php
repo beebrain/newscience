@@ -33,7 +33,7 @@ class EdocSso extends BaseConfig
     public string $sharedSecret = 'SHARED_SECRET_PLACEHOLDER';
 
     /** เปิดใช้ SSO ผ่าน Edoc หรือไม่ */
-    public bool $enabled = true;
+    public bool $enabled = false;
 
     /** URL ออกจากระบบของ Edoc เต็ม (ถ้าตั้งจะใช้แทน baseUrl + logoutPath) */
     public string $logoutUrl = '';

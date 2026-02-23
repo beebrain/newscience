@@ -26,7 +26,7 @@ class ResearchRecordSso extends BaseConfig
     public string $sharedSecret = 'SHARED_SECRET_PLACEHOLDER';
 
     /** เปิดใช้ SSO ผ่าน Research Record หรือไม่ */
-    public bool $enabled = true;
+    public bool $enabled = false;
 
     /** URL ออกจากระบบของ Research Record (ว่าง = ไม่ redirect ไป logout ที่ Research Record) */
     public string $logoutUrl = '';

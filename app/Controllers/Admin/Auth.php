@@ -288,40 +288,13 @@ class Auth extends BaseController
     /**
      * Redirect ไปหน้า Login ของ Research Record พร้อม from=newscience และ return_url (ใช้ secret เดียวกับ Edoc ได้)
      * GET /admin/portal-login-research
+     * 
+     * DEPRECATED: ใช้ Sci OAuth แทน
      */
     public function portalLoginResearch()
     {
-        if (session()->get('admin_logged_in')) {
-            log_message('debug', self::LOG_PREFIX . 'portalLoginResearch already logged in, redirect to admin/news');
-            return redirect()->to(base_url('admin/news'));
-        }
-
-        $config = config(ResearchRecordSso::class);
-        if (!$config->enabled || $config->baseUrl === '') {
-            log_message('warning', self::LOG_PREFIX . 'portalLoginResearch SSO disabled or baseUrl empty');
-            return redirect()->to(base_url('admin/login'))->with('error', 'การเข้าสู่ระบบผ่าน Research Record ยังไม่เปิดใช้');
-        }
-
-        $returnUrl = base_url('admin/oauth-callback?provider=researchrecord');
-        if (session()->get('redirect_url')) {
-            log_message('debug', self::LOG_PREFIX . 'portalLoginResearch redirect_url already in session');
-        } else {
-            $intended = $this->request->getGet('redirect_url');
-            if ($intended && is_string($intended)) {
-                $base = base_url();
-                if (strpos($intended, $base) === 0) {
-                    session()->set('redirect_url', $intended);
-                }
-            }
-        }
-
-        $researchLoginUrl = rtrim($config->baseUrl, '/') . '/auth/login?' . http_build_query([
-            'from'       => 'newscience',
-            'return_url' => $returnUrl,
-        ]);
-
-        log_message('info', self::LOG_PREFIX . 'portalLoginResearch redirect to Research Record return_url=' . $returnUrl);
-        return redirect()->to($researchLoginUrl);
+        // Redirect ไป Sci OAuth แทนการไป Research Record
+        return redirect()->to(base_url('oauth/login'));
     }
 
     /**
@@ -345,6 +318,11 @@ class Auth extends BaseController
         if (!$code || !is_string($code)) {
             log_message('error', self::LOG_PREFIX . 'oauthCallback missing or invalid code');
             return redirect()->to(base_url('admin/login'))->with('error', 'ไม่ได้รับรหัสจาก Portal กรุณาลองใหม่อีกครั้ง');
+        }
+
+        if ($provider === 'researchrecord' || $provider === 'edoc') {
+            log_message('warning', self::LOG_PREFIX . 'oauthCallback deprecated provider=' . $provider . ' - use Sci OAuth instead');
+            return redirect()->to(base_url('admin/login'))->with('error', 'การเข้าสู่ระบบผ่าน ' . $provider . ' ไม่รองรับแล้ว กรุณาใช้ Sci OAuth');
         }
 
         if ($provider === 'researchrecord') {
@@ -395,16 +373,9 @@ class Auth extends BaseController
 
         log_message('info', self::LOG_PREFIX . 'oauthCallback login success provider=' . $provider . ' uid=' . $user['uid'] . ' role=' . $user['role'] . ' redirect=' . $redirectUrl);
 
-        // Prepare SSO Auto-Login URLs for the OTHER apps
-        // (Even if we logged in via Edoc, we might want to refresh session or login to Research Record)
-        $ssoUrls = [];
-        // Optional: If logged via Edoc, maybe skip Edoc auth? But safe to call again to ensure session sync.
-        if ($ssoUrl = $this->getEdocSsoUrl($user)) $ssoUrls[] = $ssoUrl;
-        if ($ssoUrl = $this->getResearchSsoUrl($user)) $ssoUrls[] = $ssoUrl;
-
+        // SSO Auto-Login disabled - using Sci OAuth only
         return redirect()->to($redirectUrl)
-            ->with('success', 'เข้าสู่ระบบสำเร็จ (URU Portal)')
-            ->with('sso_autologin_urls', $ssoUrls);
+            ->with('success', 'เข้าสู่ระบบสำเร็จ (URU Portal)');
     }
 
     /**
@@ -417,7 +388,7 @@ class Auth extends BaseController
         $url = $config->exchangeCodeUrl;
         $payload = [
             'code' => $code,
-            'SECRET_PLACEHOLDER' => $config->sharedSecret,
+            'secret' => $config->sharedSecret,
         ];
 
         log_message('info', self::LOG_PREFIX . 'exchangeCode POST url=' . $url . ' code_len=' . strlen($code));
@@ -532,37 +503,13 @@ class Auth extends BaseController
     /**
      * ไป Research Record โดยไม่ต้อง login ซ้ำ — สร้าง signed token จาก email (ตัวระบุตัวตนร่วม) แล้ว redirect
      * GET /admin/go-research-record (ต้องล็อกอิน admin แล้ว)
+     * 
+     * DEPRECATED: ใช้ Sci OAuth แทน
      */
     public function goResearchRecord()
     {
-        $config = config(ResearchRecordSso::class);
-        if (!$config->enabled || $config->baseUrl === '' || $config->sharedSecret === '') {
-            log_message('warning', self::LOG_PREFIX . 'goResearchRecord SSO disabled or config missing');
-            return redirect()->to(base_url('admin/news'))->with('error', 'การเข้า Research Record ยังไม่เปิดใช้');
-        }
-
-        $email = session()->get('admin_email');
-        $name  = session()->get('admin_name') ?? '';
-        if (!$email || !is_string($email)) {
-            log_message('warning', self::LOG_PREFIX . 'goResearchRecord no admin_email in session');
-            return redirect()->to(base_url('admin/news'))->with('error', 'ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่');
-        }
-
-        $exp = time() + 120;
-        $payload = [
-            'email' => $email,
-            'name'  => $name,
-            'exp'   => $exp,
-        ];
-        $payloadJson = json_encode($payload);
-        $payloadB64 = $this->base64UrlEncode($payloadJson);
-        $signature = hash_hmac('sha256', $payloadB64, $config->sharedSecret, true);
-        $sigB64 = $this->base64UrlEncode($signature);
-        $token = $payloadB64 . '.' . $sigB64;
-
-        $entryUrl = rtrim($config->baseUrl, '/') . $config->ssoEntryPath . '?token=' . rawurlencode($token);
-        log_message('info', self::LOG_PREFIX . 'goResearchRecord redirect to Research Record email=' . $email);
-        return redirect()->to($entryUrl);
+        // Redirect ไป Sci OAuth แทนการไป Research Record
+        return redirect()->to(base_url('oauth/login'));
     }
 
     // -------------------------------------------------------------------------
