@@ -51,6 +51,12 @@ if (getcwd() . DIRECTORY_SEPARATOR !== FCPATH) {
 require FCPATH . '../app/Config/Paths.php';
 // ^^^ Change this line if you move your application folder
 
+// LOAD COMPOSER AUTOLOADER (ensures framework/vendor classes are available early)
+$composerAutoload = FCPATH . '../vendor/autoload.php';
+if (is_file($composerAutoload)) {
+    require $composerAutoload;
+}
+
 $paths = new Paths();
 
 // LOAD THE FRAMEWORK BOOTSTRAP FILE
