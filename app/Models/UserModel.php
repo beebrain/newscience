@@ -100,6 +100,69 @@ class UserModel extends Model
     }
 
     /**
+     * รายการผู้ใช้สำหรับฟอร์มบุคลากร (autocomplete)
+     *
+     * @param bool $excludeExisting ตัดผู้ที่ถูกเชื่อมกับ personnel.user_uid แล้วหรือไม่
+     * @return array<int, array{uid:int, email:string, name:string, name_en:string, is_linked:bool}>
+     */
+    public function getListForPersonnel(bool $excludeExisting = true): array
+    {
+        $columns = ['uid', 'email'];
+        $optional = ['title', 'th_name', 'thai_name', 'thai_lastname', 'tf_name', 'tl_name', 'gf_name', 'gl_name'];
+        foreach ($optional as $column) {
+            if ($this->db->fieldExists($column, $this->table)) {
+                $columns[] = $column;
+            }
+        }
+
+        $builder = $this->select($columns);
+
+        // ดึงรายชื่อ user_uid ที่ถูกผูกกับ personnel แล้ว
+        $linkedUids = [];
+        if ($this->db->tableExists('personnel')) {
+            $existing = $this->db->table('personnel')
+                ->select('user_uid')
+                ->where('user_uid IS NOT NULL')
+                ->get()
+                ->getResultArray();
+            $linkedUids = array_values(array_filter(array_map(fn($row) => (int) ($row['user_uid'] ?? 0), $existing)));
+        }
+
+        if ($excludeExisting && $linkedUids !== []) {
+            $builder->whereNotIn('uid', $linkedUids);
+        }
+
+        $orderColumns = [];
+        foreach (['th_name', 'thai_name', 'tf_name', 'gf_name'] as $column) {
+            if ($this->db->fieldExists($column, $this->table)) {
+                $orderColumns[] = $column;
+            }
+        }
+        if ($orderColumns === []) {
+            $orderColumns[] = 'email';
+        }
+        foreach ($orderColumns as $column) {
+            $builder->orderBy($column);
+        }
+
+        $users = $builder->findAll();
+
+        return array_map(function (array $user) use ($linkedUids) {
+            $nameTh = trim($this->getFullName($user));
+            $nameEn = trim(($user['gf_name'] ?? '') . ' ' . ($user['gl_name'] ?? ''));
+            $uid = (int) ($user['uid'] ?? 0);
+
+            return [
+                'uid'       => $uid,
+                'email'     => $user['email'] ?? '',
+                'name'      => $nameTh,
+                'name_en'   => $nameEn,
+                'is_linked' => in_array($uid, $linkedUids, true),
+            ];
+        }, $users);
+    }
+
+    /**
      * Get admins only
      */
     public function getAdmins()
@@ -186,7 +249,7 @@ class UserModel extends Model
      */
     public function findOrCreateFromApiUser(array $apiUser): ?array
     {
-        $email = trim($apiUser['email'] ?? '');
+        $email = strtolower(trim($apiUser['email'] ?? ''));
         $loginUid = trim($apiUser['login_uid'] ?? $apiUser['code'] ?? '');
         if ($email === '') {
             return null;

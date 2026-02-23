@@ -411,7 +411,7 @@ class Organization extends BaseController
      */
     public function create()
     {
-        // แสดงทุก user ใน autocomplete (รวมที่อยู่ในองค์กรแล้ว) เพื่อให้ค้นหาชื่อได้ครบ
+        // แสดงทุก user ใน autocomplete พร้อมสถานะ is_linked เพื่อให้รู้ว่าผู้ใดถูกผูกกับบุคลากรแล้ว
         $usersForPersonnel = $this->userModel->getListForPersonnel(false);
 
         $data = [

@@ -73,7 +73,16 @@
                     <?php if ($email !== ''): ?>
                         <span style="font-size: 0.85rem;"><?= esc($email) ?></span>
                         <?php if ($userLink): ?>
-                            <br><span class="badge" style="background: var(--color-success); color: #fff; font-size: 0.7rem; margin-top: 0.2rem;">ลิงก์ user (uid <?= (int)($userLink['uid'] ?? 0) ?>)</span>
+                            <?php
+                            $linkedUserName = trim(($userLink['th_name'] ?? $userLink['thai_name'] ?? '') . ' ' . ($userLink['thai_lastname'] ?? ''));
+                            if ($linkedUserName === '') {
+                                $linkedUserName = trim(($userLink['gf_name'] ?? '') . ' ' . ($userLink['gl_name'] ?? ''));
+                            }
+                            if ($linkedUserName === '') {
+                                $linkedUserName = $userLink['email'] ?? '';
+                            }
+                            ?>
+                            <br><span class="badge" style="background: var(--color-success); color: #fff; font-size: 0.7rem; margin-top: 0.2rem;">ลิงก์: <?= esc($linkedUserName) ?> (uid <?= (int)($userLink['uid'] ?? 0) ?>)</span>
                         <?php else: ?>
                             <br><span style="color: var(--color-gray-500); font-size: 0.75rem;">ยังไม่พบในตาราง user</span>
                         <?php endif; ?>

@@ -76,8 +76,19 @@
                     background: #f1f5f9;
                 }
 
-                .user-autocomplete-list [role="option"].manual {
+                .user-autocomplete-list [role="option"].linked {
+                    opacity: 0.6;
+                    background: #f1f5f9;
                     color: #64748b;
+                }
+
+                .user-autocomplete-list [role="option"] .linked-badge {
+                    background: #ef4444;
+                    color: #fff;
+                    font-size: 0.65rem;
+                    padding: 0.1rem 0.35rem;
+                    border-radius: 4px;
+                    margin-left: 0.5rem;
                 }
             </style>
 
@@ -85,30 +96,30 @@
                 <label class="form-label" style="font-weight: 500; color: var(--color-gray-700); margin-bottom: 0.5rem;">รูปภาพบุคลากร</label>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem; border: 2px dashed #cbd5e1; padding: 2rem; border-radius: 12px; background: #f8fafc; transition: all 0.2s;">
                     <div style="position: relative; width: 160px; height: 160px; flex-shrink: 0;">
-                        <?php 
+                        <?php
                         $fallbackImg = base_url('assets/images/placeholder.png');
                         $currentImg = $fallbackImg;
                         ?>
-                        <img id="preview-image" src="<?= esc($currentImg) ?>" 
-                             alt="Profile Preview" 
-                             style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); background-color: #fff; transition: opacity 0.2s;">
-                        
+                        <img id="preview-image" src="<?= esc($currentImg) ?>"
+                            alt="Profile Preview"
+                            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); background-color: #fff; transition: opacity 0.2s;">
+
                         <label for="image" style="position: absolute; bottom: 5px; right: 5px; background: #2563eb; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
-                                <path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"/>
+                                <path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" />
+                                <path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z" />
                             </svg>
                         </label>
                     </div>
-                    
+
                     <div style="text-align: center;">
-                         <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;" onchange="previewImage(this)">
-                         <div style="margin-bottom: 0.75rem;">
+                        <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;" onchange="previewImage(this)">
+                        <div style="margin-bottom: 0.75rem;">
                             <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('image').click()">
                                 <span>เลือกรูปภาพ</span>
                             </button>
-                         </div>
-                         <div style="font-size: 0.8rem; color: #64748b;">รองรับ JPG, PNG, GIF, WebP (ไม่เกิน 5MB)</div>
+                        </div>
+                        <div style="font-size: 0.8rem; color: #64748b;">รองรับ JPG, PNG, GIF, WebP (ไม่เกิน 5MB)</div>
                     </div>
                 </div>
             </div>
@@ -120,9 +131,9 @@
                         reader.onload = function(e) {
                             var img = document.getElementById('preview-image');
                             img.style.opacity = '0';
-                            setTimeout(function() { 
+                            setTimeout(function() {
                                 img.src = e.target.result;
-                                img.style.opacity = '1'; 
+                                img.style.opacity = '1';
                             }, 200);
                         }
                         reader.readAsDataURL(input.files[0]);
@@ -314,16 +325,16 @@
             </div>
 
             <?php if (!empty($organization_units)): ?>
-            <div class="form-group">
-                <label class="form-label" for="organization_unit_id">หน่วยงานสังกัด (organization_unit_id)</label>
-                <select name="organization_unit_id" id="organization_unit_id" class="form-control" style="max-width: 360px;">
-                    <option value="">— ตามสาขาหลัก (อัตโนมัติ) —</option>
-                    <?php foreach ($organization_units as $ou): ?>
-                        <option value="<?= (int)($ou['id'] ?? 0) ?>" <?= (string)(old('organization_unit_id', $person['organization_unit_id'] ?? '')) === (string)($ou['id'] ?? '') ? 'selected' : '' ?>><?= esc($ou['name_th'] ?? $ou['code'] ?? '') ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <small style="color: var(--color-gray-500);">บุคลากรสำนักงาน (หัวหน้าสำนักงาน/เจ้าหน้าที่) ให้เลือก "สำนักงานคณบดี"</small>
-            </div>
+                <div class="form-group">
+                    <label class="form-label" for="organization_unit_id">หน่วยงานสังกัด (organization_unit_id)</label>
+                    <select name="organization_unit_id" id="organization_unit_id" class="form-control" style="max-width: 360px;">
+                        <option value="">— ตามสาขาหลัก (อัตโนมัติ) —</option>
+                        <?php foreach ($organization_units as $ou): ?>
+                            <option value="<?= (int)($ou['id'] ?? 0) ?>" <?= (string)(old('organization_unit_id', $person['organization_unit_id'] ?? '')) === (string)($ou['id'] ?? '') ? 'selected' : '' ?>><?= esc($ou['name_th'] ?? $ou['code'] ?? '') ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small style="color: var(--color-gray-500);">บุคลากรสำนักงาน (หัวหน้าสำนักงาน/เจ้าหน้าที่) ให้เลือก "สำนักงานคณบดี"</small>
+                </div>
             <?php endif; ?>
 
             <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
@@ -345,6 +356,7 @@
                                         'name' => $u['name'] ?? '',
                                         'name_en' => $u['name_en'] ?? '',
                                         'email' => $u['email'] ?? '',
+                                        'is_linked' => (bool)($u['is_linked'] ?? false),
                                         'display_name' => ($u['name'] ?? '') !== '' ? ($u['name'] . ' (' . ($u['email'] ?? '') . ')') : ($u['email'] ?? '')
                                     ];
                                 }, $users_for_personnel ?? []))) ?>;
@@ -398,11 +410,17 @@
                 var btn = document.createElement('button');
                 btn.type = 'button';
                 btn.role = 'option';
-                btn.textContent = u.display_name || u.email || '';
+                btn.className = u.is_linked ? 'linked' : '';
+                var displayText = u.display_name || u.email || '';
+                if (u.is_linked) {
+                    displayText += ' (มีในองค์กรแล้ว)';
+                }
+                btn.textContent = displayText;
                 btn.dataset.uid = String(u.uid);
                 btn.dataset.name = u.name || '';
                 btn.dataset.nameEn = u.name_en || '';
                 btn.dataset.email = u.email || '';
+                btn.dataset.isLinked = u.is_linked ? '1' : '';
                 listEl.appendChild(btn);
             });
             highlightIdx = -1;
@@ -477,7 +495,9 @@
                     e.preventDefault();
                     var o = opts[highlightIdx];
                     if (o.dataset.uid === '') clearChoice();
-                    else selectUser(o.dataset.uid, o.dataset.name, o.dataset.nameEn, o.dataset.email, o.textContent);
+                    else if (o.dataset.isLinked === '1') {
+                        alert('ผู้ใช้นี้มีในโครงสร้างองค์กรแล้ว กรุณาเลือกผู้ใช้อื่นหรือเลือก "กรอกเอง"');
+                    } else selectUser(o.dataset.uid, o.dataset.name, o.dataset.nameEn, o.dataset.email, o.textContent);
                 } else if (e.key === 'Escape') {
                     hideList();
                 }
@@ -489,7 +509,9 @@
                 var opt = e.target.closest('[role="option"]');
                 if (!opt) return;
                 if (opt.dataset.uid === '') clearChoice();
-                else selectUser(opt.dataset.uid, opt.dataset.name, opt.dataset.nameEn, opt.dataset.email, opt.textContent);
+                else if (opt.dataset.isLinked === '1') {
+                    alert('ผู้ใช้นี้มีในโครงสร้างองค์กรแล้ว กรุณาเลือกผู้ใช้อื่นหรือเลือก "กรอกเอง"');
+                } else selectUser(opt.dataset.uid, opt.dataset.name, opt.dataset.nameEn, opt.dataset.email, opt.textContent);
             });
         }
 
