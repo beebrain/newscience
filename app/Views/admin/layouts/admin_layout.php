@@ -115,6 +115,38 @@
                         </svg>
                         Events Coming Up
                     </a>
+
+                    <!-- E-Certificate System Menu -->
+                    <div class="sidebar-submenu" style="margin: 0.5rem 0;">
+                        <div class="submenu-header" style="padding: 0.5rem 1rem; color: var(--color-gray-500); font-size: 12px; text-transform: uppercase;">
+                            E-Certificate System
+                        </div>
+                        <a href="<?= base_url('admin/cert-events') ?>" class="<?= (strpos(uri_string(), 'admin/cert-events') === 0) ? 'active' : '' ?>" style="padding-left: 1.5rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            กิจกรรม/อบรม
+                        </a>
+                        <a href="<?= base_url('admin/cert-templates') ?>" class="<?= (strpos(uri_string(), 'admin/cert-templates') === 0) ? 'active' : '' ?>" style="padding-left: 1.5rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                            </svg>
+                            เทมเพลตใบรับรอง
+                        </a>
+                        <a href="<?= base_url('admin/certificates') ?>" class="<?= (strpos(uri_string(), 'admin/certificates') === 0) ? 'active' : '' ?>" style="padding-left: 1.5rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            คำขอใบรับรอง (เดิม)
+                        </a>
+                    </div>
+
                     <?php if ($sidebarAdminRole === 'super_admin'): ?>
                         <a href="<?= base_url('admin/users') ?>" class="<?= (uri_string() == 'admin/users' || strpos(uri_string(), 'admin/users') === 0) ? 'active' : '' ?>">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

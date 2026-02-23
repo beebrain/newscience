@@ -106,6 +106,138 @@ class Dev extends BaseController
             ->with('success', '[Local] เข้าสู่ระบบเป็น Student Admin แล้ว');
     }
 
+    // -------------------------------------------------------------------------
+    // Mock URU Portal OAuth (ทดสอบ OAuth flow โดยไม่ต้องผ่าน Portal จริง)
+    // -------------------------------------------------------------------------
+
+    /**
+     * จำลอง OAuth callback สำหรับนักศึกษา
+     * GET /dev/mock-oauth-student?uid=u6512345&email=u6512345@live.uru.ac.th&name_th=ทดสอบ&lastname_th=นักศึกษา
+     *
+     * ทดสอบ:
+     *   - การสร้าง student_user ใหม่ (first login)
+     *   - การ update login_uid ถ้า email มีอยู่แล้วแต่ login_uid ว่าง
+     *   - session student_* ถูกตั้งค่าถูกต้อง
+     *   - log file ถูกเขียน
+     */
+    public function mockOAuthStudent()
+    {
+        if (!$this->isLocal()) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $uid    = trim($this->request->getGet('uid') ?? 'u6512345');
+        $email  = strtolower(trim($this->request->getGet('email') ?? 'u6512345@live.uru.ac.th'));
+        $nameTh = trim($this->request->getGet('name_th') ?? 'ทดสอบ');
+        $lastTh = trim($this->request->getGet('lastname_th') ?? 'นักศึกษา');
+        $nameEn = trim($this->request->getGet('name_en') ?? 'Test');
+        $lastEn = trim($this->request->getGet('lastname_en') ?? 'Student');
+
+        // จำลองข้อมูลจาก URU Portal /me endpoint
+        $portalUser = [
+            'email'         => $email,
+            'login_uid'     => $uid,
+            'first_name_th' => $nameTh,
+            'last_name_th'  => $lastTh,
+            'first_name_en' => $nameEn,
+            'last_name_en'  => $lastEn,
+            'thai_name'     => $nameTh,
+            'thai_lastname' => $lastTh,
+            'gf_name'       => $nameEn,
+            'gl_name'       => $lastEn,
+            'profile_image' => '',
+        ];
+
+        // เรียก StudentUserModel::findOrCreateFromPortalUser โดยตรง
+        $studentModel = new StudentUserModel();
+        $student = $studentModel->findOrCreateFromPortalUser($portalUser);
+
+        if (!$student) {
+            return redirect()->to(base_url('student/login'))
+                ->with('error', '[Mock] ไม่สามารถสร้างหรือค้นหาบัญชีนักศึกษาได้');
+        }
+
+        // ตั้ง session เหมือน OAuthController::handleStudentLogin
+        session()->set([
+            'student_logged_in'      => true,
+            'student_id'             => $student['id'],
+            'student_email'          => $student['email'],
+            'student_name'           => $studentModel->getFullName($student),
+            'student_role'           => $student['role'] ?? 'student',
+            'student_login_via'      => 'uru_portal_oauth_mock',
+            'student_access_token'   => 'mock_access_token_' . bin2hex(random_bytes(8)),
+            'student_refresh_token'  => 'mock_refresh_token_' . bin2hex(random_bytes(8)),
+            'student_token_expires'  => time() + 3600,
+        ]);
+
+        return redirect()->to(base_url('student'))
+            ->with('success', '[Mock] เข้าสู่ระบบสำเร็จ (นักศึกษา) ยินดีต้อนรับ ' . $studentModel->getFullName($student));
+    }
+
+    /**
+     * จำลอง OAuth callback สำหรับบุคลากร
+     * GET /dev/mock-oauth-personnel?uid=staff123&email=staff@sci.uru.ac.th&name_th=ทดสอบ&lastname_th=บุคลากร
+     *
+     * ทดสอบ:
+     *   - การสร้าง user ใหม่ (first login)
+     *   - การ update login_uid ถ้า email มีอยู่แล้วแต่ login_uid ว่าง
+     *   - session admin_* ถูกตั้งค่าถูกต้อง
+     */
+    public function mockOAuthPersonnel()
+    {
+        if (!$this->isLocal()) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $uid    = trim($this->request->getGet('uid') ?? 'staff123');
+        $email  = strtolower(trim($this->request->getGet('email') ?? 'staff@sci.uru.ac.th'));
+        $nameTh = trim($this->request->getGet('name_th') ?? 'ทดสอบ');
+        $lastTh = trim($this->request->getGet('lastname_th') ?? 'บุคลากร');
+        $nameEn = trim($this->request->getGet('name_en') ?? 'Test');
+        $lastEn = trim($this->request->getGet('lastname_en') ?? 'Staff');
+
+        // จำลองข้อมูลจาก URU Portal /me endpoint
+        $portalUser = [
+            'email'         => $email,
+            'login_uid'     => $uid,
+            'first_name_th' => $nameTh,
+            'last_name_th'  => $lastTh,
+            'first_name_en' => $nameEn,
+            'last_name_en'  => $lastEn,
+            'thai_name'     => $nameTh,
+            'thai_lastname' => $lastTh,
+            'gf_name'       => $nameEn,
+            'gl_name'       => $lastEn,
+            'profile_image' => '',
+        ];
+
+        // เรียก UserModel::findOrCreateFromPortalUser โดยตรง
+        $userModel = new UserModel();
+        $user = $userModel->findOrCreateFromPortalUser($portalUser);
+
+        if (!$user) {
+            return redirect()->to(base_url('admin/login'))
+                ->with('error', '[Mock] ไม่สามารถสร้างหรือค้นหาบัญชีผู้ใช้ได้');
+        }
+
+        // ตั้ง session เหมือน OAuthController::handlePersonnelLogin
+        $adminRole = (!empty($user['admin'])) ? 'admin' : ($user['role'] ?? 'user');
+        session()->set([
+            'admin_logged_in'      => true,
+            'admin_id'             => $user['uid'],
+            'admin_email'          => $user['email'],
+            'admin_name'           => $userModel->getFullName($user),
+            'admin_role'           => $adminRole,
+            'admin_login_via'      => 'uru_portal_oauth_mock',
+            'admin_access_token'   => 'mock_access_token_' . bin2hex(random_bytes(8)),
+            'admin_refresh_token'  => 'mock_refresh_token_' . bin2hex(random_bytes(8)),
+            'admin_token_expires'  => time() + 3600,
+        ]);
+
+        return redirect()->to(base_url('dashboard'))
+            ->with('success', '[Mock] เข้าสู่ระบบสำเร็จ (บุคลากร) ยินดีต้อนรับ ' . $userModel->getFullName($user));
+    }
+
     /**
      * เข้าเป็น super_admin และไปที่ Content Builder ทันที (สำหรับทดสอบ)
      * GET /dev/test-content-builder

@@ -163,7 +163,7 @@
                     <label for="news-content-editor" class="form-label">เนื้อหาข่าว *</label>
                     <p class="form-hint">ใช้แถบเครื่องมือด้านบนสำหรับ <strong>ตัวหนา</strong> <em>ตัวเอียง</em> ขีดเส้นใต้ และรายการ</p>
                     <div id="news-content-editor" class="news-rich-editor" style="min-height: 320px; background: #fff; border: 1px solid var(--color-gray-200); border-radius: 8px;"></div>
-                    <textarea id="content" name="content" class="form-control" style="display: none;" required><?= old('content') ?></textarea>
+                    <textarea id="content" name="content" class="form-control" style="display: none;"><?= old('content') ?></textarea>
                 </div>
             </section>
 
@@ -251,18 +251,33 @@
                 placeholder: 'เขียนเนื้อหาข่าวที่นี่...',
                 modules: {
                     toolbar: [
-                        [{ 'header': [1, 2, 3, false] }],
+                        [{
+                            'header': [1, 2, 3, false]
+                        }],
                         ['bold', 'italic', 'underline', 'strike'],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                        [{ 'align': [] }],
+                        [{
+                            'list': 'ordered'
+                        }, {
+                            'list': 'bullet'
+                        }],
+                        [{
+                            'align': []
+                        }],
                         ['link'],
                         ['clean']
                     ]
                 }
             });
             quill.root.innerHTML = contentTextarea.value || '';
-            document.getElementById('newsForm').addEventListener('submit', function() {
-                contentTextarea.value = quill.root.innerHTML;
+            document.getElementById('newsForm').addEventListener('submit', function(e) {
+                var quillContent = quill.root.innerHTML.trim();
+                if (!quillContent || quillContent === '<p><br></p>' || quillContent === '<p></p>') {
+                    e.preventDefault();
+                    alert('กรุณากรอกเนื้อหาข่าว');
+                    editorEl.focus();
+                    return false;
+                }
+                contentTextarea.value = quillContent;
             });
         }
 
@@ -298,10 +313,17 @@
         var imagePreview = document.getElementById('imagePreview');
         var selectedImageFiles = [];
 
-        if (dropZoneImages) dropZoneImages.addEventListener('click', function() { fileInputImages.click(); });
+        if (dropZoneImages) dropZoneImages.addEventListener('click', function() {
+            fileInputImages.click();
+        });
         if (dropZoneImages) {
-            dropZoneImages.addEventListener('dragover', function(e) { e.preventDefault(); dropZoneImages.style.borderColor = 'var(--primary)'; });
-            dropZoneImages.addEventListener('dragleave', function() { dropZoneImages.style.borderColor = ''; });
+            dropZoneImages.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropZoneImages.style.borderColor = 'var(--primary)';
+            });
+            dropZoneImages.addEventListener('dragleave', function() {
+                dropZoneImages.style.borderColor = '';
+            });
             dropZoneImages.addEventListener('drop', function(e) {
                 e.preventDefault();
                 dropZoneImages.style.borderColor = '';
@@ -340,6 +362,7 @@
             };
             reader.readAsDataURL(file);
         }
+
         function updateImageInput() {
             var dt = new DataTransfer();
             for (var i = 0; i < selectedImageFiles.length; i++) dt.items.add(selectedImageFiles[i]);
@@ -350,21 +373,32 @@
         var fileInputDocs = document.getElementById('additionalDocs');
         var docPreview = document.getElementById('docPreview');
         var selectedDocFiles = [];
-        var allowedDocExt = ['pdf','doc','docx','xls','xlsx','ppt','pptx'];
+        var allowedDocExt = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+
         function isDoc(file) {
             var ext = (file.name.split('.').pop() || '').toLowerCase();
             return allowedDocExt.indexOf(ext) !== -1;
         }
-        if (dropZoneDocs) dropZoneDocs.addEventListener('click', function() { fileInputDocs.click(); });
+        if (dropZoneDocs) dropZoneDocs.addEventListener('click', function() {
+            fileInputDocs.click();
+        });
         if (dropZoneDocs) {
-            dropZoneDocs.addEventListener('dragover', function(e) { e.preventDefault(); dropZoneDocs.style.borderColor = 'var(--primary)'; });
-            dropZoneDocs.addEventListener('dragleave', function() { dropZoneDocs.style.borderColor = ''; });
+            dropZoneDocs.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropZoneDocs.style.borderColor = 'var(--primary)';
+            });
+            dropZoneDocs.addEventListener('dragleave', function() {
+                dropZoneDocs.style.borderColor = '';
+            });
             dropZoneDocs.addEventListener('drop', function(e) {
                 e.preventDefault();
                 dropZoneDocs.style.borderColor = '';
                 var files = e.dataTransfer.files;
                 for (var i = 0; i < files.length; i++) {
-                    if (isDoc(files[i])) { selectedDocFiles.push(files[i]); addDocPreview(files[i], selectedDocFiles.length - 1); }
+                    if (isDoc(files[i])) {
+                        selectedDocFiles.push(files[i]);
+                        addDocPreview(files[i], selectedDocFiles.length - 1);
+                    }
                 }
                 updateDocInput();
             });
@@ -372,10 +406,14 @@
         if (fileInputDocs) fileInputDocs.addEventListener('change', function(e) {
             var files = e.target.files;
             for (var i = 0; i < files.length; i++) {
-                if (isDoc(files[i])) { selectedDocFiles.push(files[i]); addDocPreview(files[i], selectedDocFiles.length - 1); }
+                if (isDoc(files[i])) {
+                    selectedDocFiles.push(files[i]);
+                    addDocPreview(files[i], selectedDocFiles.length - 1);
+                }
             }
             updateDocInput();
         });
+
         function addDocPreview(file, index) {
             var div = document.createElement('div');
             div.className = 'image-preview-item image-preview-item--doc';
@@ -388,6 +426,7 @@
             });
             docPreview.appendChild(div);
         }
+
         function updateDocInput() {
             var dt = new DataTransfer();
             for (var i = 0; i < selectedDocFiles.length; i++) dt.items.add(selectedDocFiles[i]);

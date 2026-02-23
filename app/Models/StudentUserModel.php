@@ -39,6 +39,81 @@ class StudentUserModel extends Model
     ];
 
     /**
+     * หาหรือสร้าง student จากข้อมูล URU Portal OAuth (/me endpoint)
+     * ใช้ email เป็น key หลักในการ identify user เสมอ
+     * — ถ้า student มีอยู่แล้ว (email ตรงกัน) แต่ยังไม่มี login_uid → update login_uid
+     * — ถ้าไม่มีเลย → สร้าง student ใหม่ (role=student, status=active)
+     *
+     * @param array $portalUser ข้อมูลจาก /me endpoint ต้องมี email; ควรมี login_uid/username
+     * @return array|null student array หรือ null ถ้าล้มเหลว
+     */
+    public function findOrCreateFromPortalUser(array $portalUser): ?array
+    {
+        $email    = strtolower(trim($portalUser['email'] ?? ''));
+        $loginUid = trim($portalUser['login_uid'] ?? $portalUser['username'] ?? $portalUser['code'] ?? '');
+
+        if ($email === '') {
+            log_message('error', 'StudentUserModel::findOrCreateFromPortalUser email empty');
+            return null;
+        }
+
+        // ค้นหาด้วย email ก่อนเสมอ (email คือ key หลัก)
+        $student = $this->findByEmail($email);
+
+        // ถ้าไม่พบด้วย email ลองหาด้วย login_uid
+        if (!$student && $loginUid !== '') {
+            $student = $this->db->table($this->table)
+                ->where('login_uid', $loginUid)
+                ->limit(1)
+                ->get()
+                ->getRowArray() ?: null;
+        }
+
+        $updateData = [
+            'email'         => $email,
+            'title'         => trim($portalUser['title'] ?? ''),
+            'gf_name'       => trim($portalUser['gf_name'] ?? $portalUser['first_name_en'] ?? $portalUser['firstname_en'] ?? ''),
+            'gl_name'       => trim($portalUser['gl_name'] ?? $portalUser['last_name_en'] ?? $portalUser['lastname_en'] ?? ''),
+            'tf_name'       => trim($portalUser['tf_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? ''),
+            'tl_name'       => trim($portalUser['tl_name'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? ''),
+            'th_name'       => trim($portalUser['th_name'] ?? $portalUser['thai_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? ''),
+            'thai_lastname' => trim($portalUser['thai_lastname'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? ''),
+        ];
+
+        // อัปเดต login_uid เสมอถ้า Portal ส่งมา (รวมถึงกรณี login ครั้งแรกที่ login_uid ยังว่าง)
+        if ($loginUid !== '') {
+            $updateData['login_uid'] = $loginUid;
+        }
+
+        $profileImage = trim($portalUser['profile_image'] ?? $portalUser['avatar'] ?? $portalUser['picture'] ?? '');
+        if ($profileImage !== '') {
+            $updateData['profile_image'] = $profileImage;
+        }
+
+        if ($student) {
+            // student มีอยู่แล้ว — update ข้อมูลและ login_uid (ถ้ายังว่าง)
+            $existingLoginUid = trim($student['login_uid'] ?? '');
+            if ($existingLoginUid === '' && $loginUid !== '') {
+                log_message('info', 'StudentUserModel::findOrCreateFromPortalUser first login, updating login_uid=' . $loginUid . ' for id=' . $student['id']);
+            }
+            $this->update($student['id'], $updateData);
+            return $this->find($student['id']);
+        }
+
+        // ไม่มี student — สร้างใหม่
+        $updateData['password'] = null;
+        $updateData['role']     = 'student';
+        $updateData['status']   = 'active';
+        $id = $this->insert($updateData);
+        if (!$id) {
+            log_message('error', 'StudentUserModel::findOrCreateFromPortalUser insert failed email=' . $email);
+            return null;
+        }
+        log_message('info', 'StudentUserModel::findOrCreateFromPortalUser created new student id=' . $id . ' email=' . $email . ' login_uid=' . $loginUid);
+        return $this->find($id);
+    }
+
+    /**
      * Find by email
      */
     public function findByEmail(string $email): ?array

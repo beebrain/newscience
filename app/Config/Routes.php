@@ -35,6 +35,9 @@ $routes->group('personnel-api', static function ($routes) {
     $routes->get('faculty', 'FacultyPersonnelController::index');
     $routes->get('faculty/status', 'FacultyPersonnelController::status');
 });
+
+// Personnel CV page (public)
+$routes->get('personnel-cv/(:segment)', 'PersonnelCvController::show/$1');
 $routes->get('/official-documents', 'Pages::officialDocuments');
 $routes->get('/promotion-criteria', 'Pages::promotionCriteria');
 
@@ -43,6 +46,9 @@ $routes->get('/dev/login-as-admin', 'Dev::loginAsAdmin');
 $routes->get('/dev/login-as-student', 'Dev::loginAsStudent');
 $routes->get('/dev/login-as-student-admin', 'Dev::loginAsStudentAdmin');
 $routes->get('/dev/test-content-builder', 'Dev::testContentBuilder');
+// Mock URU Portal OAuth (ทดสอบ OAuth flow โดยไม่ต้องผ่าน Portal จริง)
+$routes->get('/dev/mock-oauth-student', 'Dev::mockOAuthStudent');
+$routes->get('/dev/mock-oauth-personnel', 'Dev::mockOAuthPersonnel');
 
 // Admin Auth Routes (no filter)
 $routes->get('/admin/login', 'Admin\Auth::login');
@@ -55,11 +61,47 @@ $routes->get('/admin/edoc-logout-return', 'Admin\Auth::edocLogoutReturn');
 $routes->get('/admin/portal-login', 'Admin\Auth::portalLogin');
 $routes->get('/admin/oauth-callback', 'Admin\Auth::oauthCallback');
 
+// -------------------------------------------------------------------------
+// URU Portal OAuth 2.0 Routes (ใช้ร่วมกันทั้ง นักศึกษา และ บุคลากร)
+// Callback URL: https://sci.uru.ac.th/index.php/oauth
+// -------------------------------------------------------------------------
+// redirect ผู้ใช้ไปล็อกอินที่ URU Portal
+$routes->get('/oauth/login', 'OAuthController::login');
+// callback จาก URU Portal (รับ ?code=xxx&state=xxx) — ต้องตรงกับ redirect_uri ที่ลงทะเบียนไว้
+$routes->get('/oauth', 'OAuthController::callback');
+// ออกจากระบบ (ล้าง session ฝั่ง newScience)
+$routes->get('/oauth/logout', 'OAuthController::logout');
+
 // หน้า Dashboard ผู้ใช้งาน — หลัง login มาที่หน้านี้ (ทุก role); หน้าตาเหมือน Admin, เมนู Edoc + หน้าการจัดการงานวิจัย; หน้าแรก = ข้อมูลผู้ใช้คนนั้น
 $routes->get('/dashboard', 'User\Dashboard::index', ['filter' => 'loggedin']);
 $routes->get('/go-research-record', 'Admin\Auth::goResearchRecord', ['filter' => 'loggedin']);
 
-// Student Portal (Portal หลัก = hub, บาร์โค้ด, ข่าว/Event)
+// DevTools - สำหรับทดสอบโดยไม่ต้องผ่าน Authen (development only)
+$routes->group('dev', function ($routes) {
+    $routes->get('/', 'DevTools::index');
+    $routes->get('login-as-student/(:num)', 'DevTools::loginAsStudent/$1');
+    $routes->get('login-as-student', 'DevTools::loginAsStudent');
+    $routes->get('login-as-staff/(:num)', 'DevTools::loginAsStaff/$1');
+    $routes->get('login-as-staff', 'DevTools::loginAsStaff');
+    $routes->get('login-as-approver/(:segment)/(:num)', 'DevTools::loginAsApprover/$1/$2');
+    $routes->get('login-as-approver/(:segment)', 'DevTools::loginAsApprover/$1');
+    $routes->get('logout', 'DevTools::logout');
+    $routes->get('create-test-request/(:num)', 'DevTools::createTestRequest/$1');
+    $routes->get('create-test-request', 'DevTools::createTestRequest');
+
+    // Upload Test Routes
+    $routes->get('upload-test', 'Dev\UploadTest::index');
+    $routes->post('upload-test/test-pdf', 'Dev\UploadTest::testPdfUpload');
+    $routes->post('upload-test/test-csv', 'Dev\UploadTest::testCsvUpload');
+    $routes->post('upload-test/cleanup-temp', 'Dev\UploadTest::cleanupTemp');
+    $routes->get('upload-test/folder-info', 'Dev\UploadTest::getFolderInfo');
+
+    // Field Mapping Test Routes
+    $routes->get('field-test', 'Dev\FieldTest::index');
+    $routes->post('field-test/test-pdf-generation', 'Dev\FieldTest::testPdfGeneration');
+});
+
+// Student Portal Routesal หลัก = hub, บาร์โค้ด, ข่าว/Event)
 $routes->get('/student/login', 'Student\Auth::login');
 $routes->post('/student/login', 'Student\Auth::attemptLogin');
 $routes->get('/student/logout', 'Student\Auth::logout');
@@ -69,6 +111,10 @@ $routes->get('/student/barcodes', 'Student\Dashboard::barcodes', ['filter' => 's
 $routes->post('/student/barcodes/claim/(:num)', 'Student\Dashboard::claimBarcode/$1', ['filter' => 'studentauth']);
 $routes->post('/student/barcodes/claim-from-event/(:num)', 'Student\Dashboard::claimFromEvent/$1', ['filter' => 'studentauth']);
 $routes->get('/student/events', 'Student\Dashboard::events', ['filter' => 'studentauth']);
+// Student Certificates (ระบบใหม่: นักศึกษาดู/ดาวน์โหลดได้อย่างเดียว ไม่สามารถขอเอง)
+$routes->get('/student/certificates', 'Student\Certificate::index', ['filter' => 'studentauth']);
+$routes->get('/student/certificates/(:num)', 'Student\Certificate::show/$1', ['filter' => 'studentauth']);
+$routes->get('/student/certificates/(:num)/download', 'Student\Certificate::download/$1', ['filter' => 'studentauth']);
 
 // Student Admin (จัดการบาร์โค้ด — แยกจาก Admin หลัก; เข้าได้ทั้ง admin ระบบ และนักศึกษาสโมสร)
 $routes->group('student-admin', ['filter' => 'studentadmin'], function ($routes) {
@@ -106,6 +152,7 @@ $routes->group('admin', ['filter' => 'adminauth'], function ($routes) {
 
     // News Management
     $routes->get('news', 'Admin\News::index');
+    $routes->get('news/get-paginated', 'Admin\News::getPaginated');
     $routes->get('news/create', 'Admin\News::create');
     $routes->post('news/store', 'Admin\News::store');
     $routes->get('news/edit/(:num)', 'Admin\News::edit/$1');
@@ -138,6 +185,41 @@ $routes->group('admin', ['filter' => 'adminauth'], function ($routes) {
     $routes->post('hero-slides/toggle-active/(:num)', 'Admin\HeroSlides::toggleActive/$1');
     $routes->post('hero-slides/update-order', 'Admin\HeroSlides::updateOrder');
 
+    // Certificate Templates Management
+    $routes->get('cert-templates', 'Admin\CertTemplates::index');
+    $routes->get('cert-templates/create', 'Admin\CertTemplates::create');
+    $routes->post('cert-templates/store', 'Admin\CertTemplates::store');
+    $routes->get('cert-templates/edit/(:num)', 'Admin\CertTemplates::edit/$1');
+    $routes->post('cert-templates/update/(:num)', 'Admin\CertTemplates::update/$1');
+    $routes->get('cert-templates/delete/(:num)', 'Admin\CertTemplates::delete/$1');
+
+    // Certificate Template Preview (AJAX)
+    $routes->post('cert-templates/preview-upload', 'Admin\CertTemplatePreview::uploadPreview');
+    $routes->post('cert-templates/extract-text', 'Admin\CertTemplatePreview::extractText');
+    $routes->post('cert-templates/clear-temp', 'Admin\CertTemplatePreview::clearTemp');
+
+    // Certificate Events (กิจกรรม/อบรมที่จะออก Certificate - ระบบใหม่)
+    $routes->get('cert-events', 'Admin\CertEvents::index');
+    $routes->get('cert-events/create', 'Admin\CertEvents::create');
+    $routes->post('cert-events/store', 'Admin\CertEvents::store');
+    $routes->get('cert-events/(:num)', 'Admin\CertEvents::show/$1');
+    $routes->get('cert-events/(:num)/edit', 'Admin\CertEvents::edit/$1');
+    $routes->post('cert-events/(:num)/update', 'Admin\CertEvents::update/$1');
+    $routes->get('cert-events/(:num)/delete', 'Admin\CertEvents::delete/$1');
+    $routes->post('cert-events/(:num)/add-recipient', 'Admin\CertEvents::addRecipient/$1');
+    $routes->get('cert-events/recipient/(:num)/remove', 'Admin\CertEvents::removeRecipient/$1');
+    $routes->get('cert-events/(:num)/import', 'Admin\CertEvents::importForm/$1');
+    $routes->post('cert-events/(:num)/import', 'Admin\CertEvents::processImport/$1');
+    $routes->get('cert-events/(:num)/export', 'Admin\CertEvents::exportRecipients/$1');
+    $routes->get('cert-events/(:num)/issue', 'Admin\CertEvents::issueCertificates/$1');
+
+    // Certificates Management (Staff verification - ระบบเดิม เก็บไว้สำหรับ backward compat)
+    $routes->get('certificates', 'Admin\Certificates::index');
+    $routes->get('certificates/pending', 'Admin\Certificates::pending');
+    $routes->get('certificates/(:num)', 'Admin\Certificates::show/$1');
+    $routes->post('certificates/verify/(:num)', 'Admin\Certificates::verify/$1');
+    $routes->post('certificates/reject/(:num)', 'Admin\Certificates::reject/$1');
+
     // Events (กิจกรรมที่จะมาถึง)
     $routes->get('events', 'Admin\Events::index');
     $routes->get('events/create', 'Admin\Events::create');
@@ -157,6 +239,19 @@ $routes->group('admin', ['filter' => 'adminauth'], function ($routes) {
     // ไป Research Record โดยไม่ต้อง login ซ้ำ (ส่ง signed token จาก email)
     $routes->get('go-research-record', 'Admin\Auth::goResearchRecord');
 });
+
+// Approver Routes (Program Chairs & Dean)
+$routes->group('approve', ['filter' => 'certapprover'], function ($routes) {
+    $routes->get('certificates', 'Approve\Certificate::index');
+    $routes->get('certificates/history', 'Approve\Certificate::history');
+    $routes->get('certificates/(:num)', 'Approve\Certificate::show/$1');
+    $routes->post('certificates/approve/(:num)', 'Approve\Certificate::approve/$1');
+    $routes->post('certificates/reject/(:num)', 'Approve\Certificate::reject/$1');
+});
+
+// Public Certificate Verification (no login required)
+$routes->get('verify/(:segment)', 'CertVerify::verify/$1');
+$routes->post('verify/check-hash', 'CertVerify::checkHash');
 
 // Utility Routes (admin only – ใช้ adminauth เหมือน admin)
 $routes->group('utility', ['filter' => 'adminauth'], function ($routes) {

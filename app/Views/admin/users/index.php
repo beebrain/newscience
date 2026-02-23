@@ -10,6 +10,10 @@
                 <p class="form-hint" style="margin: 0.25rem 0 0 0;">ทั้งหมด <?= count($users) ?> รายการ (จากตาราง user ใน newScience)</p>
             <?php endif; ?>
         </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" id="userSearch" placeholder="ค้นหาชื่อ, อีเมล, login_uid..." class="form-input" style="width: 280px;">
+            <button type="button" id="clearSearch" class="btn btn-outline btn-sm" style="display: none;">ล้าง</button>
+        </div>
     </div>
 
     <div class="card-body" style="padding: 0;">
@@ -73,4 +77,92 @@
     </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded - Initializing user search');
+
+        const searchInput = document.getElementById('userSearch');
+        const clearBtn = document.getElementById('clearSearch');
+        const tableRows = document.querySelectorAll('tbody tr');
+        const countHint = document.querySelector('.form-hint');
+
+        console.log('Elements found:', {
+            searchInput: !!searchInput,
+            clearBtn: !!clearBtn,
+            tableRows: tableRows.length,
+            countHint: !!countHint
+        });
+
+        if (!searchInput) {
+            console.error('Search input not found');
+            return;
+        }
+
+        const totalCount = tableRows.length;
+
+        function filterUsers() {
+            const keyword = searchInput.value.toLowerCase().trim();
+            console.log('Filtering with keyword:', keyword);
+            let visibleCount = 0;
+
+            tableRows.forEach(function(row) {
+                const nameCell = row.querySelector('td:nth-child(2) span');
+                const emailCell = row.querySelector('td:nth-child(3) span');
+                const loginUidCell = row.querySelector('td:nth-child(4) span');
+
+                if (!nameCell || !emailCell || !loginUidCell) {
+                    console.log('Missing cell in row:', row);
+                    return;
+                }
+
+                const displayName = nameCell.textContent.toLowerCase();
+                const email = emailCell.textContent.toLowerCase();
+                const loginUid = loginUidCell.textContent.toLowerCase();
+
+                if (displayName.includes(keyword) || email.includes(keyword) || loginUid.includes(keyword)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            console.log('Visible count:', visibleCount, 'of', totalCount);
+
+            // Update count display
+            if (countHint) {
+                if (keyword) {
+                    countHint.textContent = 'แสดง ' + visibleCount + ' จาก ' + totalCount + ' รายการ';
+                } else {
+                    countHint.textContent = 'ทั้งหมด ' + totalCount + ' รายการ (จากตาราง user ใน newScience)';
+                }
+            }
+
+            // Show/hide clear button
+            if (clearBtn) {
+                clearBtn.style.display = keyword ? 'inline-flex' : 'none';
+            }
+        }
+
+        // Auto filter on input
+        searchInput.addEventListener('input', filterUsers);
+        console.log('Event listener added to search input');
+
+        // Clear button
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                filterUsers();
+                searchInput.focus();
+            });
+        }
+
+        // Focus on search input
+        searchInput.focus();
+        console.log('User search initialized successfully');
+    });
+</script>
 <?= $this->endSection() ?>

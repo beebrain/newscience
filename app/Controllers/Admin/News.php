@@ -21,26 +21,59 @@ class News extends BaseController
     }
 
     /**
-     * List all news articles
+     * List all news articles with search and filter
      */
     public function index()
     {
         $db = \Config\Database::connect();
-        $news = $this->newsModel->getAllWithAuthor();
 
-        // Fetch tags for each news article
-        if ($db->tableExists('news_tags') && $db->tableExists('news_news_tags')) {
-            foreach ($news as &$article) {
-                $article['tags'] = $this->newsTagModel->getTagsByNewsId((int)$article['id']);
-            }
-        }
+        // Get search parameters (passed to view for AJAX JS)
+        $keyword = $this->request->getGet('keyword') ?? '';
+        $tagId = $this->request->getGet('tag_id');
+        $tagId = !empty($tagId) ? (int) $tagId : '';
+
+        // Get all tags for filter dropdown
+        $tags = ($db->tableExists('news_tags')) ? $this->newsTagModel->getAllOrdered() : [];
 
         $data = [
             'page_title' => 'Manage News',
-            'news' => $news
+            'tags' => $tags,
+            'keyword' => $keyword,
+            'selected_tag' => $tagId
         ];
 
         return view('admin/news/index', $data);
+    }
+
+    /**
+     * AJAX endpoint for paginated news
+     */
+    public function getPaginated()
+    {
+        $page = (int) ($this->request->getGet('page') ?? 1);
+        $keyword = $this->request->getGet('keyword');
+        $tagId = $this->request->getGet('tag_id');
+        $tagId = !empty($tagId) ? (int) $tagId : null;
+
+        // Get paginated results
+        if (!empty($keyword) || !empty($tagId)) {
+            $result = $this->newsModel->searchNewsPaginated($keyword, $tagId, $page, 20);
+        } else {
+            $result = $this->newsModel->getAllWithAuthorPaginated($page, 20);
+        }
+
+        // Fetch tags for each article
+        $db = \Config\Database::connect();
+        foreach ($result['data'] as &$article) {
+            $article['tags'] = [];
+            if ($db->tableExists('news_tags') && $db->tableExists('news_news_tags')) {
+                $article['tags'] = $this->newsTagModel->getTagsByNewsId((int)$article['id']);
+            }
+            // Format date for display
+            $article['created_at_formatted'] = date('d/m/Y', strtotime($article['created_at']));
+        }
+
+        return $this->response->setJSON($result);
     }
 
     /**

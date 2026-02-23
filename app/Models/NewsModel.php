@@ -97,6 +97,45 @@ class NewsModel extends Model
     }
 
     /**
+     * Search news by title and/or filter by tag with pagination
+     */
+    public function searchNewsPaginated(?string $keyword = null, ?int $tagId = null, int $page = 1, int $perPage = 20): array
+    {
+        $db = \Config\Database::connect();
+        $offset = ($page - 1) * $perPage;
+
+        $builder = $this->select('news.*, user.gf_name, user.gl_name')
+            ->join('user', 'user.uid = news.author_id', 'left');
+
+        // Filter by keyword in title
+        if (!empty($keyword)) {
+            $builder->like('news.title', $keyword);
+        }
+
+        // Filter by tag
+        if (!empty($tagId) && $db->tableExists('news_news_tags')) {
+            $builder->join('news_news_tags', 'news_news_tags.news_id = news.id', 'inner')
+                ->where('news_news_tags.news_tag_id', $tagId);
+        }
+
+        // Get total count for pagination
+        $countBuilder = clone $builder;
+        $total = $countBuilder->countAllResults();
+
+        // Get paginated results
+        $results = $builder->orderBy('news.created_at', 'DESC')
+            ->findAll($perPage, $offset);
+
+        return [
+            'data' => $results,
+            'total' => $total,
+            'page' => $page,
+            'perPage' => $perPage,
+            'totalPages' => (int) ceil($total / $perPage)
+        ];
+    }
+
+    /**
      * Get news with author info
      */
     public function getNewsWithAuthor(int $id)
@@ -107,14 +146,26 @@ class NewsModel extends Model
     }
 
     /**
-     * Get all news with author
+     * Get all news with author (paginated)
      */
-    public function getAllWithAuthor()
+    public function getAllWithAuthorPaginated(int $page = 1, int $perPage = 20): array
     {
-        return $this->select('news.*, user.gf_name, user.gl_name')
-            ->join('user', 'user.uid = news.author_id', 'left')
-            ->orderBy('news.created_at', 'DESC')
-            ->findAll();
+        $offset = ($page - 1) * $perPage;
+
+        $builder = $this->select('news.*, user.gf_name, user.gl_name')
+            ->join('user', 'user.uid = news.author_id', 'left');
+
+        $total = $this->countAllResults();
+        $results = $builder->orderBy('news.created_at', 'DESC')
+            ->findAll($perPage, $offset);
+
+        return [
+            'data' => $results,
+            'total' => $total,
+            'page' => $page,
+            'perPage' => $perPage,
+            'totalPages' => (int) ceil($total / $perPage)
+        ];
     }
 
     /**

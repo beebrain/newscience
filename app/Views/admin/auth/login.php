@@ -12,12 +12,18 @@
 
     <style>
         :root {
-            --primary: #f59e0b; /* Amber 500 */
-            --primary-hover: #d97706; /* Amber 600 */
-            --bg-dark: #0f172a; /* Slate 900 */
-            --bg-card: rgba(30, 41, 59, 0.7); /* Slate 800/70 */
-            --text-main: #f8fafc; /* Slate 50 */
-            --text-muted: #94a3b8; /* Slate 400 */
+            --primary: #f59e0b;
+            /* Amber 500 */
+            --primary-hover: #d97706;
+            /* Amber 600 */
+            --bg-dark: #0f172a;
+            /* Slate 900 */
+            --bg-card: rgba(30, 41, 59, 0.7);
+            /* Slate 800/70 */
+            --text-main: #f8fafc;
+            /* Slate 50 */
+            --text-muted: #94a3b8;
+            /* Slate 400 */
             --border: rgba(255, 255, 255, 0.1);
             --border-focus: rgba(245, 158, 11, 0.5);
         }
@@ -31,10 +37,10 @@
         body {
             font-family: 'Sarabun', sans-serif;
             background-color: var(--bg-dark);
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -61,8 +67,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .logo-area {
@@ -98,6 +111,7 @@
             font-weight: 700;
             margin-bottom: 0.5rem;
             background: linear-gradient(to right, #fff, #cbd5e1);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -184,7 +198,8 @@
             font-size: 0.8rem;
         }
 
-        .divider::before, .divider::after {
+        .divider::before,
+        .divider::after {
             content: '';
             flex: 1;
             border-bottom: 1px solid var(--border);
@@ -220,7 +235,7 @@
             background: rgba(255, 255, 255, 0.1);
             border-color: rgba(255, 255, 255, 0.2);
         }
-        
+
         .alert {
             padding: 1rem;
             border-radius: 12px;
@@ -248,7 +263,7 @@
             text-align: center;
             margin-top: 2rem;
         }
-        
+
         .back-link a {
             color: var(--text-muted);
             text-decoration: none;
@@ -263,91 +278,91 @@
 </head>
 
 <body>
-<div class="login-container">
-    <div class="glass-card">
-        <div class="logo-area">
-            <div class="logo-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                    <path d="M2 17l10 5 10-5" />
-                    <path d="M2 12l10 5 10-5" />
-                </svg>
-            </div>
-        </div>
-        
-        <div class="header-text">
-            <h1>Admin Login</h1>
-            <p>Access your university management dashboard</p>
-        </div>
-
-        <!-- Alerts -->
-        <?php if (session()->getFlashdata('error')): ?>
-            <div class="alert alert-error">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-                <span><?= session()->getFlashdata('error') ?></span>
-            </div>
-        <?php endif; ?>
-
-        <?php if (session()->getFlashdata('success')): ?>
-            <div class="alert alert-success">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <span><?= session()->getFlashdata('success') ?></span>
-            </div>
-        <?php endif; ?>
-
-        <!-- Silent Logout Logic -->
-        <?php if (isset($_GET['logout']) && $_GET['logout'] === '1'): ?>
-            <div class="alert alert-success">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <span>ออกจากระบบแล้ว</span>
-            </div>
-            <?php
-            $edocSso = config(\Config\EdocSso::class);
-            if ($edocSso->enabled && $edocSso->logoutUrl !== '') {
-                echo '<iframe src="' . esc($edocSso->logoutUrl) . '" style="width:0;height:0;border:0;position:absolute;visibility:hidden;"></iframe>';
-            }
-            $researchSso = config(\Config\ResearchRecordSso::class);
-            if ($researchSso->enabled && $researchSso->logoutUrl !== '') {
-                echo '<iframe src="' . esc($researchSso->logoutUrl) . '" style="width:0;height:0;border:0;position:absolute;visibility:hidden;"></iframe>';
-            }
-            ?>
-        <?php endif; ?>
-
-        <div style="margin-top: 1.5rem;">
-            <?php
-            $edocSso = config(\Config\EdocSso::class);
-            if ($edocSso->enabled && $edocSso->baseUrl !== ''):
-            ?>
-                <a href="<?= base_url('admin/portal-login') ?>" class="btn-primary" style="text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 0.75rem;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                        <polyline points="10 17 15 12 10 7"></polyline>
-                        <line x1="15" y1="12" x2="3" y2="12"></line>
+    <div class="login-container">
+        <div class="glass-card">
+            <div class="logo-area">
+                <div class="logo-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
                     </svg>
-                    Sign in with URU Portal
-                </a>
-            <?php else: ?>
+                </div>
+            </div>
+
+            <div class="header-text">
+                <h1>Admin Login</h1>
+                <p>Access your university management dashboard</p>
+            </div>
+
+            <!-- Alerts -->
+            <?php if (session()->getFlashdata('error')): ?>
                 <div class="alert alert-error">
-                    <span>ตวจไม่พบการตั้งค่า URU Portal กรุณาติดต่อผู้ดูแลระบบ</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span><?= session()->getFlashdata('error') ?></span>
                 </div>
             <?php endif; ?>
-        </div>
 
-        <div class="back-link">
-            <a href="<?= base_url() ?>">← Back to Website</a>
+            <?php if (session()->getFlashdata('success')): ?>
+                <div class="alert alert-success">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span><?= session()->getFlashdata('success') ?></span>
+                </div>
+            <?php endif; ?>
+
+            <!-- Silent Logout Logic -->
+            <?php if (isset($_GET['logout']) && $_GET['logout'] === '1'): ?>
+                <div class="alert alert-success">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span>ออกจากระบบแล้ว</span>
+                </div>
+                <?php
+                $edocSso = config(\Config\EdocSso::class);
+                if ($edocSso->enabled && $edocSso->logoutUrl !== '') {
+                    echo '<iframe src="' . esc($edocSso->logoutUrl) . '" style="width:0;height:0;border:0;position:absolute;visibility:hidden;"></iframe>';
+                }
+                $researchSso = config(\Config\ResearchRecordSso::class);
+                if ($researchSso->enabled && $researchSso->logoutUrl !== '') {
+                    echo '<iframe src="' . esc($researchSso->logoutUrl) . '" style="width:0;height:0;border:0;position:absolute;visibility:hidden;"></iframe>';
+                }
+                ?>
+            <?php endif; ?>
+
+            <div style="margin-top: 1.5rem;">
+                <?php
+                $uruOAuth = config(\Config\UruPortalOAuth::class);
+                if ($uruOAuth->enabled):
+                ?>
+                    <a href="<?= base_url('oauth/login') ?>" class="btn-primary" style="text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 0.75rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                            <polyline points="10 17 15 12 10 7"></polyline>
+                            <line x1="15" y1="12" x2="3" y2="12"></line>
+                        </svg>
+                        เข้าสู่ระบบด้วย URU Portal
+                    </a>
+                <?php else: ?>
+                    <div class="alert alert-error">
+                        <span>การเข้าสู่ระบบผ่าน URU Portal ยังไม่เปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ</span>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div class="back-link">
+                <a href="<?= base_url() ?>">← Back to Website</a>
+            </div>
         </div>
     </div>
-</div>
 </body>
 
 </html>

@@ -205,10 +205,52 @@
                             <li class="nav__item--has-dropdown nav__item--has-subdropdown">
                                 <span class="nav__dropdown-link nav__dropdown-link--subtrigger">ลิงก์ด่วน</span>
                                 <ul class="nav__dropdown nav__dropdown--sub">
-                                    <li><a href="#" class="nav__dropdown-link">นักศึกษา</a></li>
-                                    <li><a href="#" class="nav__dropdown-link">บุคลากร (ม.ราชภัฏ)</a></li>
-                                    <li><a href="#" class="nav__dropdown-link">ศิษย์เก่า</a></li>
-                                    <li><a href="http://old.sci.uru.ac.th" class="nav__dropdown-link" target="_blank" rel="noopener">เว็บคณะเดิม</a></li>
+                                    <?php
+                                    $quickLinks = [];
+                                    foreach (($settings ?? []) as $k => $v) {
+                                        if (!is_string($k) || strpos($k, 'quick_link_') !== 0) {
+                                            continue;
+                                        }
+                                        $idx = (int) preg_replace('/[^0-9]/', '', $k);
+                                        $payload = null;
+                                        if (is_string($v) && $v !== '') {
+                                            $decoded = json_decode($v, true);
+                                            if (is_array($decoded)) {
+                                                $payload = $decoded;
+                                            }
+                                        }
+                                        if (!is_array($payload)) {
+                                            continue;
+                                        }
+                                        $name = trim((string) ($payload['name_th'] ?? $payload['name_en'] ?? ''));
+                                        $url = trim((string) ($payload['url'] ?? ''));
+                                        if ($name === '' || $url === '') {
+                                            continue;
+                                        }
+                                        $quickLinks[] = [
+                                            'idx' => $idx,
+                                            'name' => $name,
+                                            'url' => $url,
+                                        ];
+                                    }
+
+                                    usort($quickLinks, static function ($a, $b) {
+                                        return ($a['idx'] ?? 0) <=> ($b['idx'] ?? 0);
+                                    });
+                                    ?>
+
+                                    <?php foreach ($quickLinks as $ql): ?>
+                                        <?php
+                                        $href = $ql['url'];
+                                        $isExternal = (strpos($href, 'http://') === 0 || strpos($href, 'https://') === 0);
+                                        ?>
+                                        <li>
+                                            <a href="<?= esc($href) ?>" class="nav__dropdown-link" <?= $isExternal ? 'target="_blank" rel="noopener"' : '' ?>>
+                                                <?= esc($ql['name']) ?>
+                                            </a>
+                                        </li>
+                                    <?php endforeach; ?>
+
                                     <?php if (session()->get('admin_logged_in')): ?>
                                         <li><a href="<?= base_url('dashboard') ?>" class="nav__dropdown-link">การจัดการ</a></li>
                                         <li><a href="<?= base_url('admin/logout') ?>" class="nav__dropdown-link">ออกจากระบบ</a></li>
