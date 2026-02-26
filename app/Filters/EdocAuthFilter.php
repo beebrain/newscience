@@ -19,12 +19,13 @@ class EdocAuthFilter implements FilterInterface
                 ->with('error', 'กรุณาเข้าสู่ระบบก่อนใช้งาน E-Document');
         }
 
-        $userId = $session->get('admin_id');
+        $userId = (int) $session->get('admin_id');
+        $path = $request->getUri()->getPath();
+        $systemSlug = (strpos($path, 'edoc/admin') !== false) ? 'edoc_admin' : 'edoc';
 
-        // Use AccessControl library to check permission
-        if (!AccessControl::hasAccess($userId, 'edoc')) {
+        if (!AccessControl::hasAccess($userId, $systemSlug)) {
             return redirect()->to(base_url('dashboard'))
-                ->with('error', 'คุณไม่มีสิทธิ์เข้าใช้ระบบ E-Document');
+                ->with('error', $systemSlug === 'edoc_admin' ? 'คุณไม่มีสิทธิ์จัดการ E-Document' : 'คุณไม่มีสิทธิ์เข้าใช้ระบบ E-Document');
         }
     }
 

@@ -34,20 +34,14 @@ class ProgramAdminFilter implements FilterInterface
             return redirect()->to(base_url('/admin/login'))->with('error', 'ไม่พบข้อมูลผู้ใช้');
         }
 
-        // Check if user is faculty/admin or has program management permissions
-        $isProgramAdmin = false;
-
-        // Check if user is in personnel_programs with chair role
-        if ($userRole === 'faculty' || $userRole === 'admin') {
+        $isProgramAdmin = \App\Libraries\AccessControl::hasAccess((int) $user['uid'], 'program_admin');
+        if (!$isProgramAdmin && in_array($userRole, ['super_admin', 'admin'], true)) {
+            $isProgramAdmin = true;
+        }
+        if (!$isProgramAdmin && ($userRole === 'faculty_admin' || $userRole === 'faculty' || $userRole === 'admin')) {
             $personnelProgramModel = new \App\Models\PersonnelProgramModel();
             $isProgramAdmin = $personnelProgramModel->personnelHasChairRole($user['uid']);
         }
-
-        // Check if user is Super Admin or Admin
-        if ($userRole === 'super_admin' || $userRole === 'admin') {
-            $isProgramAdmin = true;
-        }
-
         if (!$isProgramAdmin) {
             return redirect()->to(base_url('/dashboard'))->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตร');
         }

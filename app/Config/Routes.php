@@ -137,8 +137,8 @@ $routes->group('student-admin', ['filter' => 'studentadmin'], function ($routes)
     $routes->post('barcode-events/remove-eligible/(:num)/(:num)', 'StudentAdmin\BarcodeEvents::removeEligible/$1/$2');
 });
 
-// Admin Routes (protected by adminauth filter)
-$routes->group('admin', ['filter' => 'adminauth'], function ($routes) {
+// Admin Routes (protected by adminauth + ตรวจสิทธิ์แต่ละส่วนจาก user_system_access)
+$routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], function ($routes) {
     // จัดการผู้ใช้ (Super_admin และ Faculty_admin)
     $routes->get('users', 'Admin\UserManagement::index');
 
@@ -260,8 +260,8 @@ $routes->group('approve', ['filter' => 'certapprover'], function ($routes) {
 $routes->get('verify/(:segment)', 'CertVerify::verify/$1');
 $routes->post('verify/check-hash', 'CertVerify::checkHash');
 
-// Utility Routes (admin only – ใช้ adminauth เหมือน admin)
-$routes->group('utility', ['filter' => 'adminauth'], function ($routes) {
+// Utility Routes (adminauth + ตรวจสิทธิ์ระบบ utility)
+$routes->group('utility', ['filter' => ['adminauth', 'adminsystemaccess']], function ($routes) {
     $routes->post('upload/image', 'Utility\Upload::uploadImage');
     $routes->post('upload/multiple', 'Utility\Upload::uploadMultiple');
     $routes->post('upload/delete/(:num)', 'Utility\Upload::deleteImage/$1');

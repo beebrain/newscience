@@ -5,6 +5,7 @@ namespace App\Filters;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
+use App\Libraries\AccessControl;
 
 class CertApproverFilter implements FilterInterface
 {
@@ -16,14 +17,16 @@ class CertApproverFilter implements FilterInterface
             return redirect()->to(base_url('admin/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
         }
 
-        $role = $session->get('admin_role');
-        $allowedRoles = ['super_admin', 'admin', 'faculty_admin'];
-
-        if (in_array($role, $allowedRoles, true)) {
+        $userUid = (int) $session->get('admin_id');
+        if (AccessControl::hasAccess($userUid, 'cert_approve')) {
             return null;
         }
 
-        $userUid = (int) $session->get('admin_id');
+        $role = $session->get('admin_role');
+        $allowedRoles = ['super_admin', 'admin', 'faculty_admin'];
+        if (in_array($role, $allowedRoles, true)) {
+            return null;
+        }
 
         $signerModel = new \App\Models\CertSignerModel();
         $isSigner = $signerModel->where('user_uid', $userUid)->where('is_active', 1)->first();
