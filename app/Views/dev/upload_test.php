@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 <div class="card">
     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="margin: 0;">ทดสอบระบบอัพโหลดไฟล์</h2>
+        <h2 style="margin: 0;">ทดสอบระบบอัปโหลดไฟล์</h2>
         <span class="badge badge-info">Dev Tool</span>
     </div>
 
@@ -92,11 +92,11 @@
 
         <!-- 4. PDF Upload Test -->
         <div class="test-section" style="margin-bottom: 2rem;">
-            <h3>4. ทดสอบอัพโหลด PDF Template</h3>
+            <h3>4. ทดสอบอัปโหลด PDF Template</h3>
             <div class="upload-test">
                 <input type="file" id="pdfTestFile" accept=".pdf" class="form-control" style="margin-bottom: 0.5rem;">
                 <button type="button" class="btn btn-primary" onclick="testPdfUpload()">
-                    ทดสอบอัพโหลด PDF
+                    ทดสอบอัปโหลด PDF
                 </button>
                 <div id="pdfTestResult" style="margin-top: 1rem;"></div>
             </div>
@@ -104,11 +104,11 @@
 
         <!-- 5. CSV Upload Test -->
         <div class="test-section" style="margin-bottom: 2rem;">
-            <h3>5. ทดสอบอัพโหลด CSV Import</h3>
+            <h3>5. ทดสอบอัปโหลด CSV Import</h3>
             <div class="upload-test">
                 <input type="file" id="csvTestFile" accept=".csv,.txt" class="form-control" style="margin-bottom: 0.5rem;">
                 <button type="button" class="btn btn-primary" onclick="testCsvUpload()">
-                    ทดสอบอัพโหลด CSV
+                    ทดสอบอัปโหลด CSV
                 </button>
                 <div id="csvTestResult" style="margin-top: 1rem;"></div>
             </div>

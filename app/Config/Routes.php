@@ -25,9 +25,12 @@ $routes->get('/promotion-criteria', 'Pages::promotionCriteria');
 // Program Website Routes (Public)
 $routes->get('program/(:num)', 'ProgramController::show/$1');
 $routes->get('program-site/(:num)', 'ProgramWebsite::index/$1');
+$routes->get('program-detail', 'ProgramDetailController::index');
 
 // Serve uploaded files from writable (fallback to public)
+// ใส่ 2 segments ก่อน: news/xxx.jpg, activities/xxx.jpg ไปที่ file() — path เกิน 2 segments ไปที่ fileByPath
 $routes->get('serve/uploads/(:segment)/(:segment)', 'Serve::file/$1/$2');
+$routes->get('serve/uploads/(.+)', 'Serve::fileByPath/$1');
 $routes->get('serve/thumb/(:segment)/(:segment)', 'Serve::thumb/$1/$2');
 
 // Faculty personnel from external Research Record API (see doc_api.rd)
@@ -149,6 +152,10 @@ $routes->group('admin', ['filter' => 'adminauth'], function ($routes) {
     $routes->post('users/toggle-user-status/(:num)', 'Admin\UserManagement::toggleUserStatus/$1');
     $routes->post('users/toggle-student-status/(:num)', 'Admin\UserManagement::toggleStudentStatus/$1');
     $routes->post('users/bulk-update', 'Admin\UserManagement::bulkUpdate');
+
+    // System Access Management (for user permissions)
+    $routes->get('users/system-access/(:num)', 'Admin\UserManagement::getUserSystemAccess/$1');
+    $routes->post('users/system-access/(:num)', 'Admin\UserManagement::updateUserSystemAccess/$1');
 
     // News Management
     $routes->get('news', 'Admin\News::index');
@@ -289,6 +296,7 @@ $routes->group('api', function ($routes) {
     $routes->get('executives', 'Api::executives');
     $routes->get('departments', 'Api::departments');
     $routes->get('programs', 'Api::programs');
+    $routes->get('program/(:num)', 'Api::programDetail/$1');
     $routes->get('settings', 'Api::settings');
     $routes->get('stats', 'Api::stats');
 
@@ -302,6 +310,7 @@ $routes->group('program-admin', ['filter' => 'programadmin'], function ($routes)
     $routes->get('edit/(:num)', 'Admin\ProgramAdmin\Dashboard::edit/$1');
     $routes->post('update/(:num)', 'Admin\ProgramAdmin\Dashboard::update/$1');
     $routes->post('update-page/(:num)', 'Admin\ProgramAdmin\Dashboard::updatePage/$1');
+    $routes->post('update-page-json/(:num)', 'Admin\ProgramAdmin\Dashboard::updatePageJson/$1');
     $routes->get('downloads/(:num)', 'Admin\ProgramAdmin\Dashboard::downloads/$1');
     $routes->post('upload-download/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadDownload/$1');
     $routes->post('delete-download/(:num)', 'Admin\ProgramAdmin\Dashboard::deleteDownload/$1');
@@ -309,16 +318,74 @@ $routes->group('program-admin', ['filter' => 'programadmin'], function ($routes)
     $routes->get('preview/(:num)', 'Admin\ProgramAdmin\Dashboard::preview/$1');
     $routes->post('toggle-publish/(:num)', 'Admin\ProgramAdmin\Dashboard::togglePublish/$1');
 
-    // Content Builder Routes
-    $routes->get('content-builder/(:num)', 'Admin\ProgramAdmin\ContentBuilder::index/$1');
-    $routes->get('content-builder/(:num)/blocks', 'Admin\ProgramAdmin\ContentBuilder::getBlocks/$1');
-    $routes->post('content-builder/(:num)/blocks', 'Admin\ProgramAdmin\ContentBuilder::createBlock/$1');
-    $routes->get('content-builder/block/(:num)/edit', 'Admin\ProgramAdmin\ContentBuilder::editBlock/$1');
-    $routes->post('content-builder/block/(:num)/update', 'Admin\ProgramAdmin\ContentBuilder::updateBlock/$1');
-    $routes->post('content-builder/block/(:num)/delete', 'Admin\ProgramAdmin\ContentBuilder::deleteBlock/$1');
-    $routes->post('content-builder/(:num)/reorder', 'Admin\ProgramAdmin\ContentBuilder::reorderBlocks/$1');
-    $routes->post('content-builder/block/(:num)/toggle', 'Admin\ProgramAdmin\ContentBuilder::toggleBlock/$1');
-    $routes->post('content-builder/block/(:num)/publish', 'Admin\ProgramAdmin\ContentBuilder::togglePublishBlock/$1');
-    $routes->post('content-builder/block/(:num)/duplicate', 'Admin\ProgramAdmin\ContentBuilder::duplicateBlock/$1');
-    $routes->get('live-preview/(:num)', 'Admin\ProgramAdmin\ContentBuilder::livePreview/$1');
+    // Program News (tag program_{id} by default)
+    $routes->get('news/(:num)', 'Admin\ProgramAdmin\Dashboard::programNews/$1');
+    $routes->post('news/(:num)/create', 'Admin\ProgramAdmin\Dashboard::createProgramNews/$1');
+
+    // Activities (replace Content Builder)
+    $routes->get('activities/(:num)', 'Admin\ProgramAdmin\Activities::index/$1');
+    $routes->get('activities/(:num)/create', 'Admin\ProgramAdmin\Activities::createActivity/$1');
+    $routes->post('activities/(:num)/store', 'Admin\ProgramAdmin\Activities::storeActivity/$1');
+    $routes->get('activity/(:num)/edit', 'Admin\ProgramAdmin\Activities::editActivity/$1');
+    $routes->post('activity/(:num)/update', 'Admin\ProgramAdmin\Activities::updateActivity/$1');
+    $routes->post('activity/(:num)/delete', 'Admin\ProgramAdmin\Activities::deleteActivity/$1');
+    $routes->post('activity/(:num)/upload-image', 'Admin\ProgramAdmin\Activities::uploadActivityImage/$1');
+    $routes->post('activity-image/(:num)/delete', 'Admin\ProgramAdmin\Activities::deleteActivityImage/$1');
 });
+
+// ================================================================
+// Edoc Sub-App Routes (prefix: /edoc)
+// ================================================================
+$routes->group('edoc', ['filter' => 'edocauth'], function ($routes) {
+    // E-Document (User)
+    $routes->get('/', 'Edoc\EdocController::index');
+    $routes->post('getdocinfo', 'Edoc\EdocController::getDocInfo');
+    $routes->post('getdoc', 'Edoc\EdocController::getDoc');
+    $routes->post('getallviewers', 'Edoc\EdocController::getAllViewers');
+    $routes->get('viewPDF/(:any)', 'Edoc\EdocController::viewPDF/$1');
+
+    // E-Document (Admin)
+    $routes->get('admin', 'Edoc\AdminEdocController::index');
+    $routes->post('admin/getdoc', 'Edoc\AdminEdocController::getDoc');
+    $routes->post('admin/getdocinfo', 'Edoc\AdminEdocController::getDocInfo');
+    $routes->post('admin/savedoc', 'Edoc\AdminEdocController::saveDoc');
+    $routes->get('admin/gettaggroups', 'Edoc\AdminEdocController::getTagGroups');
+    $routes->post('admin/savetaggroup', 'Edoc\AdminEdocController::saveTagGroup');
+    $routes->post('admin/deletetaggroup', 'Edoc\AdminEdocController::deleteTagGroup');
+
+    // Volume Management (Admin)
+    $routes->get('admin/volumes', 'Edoc\AdminEdocController::getVolumes');
+    $routes->get('admin/volumes/years', 'Edoc\AdminEdocController::getAvailableYears');
+    $routes->post('admin/volumes/create-year', 'Edoc\AdminEdocController::createYearVolumes');
+    $routes->post('admin/volumes/toggle', 'Edoc\AdminEdocController::toggleVolume');
+
+    // Email Tag Suggest (Admin)
+    $routes->get('admin/suggest-emails', 'Edoc\AdminEdocController::suggestEmails');
+    $routes->get('admin/document-tags', 'Edoc\AdminEdocController::getDocumentTags');
+
+    // Document Analysis
+    $routes->get('analysis', 'Edoc\DocumentAnalysisController::index');
+    $routes->get('api/summary-metrics', 'Edoc\DocumentAnalysisController::getSummaryMetrics');
+    $routes->get('api/doc-type-distribution', 'Edoc\DocumentAnalysisController::getDocTypeDistribution');
+    $routes->get('api/monthly-trend', 'Edoc\DocumentAnalysisController::getMonthlyTrend');
+    $routes->get('api/top-owners', 'Edoc\DocumentAnalysisController::getTopOwners');
+    $routes->get('api/page-distribution', 'Edoc\DocumentAnalysisController::getPageDistribution');
+    $routes->get('api/advanced-analytics', 'Edoc\DocumentAnalysisController::getAdvancedAnalytics');
+    $routes->get('api/export-report', 'Edoc\DocumentAnalysisController::exportAnalysisReport');
+
+    // Notifications
+    $routes->get('notifications', 'Edoc\GeneralController::getDocumentNotificationsData');
+    $routes->get('notifications/(:segment)', 'Edoc\GeneralController::getDocumentNotificationsData/$1');
+    $routes->get('send-notifications', 'Edoc\GeneralController::sendTodayDocumentNotifications');
+
+    // File Upload (Edoc-specific)
+    $routes->post('upload/edoc', 'Edoc\EdocUploadController::uploadFileEdoc');
+
+    // Diagnostic (dev)
+    $routes->get('diagnostic/checkfile/(:any)', 'Edoc\DiagnosticController::checkFile/$1');
+    $routes->get('diagnostic/checkfile', 'Edoc\DiagnosticController::checkFile');
+    $routes->get('diagnostic/listfiles', 'Edoc\DiagnosticController::listFiles');
+});
+
+// Edoc public routes (no auth required — accessed via email link)
+$routes->get('edoc/public/secure-access', 'Edoc\GeneralController::secureAccess');

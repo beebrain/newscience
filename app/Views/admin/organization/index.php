@@ -107,7 +107,7 @@
                 </td>
                 <td>
                     <a href="<?= base_url('admin/organization/edit/' . $p['id']) ?>" class="btn btn-secondary btn-sm">แก้ไข</a>
-                    <a href="<?= base_url('admin/organization/delete/' . $p['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('ต้องการลบบุคลากรนี้ออกจากโครงสร้างองค์กรหรือไม่?\n(จะไม่แสดงบนหน้าสาธารณะ แต่ข้อมูลยังอยู่ในระบบ)');">ลบ</a>
+                    <a href="<?= base_url('admin/organization/delete/' . $p['id']) ?>" class="btn btn-danger btn-sm js-delete-org" data-href="<?= base_url('admin/organization/delete/' . $p['id']) ?>">ลบ</a>
                 </td>
             </tr>
         <?php
@@ -189,4 +189,18 @@
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.body.addEventListener('click', function(e) {
+        var btn = e.target.closest('.js-delete-org');
+        if (!btn) return;
+        e.preventDefault();
+        var href = btn.getAttribute('data-href') || btn.getAttribute('href');
+        if (!href) return;
+        swalConfirm({ title: 'ต้องการลบบุคลากรนี้ออกจากโครงสร้างองค์กรหรือไม่?', text: 'จะไม่แสดงบนหน้าสาธารณะ แต่ข้อมูลยังอยู่ในระบบ', confirmText: 'ลบ', cancelText: 'ยกเลิก' }).then(function(ok) {
+            if (ok) window.location.href = href;
+        });
+    });
+});
+</script>
 <?= $this->endSection() ?>

@@ -170,6 +170,8 @@
 
 <?= $this->section('scripts') ?>
 <script>
+    const baseUrl = '<?= base_url() ?>';
+
     // Tag badge styles function
     function getTagBadgeStyle(slug) {
         const styles = {
@@ -228,7 +230,6 @@
 
     // Render news table row
     function renderNewsRow(article) {
-        const baseUrl = '<?= base_url() ?>';
         const featuredImage = article.featured_image ?
             `<img src="${baseUrl}serve/thumb/news/${article.featured_image.split('/').pop()}" alt="" class="news-thumb" width="72" height="48">` :
             '<div class="news-thumb-placeholder">ไม่มีภาพ</div>';
@@ -265,7 +266,7 @@
             <td class="news-actions-cell">
                 <div class="actions">
                     <a href="${baseUrl}admin/news/edit/${article.id}" class="btn btn-secondary btn-sm">แก้ไข</a>
-                    <a href="${baseUrl}admin/news/delete/${article.id}" class="btn btn-danger btn-sm" onclick="return confirm('ต้องการลบข่าวนี้หรือไม่?')">ลบ</a>
+                    <a href="${baseUrl}admin/news/delete/${article.id}" class="btn btn-danger btn-sm btn-delete-news" data-href="${baseUrl}admin/news/delete/${article.id}">ลบ</a>
                 </div>
             </td>
         </tr>
@@ -382,7 +383,17 @@
         loadNews(1);
     });
 
-    // Initial load
+    document.getElementById('newsTableContainer').addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-delete-news');
+        if (!btn) return;
+        e.preventDefault();
+        var href = btn.getAttribute('data-href') || btn.getAttribute('href');
+        if (!href) return;
+        swalConfirm({ title: 'ต้องการลบข่าวนี้หรือไม่?', confirmText: 'ลบ', cancelText: 'ยกเลิก' }).then(function(ok) {
+            if (ok) window.location.href = href;
+        });
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         loadNews(1);
     });

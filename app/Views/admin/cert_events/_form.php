@@ -14,7 +14,7 @@ $isEdit = isset($event) && $event;
       data-ajax="true"
       data-modal="certEventModal"
       data-reload="true"
-      data-toast="<?= $isEdit ? 'อัพเดทกิจกรรมสำเร็จ' : 'สร้างกิจกรรมสำเร็จ' ?>">
+      data-toast="<?= $isEdit ? 'อัปเดตกิจกรรมสำเร็จ' : 'สร้างกิจกรรมสำเร็จ' ?>">
     
     <?= csrf_field() ?>
     

@@ -1,0 +1,186 @@
+/* Base Styles */
+.amsify-suggestags-area {
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-input-area-default {
+	border: 1px solid #e0e0e0;
+	border-radius: 8px;
+	min-height: 44px;
+	padding: 4px 8px;
+	transition: all 0.2s ease;
+	cursor: text;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-input-area {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	align-items: center;
+	text-align: left;
+	height: auto;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-input-area .amsify-suggestags-input {
+	height: 32px;
+	padding: 0 8px;
+	border: none;
+	font-size: 14px;
+	max-width: 200px;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-input-area .amsify-suggestags-input:focus {
+	outline: 0;
+  }
+  
+  /* Focus States */
+  .amsify-focus {
+	border-color: #6366f1;
+	outline: 0;
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+  
+  .amsify-focus-light {
+	border-color: #cacaca;
+	outline: 0;
+	box-shadow: 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(189,189,189,.6);
+  }
+  
+  /* Label and Toggle */
+  .amsify-suggestags-area .amsify-suggestags-label {
+	cursor: pointer;
+	min-height: 20px;
+  }
+  
+  .amsify-toggle-suggestags {
+	float: right;
+	cursor: pointer;
+  }
+  
+  /* Selected Tags */
+  .amsify-suggestags-input-area .amsify-select-tag {
+	background: #f3f4f6;
+	border-radius: 6px;
+	padding: 4px 10px;
+	margin: 2px;
+	font-size: 14px;
+	line-height: 24px;
+	color: #374151;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	transition: all 0.2s ease;
+  }
+  
+  .amsify-suggestags-input-area .amsify-select-tag:hover {
+	background: #e5e7eb;
+  }
+  
+  .amsify-suggestags-input-area .amsify-select-tag.col-bg {
+	background: #f0f7ff;
+	color: #1e40af;
+  }
+  
+  .amsify-suggestags-input-area .disabled.amsify-select-tag {
+	background: #f3f4f6;
+	color: #9ca3af;
+	opacity: 0.6;
+	pointer-events: none;
+  }
+  
+  .amsify-suggestags-input-area .flash.amsify-select-tag {
+	animation: flashTag 0.3s ease;
+  }
+  
+  .amsify-suggestags-input-area .amsify-remove-tag {
+	color: #6b7280;
+	font-size: 18px;
+	line-height: 1;
+	margin-left: 4px;
+	cursor: pointer;
+  }
+  
+  .amsify-suggestags-input-area .amsify-remove-tag:hover {
+	color: #ef4444;
+  }
+  
+  /* Suggestion List */
+  .amsify-suggestags-area .amsify-suggestags-list {
+	display: none;
+	position: absolute;
+	margin-top: 4px;
+	background: white;
+	border-radius: 8px;
+	border: 1px solid #e5e7eb;
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	z-index: 9999;
+	width: 100%;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-list ul.amsify-list {
+	list-style: none;
+	padding: 4px 0;
+	margin: 0;
+	max-height: 250px;
+	overflow-y: auto;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-list ul.amsify-list li.amsify-list-item {
+	padding: 8px 16px;
+	font-size: 14px;
+	color: #374151;
+	cursor: pointer;
+	transition: all 0.2s ease;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-list ul.amsify-list li.amsify-list-item:hover,
+  .amsify-suggestags-area .amsify-suggestags-list ul.amsify-list li.active {
+	background: #f3f4f6;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-list ul.amsify-list li.amsify-list-group {
+	text-align: left;
+	padding: 0 10px;
+	font-weight: bold;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-list ul.amsify-list li.amsify-item-pad {
+	padding-left: 30px;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-list ul.amsify-list li.amsify-item-noresult {
+	display: none;
+	color: #ef4444;
+	font-weight: bold;
+	text-align: center;
+	padding: 8px 0;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-list .amsify-select-input {
+	display: none;
+  }
+  
+  /* Animation */
+  @keyframes flashTag {
+	0% { background-color: #fecaca; }
+	100% { background-color: #f3f4f6; }
+  }
+  
+  /* Scrollbar Styles */
+  .amsify-suggestags-area .amsify-suggestags-list ul.amsify-list::-webkit-scrollbar {
+	width: 6px;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-list ul.amsify-list::-webkit-scrollbar-track {
+	background: #f1f1f1;
+	border-radius: 3px;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-list ul.amsify-list::-webkit-scrollbar-thumb {
+	background: #c1c1c1;
+	border-radius: 3px;
+  }
+  
+  .amsify-suggestags-area .amsify-suggestags-list ul.amsify-list::-webkit-scrollbar-thumb:hover {
+	background: #a8a8a8;
+  }

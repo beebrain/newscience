@@ -93,7 +93,7 @@ class CertEventRecipientModel extends Model
     }
 
     /**
-     * อัพเดทสถานะและ certificate_id หลังออก Certificate สำเร็จ
+     * อัปเดตสถานะและ certificate_id หลังออก Certificate สำเร็จ
      */
     public function markAsIssued(int $recipientId, int $certificateId): bool
     {

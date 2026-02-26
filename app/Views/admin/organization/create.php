@@ -496,7 +496,7 @@
                     var o = opts[highlightIdx];
                     if (o.dataset.uid === '') clearChoice();
                     else if (o.dataset.isLinked === '1') {
-                        alert('ผู้ใช้นี้มีในโครงสร้างองค์กรแล้ว กรุณาเลือกผู้ใช้อื่นหรือเลือก "กรอกเอง"');
+                        swalAlert('ผู้ใช้นี้มีในโครงสร้างองค์กรแล้ว กรุณาเลือกผู้ใช้อื่นหรือเลือก "กรอกเอง"', 'warning');
                     } else selectUser(o.dataset.uid, o.dataset.name, o.dataset.nameEn, o.dataset.email, o.textContent);
                 } else if (e.key === 'Escape') {
                     hideList();
@@ -510,7 +510,7 @@
                 if (!opt) return;
                 if (opt.dataset.uid === '') clearChoice();
                 else if (opt.dataset.isLinked === '1') {
-                    alert('ผู้ใช้นี้มีในโครงสร้างองค์กรแล้ว กรุณาเลือกผู้ใช้อื่นหรือเลือก "กรอกเอง"');
+                    swalAlert('ผู้ใช้นี้มีในโครงสร้างองค์กรแล้ว กรุณาเลือกผู้ใช้อื่นหรือเลือก "กรอกเอง"', 'warning');
                 } else selectUser(opt.dataset.uid, opt.dataset.name, opt.dataset.nameEn, opt.dataset.email, opt.textContent);
             });
         }
@@ -675,7 +675,7 @@
                 var tags = document.querySelectorAll('#program-tags .program-tag');
                 if (!tags.length) {
                     e.preventDefault();
-                    alert('เมื่อตำแหน่งเป็น ประธานหลักสูตร กรุณาเพิ่มอย่างน้อยหนึ่งหลักสูตร');
+                    swalAlert('เมื่อตำแหน่งเป็น ประธานหลักสูตร กรุณาเพิ่มอย่างน้อยหนึ่งหลักสูตร', 'warning');
                     return false;
                 }
             }

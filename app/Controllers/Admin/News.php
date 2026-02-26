@@ -132,7 +132,7 @@ class News extends BaseController
                 ->with('error', 'Failed to create news article.');
         }
 
-        // Handle featured image — ตั้งชื่อเป็นรหัสข่าว (id)
+        // Handle featured image — ชื่อรูปแบบ Feature_364_xxx.jpg
         $featuredImage = $this->request->getFile('featured_image');
         if ($featuredImage && $featuredImage->isValid() && !$featuredImage->hasMoved()) {
             $uploadPath = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'news';
@@ -146,11 +146,11 @@ class News extends BaseController
                 log_message('error', "News Upload Error: Upload directory not writable for News ID $newsId");
                 return redirect()->back()->withInput()->with('error', 'โฟลเดอร์อัปโหลดไม่มีสิทธิ์เขียน');
             }
-            $ext = $this->featuredImageExtension($featuredImage);
-            $featuredFileName = (int) $newsId . '.' . $ext;
+            helper('program_upload');
+            $featuredFileName = featured_image_filename($featuredImage, null, $newsId);
             try {
                 $featuredImage->move($uploadPath, $featuredFileName);
-                $this->newsModel->update($newsId, ['featured_image' => $featuredFileName]);
+                $this->newsModel->update($newsId, ['featured_image' => 'news/' . $featuredFileName]);
                 helper('image');
                 $fullPath = $uploadPath . DIRECTORY_SEPARATOR . $featuredFileName;
                 if (is_file($fullPath) && create_news_thumbnail($fullPath)) {
@@ -214,15 +214,14 @@ class News extends BaseController
     }
 
     /**
-     * Show edit form
+     * Show edit form — อ่านข้อมูลข่าวจากฐานข้อมูลเป็นหลัก (news/edit/364)
      */
     public function edit($id)
     {
         $news = $this->newsModel->find($id);
-
         if (!$news) {
             return redirect()->to(base_url('admin/news'))
-                ->with('error', 'News article not found.');
+                ->with('error', 'ไม่พบข่าวที่ต้องการแก้ไข');
         }
 
         $db = \Config\Database::connect();
@@ -230,13 +229,13 @@ class News extends BaseController
         $newsTagIds = ($db->tableExists('news_news_tags')) ? $this->newsTagModel->getTagIdsByNewsId((int) $id) : [];
 
         $data = [
-            'page_title' => 'Edit News',
+            'page_title' => 'แก้ไขข่าว',
             'news' => $news,
             'images' => $this->newsImageModel->getImagesByNewsId($id),
             'documents' => $this->newsImageModel->getDocumentsByNewsId((int) $id),
             'attachments' => $this->newsImageModel->getAttachmentsByNewsId((int) $id),
             'tags' => $tags,
-            'news_tag_ids' => $newsTagIds
+            'news_tag_ids' => $newsTagIds,
         ];
 
         return view('admin/news/edit', $data);
@@ -309,8 +308,8 @@ class News extends BaseController
                     ->withInput()
                     ->with('error', 'โฟลเดอร์อัปโหลดไม่มีสิทธิ์เขียน');
             }
-            $ext = $this->featuredImageExtension($featuredImage);
-            $featuredFileName = (int) $id . '.' . $ext;
+            helper('program_upload');
+            $featuredFileName = featured_image_filename($featuredImage, null, $id);
             try {
                 if ($news['featured_image']) {
                     $oldFilename = basename($news['featured_image']);
@@ -329,7 +328,7 @@ class News extends BaseController
                     }
                 }
                 $featuredImage->move($uploadPath, $featuredFileName);
-                $newsData['featured_image'] = $featuredFileName;
+                $newsData['featured_image'] = 'news/' . $featuredFileName;
                 helper('image');
                 $fullPath = $uploadPath . DIRECTORY_SEPARATOR . $featuredFileName;
                 if (is_file($fullPath) && create_news_thumbnail($fullPath)) {

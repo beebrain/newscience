@@ -1,0 +1,869 @@
+/* program-detail.css — AUN-QA Program Detail Page
+   Only NEW components not covered by theme/base/components CSS.
+   Uses existing design tokens from theme.css.
+*/
+
+/* ================================
+   Hero: Full-height program banner
+   ================================ */
+.pd-hero {
+    position: relative;
+    min-height: 75vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    color: var(--color-white);
+}
+
+.pd-hero__bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+}
+
+.pd-hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(26,26,26,0.85) 0%, rgba(45,125,70,0.7) 100%);
+    z-index: 1;
+}
+
+.pd-hero .container {
+    position: relative;
+    z-index: 2;
+}
+
+.pd-hero__badge {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    background: rgba(234,179,8,0.2);
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-full);
+    color: var(--color-primary);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-4);
+}
+
+.pd-hero__title {
+    font-size: var(--text-6xl);
+    color: var(--color-white);
+    line-height: 1.1;
+    margin-bottom: var(--spacing-4);
+}
+
+.pd-hero__degree {
+    font-size: var(--text-xl);
+    color: var(--color-gray-300);
+    margin-bottom: var(--spacing-8);
+}
+
+.pd-hero__stats {
+    display: flex;
+    gap: var(--spacing-8);
+    margin-top: var(--spacing-8);
+}
+
+.pd-hero__stat {
+    text-align: center;
+}
+
+.pd-hero__stat-number {
+    font-size: var(--text-4xl);
+    font-weight: 700;
+    color: var(--color-primary);
+    line-height: 1;
+}
+
+.pd-hero__stat-label {
+    font-size: var(--text-sm);
+    color: var(--color-gray-400);
+    margin-top: var(--spacing-1);
+}
+
+@media (max-width: 768px) {
+    .pd-hero {
+        min-height: 60vh;
+    }
+    .pd-hero__title {
+        font-size: var(--text-4xl);
+    }
+    .pd-hero__stats {
+        gap: var(--spacing-6);
+    }
+}
+
+/* ================================
+   Sticky Section Navigation
+   ================================ */
+.pd-sticky-nav {
+    position: sticky;
+    top: var(--header-height, 80px);
+    z-index: 100;
+    background: var(--color-white);
+    border-bottom: 1px solid var(--color-gray-200);
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.pd-sticky-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.pd-sticky-nav__list {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 var(--spacing-6);
+    list-style: none;
+    white-space: nowrap;
+}
+
+.pd-sticky-nav__link {
+    display: block;
+    padding: var(--spacing-4) var(--spacing-5);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-gray-600);
+    border-bottom: 3px solid transparent;
+    transition: color var(--transition), border-color var(--transition);
+    text-decoration: none;
+}
+
+.pd-sticky-nav__link:hover {
+    color: var(--color-dark);
+}
+
+.pd-sticky-nav__link.active {
+    color: var(--secondary);
+    border-bottom-color: var(--secondary);
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .pd-sticky-nav__link {
+        padding: var(--spacing-3) var(--spacing-4);
+        font-size: var(--text-xs);
+    }
+}
+
+/* ================================
+   Section Title (reusable for all AUN-QA sections)
+   ================================ */
+.pd-section {
+    padding: var(--spacing-16) 0;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    scroll-margin-top: calc(var(--header-height, 80px) + 60px);
+}
+
+.pd-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.pd-section__header {
+    margin-bottom: var(--spacing-10);
+}
+
+.pd-section__number {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    background: var(--secondary);
+    color: var(--color-white);
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: var(--text-sm);
+    margin-bottom: var(--spacing-3);
+}
+
+.pd-section__title {
+    font-size: var(--text-3xl);
+    color: var(--color-dark);
+    margin-bottom: var(--spacing-2);
+}
+
+.pd-section__subtitle {
+    color: var(--color-gray-600);
+    font-size: var(--text-base);
+}
+
+/* ================================
+   ELO (Expected Learning Outcomes) Cards
+   ================================ */
+.pd-elo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--spacing-6);
+}
+
+.pd-elo-card {
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-6);
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.pd-elo-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--secondary);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform var(--transition);
+}
+
+.pd-elo-card:hover,
+.pd-elo-card.expanded {
+    border-color: var(--secondary);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.pd-elo-card:hover::before,
+.pd-elo-card.expanded::before {
+    transform: scaleY(1);
+}
+
+.pd-elo-card__icon {
+    width: 48px;
+    height: 48px;
+    background: var(--color-secondary-light);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--spacing-4);
+    color: var(--secondary);
+}
+
+.pd-elo-card__category {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--secondary);
+    margin-bottom: var(--spacing-2);
+}
+
+.pd-elo-card__title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: var(--spacing-2);
+}
+
+.pd-elo-card__summary {
+    font-size: var(--text-sm);
+    color: var(--color-gray-600);
+    margin-bottom: 0;
+}
+
+.pd-elo-card__detail {
+    display: none;
+    margin-top: var(--spacing-4);
+    padding-top: var(--spacing-4);
+    border-top: 1px solid var(--color-gray-200);
+    font-size: var(--text-sm);
+    color: var(--color-gray-700);
+    line-height: 1.7;
+}
+
+.pd-elo-card__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    margin-top: var(--spacing-3);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--secondary);
+    cursor: pointer;
+}
+
+.pd-elo-card__toggle svg {
+    transition: transform var(--transition);
+}
+
+.pd-elo-card.expanded .pd-elo-card__toggle svg {
+    transform: rotate(180deg);
+}
+
+/* ================================
+   Curriculum Accordion
+   ================================ */
+.pd-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+.pd-accordion__item {
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: box-shadow var(--transition);
+}
+
+.pd-accordion__item.open {
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-gray-300);
+}
+
+.pd-accordion__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-5) var(--spacing-6);
+    cursor: pointer;
+    transition: background var(--transition);
+    user-select: none;
+}
+
+.pd-accordion__header:hover {
+    background: var(--color-gray-50);
+}
+
+.pd-accordion__header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+}
+
+.pd-accordion__year-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+    color: var(--color-white);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: var(--text-sm);
+    flex-shrink: 0;
+}
+
+.pd-accordion__header-title {
+    font-weight: 600;
+    color: var(--color-dark);
+    font-size: var(--text-base);
+}
+
+.pd-accordion__header-meta {
+    font-size: var(--text-xs);
+    color: var(--color-gray-500);
+    margin-top: 2px;
+}
+
+.pd-accordion__chevron {
+    width: 20px;
+    height: 20px;
+    color: var(--color-gray-400);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.pd-accordion__item.open .pd-accordion__chevron {
+    transform: rotate(180deg);
+}
+
+.pd-accordion__panel {
+    display: none;
+    padding: 0 var(--spacing-6) var(--spacing-6);
+}
+
+.pd-accordion__semester {
+    margin-bottom: var(--spacing-6);
+}
+
+.pd-accordion__semester:last-child {
+    margin-bottom: 0;
+}
+
+.pd-accordion__semester-title {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--secondary);
+    margin-bottom: var(--spacing-3);
+    padding-bottom: var(--spacing-2);
+    border-bottom: 1px dashed var(--color-gray-200);
+}
+
+.pd-course-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+.pd-course-table th {
+    text-align: left;
+    padding: var(--spacing-2) var(--spacing-3);
+    background: var(--color-gray-50);
+    color: var(--color-gray-600);
+    font-weight: 600;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pd-course-table td {
+    padding: var(--spacing-2) var(--spacing-3);
+    border-bottom: 1px solid var(--color-gray-100);
+    color: var(--color-gray-700);
+}
+
+.pd-course-table tr:last-child td {
+    border-bottom: none;
+}
+
+.pd-course-table .credits {
+    text-align: center;
+    font-weight: 600;
+    color: var(--secondary);
+}
+
+/* ================================
+   Career Opportunities
+   ================================ */
+.pd-career-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing-5);
+}
+
+.pd-career-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-4);
+    padding: var(--spacing-5);
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition);
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.pd-career-item.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.pd-career-item:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.pd-career-item__icon {
+    width: 44px;
+    height: 44px;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--primary-dark);
+}
+
+.pd-career-item__title {
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: var(--spacing-1);
+}
+
+.pd-career-item__desc {
+    font-size: var(--text-sm);
+    color: var(--color-gray-600);
+    margin-bottom: 0;
+}
+
+/* ================================
+   Staff Section (extends profile-card)
+   ================================ */
+.pd-staff-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--spacing-6);
+}
+
+.pd-staff-card {
+    text-align: center;
+    padding: var(--spacing-6);
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition);
+}
+
+.pd-staff-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+}
+
+.pd-staff-card__image {
+    width: 100px;
+    height: 100px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    margin: 0 auto var(--spacing-4);
+    border: 3px solid var(--color-gray-200);
+    transition: border-color var(--transition);
+}
+
+.pd-staff-card:hover .pd-staff-card__image {
+    border-color: var(--color-primary);
+}
+
+.pd-staff-card__placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: var(--radius-full);
+    background: var(--color-gray-100);
+    margin: 0 auto var(--spacing-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-400);
+}
+
+.pd-staff-card__name {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: var(--spacing-1);
+}
+
+.pd-staff-card__position {
+    font-size: var(--text-sm);
+    color: var(--color-gray-600);
+    margin-bottom: var(--spacing-2);
+}
+
+.pd-staff-card__role {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: var(--color-secondary-light);
+    color: var(--secondary);
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 600;
+}
+
+/* ================================
+   QA Document Hub
+   ================================ */
+.pd-doc-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+.pd-doc-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+    padding: var(--spacing-4) var(--spacing-5);
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition);
+}
+
+.pd-doc-item:hover {
+    box-shadow: var(--shadow);
+    border-color: var(--color-gray-300);
+}
+
+.pd-doc-item__icon {
+    width: 44px;
+    height: 44px;
+    background: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--secondary);
+}
+
+.pd-doc-item--locked .pd-doc-item__icon {
+    background: #fef3c7;
+    color: var(--primary-dark);
+}
+
+.pd-doc-item__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.pd-doc-item__title {
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: 2px;
+}
+
+.pd-doc-item__meta {
+    font-size: var(--text-xs);
+    color: var(--color-gray-500);
+}
+
+.pd-doc-item__action .btn {
+    white-space: nowrap;
+}
+
+.pd-doc-item__lock {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    font-size: var(--text-xs);
+    color: var(--primary-dark);
+    font-weight: 500;
+}
+
+/* ================================
+   Overview Content
+   ================================ */
+.pd-overview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-8);
+}
+
+.pd-overview-box {
+    padding: var(--spacing-8);
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-gray-200);
+}
+
+.pd-overview-box__label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--secondary);
+    margin-bottom: var(--spacing-3);
+}
+
+.pd-overview-box__text {
+    font-size: var(--text-base);
+    color: var(--color-gray-700);
+    line-height: 1.8;
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .pd-overview-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ================================
+   Loading / Skeleton State
+   ================================ */
+.pd-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-20) 0;
+    color: var(--color-gray-500);
+}
+
+/* ================================
+   Content Blocks (curriculum structure, study plan, career, etc.)
+   ================================ */
+.pd-content-block {
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-8);
+    margin-bottom: var(--spacing-6);
+    transition: box-shadow var(--transition);
+}
+
+.pd-content-block:hover {
+    box-shadow: var(--shadow);
+}
+
+.pd-content-block:last-child {
+    margin-bottom: 0;
+}
+
+.pd-content-block__title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: var(--spacing-4);
+    padding-bottom: var(--spacing-3);
+    border-bottom: 2px solid var(--secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.pd-content-block__body {
+    color: var(--color-gray-700);
+    line-height: 1.8;
+    font-size: var(--text-base);
+}
+
+.pd-content-block__body p { margin-bottom: var(--spacing-3); }
+.pd-content-block__body p:last-child { margin-bottom: 0; }
+.pd-content-block__body ul,
+.pd-content-block__body ol {
+    padding-left: var(--spacing-6);
+    margin-bottom: var(--spacing-3);
+}
+.pd-content-block__body li {
+    margin-bottom: var(--spacing-1);
+}
+.pd-content-block__body h3,
+.pd-content-block__body h4 {
+    color: var(--color-dark);
+    margin-top: var(--spacing-4);
+    margin-bottom: var(--spacing-2);
+}
+.pd-content-block__body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: var(--spacing-4);
+}
+.pd-content-block__body th,
+.pd-content-block__body td {
+    padding: var(--spacing-2) var(--spacing-3);
+    border: 1px solid var(--color-gray-200);
+    text-align: left;
+}
+.pd-content-block__body th {
+    background: var(--color-gray-50);
+    font-weight: 600;
+}
+
+/* ================================
+   News Cards (grid items)
+   ================================ */
+.news-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-white);
+    transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.news-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.news-card__image {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+}
+
+.news-card__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.news-card__content {
+    padding: var(--spacing-5);
+    flex: 1;
+}
+
+.news-card__date {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--color-gray-500);
+    margin-bottom: var(--spacing-2);
+}
+
+.news-card__title {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: var(--spacing-2);
+    line-height: 1.4;
+}
+
+.news-card__excerpt {
+    font-size: var(--text-sm);
+    color: var(--color-gray-600);
+    margin-bottom: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Grid for news */
+.grid-3 {
+    display: grid;
+    gap: var(--spacing-6);
+}
+
+@media (min-width: 768px) {
+    .grid-3 { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+}
+
+/* ================================
+   Background sections
+   ================================ */
+.section-light {
+    background: var(--color-gray-50);
+}
+
+/* ================================
+   Reduced Motion
+   ================================ */
+@media (prefers-reduced-motion: reduce) {
+    .pd-section {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+    .pd-career-item {
+        opacity: 1;
+        transform: none;
+    }
+    .pd-elo-card,
+    .pd-staff-card,
+    .pd-doc-item,
+    .pd-career-item,
+    .pd-content-block,
+    .news-card {
+        transition: none;
+    }
+    .pd-elo-card:hover,
+    .pd-staff-card:hover,
+    .news-card:hover {
+        transform: none;
+    }
+}

@@ -26,7 +26,9 @@ class UserModel extends Model
         'role',
         'program_id',
         'profile_image',
-        'status'
+        'status',
+        'edoc',
+        'admin_edoc'
     ];
     protected $useTimestamps = true;
     protected $createdField = 'created_at';

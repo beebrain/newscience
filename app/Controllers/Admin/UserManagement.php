@@ -549,4 +549,82 @@ class UserManagement extends BaseController
 
         return false;
     }
+
+    /**
+     * AJAX: Get user system access permissions
+     */
+    public function getUserSystemAccess($uid)
+    {
+        $user = $this->userModel->find((int)$uid);
+        if (!$user) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบข้อมูลผู้ใช้']);
+        }
+
+        // Check permission
+        if (!$this->canManageUser($user)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการผู้ใช้นี้']);
+        }
+
+        // Get all systems
+        $systemModel = new \App\Models\SystemModel();
+        $systems = $systemModel->getAllActive();
+
+        // Get user's current access
+        $accessModel = new \App\Models\UserSystemAccessModel();
+        $userAccess = $accessModel->getUserAccessMap((int)$uid);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'systems' => $systems,
+            'user_access' => $userAccess,
+            'is_super_admin' => ($user['role'] === 'super_admin')
+        ]);
+    }
+
+    /**
+     * AJAX: Update user system access permissions
+     */
+    public function updateUserSystemAccess($uid)
+    {
+        $user = $this->userModel->find((int)$uid);
+        if (!$user) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบข้อมูลผู้ใช้']);
+        }
+
+        // Check permission
+        if (!$this->canManageUser($user)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการผู้ใช้นี้']);
+        }
+
+        // Cannot modify super admin access (they have everything)
+        if ($user['role'] === 'super_admin') {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่สามารถแก้ไขสิทธิ์ Super Admin ได้']);
+        }
+
+        $accessData = $this->request->getPost('access');
+        if (!is_array($accessData)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ข้อมูลไม่ถูกต้อง']);
+        }
+
+        $grantedBy = $this->currentUser['uid'];
+        $results = [];
+
+        foreach ($accessData as $systemSlug => $level) {
+            if ($level === null || $level === 'none' || $level === '') {
+                // Revoke access
+                $results[$systemSlug] = \App\Libraries\AccessControl::revokeAccess((int)$uid, $systemSlug);
+            } else {
+                // Grant/update access
+                $results[$systemSlug] = \App\Libraries\AccessControl::grantAccess((int)$uid, $systemSlug, $level, $grantedBy);
+            }
+        }
+
+        $allSuccess = !in_array(false, $results, true);
+
+        return $this->response->setJSON([
+            'success' => $allSuccess,
+            'message' => $allSuccess ? 'อัปเดตสิทธิ์การเข้าถึงสำเร็จ' : 'บางรายการอัปเดตไม่สำเร็จ',
+            'results' => $results
+        ]);
+    }
 }

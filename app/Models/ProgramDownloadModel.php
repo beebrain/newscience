@@ -110,6 +110,10 @@ class ProgramDownloadModel extends Model
             return '';
         }
         
-        return base_url('serve/uploads/programs/' . basename($download['file_path']));
+        $fp = $download['file_path'];
+        if (strpos($fp, 'programs/') === 0) {
+            return base_url('serve/uploads/' . $fp);
+        }
+        return base_url('serve/' . $fp);
     }
 }

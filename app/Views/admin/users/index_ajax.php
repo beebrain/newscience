@@ -182,6 +182,31 @@
                         <option value="inactive">ไม่ใช้งาน</option>
                     </select>
                 </div>
+
+                <!-- System Access Panel -->
+                <div class="form-group" id="systemAccessPanel">
+                    <label class="form-label">สิทธิ์การเข้าถึงระบบ</label>
+                    <div id="systemAccessLoading" style="font-size: 0.875rem; color: var(--color-gray-500);">กำลังโหลด...</div>
+                    <div id="systemAccessContent" style="display: none;">
+                        <table class="table" style="font-size: 0.875rem;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">ระบบ</th>
+                                    <th style="width: 80px; text-align: center;">ไม่มี</th>
+                                    <th style="width: 80px; text-align: center;">ดู</th>
+                                    <th style="width: 80px; text-align: center;">จัดการ</th>
+                                    <th style="width: 80px; text-align: center;">แอดมิน</th>
+                                </tr>
+                            </thead>
+                            <tbody id="systemAccessTableBody">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                        <div id="superAdminNotice" style="display: none; padding: 0.75rem; background: var(--color-gray-50); border-radius: 6px; font-size: 0.875rem; color: var(--color-gray-600);">
+                            <strong>Super Admin</strong> เข้าถึงทุกระบบโดยอัตโนมัติ
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer" style="padding: 1rem 1.5rem; border-top: 1px solid var(--color-gray-200); display: flex; justify-content: flex-end; gap: 0.75rem;">
                 <button type="button" class="btn" style="background: var(--color-gray-200);" onclick="closeModal('editUserModal')">ยกเลิก</button>
@@ -783,15 +808,94 @@
                     document.getElementById('editUserRole').value = u.role || 'user';
                     document.getElementById('editUserProgramId').value = u.program_id || '';
                     document.getElementById('editUserStatus').value = u.status || 'active';
+
+                    // Load system access permissions
+                    loadSystemAccess(u.uid);
+
                     openModal('editUserModal');
                 } else {
-                    alert(data.message || 'เกิดข้อผิดพลาด');
+                    swalAlert(data.message || 'เกิดข้อผิดพลาด', 'error');
                 }
             })
             .catch(err => {
                 console.error(err);
-                alert('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+                swalAlert('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
             });
+    }
+
+    // System Access Management
+    let currentSystemAccess = {};
+
+    function loadSystemAccess(uid) {
+        const loadingEl = document.getElementById('systemAccessLoading');
+        const contentEl = document.getElementById('systemAccessContent');
+        const superAdminNotice = document.getElementById('superAdminNotice');
+        const tableBody = document.getElementById('systemAccessTableBody');
+
+        loadingEl.style.display = 'block';
+        contentEl.style.display = 'none';
+        currentSystemAccess = {};
+
+        fetch(`${baseUrl}admin/users/system-access/${uid}`)
+            .then(r => r.json())
+            .then(data => {
+                loadingEl.style.display = 'none';
+
+                if (data.success) {
+                    if (data.is_super_admin) {
+                        // Super admin - show notice and disable inputs
+                        superAdminNotice.style.display = 'block';
+                        tableBody.innerHTML = data.systems.map(s => `
+                            <tr>
+                                <td>${s.name_th}</td>
+                                <td colspan="4" style="text-align: center; color: var(--color-gray-500);">เข้าถึงอัตโนมัติ</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        // Normal user - show checkboxes
+                        superAdminNotice.style.display = 'none';
+                        currentSystemAccess = data.user_access || {};
+
+                        tableBody.innerHTML = data.systems.map(s => {
+                            const currentLevel = currentSystemAccess[s.slug] || 'none';
+                            return `
+                            <tr>
+                                <td>${s.name_th}</td>
+                                <td style="text-align: center;">
+                                    <input type="radio" name="system_${s.slug}" value="none" ${currentLevel === 'none' ? 'checked' : ''}>
+                                </td>
+                                <td style="text-align: center;">
+                                    <input type="radio" name="system_${s.slug}" value="view" ${currentLevel === 'view' ? 'checked' : ''}>
+                                </td>
+                                <td style="text-align: center;">
+                                    <input type="radio" name="system_${s.slug}" value="manage" ${currentLevel === 'manage' ? 'checked' : ''}>
+                                </td>
+                                <td style="text-align: center;">
+                                    <input type="radio" name="system_${s.slug}" value="admin" ${currentLevel === 'admin' ? 'checked' : ''}>
+                                </td>
+                            </tr>
+                        `;
+                        }).join('');
+                    }
+                    contentEl.style.display = 'block';
+                } else {
+                    loadingEl.textContent = data.message || 'ไม่สามารถโหลดข้อมูลสิทธิ์';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                loadingEl.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
+            });
+    }
+
+    function getSystemAccessData() {
+        const data = {};
+        const inputs = document.querySelectorAll('#systemAccessTableBody input[type="radio"]:checked');
+        inputs.forEach(input => {
+            const systemSlug = input.name.replace('system_', '');
+            data[systemSlug] = input.value;
+        });
+        return data;
     }
 
     function editStudent(id) {
@@ -811,12 +915,12 @@
                     document.getElementById('editStudentStatus').value = s.status || 'active';
                     openModal('editStudentModal');
                 } else {
-                    alert(data.message || 'เกิดข้อผิดพลาด');
+                    swalAlert(data.message || 'เกิดข้อผิดพลาด', 'error');
                 }
             })
             .catch(err => {
                 console.error(err);
-                alert('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+                swalAlert('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
             });
     }
 
@@ -825,6 +929,9 @@
         const uid = document.getElementById('editUserUid').value;
         const formData = new FormData(document.getElementById('editUserForm'));
         const data = Object.fromEntries(formData);
+
+        // Add system access data
+        data.system_access = getSystemAccessData();
 
         fetch(`${baseUrl}admin/users/ajax-update-user/${uid}`, {
                 method: 'POST',
@@ -837,16 +944,30 @@
             .then(r => r.json())
             .then(result => {
                 if (result.success) {
-                    closeModal('editUserModal');
-                    loadUsers(currentPage.users);
-                    alert('บันทึกสำเร็จ');
+                    // Save system access permissions
+                    return fetch(`${baseUrl}admin/users/system-access/${uid}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            access: data.system_access
+                        })
+                    });
                 } else {
-                    alert(result.message || 'เกิดข้อผิดพลาด');
+                    throw new Error(result.message || 'เกิดข้อผิดพลาด');
                 }
+            })
+            .then(r => r.json())
+            .then(result => {
+                closeModal('editUserModal');
+                loadUsers(currentPage.users);
+                swalAlert('บันทึกสำเร็จ', 'success');
             })
             .catch(err => {
                 console.error(err);
-                alert('เกิดข้อผิดพลาดในการบันทึก');
+                swalAlert(err.message || 'เกิดข้อผิดพลาดในการบันทึก', 'error');
             });
     }
 
@@ -869,22 +990,22 @@
                 if (result.success) {
                     closeModal('editStudentModal');
                     loadStudents(currentPage.students);
-                    alert('บันทึกสำเร็จ');
+                    swalAlert('บันทึกสำเร็จ', 'success');
                 } else {
-                    alert(result.message || 'เกิดข้อผิดพลาด');
+                    swalAlert(result.message || 'เกิดข้อผิดพลาด', 'error');
                 }
             })
             .catch(err => {
                 console.error(err);
-                alert('เกิดข้อผิดพลาดในการบันทึก');
+                swalAlert('เกิดข้อผิดพลาดในการบันทึก', 'error');
             });
     }
 
     function toggleUserStatus(uid, currentStatus) {
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-        if (!confirm(`ต้องการ${newStatus === 'active' ? 'เปิด' : 'ปิด'}ใช้งานผู้ใช้นี้?`)) return;
-
-        fetch(`${baseUrl}admin/users/toggle-user-status/${uid}`, {
+        swalConfirm({ title: `ต้องการ${newStatus === 'active' ? 'เปิด' : 'ปิด'}ใช้งานผู้ใช้นี้?`, confirmText: 'ตกลง', cancelText: 'ยกเลิก' }).then(function(ok) {
+            if (!ok) return;
+            fetch(`${baseUrl}admin/users/toggle-user-status/${uid}`, {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -895,17 +1016,18 @@
                 if (result.success) {
                     loadUsers(currentPage.users);
                 } else {
-                    alert(result.message || 'เกิดข้อผิดพลาด');
+                    swalAlert(result.message || 'เกิดข้อผิดพลาด', 'error');
                 }
             })
             .catch(console.error);
+        });
     }
 
     function toggleStudentStatus(id, currentStatus) {
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-        if (!confirm(`ต้องการ${newStatus === 'active' ? 'เปิด' : 'ปิด'}ใช้งานนักศึกษานี้?`)) return;
-
-        fetch(`${baseUrl}admin/users/toggle-student-status/${id}`, {
+        swalConfirm({ title: `ต้องการ${newStatus === 'active' ? 'เปิด' : 'ปิด'}ใช้งานนักศึกษานี้?`, confirmText: 'ตกลง', cancelText: 'ยกเลิก' }).then(function(ok) {
+            if (!ok) return;
+            fetch(`${baseUrl}admin/users/toggle-student-status/${id}`, {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -916,10 +1038,11 @@
                 if (result.success) {
                     loadStudents(currentPage.students);
                 } else {
-                    alert(result.message || 'เกิดข้อผิดพลาด');
+                    swalAlert(result.message || 'เกิดข้อผิดพลาด', 'error');
                 }
             })
             .catch(console.error);
+        });
     }
 
     function bulkActivate() {
@@ -938,7 +1061,7 @@
         };
 
         if (data.users.length === 0 && data.students.length === 0) {
-            alert('กรุณาเลือกรายการก่อน');
+            swalAlert('กรุณาเลือกรายการก่อน', 'warning');
             return;
         }
 
@@ -962,9 +1085,9 @@
                     updateBulkActions();
                     loadUsers(currentPage.users);
                     loadStudents(currentPage.students);
-                    alert(`อัปเดตสำเร็จ ${result.updated || 0} รายการ`);
+                    swalAlert(`อัปเดตสำเร็จ ${result.updated || 0} รายการ`, 'success');
                 } else {
-                    alert(result.message || 'เกิดข้อผิดพลาด');
+                    swalAlert(result.message || 'เกิดข้อผิดพลาด', 'error');
                 }
             })
             .catch(console.error);

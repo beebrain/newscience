@@ -100,7 +100,7 @@ class Certificate extends BaseController
             return redirect()->back()->with('error', 'ไฟล์ถูกลบหรือไม่สามารถเข้าถึงได้');
         }
 
-        // อัพเดท download count
+        // อัปเดต download count
         $this->certificateModel->update($recipient['cert_id'], [
             'download_count'     => (int) $this->certificateModel->find($recipient['cert_id'])['download_count'] + 1,
             'last_downloaded_at' => date('Y-m-d H:i:s'),

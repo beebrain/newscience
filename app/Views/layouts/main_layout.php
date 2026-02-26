@@ -511,6 +511,24 @@
 
     <!-- SPA Logic -->
     <script src="<?= base_url('assets/js/app.js') ?>"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        window.swalAlert = function(msg, type) {
+            type = type || 'info';
+            var icon = { success: 'success', error: 'error', warning: 'warning', info: 'info' }[type] || 'info';
+            return (typeof Swal !== 'undefined') ? Swal.fire({ icon: icon, title: type === 'error' ? 'เกิดข้อผิดพลาด' : (type === 'success' ? 'สำเร็จ' : ''), text: msg }) : Promise.resolve(alert(msg));
+        };
+        window.swalConfirm = function(opts) {
+            var title = (typeof opts === 'string') ? opts : (opts.title || 'ยืนยัน');
+            var text = (typeof opts === 'object' && opts.text) ? opts.text : '';
+            var confirmText = (typeof opts === 'object' && opts.confirmText) ? opts.confirmText : 'ตกลง';
+            var cancelText = (typeof opts === 'object' && opts.cancelText) ? opts.cancelText : 'ยกเลิก';
+            if (typeof Swal === 'undefined') return Promise.resolve(window.confirm(title + (text ? '\n' + text : '')));
+            return Swal.fire({ title: title, text: text, icon: 'question', showCancelButton: true, confirmButtonText: confirmText, cancelButtonText: cancelText, confirmButtonColor: '#d33', cancelButtonColor: '#6c757d' }).then(function(r) { return r.isConfirmed; });
+        };
+    </script>
+    <?= $this->renderSection('footer_scripts') ?>
 </body>
 
 </html>

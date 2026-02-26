@@ -1,0 +1,417 @@
+/* Education Portal - Bootstrap Compatible CSS */
+/* Custom styles to work alongside Bootstrap 5 */
+
+/* ==========================================================================
+   CUSTOM VARIABLES
+   ========================================================================== */
+:root {
+  /* Custom Colors */
+  --ep-primary: #0078D4;
+  --ep-primary-dark: #106EBE;
+  --ep-secondary: #6c757d;
+  --ep-success: #28a745;
+  --ep-danger: #dc3545;
+  --ep-warning: #ffc107;
+  --ep-info: #17a2b8;
+  
+  --ep-white: #ffffff;
+  --ep-light: #f8f9fa;
+  --ep-dark: #343a40;
+  --ep-gray: #6c757d;
+  
+  /* Typography */
+  --ep-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  
+  /* Custom Effects */
+  --ep-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  --ep-shadow-lg: 0 8px 25px rgba(0,0,0,0.15);
+  --ep-border-radius: 0.375rem;
+}
+
+/* ==========================================================================
+   BASE OVERRIDES
+   ========================================================================== */
+body {
+  font-family: var(--ep-font-family) !important;
+  background-color: var(--ep-light) !important;
+}
+
+/* ==========================================================================
+   CUSTOM HEADER
+   ========================================================================== */
+.ep-header {
+  background: linear-gradient(90deg, var(--ep-primary) 0%, var(--ep-primary-dark) 100%);
+  color: var(--ep-white);
+  box-shadow: var(--ep-shadow);
+}
+
+.ep-header-logo {
+  color: var(--ep-white);
+  text-decoration: none;
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.ep-header-logo:hover,
+.ep-header-logo:focus {
+  color: var(--ep-white);
+  text-decoration: none;
+}
+
+.ep-header-logo svg {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-right: 0.75rem;
+}
+
+.ep-header-nav a {
+  color: var(--ep-white);
+  text-decoration: none;
+  font-weight: 500;
+  margin-right: 1.5rem;
+}
+
+.ep-header-nav a:hover,
+.ep-header-nav a:focus {
+  color: var(--ep-white);
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   SYSTEM CARDS
+   ========================================================================== */
+.ep-system-card {
+  transition: all 0.3s ease;
+  border: none !important;
+  box-shadow: var(--ep-shadow) !important;
+  height: 100%;
+}
+
+.ep-system-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--ep-shadow-lg) !important;
+}
+
+.ep-system-icon {
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  font-size: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.ep-system-card:hover .ep-system-icon {
+  transform: scale(1.1);
+}
+
+/* System Icon Colors */
+.ep-icon-blue { 
+  background-color: #e3f2fd; 
+  color: #1976d2; 
+}
+
+.ep-icon-green { 
+  background-color: #e8f5e8; 
+  color: #388e3c; 
+}
+
+.ep-icon-purple { 
+  background-color: #f3e5f5; 
+  color: #7b1fa2; 
+}
+
+.ep-icon-red { 
+  background-color: #ffebee; 
+  color: #d32f2f; 
+}
+
+.ep-icon-yellow { 
+  background-color: #fff3e0; 
+  color: #f57c00; 
+}
+
+.ep-icon-teal { 
+  background-color: #e0f2f1; 
+  color: #00796b; 
+}
+
+/* ==========================================================================
+   CUSTOM BUTTONS
+   ========================================================================== */
+.ep-btn-purple {
+  background-color: #9C27B0;
+  border-color: #9C27B0;
+  color: var(--ep-white);
+}
+
+.ep-btn-purple:hover,
+.ep-btn-purple:focus {
+  background-color: #7b1fa2;
+  border-color: #7b1fa2;
+  color: var(--ep-white);
+}
+
+/* ==========================================================================
+   SEARCH BOX
+   ========================================================================== */
+.ep-search-box {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.ep-search-box .form-control {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: 0;
+}
+
+.ep-search-box .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* ==========================================================================
+   LOADING SPINNER
+   ========================================================================== */
+.ep-spinner {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  border: 0.25em solid #f3f3f3;
+  border-top: 0.25em solid var(--ep-primary);
+  border-radius: 50%;
+  animation: ep-spin 1s linear infinite;
+}
+
+@keyframes ep-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.ep-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* ==========================================================================
+   SIDEBAR (For Admin Interface)
+   ========================================================================== */
+.ep-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  background-color: var(--ep-white);
+  border-right: 1px solid #dee2e6;
+  box-shadow: var(--ep-shadow-lg);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+  z-index: 1040;
+}
+
+.ep-sidebar.show {
+  transform: translateX(0);
+}
+
+.ep-sidebar-header {
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  background-color: var(--ep-light);
+}
+
+.ep-sidebar-menu {
+  padding: 0.5rem 0;
+}
+
+.ep-sidebar-menu-item {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: var(--ep-dark);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.ep-sidebar-menu-item:hover,
+.ep-sidebar-menu-item:focus {
+  color: var(--ep-primary);
+  background-color: var(--ep-light);
+  text-decoration: none;
+}
+
+.ep-sidebar-menu-item.active {
+  color: var(--ep-primary);
+  background-color: rgba(0, 120, 212, 0.1);
+  border-right: 3px solid var(--ep-primary);
+}
+
+.ep-sidebar-menu-item i {
+  width: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+/* Main content adjustment when sidebar is open */
+.ep-main-content {
+  transition: margin-left 0.3s ease;
+}
+
+.ep-sidebar.show ~ .ep-main-content {
+  margin-left: 280px;
+}
+
+/* ==========================================================================
+   ALERTS WITH CUSTOM STYLING
+   ========================================================================== */
+.ep-alert-custom {
+  border-left: 4px solid;
+  border-radius: var(--ep-border-radius);
+}
+
+.ep-alert-custom.alert-primary {
+  border-left-color: var(--ep-primary);
+}
+
+.ep-alert-custom.alert-success {
+  border-left-color: var(--ep-success);
+}
+
+.ep-alert-custom.alert-danger {
+  border-left-color: var(--ep-danger);
+}
+
+.ep-alert-custom.alert-warning {
+  border-left-color: var(--ep-warning);
+}
+
+.ep-alert-custom.alert-info {
+  border-left-color: var(--ep-info);
+}
+
+/* ==========================================================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================================================== */
+@media (max-width: 767.98px) {
+  .ep-header-logo {
+    font-size: 1.2rem;
+  }
+  
+  .ep-header-logo svg {
+    width: 2rem;
+    height: 2rem;
+    margin-right: 0.5rem;
+  }
+  
+  .ep-system-icon {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.2rem;
+  }
+  
+  .ep-sidebar {
+    width: 100%;
+  }
+  
+  .ep-sidebar.show ~ .ep-main-content {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .ep-header-logo {
+    font-size: 1rem;
+  }
+  
+  .ep-system-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* ==========================================================================
+   UTILITY ADDITIONS
+   ========================================================================== */
+.ep-text-gradient {
+  background: linear-gradient(90deg, var(--ep-primary) 0%, var(--ep-primary-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ep-hover-lift {
+  transition: transform 0.2s ease;
+}
+
+.ep-hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+.ep-shadow-custom {
+  box-shadow: var(--ep-shadow) !important;
+}
+
+.ep-shadow-lg-custom {
+  box-shadow: var(--ep-shadow-lg) !important;
+}
+
+/* ==========================================================================
+   ANIMATION CLASSES
+   ========================================================================== */
+.ep-fade-in {
+  animation: ep-fadeIn 0.5s ease-in;
+}
+
+@keyframes ep-fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ep-slide-in-left {
+  animation: ep-slideInLeft 0.3s ease-out;
+}
+
+@keyframes ep-slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+/* ==========================================================================
+   DARK MODE SUPPORT (Optional)
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ep-dark: #f8f9fa;
+    --ep-light: #343a40;
+    --ep-white: #212529;
+  }
+  
+  .ep-dark-mode body {
+    background-color: #121212;
+    color: #ffffff;
+  }
+  
+  .ep-dark-mode .ep-system-card {
+    background-color: #1e1e1e;
+    color: #ffffff;
+  }
+}

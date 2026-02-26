@@ -171,7 +171,7 @@ class CertEvents extends BaseController
     }
 
     /**
-     * อัพเดทกิจกรรม - รองรับทั้ง HTML form และ AJAX
+     * อัปเดตกิจกรรม - รองรับทั้ง HTML form และ AJAX
      */
     public function update(int $id)
     {
@@ -205,12 +205,12 @@ class CertEvents extends BaseController
         if ($this->request->isAJAX()) {
             return $this->response->setJSON([
                 'success' => true,
-                'message' => 'อัพเดทกิจกรรมเรียบร้อย'
+                'message' => 'อัปเดตกิจกรรมเรียบร้อย'
             ]);
         }
 
         return redirect()->to(base_url('admin/cert-events/' . $id))
-            ->with('success', 'อัพเดทกิจกรรมเรียบร้อย');
+            ->with('success', 'อัปเดตกิจกรรมเรียบร้อย');
     }
 
     /**
@@ -362,12 +362,12 @@ class CertEvents extends BaseController
                 );
 
                 if ($pdfPath) {
-                    // อัพเดท certificate ด้วย pdf_path
+                    // อัปเดต certificate ด้วย pdf_path
                     $this->certificateModel->update($certificateData['id'], [
                         'pdf_path' => $pdfPath,
                     ]);
 
-                    // อัพเดท recipient
+                    // อัปเดต recipient
                     $this->recipientModel->markAsIssued($recipient['id'], $certificateData['id']);
                     $successCount++;
                 } else {
@@ -380,7 +380,7 @@ class CertEvents extends BaseController
             }
         }
 
-        // อัพเดทสถานะกิจกรรมเป็น issued ถ้ามีการออกสำเร็จ
+        // อัปเดตสถานะกิจกรรมเป็น issued ถ้ามีการออกสำเร็จ
         if ($successCount > 0) {
             $this->eventModel->updateStatus($eventId, 'issued');
         }
@@ -540,8 +540,8 @@ class CertEvents extends BaseController
         $data = [
             'request_id'         => 0, // ไม่ผูกกับ cert_requests ในระบบใหม่
             'certificate_no'     => $certificateNo,
-            'pdf_path'           => '', // จะอัพเดทหลังสร้าง PDF
-            'pdf_hash'           => '', // จะอัพเดทหลังสร้าง PDF
+            'pdf_path'           => '', // จะอัปเดตหลังสร้าง PDF
+            'pdf_hash'           => '', // จะอัปเดตหลังสร้าง PDF
             'verification_token' => $token,
             'student_snapshot'   => json_encode([
                 'name'      => $recipient['recipient_name'],

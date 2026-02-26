@@ -1,0 +1,1837 @@
+﻿<!DOCTYPE html>
+<html lang="th" class="h-full">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Document Manager | เธเธฑเธ”เธเธฒเธฃเน€เธญเธเธชเธฒเธฃ</title>
+    <link rel="shortcut icon" href="<?= base_url('assets/images/favicon.ico') ?>" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: {} }, corePlugins: { preflight: false } }
+    </script>
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Core CSS (modal เธชเธณเธซเธฃเธฑเธ form / preview) -->
+    <link rel="stylesheet" href="<?= base_url('assets/css/backend.css') ?>?v=1.0.0">
+    <link rel="stylesheet" href="<?= base_url('assets/css/backend-plugin.min.css') ?>">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="<?= base_url('assets/vendor/@fortawesome/fontawesome-free/css/all.min.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/vendor/remixicon/fonts/remixicon.css') ?>">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+    <!-- Plugin CSS -->
+    <link rel="stylesheet" href="<?= base_url('assets/css/amsify.suggestags.css') ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/css/bootstrap-datepicker.css" />
+    <!-- DataTables (เธเธตเธกเน€เธ”เธตเธขเธงเธเธฑเธเธซเธเนเธฒ) -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+
+    <style>
+        body { box-sizing: border-box; }
+        * { font-family: 'Prompt', sans-serif; }
+        .modal-overlay { animation: fadeIn 0.2s ease-out; }
+        .modal-content { animation: slideUp 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .loading-pulse { animation: pulse 1.5s ease-in-out infinite; }
+        .doc-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .doc-card:hover { transform: translateY(-4px); }
+        .preview-container { background: linear-gradient(180deg, #f8f9fb 0%, #f3f4f8 100%); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #3b82f6, #1e40af); border-radius: 3px; }
+        #modalCenter.modal { z-index: 1055; }
+        #modalCenter .modal-dialog { z-index: 1056; }
+        body.modal-open .modal-backdrop { display: none !important; }
+        body.modal-open .modal .modal-dialog .modal-content { animation: slideUp 0.3s ease-out; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .view_model { z-index: 9999; }
+        .doc-view-modal .pdf-container { min-height: 70vh; background: #f8fafc; border-radius: 0.5rem; }
+        .custom-file { position: relative; display: flex; width: 100%; }
+        .custom-file-input { position: relative; z-index: 2; width: 100%; height: 2.5rem; margin: 0; opacity: 0; }
+        .custom-file-label {
+            position: absolute; top: 0; right: 0; left: 0; z-index: 1;
+            padding: 0.5rem 0.75rem; line-height: 1.5; color: #374151;
+            background: #fff; border: 1px solid #e5e7eb; border-radius: 0.5rem;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .doc-action-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; }
+        .doc-action-buttons .doc-btn { display: inline-flex; align-items: center; justify-content: center; width: 1.75rem; height: 1.75rem; padding: 0; border: none; border-radius: 0.375rem; font-size: 0.875rem; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+        .doc-action-buttons .doc-btn:hover { transform: scale(1.08); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        .doc-action-buttons .doc-btn i { font-size: 1rem; }
+        .doc-action-buttons .doc-btn-view { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #fff !important; }
+        .doc-action-buttons .doc-btn-view:hover { background: linear-gradient(135deg, #047857 0%, #065f46 100%); color: #fff !important; }
+        .doc-action-buttons .doc-btn-edit { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #fff !important; }
+        .doc-action-buttons .doc-btn-edit:hover { background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); color: #fff !important; }
+        .doc-action-buttons .doc-btn-stats { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); color: #fff !important; }
+        .doc-action-buttons .doc-btn-stats:hover { background: linear-gradient(135deg, #b45309 0%, #92400e 100%); color: #fff !important; }
+        #imageModal .modal-body { background: #000; }
+        #imageModal img { max-height: 80vh; object-fit: contain; }
+        .alert { padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; }
+        .alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .alert-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .alert-danger { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .list-group-item { padding: 0.5rem 0.75rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .list-group-item:last-child { border-bottom: none; }
+        /* เธเธฃเธฐเน€เธ เธ—เน€เธญเธเธชเธฒเธฃ dropdown เนเธซเนเน€เธเนเธฒเธเธฑเธเธเธญเธฃเนเธก */
+        #formModal .bootstrap-select .dropdown-toggle,
+        #formModal select#doctype { border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.875rem; color: #374151; background: #fff; min-height: 2.5rem; outline: none; box-shadow: none; }
+        #formModal .bootstrap-select .dropdown-toggle:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        #formModal .bootstrap-select .dropdown-toggle:hover { border-color: #9ca3af; background: #f9fafb; }
+        #formModal .bootstrap-select.btn-group { width: 100% !important; }
+        #formModal .bootstrap-select .dropdown-toggle .filter-option { text-align: right; }
+        /* เธซเธเนเธฒเน€เธ•เนเธกเนเธกเนเธกเธต sidebar */
+        body.doc-full-page .content-page { margin-left: 0; width: 100%; padding: 0; }
+        /* DataTables เธเธตเธกเน€เธ”เธตเธขเธงเธเธฑเธเธซเธเนเธฒ + เธเธงเธฒเธกเธเธงเนเธฒเธเธเธญเธฅเธฑเธกเธเน */
+        .dataTables_wrapper { font-size: 0.875rem; width: 100%; }
+        #documents-table { width: 100% !important; }
+        #documents-table thead th { background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); color: #475569; font-weight: 600; padding: 0.5rem 0.75rem; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+        #documents-table thead th.sorting:hover, #documents-table thead th.sorting_asc, #documents-table thead th.sorting_desc { color: #1e40af; }
+        #documents-table tbody td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        #documents-table tbody tr:hover { background: #f8fafc; }
+        #documents-table tbody tr:hover td { background: transparent; }
+        /* เธเธทเนเธญเน€เธฃเธทเนเธญเธ - เธ•เธฑเธ”เธ—เธดเนเธเธ–เนเธฒเน€เธเธดเธ */
+        #documents-table thead th:nth-child(3), #documents-table tbody td:nth-child(3) { max-width: 16em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* เธเธนเนเธฃเธฑเธ - เธ•เธฑเธ”เธ—เธดเนเธเธ–เนเธฒเน€เธเธดเธ */
+        #documents-table thead th:nth-child(6), #documents-table tbody td:nth-child(6) { max-width: 12em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* เธงเธฑเธเธ—เธตเน - เธเธงเธฒเธกเธเธงเนเธฒเธเธเธญเธ”เธต */
+        #documents-table thead th:nth-child(7), #documents-table tbody td:nth-child(7) { min-width: 7rem; width: 7rem; }
+        /* เธเธฑเธ”เธเธฒเธฃ - เนเธ–เธงเน€เธ”เธตเธขเธง เนเธเธ */
+        #documents-table thead th:nth-child(10), #documents-table tbody td:nth-child(10) { width: 1%; white-space: nowrap; }
+        .doc-action-buttons { flex-wrap: nowrap; }
+        .dataTables_wrapper .dataTables_info { padding-top: 0.5rem; color: #64748b; font-size: 0.75rem; }
+        .dataTables_wrapper .dataTables_paginate { padding-top: 0.5rem; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 0.25rem 0.5rem; margin: 0 1px; border-radius: 0.375rem; font-size: 0.75rem; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #3b82f6 !important; color: #fff !important; border: none !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #e2e8f0 !important; color: #1e293b !important; border: none !important; }
+        .dataTables_wrapper .dataTables_length label { font-size: 0.875rem; color: #64748b; }
+        .dataTables_wrapper .dataTables_length select { padding: 0.25rem 0.5rem; border-radius: 0.375rem; border: 1px solid #e2e8f0; }
+    </style>
+</head>
+
+<body class="color-light min-h-full doc-full-page">
+    <div class="wrapper min-h-full">
+        <div class="content-page min-h-full overflow-auto" style="background: linear-gradient(135deg, #f8f9fb 0%, #f3f4f8 100%); margin-left: 0;">
+            <div id="app" class="h-full overflow-auto">
+                <!-- Header (เน€เธซเธกเธทเธญเธ reference 100%) -->
+                <header class="sticky top-0 z-40 backdrop-blur-xl bg-white/80 border-b border-gray-200/50">
+                    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center shadow shadow-blue-400/20">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                </div>
+                                <div>
+                                    <h1 id="app-title" class="text-base font-bold text-gray-900">Document Manager</h1>
+                                    <p id="doc-count" class="text-xs text-gray-500">0 เน€เธญเธเธชเธฒเธฃ</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="relative flex-1 sm:w-48">
+                                    <input type="text" id="search-input" placeholder="เธเนเธเธซเธฒ..." class="w-full pl-8 pr-3 py-1.5 text-sm bg-gray-100 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/20 transition-all">
+                                    <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                </div>
+                                <button type="button" id="add-btn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg shadow shadow-blue-500/20 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    <span class="hidden sm:inline">เน€เธเธดเนเธกเน€เธญเธเธชเธฒเธฃ</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Main: DataTables เธเธขเธฒเธขเธ•เธฒเธกเธเธเธฒเธ”เธซเธเนเธฒเธเธญ -->
+                <main class="w-full px-3 sm:px-4 py-3">
+                    <div id="doc-table-card" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden px-3 py-2 hidden">
+                        <table id="documents-table" class="display stripe hover" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>ID เน€เธญเธเธชเธฒเธฃ</th>
+                                    <th>เน€เธฅเธเธ—เธตเนเธซเธเธฑเธเธชเธทเธญ</th>
+                                    <th>เธเธทเนเธญเน€เธฃเธทเนเธญเธ</th>
+                                    <th>เธเธฃเธฐเน€เธ เธ—</th>
+                                    <th>เธเธนเนเธเธฑเธ”เธ—เธณ</th>
+                                    <th>เธเธนเนเธฃเธฑเธ</th>
+                                    <th>เธงเธฑเธเธ—เธตเน</th>
+                                    <th>เธซเธเนเธฒ</th>
+                                    <th>เธเธณเธเธงเธเธ”เธน</th>
+                                    <th class="no-sort">เธเธฑเธ”เธเธฒเธฃ</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div id="empty-state" class="hidden flex-col items-center justify-center py-12">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                        <h3 id="empty-title" class="text-base font-semibold text-gray-900 mb-1">เธขเธฑเธเนเธกเนเธกเธตเน€เธญเธเธชเธฒเธฃ</h3>
+                        <p class="text-gray-600 text-center text-sm mb-4">เน€เธฃเธดเนเธกเธ•เนเธเน€เธเธดเนเธกเน€เธญเธเธชเธฒเธฃเนเธฃเธเธเธญเธเธเธธเธ“</p>
+                        <button type="button" id="empty-add-btn" class="flex items-center gap-1.5 px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg shadow shadow-blue-500/20 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            เน€เธเธดเนเธกเน€เธญเธเธชเธฒเธฃ
+                        </button>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Modal: เน€เธเธดเนเธก/เนเธเนเนเธเน€เธญเธเธชเธฒเธฃ -->
+    <div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalTitle" aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content rounded-xl overflow-hidden">
+                <div class="modal-header border-b border-gray-200 bg-gray-50">
+                    <h5 class="modal-title text-lg font-semibold text-gray-800" id="formModalTitle"><i class="fas fa-file-alt me-2"></i>เน€เธเธดเนเธกเน€เธญเธเธชเธฒเธฃ</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="เธเธดเธ”">&times;</button>
+                </div>
+                <div class="modal-body p-6">
+                    <form id="frmdata" class="space-y-5">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                            <div class="md:col-span-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เน€เธฅเธเธ—เธตเนเธซเธเธฑเธเธชเธทเธญ</label>
+                                <input type="text" id="officeiddoc" name="officeiddoc" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <input type="hidden" id="iddoc" name="iddoc">
+                                <input type="hidden" id="userid" name="userid" value="<?= $infoUser['uid'] ?>">
+                            </div>
+                            <div class="md:col-span-7">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เธเธทเนเธญเน€เธฃเธทเนเธญเธ</label>
+                                <input type="text" id="title" name="title" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เธเธณเธเธงเธเธซเธเนเธฒ</label>
+                                <input type="number" id="pages" name="pages" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                            <div class="md:col-span-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เธเธฃเธฐเน€เธ เธ—เน€เธญเธเธชเธฒเธฃ</label>
+                                <select name="doctype" id="doctype" class="selectpicker form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-style="py-0" required>
+                                    <option value="">เธเธฃเธธเธ“เธฒเธฃเธฐเธเธธ</option>
+                                    <option value="เธซเธเธฑเธเธชเธทเธญเธฃเธฑเธเธ เธฒเธขเนเธ">เธซเธเธฑเธเธชเธทเธญเธฃเธฑเธเธ เธฒเธขเนเธ</option>
+                                    <option value="เธซเธเธฑเธเธชเธทเธญเธฃเธฑเธเธ เธฒเธขเธเธญเธ">เธซเธเธฑเธเธชเธทเธญเธฃเธฑเธเธ เธฒเธขเธเธญเธ</option>
+                                    <option value="เธซเธเธฑเธเธชเธทเธญเธชเนเธเธ เธฒเธขเนเธ">เธซเธเธฑเธเธชเธทเธญเธชเนเธเธ เธฒเธขเนเธ</option>
+                                    <option value="เนเธเธฅเธฒ">เนเธเธฅเธฒ</option>
+                                    <option value="เธเธณเธชเธฑเนเธ">เธเธณเธชเธฑเนเธ</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เธงเธฑเธเธ—เธตเนเธฅเธเธซเธเธฑเธเธชเธทเธญ</label>
+                                <input type="text" data-date-format="yyyy-mm-dd" name="datedoc" id="datedoc" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                            </div>
+                            <div class="md:col-span-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เน€เธเนเธฒเธเธญเธเน€เธญเธเธชเธฒเธฃ</label>
+                                <input type="text" name="owner" id="owner" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">เธเธณเธชเธฑเนเธเธเธฒเธฃ</label>
+                            <input type="text" name="order" id="order" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                            <div class="md:col-span-12">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เธเธฅเธธเนเธกเธเธนเนเธฃเธฑเธ (Tag Groups)</label>
+                                <div class="flex gap-2 mb-2">
+                                    <select id="tagGroupSelect" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                        <option value="">-- เน€เธฅเธทเธญเธเธเธฅเธธเนเธก --</option>
+                                    </select>
+                                    <button type="button" id="btnSaveGroup" class="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm whitespace-nowrap"><i class="fas fa-save me-1"></i>เธเธฑเธเธ—เธถเธเธเธฅเธธเนเธก</button>
+                                     <button type="button" id="btnDeleteGroup" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm whitespace-nowrap" style="display:none;"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                             <div class="md:col-span-10">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เธเธนเนเธกเธตเธชเนเธงเธเธฃเนเธงเธก</label>
+                                <input type="text" name="participant" id="participant" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <input type="hidden" name="copynum" id="copynum">
+                                <input type="hidden" name="allname" id="allname" value="<?= "'" . implode("','", $suggestname) . "'" ?>">
+                            </div>
+                            <div class="md:col-span-2 flex gap-2">
+                                <button type="button" onclick="addtag(1)" class="flex-1 px-3 py-2 border border-blue-500 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-50 focus:outline-none" title="เธ—เธธเธเธเธ"><i class="fas fa-users"></i></button>
+                                <button type="button" onclick="addtag(0)" class="flex-1 px-3 py-2 border border-gray-300 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none" title="เธฅเนเธฒเธ"><i class="fas fa-user-minus"></i></button>
+                            </div>
+                        </div>
+                        <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:bg-gray-50/50 transition">
+                            <div class="flex flex-wrap gap-2 items-center mb-3">
+                                <div class="custom-file flex-1 min-w-0">
+                                    <input type="file" class="custom-file-input" id="fileupload" name="fileupload" multiple accept=".docx,.pdf,.png,.jpg,.jpeg">
+                                    <label class="custom-file-label" for="fileupload">เน€เธฅเธทเธญเธเนเธเธฅเน (เธซเธฅเธฒเธขเนเธเธฅเนเนเธ”เน)</label>
+                                </div>
+                                <span id="upload_doc" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-200">เธญเธฑเธเนเธซเธฅเธ”</span>
+                            </div>
+                            <div id="file-list" class="mb-3" style="display: none;">
+                                <p class="text-sm font-medium text-gray-700 mb-2">เนเธเธฅเนเธ—เธตเนเน€เธฅเธทเธญเธ</p>
+                                <div id="selected-files"></div>
+                            </div>
+                            <div id="upload-progress" class="mb-3" style="display: none;">
+                                <div class="h-2 bg-gray-200 rounded overflow-hidden"><div class="progress-bar h-full bg-blue-500 rounded transition-all" role="progressbar" style="width: 0%"></div></div>
+                                <p class="text-xs text-gray-500 mt-1">เธเธณเธฅเธฑเธเธญเธฑเธเนเธซเธฅเธ”...</p>
+                            </div>
+                            <div id="uploaded-files" class="mb-3" style="display: none;">
+                                <p class="text-sm font-medium text-gray-700 mb-2">เนเธเธฅเนเธ—เธตเนเธญเธฑเธเนเธซเธฅเธ”เนเธฅเนเธง</p>
+                                <div id="uploaded-files-list"></div>
+                            </div>
+                            <div id="msgfile" class="text-sm py-2 px-3 rounded-lg hidden"></div>
+                            <p class="text-xs text-gray-500">เธฃเธญเธเธฃเธฑเธ: .docx, .pdf, .png, .jpg, .jpeg</p>
+                            <input type="hidden" id="fileaddress" name="fileaddress" value="[]">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-t border-gray-200 flex justify-end gap-3 pt-4">
+                    <button type="button" class="flex-1 sm:flex-none px-4 py-3 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-900 font-medium rounded-xl transition-all" data-dismiss="modal">เธขเธเน€เธฅเธดเธ</button>
+                    <button type="button" id="saveForm" value="save" class="flex-1 sm:flex-none px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl shadow-lg shadow-blue-500/30 transition-all">เน€เธเธดเนเธกเธเนเธญเธกเธนเธฅ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade view_model" id="statsModal" tabindex="-1" aria-labelledby="statsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content rounded-xl overflow-hidden">
+                <div class="modal-header border-b border-gray-200 bg-gray-50">
+                    <h5 class="modal-title text-lg font-semibold text-gray-800" id="statsModalTitle">เธเธฃเธฐเธงเธฑเธ•เธดเธเธฒเธฃเน€เธเนเธฒเธเธก</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
+                </div>
+                <div class="modal-body p-6" id="statsModalBody"></div>
+                <div class="modal-footer border-t border-gray-200">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">เธเธดเธ”</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Details Modal -->
+    <div class="modal fade" id="modalCenter" tabindex="-1" aria-labelledby="modalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content doc-view-modal rounded-xl overflow-hidden">
+                <div class="modal-header border-b border-gray-200 bg-gray-50">
+                    <h5 class="modal-title text-lg font-semibold text-gray-800" id="modalCenterTitle"><i class="bx bx-file-blank me-2"></i>เธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ”เน€เธญเธเธชเธฒเธฃ</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="เธเธดเธ”">&times;</button>
+                </div>
+                <div class="modal-body p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+                        <div class="md:col-span-4">
+                            <p class="text-xs font-medium text-gray-500 uppercase">เน€เธฅเธเธ—เธตเนเธซเธเธฑเธเธชเธทเธญ</p>
+                            <p id="msg_officeiddoc" class="text-gray-800 mt-0.5"></p>
+                        </div>
+                        <div class="md:col-span-4">
+                            <p class="text-xs font-medium text-gray-500 uppercase">เธงเธฑเธเธ—เธตเนเธฅเธเธซเธเธฑเธเธชเธทเธญ</p>
+                            <p id="msg_docdate" class="text-gray-800 mt-0.5"></p>
+                        </div>
+                        <div class="md:col-span-4">
+                            <p class="text-xs font-medium text-gray-500 uppercase">เธเธเธดเธ”เน€เธญเธเธชเธฒเธฃ</p>
+                            <p id="msg_doctype" class="text-gray-800 mt-0.5"></p>
+                        </div>
+                        <div class="md:col-span-4">
+                            <p class="text-xs font-medium text-gray-500 uppercase">เน€เธเนเธฒเธเธญเธเน€เธญเธเธชเธฒเธฃ</p>
+                            <p id="msg_owner" class="text-gray-800 mt-0.5"></p>
+                        </div>
+                        <div class="md:col-span-8">
+                            <p class="text-xs font-medium text-gray-500 uppercase">เธเธทเนเธญเน€เธฃเธทเนเธญเธ</p>
+                            <p id="msg_title" class="text-gray-800 mt-0.5"></p>
+                        </div>
+                        <div class="md:col-span-12">
+                            <p class="text-xs font-medium text-gray-500 uppercase">เธเธนเนเน€เธเธตเนเธขเธงเธเนเธญเธ</p>
+                            <p id="msg_participant" class="text-gray-800 mt-0.5"></p>
+                        </div>
+                        <div class="md:col-span-12">
+                            <p class="text-xs font-medium text-gray-500 uppercase">เธเธณเธชเธฑเนเธเธเธฒเธฃ</p>
+                            <p id="msg_order" class="text-gray-800 mt-0.5"></p>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 mt-4 pt-4 border-t border-gray-200">
+                        <h6 class="mb-0 text-sm font-semibold text-gray-700"><i class="bx bx-file-blank me-1"></i>เน€เธญเธเธชเธฒเธฃเนเธเธ</h6>
+                        <a id="msg_fileaddresslink" href="" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">เธ”เธฒเธงเธเนเนเธซเธฅเธ”</a>
+                    </div>
+                    <div class="pdf-container border border-gray-200 rounded-lg p-2" aria-label="เธเธทเนเธเธ—เธตเนเนเธชเธ”เธเน€เธญเธเธชเธฒเธฃ PDF">
+                        <embed id="msg_fileaddress" src="" width="100%" height="600" type="application/pdf">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[1060] flex flex-col gap-2"></div>
+
+    <!-- Footer (เธกเธดเธเธดเธกเธญเธฅ) -->
+    <footer class="border-t border-gray-200/50 bg-white/50 py-2 mt-4">
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 flex flex-col sm:flex-row items-center justify-between gap-1 text-xs text-gray-500">
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-gray-700">Privacy Policy</a>
+                <a href="#" class="hover:text-gray-700">Terms of Use</a>
+            </div>
+            <div>ยฉ <script>document.write(new Date().getFullYear());</script> EdocDocument</div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="<?= base_url('assets/js/backend-bundle.min.js') ?>"></script>
+    <script src="<?= base_url('assets/js/table-treeview.js') ?>"></script>
+    <script src="<?= base_url('assets/js/customizer.js') ?>"></script>
+    <script src="<?= base_url('assets/js/app.js') ?>"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="<?= base_url('assets/js/jquery.amsify.suggestags.js') ?>"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        let uploadedFiles = [];
+
+        function displaySelectedFiles(files) {
+            let filesHtml = '';
+
+            files.forEach((file, index) => {
+                const fileSize = formatFileSize(file.size);
+                const fileIcon = getFileIcon(file.name);
+
+                filesHtml += `
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <i class="fas ${fileIcon} me-2"></i>
+                    <div>
+                        <div class="fw-medium">${file.name}</div>
+                        <small class="text-muted">${fileSize}</small>
+                    </div>
+                </div>
+                <span class="badge bg-secondary">เธฃเธญเธเธฒเธฃเธญเธฑเธเนเธซเธฅเธ”</span>
+            </div>
+        `;
+            });
+
+            $('#selected-files').html(filesHtml);
+            $('#file-list').show();
+        }
+
+        function displayUploadedFiles() {
+            if (uploadedFiles.length === 0) {
+                $('#uploaded-files').hide();
+                return;
+            }
+
+            let filesHtml = '';
+
+            uploadedFiles.forEach((file, index) => {
+                const fileIcon = getFileIcon(file.original_name);
+
+                // Fix: Point to root EdocDocument (removing public/ if present) for preview
+                const fileUrl = "<?php echo str_replace('public/', '', base_url('index.php/edoc/viewPDF/')); ?>" + file.filename;
+
+                filesHtml += `
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <i class="fas ${fileIcon} me-2"></i>
+                    <div>
+                        <div class="fw-medium">${file.original_name}</div>
+                        <small class="text-muted">
+                            <a href="${fileUrl}" target="_blank" class="text-decoration-none">
+                                <i class="fas fa-external-link-alt"></i> เธ”เธนเนเธเธฅเน
+                            </a>
+                        </small>
+                    </div>
+                </div>
+                <div>
+                    <span class="badge bg-success me-2">เธญเธฑเธเนเธซเธฅเธ”เธชเธณเน€เธฃเนเธ</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeUploadedFile(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+            });
+
+            $('#uploaded-files-list').html(filesHtml);
+            $('#uploaded-files').show();
+        }
+
+        function removeUploadedFile(index) {
+            uploadedFiles.splice(index, 1);
+            updateFileAddressField();
+            displayUploadedFiles();
+
+            if (uploadedFiles.length === 0) {
+                $('#msgfile').hide();
+            }
+        }
+
+        function updateFileAddressField() {
+            const fileList = uploadedFiles.map(file => file.filename);
+            $('#fileaddress').val(JSON.stringify(fileList));
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            switch (ext) {
+                case 'pdf':
+                    return 'fa-file-pdf text-danger';
+                case 'doc':
+                case 'docx':
+                    return 'fa-file-word text-primary';
+                case 'jpg':
+                case 'jpeg':
+                case 'png':
+                    return 'fa-file-image text-success';
+                default:
+                    return 'fa-file text-secondary';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        $('.custom-file-input').on('change', function() {
+            const files = Array.from(this.files);
+
+            if (files.length === 0) {
+                $('#file-list').hide();
+                return;
+            }
+
+            // Update label
+            const fileNames = files.map(file => file.name).join(', ');
+            const displayText = files.length > 3 ?
+                `${files.length} เนเธเธฅเนเธ—เธตเนเน€เธฅเธทเธญเธ` :
+                fileNames.length > 50 ? `${files.length} เนเธเธฅเนเธ—เธตเนเน€เธฅเธทเธญเธ` : fileNames;
+
+            $(this).siblings('.custom-file-label').addClass('selected').html(displayText);
+
+            // Display selected files
+            displaySelectedFiles(files);
+        });
+
+        // --- DataTables (เธเธตเธกเน€เธ”เธตเธขเธงเธเธฑเธเธซเธเนเธฒ, Sort เนเธ”เน) ---
+        var getdocUrl = "<?= base_url('index.php/edoc/admin/getdoc') ?>";
+        var documentsTable = null;
+
+        function initDocumentsTable() {
+            if (documentsTable) return;
+            documentsTable = $('#documents-table').DataTable({
+                serverSide: true,
+                ajax: {
+                    url: getdocUrl,
+                    type: 'POST',
+                    data: function(d) {
+                        if (!d.order || d.order.length === 0) {
+                            d.order = [{ column: 0, dir: 'desc' }];
+                        } else {
+                            d.order = d.order.filter(function(o) { return o.column !== 9; });
+                        }
+                        d.columnSearch = [];
+                    }
+                },
+                columns: [
+                    { data: 'iddoc' },
+                    { data: 'officeiddoc' },
+                    { data: 'title' },
+                    { data: 'doctype' },
+                    { data: 'owner' },
+                    { data: 'participant' },
+                    { data: 'datedoc' },
+                    { data: 'pages' },
+                    { data: 'view_count' },
+                    { data: 'edit', orderable: false, searchable: false }
+                ],
+                order: [[ 0, 'desc' ]],
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                dom: 'lrtip',
+                language: {
+                    emptyTable: 'เนเธกเนเธกเธตเธเนเธญเธกเธนเธฅ',
+                    info: 'เนเธชเธ”เธ _START_ เธ–เธถเธ _END_ เธเธฒเธ _TOTAL_ เธฃเธฒเธขเธเธฒเธฃ',
+                    infoEmpty: 'เนเธชเธ”เธ 0 เธ–เธถเธ 0 เธเธฒเธ 0 เธฃเธฒเธขเธเธฒเธฃ',
+                    infoFiltered: '(เธเธฃเธญเธเธเธฒเธ _MAX_ เธฃเธฒเธขเธเธฒเธฃ)',
+                    lengthMenu: 'เนเธชเธ”เธ _MENU_ เธฃเธฒเธขเธเธฒเธฃ',
+                    loadingRecords: 'เธเธณเธฅเธฑเธเนเธซเธฅเธ”...',
+                    processing: 'เธเธณเธฅเธฑเธเธเธฃเธฐเธกเธงเธฅเธเธฅ...',
+                    search: 'เธเนเธเธซเธฒ:',
+                    zeroRecords: 'เนเธกเนเธเธเธเนเธญเธกเธนเธฅ'
+                },
+                drawCallback: function() {
+                    var info = this.api().page.info();
+                    $('#doc-count').text(info.recordsFiltered + ' เน€เธญเธเธชเธฒเธฃ');
+                    if (info.recordsFiltered === 0) {
+                        $('#doc-table-card').addClass('hidden');
+                        $('#empty-state').removeClass('hidden').addClass('flex');
+                    } else {
+                        $('#doc-table-card').removeClass('hidden');
+                        $('#empty-state').addClass('hidden').removeClass('flex');
+                    }
+                }
+            });
+            window.documentsTable = documentsTable;
+        }
+
+        $(document).ready(function() {
+            $("#datedoc").datepicker();
+            $("#msgfile").hide();
+            initsuggest();
+            initDocumentsTable();
+
+            $('#add-btn, #empty-add-btn').on('click', function() { openFormModal(); });
+            var searchTimeout;
+            $('#search-input').on('keyup', function() {
+                var q = $(this).val();
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    if (window.documentsTable) window.documentsTable.search(q).draw();
+                }, 300);
+            });
+            $('#formModal').on('hidden.bs.modal', function() {
+                $("#frmdata").trigger('reset');
+                clearMultipleFileUpload();
+                $("#iddoc").val("");
+                $('#saveForm').html("เน€เธเธดเนเธกเธเนเธญเธกเธนเธฅ").prop('disabled', false);
+                $('#formModalTitle').html('<i class="fas fa-file-alt me-2"></i>เน€เธเธดเนเธกเน€เธญเธเธชเธฒเธฃ');
+            });
+            $('#formModal').on('shown.bs.modal', function() {
+                if ($.fn.selectpicker && $('#doctype').hasClass('selectpicker')) $('#doctype').selectpicker('refresh');
+            });
+        });
+
+        function initsuggest() {
+            var copynumber = 1;
+            $('#owner').amsifySuggestags({
+                suggestions: [<?= "'" . implode("','", $suggestname) . "'"; ?>],
+                defaultTagClass: 'badge',
+                type: 'amsify',
+                tagLimit: 1,
+                showAllSuggestions: false,
+                keepLastOnHoverTag: false,
+                delimiters: [';']
+            });
+
+            $('#participant').amsifySuggestags({
+                suggestions: [<?= "'" . implode("','", $suggestname) . "'"; ?>],
+                defaultTagClass: 'badge',
+                whiteList: false,
+                type: 'amsify',
+                tagLimit: 100,
+                showAllSuggestions: true,
+                afterAdd: function(value) {
+                    copynumber = copynumber + 1;
+                    $('#copynum').val(copynumber);
+                },
+                afterRemove: function(value) {
+                    copynumber = copynumber - 1;
+                    $('#copynum').val(copynumber);
+                },
+            });
+        }
+
+        function addtag(flag) {
+            if (flag) {
+                $('#participant').val("<?php echo "เธ—เธธเธเธเธ"; ?>");
+            } else {
+                $('#participant').val("");
+            }
+            initsuggest();
+        }
+
+        // --- Tag Group JS ---
+        let tagGroupsData = [];
+
+        function loadTagGroups() {
+            $.ajax({
+                url: '<?= base_url("index.php/edoc/admin/gettaggroups") ?>',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if(response.status === 'success') {
+                        tagGroupsData = response.data;
+                        renderTagGroupSelect();
+                    }
+                }
+            });
+        }
+
+        function renderTagGroupSelect() {
+            let options = '<option value="">-- เน€เธฅเธทเธญเธเธเธฅเธธเนเธก --</option>';
+            tagGroupsData.forEach(group => {
+                options += `<option value="${group.id}">${group.name}</option>`;
+            });
+            $('#tagGroupSelect').html(options);
+            $('#btnDeleteGroup').hide();
+        }
+
+        $('#tagGroupSelect').on('change', function() {
+            const groupId = $(this).val();
+            if(!groupId) {
+                 $('#btnDeleteGroup').hide();
+                 return;
+            }
+
+            $('#btnDeleteGroup').show();
+            const group = tagGroupsData.find(g => g.id === groupId);
+            if(group) {
+                // Determine current tags
+                let currentVal = $('#participant').val();
+                let currentTags = currentVal ? currentVal.split(',') : [];
+                
+                // Add new tags unique
+                let newTags = [...currentTags];
+                group.tags.forEach(tag => {
+                    if(!newTags.includes(tag)) {
+                        newTags.push(tag);
+                    }
+                });
+                
+                $('#participant').val(newTags.join(','));
+                
+                // Refresh amsify
+                initsuggest();
+            }
+        });
+
+        $('#btnSaveGroup').on('click', function() {
+            let currentVal = $('#participant').val();
+            if(!currentVal) {
+                alert('เธเธฃเธธเธ“เธฒเน€เธเธดเนเธกเธฃเธฒเธขเธเธทเนเธญเธเธนเนเธฃเธฑเธเธเนเธญเธเธเธฑเธเธ—เธถเธเธเธฅเธธเนเธก');
+                return;
+            }
+
+            const name = prompt("เธ•เธฑเนเธเธเธทเนเธญเธเธฅเธธเนเธกเนเธซเธกเน:");
+            if(name) {
+                const tags = currentVal.split(',');
+                $.ajax({
+                    url: '<?= base_url("index.php/edoc/admin/savetaggroup") ?>',
+                    type: 'POST',
+                    data: { name: name, tags: tags },
+                    dataType: 'json',
+                    success: function(response) {
+                        if(response.status === 'success') {
+                            alert('เธเธฑเธเธ—เธถเธเธเธฅเธธเนเธกเธชเธณเน€เธฃเนเธ');
+                            loadTagGroups(); // Reload
+                        } else {
+                            alert('เน€เธเธดเธ”เธเนเธญเธเธดเธ”เธเธฅเธฒเธ”: ' + response.message);
+                        }
+                    }
+                });
+            }
+        });
+
+        $('#btnDeleteGroup').on('click', function() {
+             const groupId = $('#tagGroupSelect').val();
+             if(!groupId) return;
+
+             if(confirm('เธ•เนเธญเธเธเธฒเธฃเธฅเธเธเธฅเธธเนเธกเธเธตเนเนเธเนเธซเธฃเธทเธญเนเธกเน?')) {
+                 $.ajax({
+                    url: '<?= base_url("index.php/edoc/admin/deletetaggroup") ?>',
+                    type: 'POST',
+                    data: { id: groupId },
+                    dataType: 'json',
+                    success: function(response) {
+                        if(response.status === 'success') {
+                            alert('เธฅเธเธเธฅเธธเนเธกเธชเธณเน€เธฃเนเธ');
+                            loadTagGroups(); // Reload
+                             initsuggest(); // Refresh suggested tags to clear selection if we want, but simpler to just leave as is.
+                        } else {
+                            alert('เน€เธเธดเธ”เธเนเธญเธเธดเธ”เธเธฅเธฒเธ”: ' + response.message);
+                        }
+                    }
+                });
+             }
+        });
+
+        // Initialize on doc ready
+        $(document).ready(function() {
+             loadTagGroups();
+        });
+
+
+
+        // File upload handler
+        $('#upload_doc').on('click', function() {
+            const files = $('#fileupload').prop('files');
+
+            if (files.length === 0) {
+                alert('เธเธฃเธธเธ“เธฒเน€เธฅเธทเธญเธเนเธเธฅเน');
+                return;
+            }
+
+            // Show progress
+            $('#upload-progress').show();
+            $('.progress-bar').css('width', '0%');
+
+            // Upload files sequentially
+            uploadFilesSequentially(files, 0);
+        });
+
+        function uploadFilesSequentially(files, currentIndex) {
+            if (currentIndex >= files.length) {
+                // All files uploaded
+                $('#upload-progress').hide();
+                $('#file-list').hide();
+                $('#fileupload').val('');
+                $('.custom-file-label').removeClass('selected').html('เน€เธฅเธทเธญเธเนเธเธฅเน (เธชเธฒเธกเธฒเธฃเธ–เน€เธฅเธทเธญเธเธซเธฅเธฒเธขเนเธเธฅเน)');
+
+                updateFileAddressField();
+                displayUploadedFiles();
+
+                $('#msgfile').html(`เธญเธฑเธเนเธซเธฅเธ”เนเธเธฅเนเธชเธณเน€เธฃเนเธ ${uploadedFiles.length} เนเธเธฅเน`).removeClass('alert-danger').addClass('alert-success').show();
+                return;
+            }
+
+            const file = files[currentIndex];
+            const form_data = new FormData();
+            form_data.append('file', file);
+
+            // Update progress
+            const progress = ((currentIndex) / files.length) * 100;
+            $('.progress-bar').css('width', progress + '%');
+
+            $.ajax({
+                url: '<?= base_url('index.php/edoc/upload/edoc') ?>',
+                dataType: 'json',
+                cache: false,
+                contentType: false,
+                processData: false,
+                data: form_data,
+                type: 'post',
+                success: function(response) {
+                    if (response.status === 'success' || response.filename) {
+                        // Add to uploaded files array
+                        uploadedFiles.push({
+                            filename: response.filename,
+                            original_name: file.name,
+                            file_size: file.size,
+                            file_type: file.type
+                        });
+                    }
+
+                    // Upload next file
+                    uploadFilesSequentially(files, currentIndex + 1);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Upload error:', error);
+                    $('#msgfile').html(`เน€เธเธดเธ”เธเนเธญเธเธดเธ”เธเธฅเธฒเธ”เนเธเธเธฒเธฃเธญเธฑเธเนเธซเธฅเธ” ${file.name}`).removeClass('alert-success').addClass('alert-danger').show();
+
+                    // Continue with next file
+                    uploadFilesSequentially(files, currentIndex + 1);
+                }
+            });
+        }
+
+
+        // Fixed function to parse fileaddress correctly
+        function parseFileAddress(fileaddress) {
+            if (!fileaddress || fileaddress.trim() === '') {
+                return [];
+            }
+
+            let fileList = [];
+
+            try {
+                // First, try to parse as JSON array
+                if (fileaddress.startsWith('[') && fileaddress.endsWith(']')) {
+                    fileList = JSON.parse(fileaddress);
+                } else {
+                    // Handle comma-separated values with potential quotes
+                    fileList = fileaddress.split(',').map(file => {
+                        return file.trim()
+                            .replace(/^["'\[]/, '') // Remove leading quotes or brackets
+                            .replace(/["'\]]$/, '') // Remove trailing quotes or brackets
+                            .trim();
+                    }).filter(file => file && file.length > 0);
+                }
+            } catch (e) {
+                // Fallback: split by comma and clean
+                fileList = fileaddress.split(',').map(file => {
+                    return file.trim()
+                        .replace(/^["'\[]/, '')
+                        .replace(/["'\]]$/, '')
+                        .trim();
+                }).filter(file => file && file.length > 0);
+            }
+
+            // เธฅเธเน€เธเธฃเธทเนเธญเธเธซเธกเธฒเธขเนเธฅเธฐเธญเธฑเธเธเธฃเธฐเธเธฅเธฒเธขเธ—เธฒเธเธ—เธตเนเธเธดเธ”เธเธฅเธฒเธ” (เน€เธเนเธ .pdf], [ เธซเธฃเธทเธญ quote) เธญเธญเธเธเธฒเธเนเธ•เนเธฅเธฐเธเธทเนเธญเนเธเธฅเน
+            return fileList.map(file => {
+                return file.replace(/^["'\s\[\]]+|["'\s\[\]]+$/g, '');
+            }).filter(file => file && file.length > 0);
+        }
+
+        // Updated displayMultipleFilesWithTabs function
+        function displayMultipleFilesWithTabs(result_data) {
+            const baseUrl = "<?php echo base_url('index.php/edoc/viewPDF/'); ?>";
+
+            // เธฃเธญเธเธฃเธฑเธเธ—เธฑเนเธ 2 เธฃเธนเธเนเธเธ: เนเธเน fileaddress_list เธเธฒเธ API (เธซเธเนเธฒเธฃเธญเนเธฒเธเธเนเธญเธกเธนเธฅ) เธซเธฃเธทเธญ parse เน€เธญเธ
+            let fileList = Array.isArray(result_data.fileaddress_list) && result_data.fileaddress_list.length
+                ? result_data.fileaddress_list
+                : parseFileAddress(result_data.fileaddress);
+
+            console.log('Parsed file list:', fileList); // Debug log
+
+            if (fileList.length === 0) {
+                // No files
+                updateFileHeader(0);
+                $('.pdf-container').html(createNoFileDisplay());
+                return;
+            }
+
+            // Update header with file count and download options
+            updateFileHeader(fileList.length, fileList, baseUrl);
+
+            if (fileList.length === 1) {
+                // Single file - display directly without tabs
+                displaySingleFile(fileList[0], baseUrl);
+            } else {
+                // Multiple files - create tabs
+                createFileTabsInterface(fileList, baseUrl);
+            }
+        }
+
+        // Updated edit function to handle file parsing correctly
+        function edit(id) {
+            $('#saveForm').prop('disabled', true);
+            $.ajax({
+                type: "POST",
+                url: "<?= base_url('index.php/edoc/getdocinfo') ?>",
+                data: {
+                    iddoc: id
+                },
+                dataType: "json",
+                success: function(data) {
+                    let result_data = data['result'];
+                    let url = "<?= base_url('index.php/edoc/viewPDF/') ?>";
+
+                    // Fill form fields
+                    $('#officeiddoc').val(result_data.officeiddoc);
+                    $('#title').val(result_data.title);
+                    $('#doctype').val(result_data.doctype);
+                    $('#owner').val(result_data.owner);
+                    $('#participant').val(result_data.participant);
+                    $('#datedoc').val(result_data.datedoc);
+                    $('#pages').val(result_data.pages);
+                    $("#iddoc").val(result_data.iddoc);
+
+                    // Handle multiple files using the new parsing function
+                    uploadedFiles = [];
+
+                    if (result_data.fileaddress || (result_data.fileaddress_list && result_data.fileaddress_list.length)) {
+                        const fileList = Array.isArray(result_data.fileaddress_list) && result_data.fileaddress_list.length
+                            ? result_data.fileaddress_list
+                            : parseFileAddress(result_data.fileaddress || '');
+
+                        console.log('Edit - Parsed files:', fileList); // Debug log
+
+                        // Convert to uploadedFiles format
+                        fileList.forEach(filename => {
+                            if (filename) {
+                                uploadedFiles.push({
+                                    filename: filename,
+                                    original_name: filename.split('/').pop() || filename,
+                                    file_size: 0,
+                                    file_type: ''
+                                });
+                            }
+                        });
+
+                        // เนเธเน JSON เน€เธชเธกเธญ เน€เธเธทเนเธญเนเธกเนเนเธซเนเน€เธเธดเธ”เธฃเธนเธเนเธเธเธเธชเธก เน€เธเนเธ .pdf], เธซเธฃเธทเธญเธเธทเนเธญเนเธเธฅเนเธ•เธดเธ”เธเธฑเธ
+                        $("#fileaddress").val(JSON.stringify(fileList));
+                        displayUploadedFiles();
+
+                        let fileText = uploadedFiles.length === 1 ? 'เนเธเธฅเน' : 'เนเธเธฅเน';
+                        $('#msgfile').html(`เธเธเนเธเธฅเนเนเธเธ ${uploadedFiles.length} ${fileText}`).removeClass('alert-danger').addClass('alert-info').show();
+                    }
+
+                    $('#saveForm').html("เธเธฃเธฑเธเธเธฃเธธเธเธเนเธญเธกเธนเธฅ");
+                    $('#saveForm').prop('disabled', false);
+                    initsuggest();
+                    $('#formModalTitle').html('<i class="fas fa-edit me-2"></i>เนเธเนเนเธเน€เธญเธเธชเธฒเธฃ');
+                    $('#formModal').modal('show');
+                },
+                error: function(data) {
+                    alert('Error loading document data');
+                    $('#saveForm').prop('disabled', false);
+                }
+            });
+        }
+
+        function openFormModal() {
+            $("#frmdata").trigger('reset');
+            clearMultipleFileUpload();
+            $("#iddoc").val("");
+            $("#msgfile").hide();
+            $('#saveForm').html("เน€เธเธดเนเธกเธเนเธญเธกเธนเธฅ");
+            $('#formModalTitle').html('<i class="fas fa-file-alt me-2"></i>เน€เธเธดเนเธกเน€เธญเธเธชเธฒเธฃ');
+            initsuggest();
+            $('#formModal').modal('show');
+        }
+
+        function showToast(message, type) {
+            type = type || 'success';
+            var cls = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-red-600' : 'bg-blue-600');
+            var icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
+            var el = $('<div class="flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-white ' + cls + '"><i class="fas ' + icon + ' w-5 h-5"></i><span class="font-medium">' + message + '</span></div>');
+            $('#toast-container').append(el);
+            setTimeout(function() { el.fadeOut(300, function() { $(this).remove(); }); }, 3000);
+        }
+
+        // Form save handler
+        $('#saveForm').off('click').on('click', function() {
+            var datastring = $("#frmdata").serialize();
+            $('#saveForm').prop('disabled', true);
+
+            $.ajax({
+                type: "POST",
+                url: "<?= base_url('index.php/edoc/admin/savedoc') ?>",
+                data: datastring,
+                dataType: "json",
+                success: function(data) {
+                    showToast('เธเธฑเธเธ—เธถเธเธเนเธญเธกเธนเธฅเน€เธฃเธตเธขเธเธฃเนเธญเธข');
+                    if (window.documentsTable) documentsTable.ajax.reload();
+
+                    // Clear form data
+                    $("#frmdata").trigger('reset');
+
+                    // Clear multiple file upload state
+                    clearMultipleFileUpload();
+
+                    initsuggest();
+                    $("#msgfile").hide();
+                    $("#iddoc").val("");
+                    $('#saveForm').html("เน€เธเธดเนเธกเธเนเธญเธกเธนเธฅ");
+                    $('#saveForm').prop('disabled', false);
+                    $('#formModal').modal('hide');
+                },
+                error: function(data) {
+                    alert('เธเธเธเนเธญเธเธดเธ”เธเธฅเธฒเธ”เธเธฃเธธเธ“เธฒเธ•เธดเธ”เธ•เนเธญเธเธนเนเธเธฑเธ’เธเธฒ');
+                    $('#saveForm').prop('disabled', false);
+                },
+                beforeSend: function() {
+                    // Check if files are uploaded first
+                    if (uploadedFiles.length === 0) {
+                        $('#msgfile').show().html('เธเธฃเธธเธ“เธฒเธญเธฑเธเนเธซเธฅเธ”เนเธเธฅเนเน€เธญเธเธชเธฒเธฃเธญเธขเนเธฒเธเธเนเธญเธข 1 เนเธเธฅเน').removeClass('alert-success alert-info').addClass('alert-danger');
+                        $('#saveForm').prop('disabled', false);
+                        return false;
+                    }
+
+                    // Sync fileaddress เธเธฒเธ uploadedFiles เน€เธเนเธ JSON เน€เธชเธกเธญ (เธเนเธญเธเธเธฑเธเธเนเธฒเธเธชเธกเนเธเธ .pdf], เธซเธฃเธทเธญ comma-separated)
+                    updateFileAddressField();
+
+                    // Validate required fields
+                    const requiredFields = [
+                        'officeiddoc', 'title', 'pages', 'doctype',
+                        'datedoc', 'owner', 'participant'
+                    ];
+
+                    let isEmpty = false;
+                    let firstEmptyField = null;
+
+                    // Check each required field
+                    for (let field of requiredFields) {
+                        const value = $('#' + field).val();
+                        if (!value || value.trim() === '') {
+                            isEmpty = true;
+                            if (!firstEmptyField) {
+                                firstEmptyField = field;
+                            }
+                        }
+                    }
+
+                    // If any required field is empty
+                    if (isEmpty) {
+                        alert('เธเธฃเธธเธ“เธฒเธฃเธฐเธเธธเธเนเธญเธกเธนเธฅเนเธซเนเธเธฃเธเธ–เนเธงเธ');
+                        $('#' + firstEmptyField).focus();
+                        $('#saveForm').prop('disabled', false);
+                        return false;
+                    }
+
+                    return true;
+                }
+            });
+        });
+
+        function clearMultipleFileUpload() {
+            // Reset uploaded files array
+            uploadedFiles = [];
+
+            // Clear file input
+            $('#fileupload').val('');
+
+            // Reset file input label
+            $('.custom-file-label').removeClass('selected').html('เน€เธฅเธทเธญเธเนเธเธฅเน (เธชเธฒเธกเธฒเธฃเธ–เน€เธฅเธทเธญเธเธซเธฅเธฒเธขเนเธเธฅเน)');
+
+            // Hide all file display areas
+            $('#file-list').hide();
+            $('#uploaded-files').hide();
+            $('#upload-progress').hide();
+
+            // Clear all file lists content
+            $('#selected-files').empty();
+            $('#uploaded-files-list').empty();
+
+            // Clear hidden field
+            $('#fileaddress').val('');
+
+            // Hide and clear message
+            $('#msgfile').hide().html('');
+
+            // Reset progress bar
+            $('.progress-bar').css('width', '0%');
+
+            // Force update display
+            displayUploadedFiles(); // This will hide the section since uploadedFiles is empty
+        }
+
+
+        function toggleform() {
+            openFormModal();
+        }
+
+        // Edit document handler
+        // function edit(id) {
+        //     $('#saveForm').prop('disabled', true);
+        //     $.ajax({
+        //         type: "POST",
+        //         url: "<?= base_url('index.php/edoc/getdocinfo') ?>",
+        //         data: {
+        //             iddoc: id
+        //         },
+        //         dataType: "json",
+        //         success: function(data) {
+        //             let result_data = data['result'];
+        //             let url = "<?= base_url('index.php/edoc/viewPDF/') ?>";
+
+        //             $('#officeiddoc').val(result_data.officeiddoc);
+        //             $('#title').val(result_data.title);
+        //             $('#doctype').val(result_data.doctype);
+        //             $('#owner').val(result_data.owner);
+        //             $('#participant').val(result_data.participant);
+        //             $('#datedoc').val(result_data.datedoc);
+        //             $('#pages').val(result_data.pages);
+        //             $("#iddoc").val(result_data.iddoc);
+        //             $("#fileaddress").val(result_data.fileaddress);
+
+        //             $('#msgfile').html(
+        //                 "Link File : <a href='" + url + result_data.fileaddress + "'>" +
+        //                 result_data.fileaddress + "</a>"
+        //             );
+        //             $('#msgfile').show();
+        //             $('#saveForm').html("เธเธฃเธฑเธเธเธฃเธธเธเธเนเธญเธกเธนเธฅ");
+        //             $('#saveForm').prop('disabled', false);
+        //             initsuggest();
+
+        //             // Show form
+        //             $('#adddoc').show();
+        //         },
+        //         error: function(data) {
+        //             alert('Error loading document data');
+        //             $('#saveForm').prop('disabled', false);
+        //         }
+        //     });
+        // }
+
+
+
+
+
+        // Modify the info function
+        function info(id) {
+            $.ajax({
+                type: "POST",
+                url: "<?php echo base_url('index.php/edoc/admin/getdocinfo'); ?>",
+                data: {
+                    iddoc: id
+                },
+                dataType: "json",
+                success: function(response) {
+                    if (response.status === 'success') {
+                        var result_data = response.result;
+                        try {
+                            // Clear any previous view stats
+                            $('#viewStatsSection').remove();
+
+                            // Fill basic document info
+                            $('#msg_officeiddoc').text(result_data.officeiddoc || '');
+                            $('#msg_title').text(result_data.title || '');
+                            $('#msg_doctype').text(result_data.doctype || '');
+                            $('#msg_owner').text(result_data.owner || '');
+                            $('#msg_participant').text(result_data.participant || '');
+                            $('#msg_order').text(result_data.order || '');
+                            $('#msg_docdate').text(result_data.datedoc || '');
+
+                            // Add view statistics if available
+                            if (result_data.view_statistics && typeof addViewStatistics === 'function') {
+                                addViewStatistics(result_data);
+                            }
+
+                            // Handle multiple files display with tabs
+                            if (typeof displayMultipleFilesWithTabs === 'function') {
+                                displayMultipleFilesWithTabs(result_data);
+                            } else {
+                                $('.pdf-container').html('<p class="text-muted p-3">เนเธกเนเธเธเน€เธญเธเธชเธฒเธฃเนเธเธ</p>');
+                            }
+                        } catch (e) {
+                            console.error('info() fill error:', e);
+                            if (!$('.pdf-container').html()) {
+                                $('.pdf-container').html('<p class="text-muted p-3">เนเธซเธฅเธ”เธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ”เนเธกเนเธชเธกเธเธนเธฃเธ“เน</p>');
+                            }
+                        }
+                        // เธขเนเธฒเธข modal เนเธเธ—เธตเน body เธ–เนเธฒเธญเธขเธนเนเธฅเธถเธเนเธ layout (เธเนเธญเธเธเธฑเธ overflow เธ•เธฑเธ”)
+                        var $modal = $('#modalCenter');
+                        if (!$modal.parent().is('body')) {
+                            $modal.appendTo('body');
+                        }
+                        // เนเธชเธ”เธ modal (เธฃเธญเธเธฃเธฑเธเธ—เธฑเนเธ Bootstrap 4 เนเธฅเธฐ 5)
+                        if (typeof $modal.modal === 'function') {
+                            $modal.modal('show');
+                        } else if (typeof bootstrap !== 'undefined') {
+                            var el = document.getElementById('modalCenter');
+                            if (el) new bootstrap.Modal(el).show();
+                        } else {
+                            $modal.addClass('show').css('display', 'block');
+                            $('body').addClass('modal-open');
+                            if (!$('.modal-backdrop').length) $('body').append('<div class="modal-backdrop fade show"></div>');
+                        }
+                    } else {
+                        alert(response.message || 'Failed to load document information');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", xhr.responseJSON || xhr.responseText || error);
+                    alert("เนเธกเนเธชเธฒเธกเธฒเธฃเธ–เนเธซเธฅเธ”เธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ”เนเธ”เน: " + (xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : "เธเธฃเธธเธ“เธฒเธฅเธญเธเนเธซเธกเนเธซเธฃเธทเธญเธ•เธฃเธงเธเธชเธญเธเธเธฒเธฃเธฅเนเธญเธเธญเธดเธ"));
+                }
+            });
+        }
+
+
+
+        function displayMultipleFilesWithTabs(result_data) {
+            // Use viewPDF controller for existing files
+            const baseUrl = "<?php echo base_url('index.php/edoc/viewPDF/'); ?>" + result_data.iddoc + "?file=true&subfile=";
+
+            // เธฃเธญเธเธฃเธฑเธเธ—เธฑเนเธ 2 เธฃเธนเธเนเธเธ: เนเธเน fileaddress_list เธเธฒเธ API เธซเธฃเธทเธญ parse เน€เธญเธ
+            const fileList = Array.isArray(result_data.fileaddress_list) && result_data.fileaddress_list.length
+                ? result_data.fileaddress_list
+                : parseFileAddress(result_data.fileaddress || '');
+
+            console.log('Parsed file list:', fileList); // Debug log
+
+            if (fileList.length === 0) {
+                // No files
+                updateFileHeader(0);
+                $('.pdf-container').html(createNoFileDisplay());
+                return;
+            }
+
+            // Update header with file count and download options
+            updateFileHeader(fileList.length, fileList, baseUrl);
+
+            if (fileList.length === 1) {
+                // Single file - display directly without tabs
+                displaySingleFile(fileList[0], baseUrl);
+            } else {
+                // Multiple files - create tabs
+                createFileTabsInterface(fileList, baseUrl);
+            }
+        }
+
+
+
+        function updateFileHeader(fileCount, fileList = [], baseUrl = '') {
+            if (fileCount === 0) {
+                $('.d-flex.justify-content-between.align-items-center.mb-3').html('<h6 class="mb-0">เนเธกเนเธกเธตเน€เธญเธเธชเธฒเธฃเนเธเธ</h6>');
+                return;
+            }
+
+            let downloadDropdown = '';
+            if (fileCount > 0) {
+                downloadDropdown = `
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-toggle="dropdown">
+                    <i class="fas fa-download me-1"></i>เธ”เธฒเธงเธเนเนเธซเธฅเธ”
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                    ${fileList.map((file, index) => {
+                        const cleanFile = file.trim().replace(/^["'\[]/, '').replace(/["'\]]$/, '');
+                        const fileName = cleanFile.split('/').pop() || cleanFile;
+                        const fileUrl = baseUrl + cleanFile;
+                        return `<a class="dropdown-item" href="${fileUrl}" download>
+                            <i class="fas fa-download me-2"></i>${fileName}
+                        </a>`;
+                    }).join('')}
+                    ${fileCount > 1 ? `
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#" onclick="downloadAllFiles(['${fileList.map(f => f.trim().replace(/^["'\[]/, '').replace(/["'\]]$/, '')).join("','")}'], '${baseUrl}')">
+                        <i class="fas fa-download me-2"></i>เธ”เธฒเธงเธเนเนเธซเธฅเธ”เธ—เธฑเนเธเธซเธกเธ” (${fileCount} เนเธเธฅเน)
+                    </a>` : ''}
+                </div>
+            </div>
+        `;
+            }
+
+            const headerHtml = `
+        <h6 class="mb-0">
+            เน€เธญเธเธชเธฒเธฃเนเธเธ 
+            <span class="badge badge-primary ms-2">${fileCount} เนเธเธฅเน</span>
+        </h6>
+        ${downloadDropdown}
+    `;
+
+            $('.d-flex.justify-content-between.align-items-center.mb-3').html(headerHtml);
+        }
+
+
+        function createNoFileDisplay() {
+            return `
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-file-slash text-warning" style="font-size: 48px;"></i>
+            </div>
+            <h5 class="mb-3">เนเธกเนเธเธเนเธเธฅเน</h5>
+            <p class="mb-4 text-muted">เนเธกเนเธกเธตเนเธเธฅเนเนเธเธเธซเธฃเธทเธญเนเธเธฅเนเธญเธฒเธเธชเธนเธเธซเธฒเธข</p>
+        </div>
+    `;
+        }
+
+        function displaySingleFile(file, baseUrl) {
+            const fileUrl = baseUrl + encodeURIComponent(file);
+            const fileName = file.split('/').pop() || file;
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+            const isMobileDevice = isMobile();
+
+            let content = '';
+
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
+                // Image files
+                content = `
+            <div class="text-center">
+                <img src="${fileUrl}" class="img-fluid rounded mx-auto d-block" 
+                     style="max-height: ${isMobileDevice ? '400px' : '600px'}; cursor: pointer;" 
+                     alt="${fileName}" onclick="openImageModal('${fileUrl}', '${fileName}')">
+                <p class="mt-2 text-muted small">${fileName}</p>
+            </div>
+        `;
+            } else if (fileExtension === 'pdf' && !isMobileDevice) {
+                // PDF on desktop
+                content = `
+            <div class="embed-responsive" style="height: 600px;">
+                <embed src="${fileUrl}" width="100%" height="100%" type="application/pdf">
+            </div>
+        `;
+            } else {
+                // Other files or mobile PDF
+                const fileIcon = getFileIcon(fileName);
+                content = `
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="fas ${fileIcon.split(' ')[1]}" style="font-size: 64px; color: #3b82f6;"></i>
+                </div>
+                <h5 class="mb-3">${fileName}</h5>
+                <p class="mb-4 text-muted">
+                    ${isMobileDevice && fileExtension === 'pdf' ? 
+                        'PDF เนเธกเนเธชเธฒเธกเธฒเธฃเธ–เนเธชเธ”เธเธ•เธฑเธงเธญเธขเนเธฒเธเธเธเธญเธธเธเธเธฃเธ“เนเธกเธทเธญเธ–เธทเธญเนเธ”เน' : 
+                        'เธเธฃเธธเธ“เธฒเธ”เธฒเธงเธเนเนเธซเธฅเธ”เน€เธเธทเนเธญเธ”เธนเนเธเธฅเน'}
+                </p>
+                <a href="${fileUrl}" class="btn btn-primary" download>
+                    <i class="fas fa-download me-2"></i>เธ”เธฒเธงเธเนเนเธซเธฅเธ”
+                </a>
+            </div>
+        `;
+            }
+
+            $('.pdf-container').html(content);
+        }
+
+
+        function createFileTabsInterface(fileList, baseUrl) {
+            const tabId = 'fileTabs_' + Date.now();
+            const contentId = 'fileTabContent_' + Date.now();
+
+            let tabsHtml = `<ul class="nav nav-tabs mb-3" id="${tabId}" role="tablist">`;
+            let contentHtml = `<div class="tab-content" id="${contentId}">`;
+
+            fileList.forEach((file, index) => {
+                // Clean the file path
+                const cleanFile = file.trim().replace(/^["'\[]/, '').replace(/["'\]]$/, '');
+                const fileName = cleanFile.split('/').pop() || cleanFile;
+                // Append encoded filename as subfile parameter
+                const fileUrl = baseUrl + encodeURIComponent(cleanFile);
+                const isActive = index === 0 ? 'active' : '';
+                const fileIcon = getFileIcon(fileName);
+                const fileExtension = fileName.split('.').pop().toLowerCase();
+
+                console.log(`Tab ${index}: Clean file: ${cleanFile}, URL: ${fileUrl}`); // Debug log
+
+                // Smart truncate filename for tab display
+                const displayName = truncateFileName(fileName, 12);
+
+                // Tab header with shortened name
+                tabsHtml += `
+            <li class="nav-item" role="presentation">
+                <a class="nav-link ${isActive}" id="file-tab-${index}" 
+                   data-bs-toggle="tab" data-toggle="tab" href="#file-content-${index}" 
+                   role="tab" aria-controls="file-content-${index}" 
+                   title="${fileName}">
+                    <i class="fas ${fileIcon.split(' ')[1]} me-2"></i>
+                    <span class="d-none d-md-inline">${displayName}</span>
+                    <span class="d-md-none">${index + 1}</span>
+                </a>
+            </li>
+        `;
+
+                // Tab content with full filename display
+                let fileContentHtml = '';
+
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
+                    // Image display
+                    fileContentHtml = `
+                <div class="text-center">
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">${fileName}</h6>
+                        <small class="text-muted">เธเธฃเธธเธ“เธฒเธ”เธฒเธงเธเนเนเธซเธฅเธ”เน€เธเธทเนเธญเธ”เธนเนเธเธฅเน</small>
+                    </div>
+                    <img src="${fileUrl}" class="img-fluid rounded mx-auto d-block" 
+                         style="max-height: 400px; cursor: pointer;" 
+                         alt="${fileName}" onclick="openImageModal('${fileUrl}', '${fileName}')">
+                    <div class="mt-3">
+                        <button class="btn btn-primary" onclick="downloadFile('${fileUrl}', '${fileName}')">
+                            <i class="fas fa-download me-2"></i>เธ”เธฒเธงเธเนเนเธซเธฅเธ”
+                        </button>
+                    </div>
+                </div>
+            `;
+                } else if (fileExtension === 'pdf' && !isMobile()) {
+                    // PDF embed for desktop
+                    fileContentHtml = `
+                <div class="text-center mb-3">
+                    <h6 class="text-muted mb-2">${fileName}</h6>
+                    <small class="text-muted">เธเธฃเธธเธ“เธฒเธ”เธฒเธงเธเนเนเธซเธฅเธ”เน€เธเธทเนเธญเธ”เธนเนเธเธฅเน</small>
+                </div>
+                <div class="embed-responsive" style="height: 450px;">
+                    <embed src="${fileUrl}" width="100%" height="100%" type="application/pdf">
+                </div>
+                <div class="text-center mt-3">
+                    <button class="btn btn-primary" onclick="downloadFile('${fileUrl}', '${fileName}')">
+                        <i class="fas fa-download me-2"></i>เธ”เธฒเธงเธเนเนเธซเธฅเธ”
+                    </button>
+                </div>
+            `;
+                } else {
+                    // Other files or mobile PDF
+                    fileContentHtml = `
+                <div class="text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas ${fileIcon.split(' ')[1]}" style="font-size: 48px; color: #3b82f6;"></i>
+                    </div>
+                    <h6 class="mb-2">${fileName}</h6>
+                    <p class="mb-3 text-muted">
+                        ${isMobile() && fileExtension === 'pdf' ? 
+                            'PDF เนเธกเนเธชเธฒเธกเธฒเธฃเธ–เนเธชเธ”เธเธ•เธฑเธงเธญเธขเนเธฒเธเธเธเธญเธธเธเธเธฃเธ“เนเธกเธทเธญเธ–เธทเธญเนเธ”เน' : 
+                            'เธเธฃเธธเธ“เธฒเธ”เธฒเธงเธเนเนเธซเธฅเธ”เน€เธเธทเนเธญเธ”เธนเนเธเธฅเน'}
+                    </p>
+                    <button class="btn btn-primary" onclick="downloadFile('${fileUrl}', '${fileName}')">
+                        <i class="fas fa-download me-2"></i>เธ”เธฒเธงเธเนเนเธซเธฅเธ”
+                    </button>
+                </div>
+            `;
+                }
+
+                contentHtml += `
+            <div class="tab-pane fade ${isActive ? 'show active' : ''}" 
+                 id="file-content-${index}" role="tabpanel" 
+                 aria-labelledby="file-tab-${index}">
+                ${fileContentHtml}
+            </div>
+        `;
+            });
+
+            tabsHtml += '</ul>';
+            contentHtml += '</div>';
+
+            $('.pdf-container').html(tabsHtml + contentHtml);
+        }
+
+
+
+        // Helper function to download individual files
+        function downloadFile(url, filename) {
+            if (isMobile()) {
+                window.open(url, '_blank');
+            } else {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            }
+        }
+
+        function truncateFileName(filename, maxLength) {
+            if (filename.length <= maxLength) {
+                return filename;
+            }
+
+            // Split filename and extension
+            const lastDotIndex = filename.lastIndexOf('.');
+            if (lastDotIndex === -1) {
+                // No extension
+                return filename.substring(0, maxLength - 3) + '...';
+            }
+
+            const name = filename.substring(0, lastDotIndex);
+            const extension = filename.substring(lastDotIndex);
+
+            // Calculate available space for name (reserve space for extension and ...)
+            const availableSpace = maxLength - extension.length - 3;
+
+            if (availableSpace <= 0) {
+                // If extension is too long, just truncate the whole filename
+                return filename.substring(0, maxLength - 3) + '...';
+            }
+
+            return name.substring(0, availableSpace) + '...' + extension;
+        }
+
+        // Updated downloadAllFiles function
+        function downloadAllFiles(fileList, baseUrl) {
+            fileList.forEach((file, index) => {
+                setTimeout(() => {
+                    const cleanFile = file.trim().replace(/^["'\[]/, '').replace(/["'\]]$/, '');
+                    const fileUrl = baseUrl + encodeURIComponent(cleanFile);
+                    const fileName = cleanFile.split('/').pop() || cleanFile;
+                    downloadFile(fileUrl, fileName);
+                }, index * 500); // Delay between downloads
+            });
+        }
+        // Function to open image in modal (optional enhancement)
+        function openImageModal(imageUrl, imageName) {
+            // Create image modal if not exists
+            if (!$('#imageModal').length) {
+                $('body').append(`
+            <div class="modal fade" id="imageModal" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="imageModalTitle"></h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body text-center p-0">
+                            <img id="imageModalImg" src="" class="img-fluid w-100">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">เธเธดเธ”</button>
+                            <a id="imageDownloadBtn" href="" download class="btn btn-primary">
+                                <i class="fas fa-download me-1"></i>เธ”เธฒเธงเธเนเนเธซเธฅเธ”
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+            }
+
+            // Set image and show modal
+            $('#imageModalTitle').text(imageName);
+            $('#imageModalImg').attr('src', imageUrl);
+            $('#imageDownloadBtn').attr('href', imageUrl).attr('download', imageName);
+            $('#imageModal').modal('show');
+        }
+
+        // Add view statistics function
+        function addViewStatistics(result_data) {
+            if (!result_data.view_statistics) return;
+
+            const viewStatsHtml = `
+        <div id="viewStatsSection" class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title d-flex align-items-center mb-3">
+                            <i class="fas fa-chart-line text-primary me-2"></i>
+                            เธชเธ–เธดเธ•เธดเธเธฒเธฃเน€เธเนเธฒเธเธก
+                        </h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-primary p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    <i class="far fa-eye text-white"></i>
+                                                </div>
+                                                <div>
+                                                    <h3 class="mb-0">${result_data.view_statistics.total_views}</h3>
+                                                    <small class="text-muted">เธเธณเธเธงเธเธเธฒเธฃเน€เธเนเธฒเธเธกเธ—เธฑเนเธเธซเธกเธ”</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-info p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    <i class="far fa-user text-white"></i>
+                                                </div>
+                                                <div>
+                                                    <h3 class="mb-0">${result_data.view_statistics.unique_viewers}</h3>
+                                                    <small class="text-muted">เธเธนเนเน€เธเนเธฒเธเธกเธ—เธตเนเนเธกเนเธเนเธณเธเธฑเธ</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewAllStats('${result_data.iddoc}')">
+                                <i class="fas fa-list me-1"></i> เนเธชเธ”เธเธเธฃเธฐเธงเธฑเธ•เธดเธ—เธฑเนเธเธซเธกเธ”
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+            $('.d-flex.justify-content-between.align-items-center.mb-3').before(viewStatsHtml);
+        }
+
+
+        function downloadFile(url, filename) {
+            if (isMobile()) {
+                // On mobile, it's better to open in a new tab
+                window.open(url, '_blank');
+            } else {
+                // On desktop, we can use the Fetch API
+                fetch(url)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = filename || 'document';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(blobUrl);
+                        a.remove();
+                    })
+                    .catch(error => {
+                        console.error('Download error:', error);
+                        alert('An error occurred while downloading the file. Please try again.');
+                        // Fallback to direct link
+                        window.open(url, '_blank');
+                    });
+            }
+        }
+
+
+        function viewAllStats(docId) {
+            $.ajax({
+                type: "POST",
+                url: "<?php echo base_url('index.php/edoc/getallviewers'); ?>",
+                data: {
+                    iddoc: docId
+                },
+                dataType: "json",
+                success: function(response) {
+                    if (response.status === 'success') {
+                        const allViewers = response.viewers;
+
+                        // Create the modal content
+                        let tableRows = '';
+
+                        if (allViewers && allViewers.length > 0) {
+                            allViewers.forEach((viewer, index) => {
+                                const viewerName = viewer.thai_name && viewer.thai_lastname ?
+                                    `${viewer.thai_name} ${viewer.thai_lastname}` :
+                                    'เธเธนเนเนเธเนเนเธกเนเธฃเธฐเธเธธเธเธทเนเธญ';
+
+                                const viewDate = new Date(viewer.viewed_at);
+                                const formattedDateTime = viewDate.toLocaleString('th-TH', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                });
+
+                                const userType = viewer.user_id ?
+                                    '<span class="badge bg-success">เธเธนเนเนเธเนเธฅเธเธ—เธฐเน€เธเธตเธขเธ</span>' :
+                                    '<span class="badge bg-secondary">เธเธนเนเนเธเนเนเธกเนเธฅเธเธ—เธฐเน€เธเธตเธขเธ</span>';
+
+                                tableRows += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${viewerName}</td>
+                            <td>${userType}</td>
+                            <td>${formattedDateTime}</td>
+                            <td>${viewer.ip_address}</td>
+                        </tr>`;
+                            });
+                        } else {
+                            tableRows = '<tr><td colspan="5" class="text-center">เนเธกเนเธเธเธเนเธญเธกเธนเธฅเธเธฒเธฃเน€เธเนเธฒเธเธก</td></tr>';
+                        }
+
+                        const modalContent = `
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>เธเธทเนเธญเธเธนเนเนเธเน</th>
+                                <th>เธเธฃเธฐเน€เธ เธ—</th>
+                                <th>เน€เธงเธฅเธฒเธ—เธตเนเน€เธเนเธฒเธเธก</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>`;
+
+                        // Show the modal
+                        $('#statsModalTitle').text('เธเธฃเธฐเธงเธฑเธ•เธดเธเธฒเธฃเน€เธเนเธฒเธเธกเธ—เธฑเนเธเธซเธกเธ”');
+                        $('#statsModalBody').html(modalContent);
+                        $('#statsModal').modal('show');
+                    } else {
+                        alert(response.message || 'Failed to load viewing history');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", xhr.responseJSON || error);
+                    alert("An error occurred while fetching viewing history. Please try again.");
+                }
+            });
+        }
+
+        // Helper function to format recent viewers list
+        function getRecentViewersHtml(recentViewers) {
+            if (!recentViewers || recentViewers.length === 0) {
+                return '<div class="list-group-item px-0 border-0">เธขเธฑเธเนเธกเนเธกเธตเธเธฒเธฃเน€เธเนเธฒเธเธก</div>';
+            }
+
+            let html = '';
+
+            // Create detailed list of viewers
+            recentViewers.forEach((viewer, index) => {
+                const viewerName = viewer.thai_name && viewer.thai_lastname ?
+                    `${viewer.thai_name} ${viewer.thai_lastname}` :
+                    'เธเธนเนเนเธเนเนเธกเนเธฃเธฐเธเธธเธเธทเนเธญ';
+
+                const viewDate = new Date(viewer.viewed_at);
+                const formattedDate = viewDate.toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                const formattedTime = viewDate.toLocaleTimeString('th-TH', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const ipAddress = viewer.ip_address || '';
+
+                html += `
+        <div class="list-group-item px-0 ${index < recentViewers.length - 1 ? 'border-bottom' : 'border-0'}">
+            <div class="d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="far fa-user-circle text-primary me-2"></i>
+                        <span class="fw-medium">${viewerName}</span>
+                    </div>
+                    ${viewer.user_id ? '<span class="badge bg-success ms-2">Registered</span>' : '<span class="badge bg-secondary ms-2">Guest</span>'}
+                </div>
+                <div class="d-flex justify-content-between mt-1">
+                    <small class="text-muted">
+                        <i class="far fa-clock me-1"></i> ${formattedDate} เน€เธงเธฅเธฒ ${formattedTime}
+                    </small>
+                    <small class="text-muted">
+                        <i class="fas fa-network-wired me-1"></i> ${ipAddress}
+                    </small>
+                </div>
+            </div>
+        </div>`;
+            });
+
+            return html;
+        }
+
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        function downloadPDF(url, filename) {
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = filename || 'document.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(blobUrl);
+                    a.remove();
+                });
+        }
+
+        // Update the link click handler
+        document.getElementById('msg_fileaddresslink').onclick = function(e) {
+            e.preventDefault();
+            const fileUrl = this.getAttribute('href');
+            const filename = fileUrl.split('/').pop();
+            downloadPDF(fileUrl, filename);
+        };
+
+        function parseFileAddress(fileaddress) {
+            if (!fileaddress || fileaddress.trim() === '') {
+                return [];
+            }
+
+            let fileList = [];
+
+            try {
+                // First, try to parse as JSON array
+                if (fileaddress.startsWith('[') && fileaddress.endsWith(']')) {
+                    fileList = JSON.parse(fileaddress);
+                } else {
+                    // Handle comma-separated values with potential quotes
+                    fileList = fileaddress.split(',').map(file => {
+                        return file.trim()
+                            .replace(/^["'\[]/, '') // Remove leading quotes or brackets
+                            .replace(/["'\]]$/, '') // Remove trailing quotes or brackets
+                            .trim();
+                    }).filter(file => file && file.length > 0);
+                }
+            } catch (e) {
+                // Fallback: split by comma and clean
+                fileList = fileaddress.split(',').map(file => {
+                    return file.trim()
+                        .replace(/^["'\[]/, '')
+                        .replace(/["'\]]$/, '')
+                        .trim();
+                }).filter(file => file && file.length > 0);
+            }
+
+            // เธฅเธเน€เธเธฃเธทเนเธญเธเธซเธกเธฒเธขเนเธฅเธฐเธญเธฑเธเธเธฃเธฐเธเธฅเธฒเธขเธ—เธฒเธเธ—เธตเนเธเธดเธ”เธเธฅเธฒเธ” (เน€เธเนเธ .pdf], [ เธซเธฃเธทเธญ quote) เธญเธญเธเธเธฒเธเนเธ•เนเธฅเธฐเธเธทเนเธญเนเธเธฅเน
+            return fileList.map(file => {
+                return file.replace(/^["'\s\[\]]+|["'\s\[\]]+$/g, '');
+            }).filter(file => file && file.length > 0);
+        }
+    </script>
+</body>
+
+</html>

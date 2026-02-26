@@ -53,14 +53,22 @@
                 </svg>
                 ดาวน์โหลด
             </button>
-            <button type="button" class="tab-button" data-tab="content-builder" onclick="window.location.href='<?= base_url('program-admin/content-builder/' . $program['id']) ?>'">
+            <button type="button" class="tab-button" data-tab="news" onclick="switchTab('news'); loadProgramNews();">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-                    <path d="M2 2l7.586 7.586"></path>
-                    <circle cx="11" cy="11" r="2"></circle>
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
                 </svg>
-                Content Builder
+                ข่าวหลักสูตร
+            </button>
+            <button type="button" class="tab-button" data-tab="activities" onclick="window.location.href='<?= base_url('program-admin/activities/' . $program['id']) ?>'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 20V10"></path>
+                    <path d="M12 20V4"></path>
+                    <path d="M6 20v-6"></path>
+                </svg>
+                กิจกรรม
             </button>
             <button type="button" class="tab-button" data-tab="personnel" onclick="switchTab('personnel')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -77,7 +85,7 @@
         <div class="tab-content-container">
             <!-- Basic Info Tab -->
             <div id="basic-tab" class="tab-content active">
-                <form action="<?= base_url('program-admin/update/' . $program['id']) ?>" method="post" style="padding: 1.5rem;">
+                <form id="basic-info-form" action="<?= base_url('program-admin/update/' . $program['id']) ?>" method="post" style="padding: 1.5rem;">
                     <?= csrf_field() ?>
 
                     <div class="form-section">
@@ -112,8 +120,8 @@
                             </div>
                         </div>
 
-                        <div class="form-actions" style="margin-top: 2rem;">
-                            <button type="submit" class="btn btn-primary">
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="basic-save-btn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
                                     <polyline points="17 21 17 13 7 13 7 21" />
@@ -122,6 +130,7 @@
                                 </svg>
                                 บันทึกข้อมูล
                             </button>
+                            <span id="basic-ajax-msg" class="ajax-msg" aria-live="polite"></span>
                         </div>
                     </div>
                 </form>
@@ -129,7 +138,7 @@
 
             <!-- Content Tab -->
             <div id="content-tab" class="tab-content">
-                <form action="<?= base_url('program-admin/update-page/' . $program['id']) ?>" method="post" style="padding: 1.5rem;">
+                <form id="content-page-form" action="<?= base_url('program-admin/update-page/' . $program['id']) ?>" method="post" style="padding: 1.5rem;">
                     <?= csrf_field() ?>
 
                     <div class="form-section">
@@ -150,33 +159,123 @@
                             <textarea id="graduate_profile" name="graduate_profile" class="form-control" rows="4"><?= esc($program_page['graduate_profile'] ?? '') ?></textarea>
                         </div>
 
-                        <div class="form-group">
-                            <label for="curriculum_structure" class="form-label">โครงสร้างหลักสูตร</label>
-                            <textarea id="curriculum_structure" name="curriculum_structure" class="form-control" rows="6"><?= esc($program_page['curriculum_structure'] ?? '') ?></textarea>
+                        <?php
+                        $elos_initial = [];
+                        if (!empty($program_page['elos_json'])) {
+                            $decoded = json_decode($program_page['elos_json'], true);
+                            if (is_array($decoded)) { $elos_initial = $decoded; }
+                        }
+                        ?>
+                        <div class="form-group elos-editor-wrap">
+                            <label class="form-label">ELO (ผลลัพธ์การเรียนรู้ที่คาดหวัง)</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">สำหรับหน้า AUN-QA program-detail — กรอกเฉพาะ หมวด และ รายละเอียด แล้วกดบันทึก ELO ได้ทันที</p>
+                            <div id="elos-list" class="elos-list" data-initial="<?= htmlspecialchars(json_encode($elos_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
+                            <div class="elos-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-outline btn-sm" id="elos-add-btn">+ เพิ่ม ELO</button>
+                                <button type="button" class="btn btn-primary btn-sm" id="elos-save-ajax-btn">บันทึก ELO</button>
+                                <span id="elos-ajax-msg" class="ajax-msg" aria-live="polite"></span>
+                            </div>
+                            <textarea id="elos_json" name="elos_json" class="form-control" style="display: none;" aria-hidden="true"><?= esc($program_page['elos_json'] ?? '') ?></textarea>
+                        </div>
+
+                        <?php
+                        $curriculum_initial = [];
+                        if (!empty($program_page['curriculum_json'])) {
+                            $decoded = json_decode($program_page['curriculum_json'], true);
+                            if (is_array($decoded)) { $curriculum_initial = $decoded; }
+                        }
+                        ?>
+                        <div class="form-group curriculum-editor-wrap">
+                            <label class="form-label">หลักสูตร/แผนการเรียน</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">สำหรับหน้า AUN-QA program-detail — เพิ่มปี/ภาคเรียน/วิชา แล้วกดบันทึกแผนการเรียน</p>
+                            <div id="curriculum-list" class="curriculum-list" data-initial="<?= htmlspecialchars(json_encode($curriculum_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
+                            <div class="curriculum-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-outline btn-sm" id="curriculum-add-year-btn">+ เพิ่มปี</button>
+                                <button type="button" class="btn btn-primary btn-sm" id="curriculum-save-ajax-btn">บันทึกแผนการเรียน</button>
+                                <span id="curriculum-ajax-msg" class="ajax-msg" aria-live="polite"></span>
+                            </div>
+                            <textarea id="curriculum_json" name="curriculum_json" class="form-control" style="display: none;" aria-hidden="true"><?= esc($program_page['curriculum_json'] ?? '') ?></textarea>
                         </div>
 
                         <div class="form-group">
+                            <label for="curriculum_structure" class="form-label">โครงสร้างหลักสูตร</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
+                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<hr>">เส้นคั่น</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
+                            </div>
+                            <textarea id="curriculum_structure" name="curriculum_structure" class="form-control" rows="8"><?= esc($program_page['curriculum_structure'] ?? '') ?></textarea>
+                            <div style="margin-top: 0.5rem;">
+                                <button type="button" class="btn btn-primary btn-sm" id="curriculum-structure-save-ajax-btn">บันทึกโครงสร้างหลักสูตร</button>
+                                <span id="curriculum-structure-ajax-msg" class="ajax-msg" aria-live="polite"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group content-with-toolbar">
                             <label for="study_plan" class="form-label">แผนการเรียน</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
+                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<hr>">เส้นคั่น</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
+                            </div>
                             <textarea id="study_plan" name="study_plan" class="form-control" rows="6"><?= esc($program_page['study_plan'] ?? '') ?></textarea>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group content-with-toolbar">
                             <label for="career_prospects" class="form-label">อาชีพที่สามารถประกอบได้</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
+                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<hr>">เส้นคั่น</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
+                            </div>
                             <textarea id="career_prospects" name="career_prospects" class="form-control" rows="4"><?= esc($program_page['career_prospects'] ?? '') ?></textarea>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group content-with-toolbar">
                             <label for="tuition_fees" class="form-label">ค่าเล่าเรียน/ค่าธรรมเนียม</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
+                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<hr>">เส้นคั่น</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
+                            </div>
                             <textarea id="tuition_fees" name="tuition_fees" class="form-control" rows="4"><?= esc($program_page['tuition_fees'] ?? '') ?></textarea>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group content-with-toolbar">
                             <label for="admission_info" class="form-label">การรับสมัคร</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
+                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<hr>">เส้นคั่น</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
+                            </div>
                             <textarea id="admission_info" name="admission_info" class="form-control" rows="4"><?= esc($program_page['admission_info'] ?? '') ?></textarea>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group content-with-toolbar">
                             <label for="contact_info" class="form-label">ข้อมูลติดต่อ</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
+                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<hr>">เส้นคั่น</button>
+                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
+                            </div>
                             <textarea id="contact_info" name="contact_info" class="form-control" rows="4"><?= esc($program_page['contact_info'] ?? '') ?></textarea>
                         </div>
 
@@ -204,8 +303,8 @@
                             <textarea id="meta_description" name="meta_description" class="form-control" rows="2" placeholder="คำอธิบายสำหรับแสดงในผลการค้นหา"><?= esc($program_page['meta_description'] ?? '') ?></textarea>
                         </div>
 
-                        <div class="form-actions" style="margin-top: 2rem;">
-                            <button type="submit" class="btn btn-primary">
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="content-save-btn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
                                     <polyline points="17 21 17 13 7 13 7 21" />
@@ -214,6 +313,7 @@
                                 </svg>
                                 บันทึกเนื้อหา
                             </button>
+                            <span id="content-ajax-msg" class="ajax-msg" aria-live="polite"></span>
                         </div>
                     </div>
                 </form>
@@ -284,7 +384,7 @@
                                         </div>
                                     </div>
                                     <div class="actions">
-                                        <a href="<?= base_url('serve/' . $download['file_path']) ?>" class="btn btn-outline btn-sm" target="_blank">
+                                        <a href="<?= (strpos($download['file_path'], 'uploads/') === 0 ? base_url('serve/' . $download['file_path']) : base_url('serve/uploads/' . $download['file_path'])) ?>" class="btn btn-outline btn-sm" target="_blank">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
                                                 <polyline points="7 10 12 15 17 10" />
@@ -313,6 +413,123 @@
                             <p>ยังไม่มีไฟล์ดาวน์โหลด</p>
                         </div>
                     <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- News Tab -->
+            <div id="news-tab" class="tab-content">
+                <div style="padding: 1.5rem;">
+                    <div class="section-header" style="margin-bottom: 1.5rem;">
+                        <h4>ข่าวหลักสูตร</h4>
+                        <p style="color: var(--color-gray-600);">ข่าวที่แท็กกับหลักสูตรนี้ (ค่าเริ่มต้นจะแท็กหลักสูตรปัจจุบัน)</p>
+                    </div>
+                    <div id="program-news-list" style="margin-bottom: 2rem;">
+                        <p style="color: var(--color-gray-500);">กำลังโหลด...</p>
+                    </div>
+                    <hr style="margin: 2rem 0;">
+
+                    <style>
+                    .news-form-container { font-family: 'Sarabun', 'Prompt', sans-serif; color: #334155; background: #f8fafc; padding: 2rem; border-radius: 12px; }
+                    .news-form-container .news-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+                    .news-form-container .news-card-title { font-size: 1.1rem; font-weight: 600; color: #0f172a; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 0.5rem; }
+                    .news-form-container .news-card-title .card-title-icon { flex-shrink: 0; color: #475569; }
+                    .news-form-container input[type="file"] { width: 100%; padding: 0.75rem 1rem; font-size: 0.9375rem; color: #334155; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+                    .news-form-container input[type="file"]:focus { border-color: #3b82f6; outline: 0; box-shadow: 0 0 0 3px rgba(59,130,246,0.25); }
+                    .news-form-container .form-group { margin-bottom: 1.25rem; }
+                    .news-form-container .form-group:last-child { margin-bottom: 0; }
+                    .news-form-container .form-label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: #475569; }
+                    .news-form-container .text-danger { color: #ef4444; }
+                    .news-form-container .form-control { width: 100%; padding: 0.75rem 1rem; font-size: 1rem; line-height: 1.5; color: #334155; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; transition: border-color 0.15s, box-shadow 0.15s; box-sizing: border-box; }
+                    .news-form-container .form-control:focus { border-color: #3b82f6; outline: 0; box-shadow: 0 0 0 3px rgba(59,130,246,0.25); }
+                    .news-form-container .form-row { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+                    .news-form-container .form-row .form-group { flex: 1; min-width: 250px; }
+                    .news-form-container .file-upload-info { font-size: 0.85rem; color: #64748b; margin-top: 0.25rem; }
+                    .news-form-container .checkbox-wrapper { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0; }
+                    .news-form-container .checkbox-wrapper input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+                    .news-form-container .btn-submit { background: #2563eb; color: #fff; font-weight: 600; padding: 0.75rem 2rem; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; font-size: 1rem; display: inline-flex; align-items: center; gap: 0.5rem; }
+                    .news-form-container .btn-submit:hover { background: #1d4ed8; }
+                    .news-form-container .btn-cancel { background: #f1f5f9; color: #334155; padding: 0.75rem 1.5rem; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+                    .news-form-container .btn-cancel:hover { background: #e2e8f0; }
+                    </style>
+
+                    <div class="news-form-container">
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="margin: 0 0 0.5rem 0; color: #0f172a;">สร้างข่าวหลักสูตรใหม่</h3>
+                            <p style="color: #64748b; margin: 0;">เพิ่มเนื้อหาและประกาศสำหรับนักศึกษาในหลักสูตร</p>
+                        </div>
+
+                        <form action="<?= base_url('program-admin/news/' . $program['id'] . '/create') ?>" method="post" enctype="multipart/form-data" id="program-news-form">
+                            <?= csrf_field() ?>
+                            <div class="news-card">
+                                <div class="news-card-title">
+                                    <svg class="card-title-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                    ข้อมูลทั่วไป
+                                </div>
+                                <div class="form-group">
+                                    <label for="news_title" class="form-label">หัวข้อข่าว <span class="text-danger">*</span></label>
+                                    <input type="text" id="news_title" name="title" class="form-control" required minlength="3" maxlength="500" placeholder="เช่น ประกาศรับสมัครนักศึกษา ปีการศึกษา 2567">
+                                </div>
+                                <div class="form-group">
+                                    <label for="news_content" class="form-label">เนื้อหาข่าว <span class="text-danger">*</span></label>
+                                    <textarea id="news_content" name="content" class="form-control" rows="8" required placeholder="ใส่รายละเอียดข่าวที่นี่..."></textarea>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="news_excerpt" class="form-label">สรุปเนื้อหาสั้นๆ (ไม่บังคับ)</label>
+                                    <textarea id="news_excerpt" name="excerpt" class="form-control" rows="2" placeholder="ข้อความสรุปที่จะแสดงในหน้าแรก (ถ้าไม่ใส่ ระบบจะดึงจากเนื้อหาบางส่วน)"></textarea>
+                                </div>
+                            </div>
+                            <div class="news-card">
+                                <div class="news-card-title">
+                                    <svg class="card-title-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-1.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h1.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v1.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-1.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                                    การแสดงผล
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label for="news_status" class="form-label">สถานะการเผยแพร่ <span class="text-danger">*</span></label>
+                                        <select id="news_status" name="status" class="form-control" required>
+                                            <option value="draft">ร่าง (ยังไม่แสดงผล)</option>
+                                            <option value="published" selected>เผยแพร่ทันที</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label class="form-label">ประเภทกิจกรรม</label>
+                                        <label class="checkbox-wrapper">
+                                            <input type="checkbox" name="display_as_event" value="1">
+                                            <span>แสดงข่าวนี้เป็น <strong>"กิจกรรมที่จะเกิดขึ้น"</strong> (Upcoming Event)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="news-card" style="margin-bottom: 2rem;">
+                                <div class="news-card-title">
+                                    <svg class="card-title-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+                                    สื่อและไฟล์แนบ
+                                </div>
+                                <div class="form-group">
+                                    <label for="news_featured_image" class="form-label">ภาพปกข่าว (Featured Image)</label>
+                                    <input type="file" id="news_featured_image" name="featured_image" accept="image/jpeg,image/png,image/gif,image/webp" class="form-control">
+                                    <div class="file-upload-info">รองรับไฟล์: JPG, PNG, WEBP (แนะนำขนาด 1200x630px)</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">รูปภาพประกอบเพิ่มเติม (เลือกได้หลายไฟล์)</label>
+                                    <input type="file" name="attachments_images[]" accept="image/jpeg,image/png,image/gif,image/webp" class="form-control" multiple>
+                                    <div class="file-upload-info">สร้างเป็นแกลลอรี่ภาพด้านล่างข่าว</div>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label">เอกสารแนบ (เลือกได้หลายไฟล์)</label>
+                                    <input type="file" name="attachments_docs[]" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" class="form-control" multiple>
+                                    <div class="file-upload-info">รองรับไฟล์: PDF, Word, Excel, PowerPoint</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <button type="button" class="btn-cancel" onclick="window.history.back()">ยกเลิก</button>
+                                <button type="submit" class="btn-submit" style="margin-left: 1rem;">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                                    บันทึกข่าว
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -400,15 +617,147 @@
     }
 
     function confirmDelete(url) {
-        if (confirm('คุณแน่ใจว่าต้องการลบไฟล์นี้?')) {
-            window.location.href = url;
+        swalConfirm({ title: 'คุณแน่ใจว่าต้องการลบไฟล์นี้?', confirmText: 'ลบ', cancelText: 'ยกเลิก' }).then(function(ok) {
+            if (ok) window.location.href = url;
+        });
+    }
+
+    function loadProgramNews() {
+        var listEl = document.getElementById('program-news-list');
+        if (!listEl) return;
+        var programId = <?= (int)($program['id'] ?? 0) ?>;
+        var baseUrl = '<?= base_url() ?>';
+        fetch(baseUrl + 'program-admin/news/' + programId)
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res.success || !res.data) { listEl.innerHTML = '<p style="color: var(--color-gray-500);">ไม่มีข่าว</p>'; return; }
+                var data = res.data;
+                if (data.length === 0) {
+                    listEl.innerHTML = '<p style="color: var(--color-gray-500);">ยังไม่มีข่าวที่แท็กกับหลักสูตรนี้</p>';
+                    return;
+                }
+                var html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+                data.forEach(function (n) {
+                    var thumb = n.thumb_url ? '<img src="' + n.thumb_url + '" alt="" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;">' : '<span style="width: 60px; height: 40px; background: var(--color-gray-200); border-radius: 4px; display: inline-block;"></span>';
+                    html += '<div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; border: 1px solid var(--color-gray-200); border-radius: 8px;">' + thumb + '<div style="flex: 1;"><a href="' + (n.url || (baseUrl + 'news/' + n.id)) + '" target="_blank" style="font-weight: 500;">' + (n.title || '') + '</a><div style="font-size: 0.875rem; color: var(--color-gray-600);">' + (n.created_at_formatted || '') + '</div></div><a href="' + baseUrl + 'admin/news/edit/' + n.id + '" class="btn btn-outline btn-sm" target="_blank">แก้ไข</a></div>';
+                });
+                html += '</div>';
+                listEl.innerHTML = html;
+            })
+            .catch(function () { listEl.innerHTML = '<p style="color: var(--color-gray-500);">โหลดข่าวไม่สำเร็จ</p>'; });
+    }
+
+    var newsContentEditor = null;
+    function initNewsCKEditor() {
+        var ta = document.getElementById('news_content');
+        if (!ta || newsContentEditor !== null) return;
+        if (typeof ClassicEditor === 'undefined') {
+            var s = document.createElement('script');
+            s.src = 'https://cdn.ckeditor.com/ckeditor5/43.0.0/classic/ckeditor.js';
+            s.onload = function() { startNewsCKEditor(); };
+            document.head.appendChild(s);
+        } else {
+            startNewsCKEditor();
+        }
+    }
+    function startNewsCKEditor() {
+        var ta = document.getElementById('news_content');
+        if (!ta || newsContentEditor !== null) return;
+        ClassicEditor.create(ta, {
+            language: 'th',
+            placeholder: 'ใส่รายละเอียดข่าวที่นี่...',
+            toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'blockQuote', 'insertTable', '|', 'undo', 'redo']
+        }).then(function(editor) {
+            newsContentEditor = editor;
+        }).catch(function(err) { console.warn('CKEditor init:', err); });
+    }
+    function ensureNewsEditorSync() {
+        if (newsContentEditor && typeof newsContentEditor.getData === 'function') {
+            var ta = document.getElementById('news_content');
+            if (ta) ta.value = newsContentEditor.getData();
         }
     }
 
-    // Initialize first tab
+    // Initialize first tab (or tab from query string)
     document.addEventListener('DOMContentLoaded', function() {
-        switchTab('basic');
+        var params = new URLSearchParams(window.location.search);
+        var tab = params.get('tab');
+        if (tab === 'news' && document.getElementById('news-tab')) {
+            switchTab('news');
+            loadProgramNews();
+            setTimeout(initNewsCKEditor, 100);
+        } else {
+            switchTab('basic');
+        }
+        document.getElementById('program-news-form') && document.getElementById('program-news-form').addEventListener('submit', function() {
+            ensureNewsEditorSync();
+        });
     });
+    var origSwitchTab = window.switchTab;
+    if (typeof origSwitchTab === 'function') {
+        window.switchTab = function(tabName) {
+            origSwitchTab(tabName);
+            if (tabName === 'news') { loadProgramNews(); setTimeout(initNewsCKEditor, 100); }
+        };
+    }
+
+    // --- Ajax save: Basic Info ---
+    (function() {
+        var form = document.getElementById('basic-info-form');
+        if (!form) return;
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var btn = document.getElementById('basic-save-btn');
+            var msg = document.getElementById('basic-ajax-msg');
+            if (!btn || !msg) return;
+            btn.disabled = true;
+            msg.textContent = 'กำลังบันทึก...';
+            msg.style.color = 'var(--color-gray-600)';
+            var fd = new FormData(form);
+            fetch(form.action, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    btn.disabled = false;
+                    msg.textContent = res.message || (res.success ? 'บันทึกเรียบร้อย' : 'เกิดข้อผิดพลาด');
+                    msg.style.color = res.success ? 'var(--secondary)' : 'var(--color-error)';
+                })
+                .catch(function() {
+                    btn.disabled = false;
+                    msg.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
+                    msg.style.color = 'var(--color-error)';
+                });
+        });
+    })();
+
+    // --- Ajax save: Content Page ---
+    (function() {
+        var form = document.getElementById('content-page-form');
+        if (!form) return;
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var btn = document.getElementById('content-save-btn');
+            var msg = document.getElementById('content-ajax-msg');
+            if (!btn || !msg) return;
+            btn.disabled = true;
+            msg.textContent = 'กำลังบันทึก...';
+            msg.style.color = 'var(--color-gray-600)';
+            if (typeof window.buildElosJson === 'function') window.buildElosJson();
+            if (typeof window.buildCurriculumJson === 'function') window.buildCurriculumJson();
+            var fd = new FormData(form);
+            fetch(form.action, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    btn.disabled = false;
+                    msg.textContent = res.message || (res.success ? 'บันทึกเรียบร้อย' : 'เกิดข้อผิดพลาด');
+                    msg.style.color = res.success ? 'var(--secondary)' : 'var(--color-error)';
+                })
+                .catch(function() {
+                    btn.disabled = false;
+                    msg.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
+                    msg.style.color = 'var(--color-error)';
+                });
+        });
+    })();
 </script>
 
 <style>
@@ -438,8 +787,8 @@
     }
 
     .tab-button.active {
-        color: var(--color-primary-600);
-        border-bottom-color: var(--color-primary-600);
+        color: var(--secondary);
+        border-bottom-color: var(--secondary);
         background: white;
     }
 
@@ -452,7 +801,7 @@
     }
 
     .tab-content.active {
-        display: block;
+        display: block !important;
     }
 
     .form-section {
@@ -500,22 +849,23 @@
 
     .form-control:focus {
         outline: none;
-        border-color: var(--color-primary-500);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
     }
 
     .form-actions {
         display: flex;
         gap: 0.5rem;
+        margin-top: 2rem;
         padding-top: 1rem;
         border-top: 1px solid var(--color-gray-200);
     }
 
     .btn {
         padding: 0.75rem 1.5rem;
-        border: none;
+        border: 2px solid transparent;
         border-radius: 6px;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
@@ -525,12 +875,14 @@
     }
 
     .btn-primary {
-        background: var(--color-primary-600);
-        color: white;
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+        color: var(--color-dark);
+        border-color: var(--color-primary-dark);
     }
 
     .btn-primary:hover {
-        background: var(--color-primary-700);
+        filter: brightness(1.05);
+        box-shadow: 0 4px 12px rgba(234, 179, 8, 0.35);
     }
 
     .btn-secondary {
@@ -576,6 +928,297 @@
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         }
     }
+
+    .elos-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .elo-row {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        padding: 1rem;
+        border: 1px solid var(--color-gray-200);
+        border-radius: 8px;
+        background: var(--color-gray-50);
+    }
+
+    .elo-row__fields {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .elo-row__actions {
+        flex-shrink: 0;
+    }
+
+    .form-row--2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @media (max-width: 640px) {
+        .elo-row { flex-direction: column; }
+        .form-row--2 { grid-template-columns: 1fr; }
+    }
+
+    .curriculum-list { display: flex; flex-direction: column; gap: 1.5rem; }
+    .curriculum-year-card { border: 1px solid var(--color-gray-200); border-radius: 8px; padding: 1rem; background: var(--color-gray-50); }
+    .curriculum-year-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    .curriculum-year-body { margin-top: 1rem; margin-bottom: 0.5rem; }
+    .curriculum-semester { margin-bottom: 1rem; padding: 0.75rem; background: white; border-radius: 6px; border: 1px solid var(--color-gray-200); }
+    .curriculum-semester__head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .curriculum-semester-name { flex: 1; min-width: 10rem; }
+    .curriculum-course-table { width: 100%; border-collapse: collapse; margin-bottom: 0.5rem; font-size: 0.875rem; }
+    .curriculum-course-table th, .curriculum-course-table td { padding: 0.35rem 0.5rem; text-align: left; }
+    .curriculum-course-table th { font-weight: 600; color: var(--color-gray-700); }
+    .structure-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .ajax-msg { font-size: 0.875rem; font-weight: 500; margin-left: 0.5rem; transition: color 0.2s; }
 </style>
+
+<script>
+(function () {
+    function formatJson(taId) {
+        var ta = document.getElementById(taId);
+        if (!ta) return;
+        var raw = (ta.value || '').trim();
+        if (!raw) return;
+        try {
+            var obj = JSON.parse(raw);
+            ta.value = JSON.stringify(obj, null, 2);
+        } catch (e) {
+            swalAlert('JSON ไม่ถูกต้อง: ' + e.message, 'error');
+        }
+    }
+    // --- ELO UI: โหลดจาก data-initial, บันทึกได้ผ่าน Ajax ---
+    var elosList = document.getElementById('elos-list');
+    var elosJsonField = document.getElementById('elos_json');
+    var contentForm = document.querySelector('#content-tab form');
+    if (!elosList || !elosJsonField || !contentForm) return;
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+    }
+
+    function addElosRow(data) {
+        data = data || {};
+        var category = escapeHtml(data.category || '');
+        var detail = escapeHtml(data.detail || '');
+        var row = document.createElement('div');
+        row.className = 'elo-row';
+        row.innerHTML =
+            '<div class="elo-row__fields">' +
+            '<div class="form-group"><label class="form-label">หมวด (category)</label><input type="text" class="form-control elo-field elo-category" value="' + category + '" placeholder="เช่น ความรู้ (Knowledge)"></div>' +
+            '<div class="form-group"><label class="form-label">รายละเอียด (detail)</label><textarea class="form-control elo-field elo-detail" rows="3" placeholder="อธิบายผลลัพธ์การเรียนรู้ที่คาดหวัง">' + detail + '</textarea></div>' +
+            '</div>' +
+            '<div class="elo-row__actions"><button type="button" class="btn btn-danger btn-sm elo-remove-btn">ลบ</button></div>';
+        elosList.appendChild(row);
+        row.querySelector('.elo-remove-btn').addEventListener('click', function () { row.remove(); });
+    }
+
+    function buildElosJson() {
+        var rows = elosList.querySelectorAll('.elo-row');
+        var arr = [];
+        rows.forEach(function (row) {
+            var category = (row.querySelector('.elo-category') && row.querySelector('.elo-category').value) || '';
+            var detail = (row.querySelector('.elo-detail') && row.querySelector('.elo-detail').value) || '';
+            var summary = detail.length > 120 ? detail.substring(0, 120) + '…' : detail;
+            arr.push({ category: category, title: category || ('ELO ' + (arr.length + 1)), summary: summary, detail: detail });
+        });
+        elosJsonField.value = JSON.stringify(arr);
+        return elosJsonField.value;
+    }
+
+    window.buildElosJson = buildElosJson;
+    contentForm.addEventListener('submit', function () { buildElosJson(); });
+
+    var programId = <?= (int)($program['id'] ?? 0) ?>;
+    var updatePageJsonUrl = '<?= base_url('program-admin/update-page-json/' . (int)($program['id'] ?? 0)) ?>';
+    var csrfInput = contentForm.querySelector('input[name="csrf_test_name"]') || contentForm.querySelector('input[type="hidden"][name*="csrf"]');
+    function showElosMsg(msg, isError) {
+        var el = document.getElementById('elos-ajax-msg');
+        if (el) { el.textContent = msg; el.style.color = isError ? 'var(--color-error)' : 'var(--secondary)'; }
+    }
+    document.getElementById('elos-save-ajax-btn') && document.getElementById('elos-save-ajax-btn').addEventListener('click', function () {
+        var btn = this;
+        var json = buildElosJson();
+        btn.disabled = true;
+        showElosMsg('กำลังบันทึก...');
+        var fd = new FormData();
+        fd.append('elos_json', json);
+        if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
+        fetch(updatePageJsonUrl, { method: 'POST', body: fd })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                btn.disabled = false;
+                showElosMsg(res.success ? 'บันทึก ELO เรียบร้อย' : (res.message || 'เกิดข้อผิดพลาด'), !res.success);
+            })
+            .catch(function () { btn.disabled = false; showElosMsg('เกิดข้อผิดพลาดในการเชื่อมต่อ', true); });
+    });
+
+    var initialData = [];
+    try {
+        var raw = elosList.getAttribute('data-initial') || '[]';
+        initialData = JSON.parse(raw);
+        if (!Array.isArray(initialData)) initialData = [];
+    } catch (e) {
+        initialData = [];
+    }
+    if (initialData.length === 0) {
+        addElosRow({});
+    } else {
+        initialData.forEach(function (item) {
+            addElosRow(item);
+        });
+    }
+
+    document.getElementById('elos-add-btn') && document.getElementById('elos-add-btn').addEventListener('click', function () {
+        addElosRow({});
+    });
+
+    // --- หลักสูตร/แผนการเรียน: repeater ปี > ภาคเรียน > วิชา + บันทึก Ajax ---
+    var curriculumList = document.getElementById('curriculum-list');
+    var curriculumJsonField = document.getElementById('curriculum_json');
+    if (curriculumList && curriculumJsonField) {
+        function esc(s) { if (s == null) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function addCourseRow(semBody, c) {
+            c = c || {};
+            var tr = document.createElement('tr');
+            tr.className = 'curriculum-course-row';
+            tr.innerHTML = '<td><input type="text" class="form-control form-control-sm curriculum-course-code" value="' + esc(c.code || '') + '" placeholder="รหัส"></td>' +
+                '<td><input type="text" class="form-control form-control-sm curriculum-course-name" value="' + esc(c.name || '') + '" placeholder="ชื่อวิชา"></td>' +
+                '<td><input type="number" class="form-control form-control-sm curriculum-course-credits" value="' + esc(c.credits ?? '') + '" placeholder="0" min="0" style="width:4rem"></td>' +
+                '<td><button type="button" class="btn btn-danger btn-sm curriculum-remove-course">ลบ</button></td>';
+            semBody.appendChild(tr);
+            tr.querySelector('.curriculum-remove-course').addEventListener('click', function () { tr.remove(); });
+        }
+        function addSemester(yearCard, sem) {
+            sem = sem || {};
+            var semDiv = document.createElement('div');
+            semDiv.className = 'curriculum-semester';
+            semDiv.innerHTML = '<div class="curriculum-semester__head"><label class="form-label">ภาคเรียน</label><input type="text" class="form-control form-control-sm curriculum-semester-name" value="' + esc(sem.name || '') + '" placeholder="ภาคเรียนที่ 1"><button type="button" class="btn btn-danger btn-sm curriculum-remove-semester">ลบภาคเรียน</button></div>' +
+                '<table class="curriculum-course-table"><thead><tr><th>รหัส</th><th>ชื่อวิชา</th><th>หน่วยกิต</th><th></th></tr></thead><tbody class="curriculum-semester-body"></tbody></table>' +
+                '<button type="button" class="btn btn-outline btn-sm curriculum-add-course">+ เพิ่มวิชา</button>';
+            var tbody = semDiv.querySelector('.curriculum-semester-body');
+            (sem.courses || []).forEach(function (c) { addCourseRow(tbody, c); });
+            if (!(sem.courses && sem.courses.length)) addCourseRow(tbody, {});
+            yearCard.querySelector('.curriculum-year-body').appendChild(semDiv);
+            semDiv.querySelector('.curriculum-add-course').addEventListener('click', function () { addCourseRow(tbody, {}); });
+            semDiv.querySelector('.curriculum-remove-semester').addEventListener('click', function () { semDiv.remove(); });
+        }
+        function addYearCard(data) {
+            data = data || {};
+            var year = data.year || (curriculumList.querySelectorAll('.curriculum-year-card').length + 1);
+            var title = esc(data.title || '');
+            var credits = esc(data.total_credits ?? '');
+            var card = document.createElement('div');
+            card.className = 'curriculum-year-card';
+            card.innerHTML = '<div class="curriculum-year-head"><h5 class="curriculum-year-title">ปีที่ ' + year + '</h5><button type="button" class="btn btn-danger btn-sm curriculum-remove-year">ลบปี</button></div>' +
+                '<div class="form-row form-row--2"><div class="form-group"><label class="form-label">ชื่อช่วงปี</label><input type="text" class="form-control curriculum-year-title-input" value="' + title + '" placeholder="ชั้นปีที่ 1"></div>' +
+                '<div class="form-group"><label class="form-label">หน่วยกิตรวม</label><input type="number" class="form-control curriculum-year-credits" value="' + credits + '" placeholder="18" min="0" style="width:6rem"></div></div>' +
+                '<div class="curriculum-year-body"></div>' +
+                '<button type="button" class="btn btn-outline btn-sm curriculum-add-semester">+ เพิ่มภาคเรียน</button>';
+            curriculumList.appendChild(card);
+            (data.semesters || []).forEach(function (s) { addSemester(card, s); });
+            if (!(data.semesters && data.semesters.length)) addSemester(card, {});
+            card.querySelector('.curriculum-add-semester').addEventListener('click', function () { addSemester(card, {}); });
+            card.querySelector('.curriculum-remove-year').addEventListener('click', function () { card.remove(); });
+        }
+        function buildCurriculumJson() {
+            var years = [];
+            curriculumList.querySelectorAll('.curriculum-year-card').forEach(function (card, i) {
+                var y = i + 1;
+                var title = (card.querySelector('.curriculum-year-title-input') && card.querySelector('.curriculum-year-title-input').value) || ('ชั้นปีที่ ' + y);
+                var total = parseInt((card.querySelector('.curriculum-year-credits') && card.querySelector('.curriculum-year-credits').value) || 0, 10) || 0;
+                var semesters = [];
+                card.querySelectorAll('.curriculum-semester').forEach(function (semEl) {
+                    var name = (semEl.querySelector('.curriculum-semester-name') && semEl.querySelector('.curriculum-semester-name').value) || '';
+                    var courses = [];
+                    semEl.querySelectorAll('.curriculum-course-row').forEach(function (row) {
+                        var code = (row.querySelector('.curriculum-course-code') && row.querySelector('.curriculum-course-code').value) || '';
+                        var nameC = (row.querySelector('.curriculum-course-name') && row.querySelector('.curriculum-course-name').value) || '';
+                        var cred = parseInt((row.querySelector('.curriculum-course-credits') && row.querySelector('.curriculum-course-credits').value) || 0, 10) || 0;
+                        courses.push({ code: code, name: nameC, credits: cred });
+                    });
+                    semesters.push({ name: name, courses: courses });
+                });
+                years.push({ year: y, title: title, total_credits: total, semesters: semesters });
+            });
+            curriculumJsonField.value = JSON.stringify(years);
+            return curriculumJsonField.value;
+        }
+        var curriculumInitial = [];
+        try {
+            var rawC = curriculumList.getAttribute('data-initial') || '[]';
+            curriculumInitial = JSON.parse(rawC);
+            if (!Array.isArray(curriculumInitial)) curriculumInitial = [];
+        } catch (e) { curriculumInitial = []; }
+        if (curriculumInitial.length === 0) addYearCard({});
+        else curriculumInitial.forEach(function (y) { addYearCard(y); });
+        document.getElementById('curriculum-add-year-btn') && document.getElementById('curriculum-add-year-btn').addEventListener('click', function () { addYearCard({}); });
+        function showCurriculumMsg(msg, err) {
+            var el = document.getElementById('curriculum-ajax-msg');
+            if (el) { el.textContent = msg; el.style.color = err ? 'var(--color-error)' : 'var(--secondary)'; }
+        }
+        document.getElementById('curriculum-save-ajax-btn') && document.getElementById('curriculum-save-ajax-btn').addEventListener('click', function () {
+            var btn = this;
+            var json = buildCurriculumJson();
+            btn.disabled = true;
+            showCurriculumMsg('กำลังบันทึก...');
+            var fd = new FormData();
+            fd.append('curriculum_json', json);
+            if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
+            fetch(updatePageJsonUrl, { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (res) { btn.disabled = false; showCurriculumMsg(res.success ? 'บันทึกแผนการเรียนเรียบร้อย' : (res.message || 'เกิดข้อผิดพลาด'), !res.success); })
+                .catch(function () { btn.disabled = false; showCurriculumMsg('เกิดข้อผิดพลาดในการเชื่อมต่อ', true); });
+        });
+        window.buildCurriculumJson = buildCurriculumJson;
+        contentForm.addEventListener('submit', function () { buildCurriculumJson(); });
+    }
+
+    // --- Toolbar แทรกข้อความ: ใช้กับโครงสร้างหลักสูตร และแผนการเรียน/อาชีพ/ค่าเล่าเรียน/การรับสมัคร/ข้อมูลติดต่อ ---
+    function applyStructureTool(btn, targetTextarea) {
+        if (!targetTextarea) return;
+        var insert = btn.getAttribute('data-insert') || '';
+        var start = targetTextarea.selectionStart, end = targetTextarea.selectionEnd, val = targetTextarea.value;
+        targetTextarea.value = val.substring(0, start) + insert + val.substring(end);
+        targetTextarea.selectionStart = targetTextarea.selectionEnd = start + insert.length;
+        targetTextarea.focus();
+    }
+    document.querySelectorAll('.structure-tool').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var group = this.closest('.form-group') || this.closest('.content-with-toolbar');
+            var ta = group ? group.querySelector('textarea') : null;
+            if (ta) applyStructureTool(this, ta);
+        });
+    });
+    var structureTa = document.getElementById('curriculum_structure');
+    if (structureTa) {
+        document.getElementById('curriculum-structure-save-ajax-btn') && document.getElementById('curriculum-structure-save-ajax-btn').addEventListener('click', function () {
+            var btn = this;
+            var msgEl = document.getElementById('curriculum-structure-ajax-msg');
+            btn.disabled = true;
+            if (msgEl) msgEl.textContent = 'กำลังบันทึก...';
+            var fd = new FormData();
+            fd.append('curriculum_structure', structureTa.value);
+            if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
+            fetch(updatePageJsonUrl, { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    btn.disabled = false;
+                    if (msgEl) { msgEl.textContent = res.success ? 'บันทึกโครงสร้างหลักสูตรเรียบร้อย' : (res.message || 'เกิดข้อผิดพลาด'); msgEl.style.color = res.success ? 'var(--secondary)' : 'var(--color-error)'; }
+                })
+                .catch(function () { btn.disabled = false; if (msgEl) msgEl.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ'; });
+        });
+    }
+})();
+</script>
 
 <?= $this->endSection() ?>

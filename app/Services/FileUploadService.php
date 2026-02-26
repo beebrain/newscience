@@ -6,7 +6,7 @@ use CodeIgniter\HTTP\Files\UploadedFile;
 use Config\Certificate as CertificateConfig;
 
 /**
- * File Upload Service - จัดการการอัพโหลดไฟล์สำหรับระบบ Certificate
+ * File Upload Service - จัดการการอัปโหลดไฟล์สำหรับระบบ Certificate
  * 
  * แยก folder ตาม feature:
  * - cert_system/templates/     : ไฟล์ PDF template
@@ -87,7 +87,7 @@ class FileUploadService
 
         // 1. ตรวจสอบว่าไฟล์ upload สำเร็จ
         if (!$file->isValid()) {
-            $this->errors[] = 'ไฟล์อัพโหลดไม่สำเร็จ: ' . $this->getUploadErrorMessage($file->getError());
+            $this->errors[] = 'ไฟล์อัปโหลดไม่สำเร็จ: ' . $this->getUploadErrorMessage($file->getError());
             return false;
         }
 
@@ -396,7 +396,7 @@ class FileUploadService
         return match ($code) {
             UPLOAD_ERR_INI_SIZE   => 'ไฟล์ใหญ่เกินกำหนดใน php.ini',
             UPLOAD_ERR_FORM_SIZE  => 'ไฟล์ใหญ่เกินกำหนดใน form',
-            UPLOAD_ERR_PARTIAL    => 'อัพโหลดไม่สมบูรณ์',
+            UPLOAD_ERR_PARTIAL    => 'อัปโหลดไม่สมบูรณ์',
             UPLOAD_ERR_NO_FILE    => 'ไม่มีไฟล์',
             UPLOAD_ERR_NO_TMP_DIR => 'ไม่พบโฟลเดอร์ temp',
             UPLOAD_ERR_CANT_WRITE => 'เขียนไฟล์ไม่ได้',

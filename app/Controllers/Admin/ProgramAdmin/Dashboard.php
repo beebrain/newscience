@@ -8,6 +8,9 @@ use App\Models\ProgramPageModel;
 use App\Models\ProgramDownloadModel;
 use App\Models\PersonnelModel;
 use App\Models\PersonnelProgramModel;
+use App\Models\NewsModel;
+use App\Models\NewsTagModel;
+use App\Models\NewsImageModel;
 
 class Dashboard extends BaseController
 {
@@ -16,6 +19,9 @@ class Dashboard extends BaseController
     protected $programDownloadModel;
     protected $personnelModel;
     protected $personnelProgramModel;
+    protected $newsModel;
+    protected $newsTagModel;
+    protected $newsImageModel;
 
     public function __construct()
     {
@@ -24,6 +30,9 @@ class Dashboard extends BaseController
         $this->programDownloadModel = new ProgramDownloadModel();
         $this->personnelModel = new PersonnelModel();
         $this->personnelProgramModel = new PersonnelProgramModel();
+        $this->newsModel = new NewsModel();
+        $this->newsTagModel = new NewsTagModel();
+        $this->newsImageModel = new NewsImageModel();
     }
 
     /**
@@ -143,7 +152,7 @@ class Dashboard extends BaseController
         }
 
         $data = [
-            'page_title' => 'แก้ไข้อมเนื้อหา - ' . ($program['name_th'] ?? $program['name_en']),
+            'page_title' => 'แก้ไขเนื้อหา - ' . ($program['name_th'] ?? $program['name_en']),
             'program' => $program,
             'program_page' => $programPage,
             'downloads' => $downloads,
@@ -161,13 +170,17 @@ class Dashboard extends BaseController
      */
     public function update($programId)
     {
+        $isAjax = $this->request->isAJAX();
+        $programId = (int) $programId;
+
         $program = $this->programModel->find($programId);
         if (!$program) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบหลักสูตร'])->setStatusCode(404);
             return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
         }
 
-        // Check authorization
         if (!$this->canManageProgram($programId)) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'message' => 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้'])->setStatusCode(403);
             return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
         }
 
@@ -179,12 +192,10 @@ class Dashboard extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->back()
-                ->withInput()
-                ->with('errors', $this->validator->getErrors());
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'message' => implode(', ', $this->validator->getErrors())]);
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        // Update program
         $updateData = [
             'name_th' => $this->request->getPost('name_th'),
             'name_en' => $this->request->getPost('name_en'),
@@ -195,13 +206,11 @@ class Dashboard extends BaseController
         try {
             $this->programModel->update($programId, $updateData);
 
-            // Update slug to simple format
-            $this->programModel->update($programId, ['slug' => 'program-' . $programId]);
-
-            return redirect()->to(base_url('program-admin/'))->with('success', 'อัปเดตอข้อมูลหลักสูตรเรียบร้อยแล้ว');
+            if ($isAjax) return $this->response->setJSON(['success' => true, 'message' => 'อัปเดตข้อมูลหลักสูตรเรียบร้อยแล้ว']);
+            return redirect()->to(base_url('program-admin/'))->with('success', 'อัปเดตข้อมูลหลักสูตรเรียบร้อยแล้ว');
         } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()])->setStatusCode(500);
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
         }
     }
 
@@ -210,13 +219,17 @@ class Dashboard extends BaseController
      */
     public function updatePage($programId)
     {
+        $isAjax = $this->request->isAJAX();
+        $programId = (int) $programId;
+
         $program = $this->programModel->find($programId);
         if (!$program) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบหลักสูตร'])->setStatusCode(404);
             return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
         }
 
-        // Check authorization
         if (!$this->canManageProgram($programId)) {
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'message' => 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้'])->setStatusCode(403);
             return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
         }
 
@@ -224,6 +237,8 @@ class Dashboard extends BaseController
             'philosophy' => 'max_length[5000]',
             'objectives' => 'max_length[5000]',
             'graduate_profile' => 'max_length[5000]',
+            'elos_json' => 'max_length[65000]',
+            'curriculum_json' => 'max_length[65000]',
             'curriculum_structure' => 'max_length[10000]',
             'study_plan' => 'max_length[10000]',
             'career_prospects' => 'max_length[5000]',
@@ -236,15 +251,16 @@ class Dashboard extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->back()
-                ->withInput()
-                ->with('errors', $this->validator->getErrors());
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'message' => implode(', ', $this->validator->getErrors())]);
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
         $updateData = [
             'philosophy' => $this->request->getPost('philosophy'),
             'objectives' => $this->request->getPost('objectives'),
             'graduate_profile' => $this->request->getPost('graduate_profile'),
+            'elos_json' => $this->request->getPost('elos_json'),
+            'curriculum_json' => $this->request->getPost('curriculum_json'),
             'curriculum_structure' => $this->request->getPost('curriculum_structure'),
             'study_plan' => $this->request->getPost('study_plan'),
             'career_prospects' => $this->request->getPost('career_prospects'),
@@ -259,10 +275,59 @@ class Dashboard extends BaseController
 
         try {
             $this->programPageModel->updateOrCreate(['program_id' => $programId], $updateData);
-            return redirect()->to(base_url('program-admin/edit/' . $programId))->with('success', 'อัปเดตอเนื้อหาเรียบร้อยแล้ว');
+            if ($isAjax) return $this->response->setJSON(['success' => true, 'message' => 'อัปเดตเนื้อหาเรียบร้อยแล้ว']);
+            return redirect()->to(base_url('program-admin/edit/' . $programId))->with('success', 'อัปเดตเนื้อหาเรียบร้อยแล้ว');
         } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            if ($isAjax) return $this->response->setJSON(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()])->setStatusCode(500);
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * บันทึกเฉพาะ elos_json และ/หรือ curriculum_json ผ่าน Ajax (สำหรับ AUN-QA)
+     * POST program-admin/update-page-json/{id}
+     * Body: elos_json (optional), curriculum_json (optional), curriculum_structure (optional)
+     */
+    public function updatePageJson($programId)
+    {
+        $programId = (int) $programId;
+        $program = $this->programModel->find($programId);
+        if (!$program) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบหลักสูตร'])->setStatusCode(404);
+        }
+        if (!$this->canManageProgram($programId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการหลักสูตรนี้'])->setStatusCode(403);
+        }
+
+        $updateData = [];
+        if ($this->request->getPost('elos_json') !== null) {
+            $raw = $this->request->getPost('elos_json');
+            if (is_string($raw) && strlen($raw) <= 65000) {
+                $updateData['elos_json'] = $raw;
+            }
+        }
+        if ($this->request->getPost('curriculum_json') !== null) {
+            $raw = $this->request->getPost('curriculum_json');
+            if (is_string($raw) && strlen($raw) <= 65000) {
+                $updateData['curriculum_json'] = $raw;
+            }
+        }
+        if ($this->request->getPost('curriculum_structure') !== null) {
+            $raw = $this->request->getPost('curriculum_structure');
+            if (is_string($raw) && strlen($raw) <= 10000) {
+                $updateData['curriculum_structure'] = $raw;
+            }
+        }
+
+        if (empty($updateData)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีข้อมูลที่จะบันทึก']);
+        }
+
+        try {
+            $this->programPageModel->updateOrCreate(['program_id' => $programId], $updateData);
+            return $this->response->setJSON(['success' => true, 'message' => 'บันทึกเรียบร้อยแล้ว']);
+        } catch (\Exception $e) {
+            return $this->response->setJSON(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()])->setStatusCode(500);
         }
     }
 
@@ -340,7 +405,7 @@ class Dashboard extends BaseController
         }
 
         if (!$isChair) {
-            return redirect()->back()->with('error', 'คุณณมีสิทธิ์เพียงการดาวน์โหลด');
+            return redirect()->back()->with('error', 'คุณมีสิทธิ์เพียงการดาวน์โหลด');
         }
 
         $validationRules = [
@@ -356,34 +421,31 @@ class Dashboard extends BaseController
         $file = $this->request->getFile('file');
 
         if (!$file->isValid() || $file->hasMoved()) {
-            return redirect()->back()->with('error', 'ไฟล์ไม่ถูกต้องหรือเสามารไม่สนับ');
+            return redirect()->back()->with('error', 'ไฟล์ไม่ถูกต้องหรือส่งมาไม่สมบูรณ์');
         }
 
         // Validate file type
         $allowedTypes = ['pdf', 'doc', 'docx', 'xlsx', 'pptx', 'ppt', 'zip', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'mp3', 'txt'];
-        $fileType = strtolower(pathinfo($file->getClientExtension()));
+        $fileType = strtolower($file->getExtension() ?: pathinfo($file->getClientName(), PATHINFO_EXTENSION));
 
         if (!in_array($fileType, $allowedTypes)) {
-            return redirect()->back()->withInput()->with('error', 'ประเภทที่ไม่อนุญการอนุญา');
+            return redirect()->back()->withInput()->with('error', 'ประเภทที่ไม่อนุญาต');
         }
 
-        // Upload file
-        $uploadPath = WRITEPATH . 'uploads/programs/' . $programId;
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0755, true);
-        }
-
-        $fileName = $file->getRandomName();
-        $filePath = $uploadPath . '/' . $fileName;
+        helper('program_upload');
+        $uploadPath = program_upload_path($programId, 'downloads');
+        $prefix = 'p' . $programId . '_';
+        $fileName = $prefix . program_unique_filename($file, 'doc');
+        $relativePath = program_upload_relative_path($programId, 'downloads', $fileName);
 
         try {
-            $file->move($filePath);
+            $file->move($uploadPath, $fileName);
 
-            // Save to database
+            // Save to database (store path relative to uploads/ for serve URL)
             $downloadData = [
                 'program_id' => $programId,
                 'title' => $this->request->getPost('title'),
-                'file_path' => 'uploads/programs/' . $programId . '/' . $fileName,
+                'file_path' => $relativePath,
                 'file_type' => $fileType,
                 'file_size' => $file->getSize(),
                 'sort_order' => 0,
@@ -404,7 +466,7 @@ class Dashboard extends BaseController
     {
         $download = $this->programDownloadModel->find($downloadId);
         if (!$download) {
-            return redirect()->back()->with('error', 'ไม่พบข้อมไฟล');
+            return redirect()->back()->with('error', 'ไม่พบข้อมูลไฟล์');
         }
 
         $programId = $download['program_id'];
@@ -414,16 +476,16 @@ class Dashboard extends BaseController
             return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการดาวน์โหลด');
         }
 
-        // Delete file from filesystem
-        $filePath = WRITEPATH . $download['file_path'];
-        if (file_exists($filePath)) {
-            unlink($filePath);
+        helper('program_upload');
+        $fullPath = upload_resolve_full_path($download['file_path']);
+        if (file_exists($fullPath)) {
+            @unlink($fullPath);
         }
 
         // Delete from database
         $this->programDownloadModel->deleteDownload($downloadId);
 
-        return redirect()->back()->with('success', 'ลบไฟลเรียบร้อยแล้ว');
+        return redirect()->back()->with('success', 'ลบไฟล์เรียบร้อยแล้ว');
     }
 
     /**
@@ -460,10 +522,145 @@ class Dashboard extends BaseController
         $isPublished = $programPage['is_published'] ?? 0;
         $newStatus = $isPublished ? 0 : 1;
 
-        $this->programPageModel->update($programId, ['is_published' => $newStatus]);
+        $this->programPageModel->update($programPage['id'], ['is_published' => $newStatus]);
 
-        $status = $newStatus ? 'เผลิดแล้ว' : 'ซ่งการแสดง';
+        $status = $newStatus ? 'เผยแพร่' : 'ซ่อนการแสดง';
 
         return redirect()->back()->with('success', $status . 'หน้าเว็บไซต์หลักสูตรแล้ว');
+    }
+
+    /**
+     * Get news list for program (by tag program_{id}). JSON for tab.
+     */
+    public function programNews($programId)
+    {
+        $programId = (int) $programId;
+        $program = $this->programModel->find($programId);
+        if (!$program) {
+            return $this->response->setJSON(['success' => false, 'data' => []])->setStatusCode(404);
+        }
+        if (!$this->canManageProgram($programId)) {
+            return $this->response->setJSON(['success' => false, 'data' => []])->setStatusCode(403);
+        }
+        $tagSlug = 'program_' . $programId;
+        $db = \Config\Database::connect();
+        if (!$db->tableExists('news_tags') || !$db->tableExists('news_news_tags')) {
+            return $this->response->setJSON(['success' => true, 'data' => []]);
+        }
+        helper('program_upload');
+        $list = $this->newsModel->getPublishedByTag($tagSlug, 50, 0);
+        foreach ($list as &$n) {
+            $n['created_at_formatted'] = $n['created_at'] ? date('d/m/Y', strtotime($n['created_at'])) : '';
+            $n['url'] = base_url('news/' . $n['id']);
+            if (!empty($n['featured_image'])) {
+                $n['thumb_url'] = featured_image_serve_url($n['featured_image'], true);
+            } else {
+                $n['thumb_url'] = null;
+            }
+        }
+        return $this->response->setJSON(['success' => true, 'data' => $list]);
+    }
+
+    /**
+     * Create news for program (tag program_{id} set by default). Uploads to writable/uploads/news/ ใช้รหัสหลักสูตรในชื่อไฟล์ (p1_xxx) แก้ที่ admin/news/edit ก็เห็นรูป
+     */
+    public function createProgramNews($programId)
+    {
+        $programId = (int) $programId;
+        $program = $this->programModel->find($programId);
+        if (!$program) {
+            return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
+        }
+        if (!$this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
+        }
+
+        $rules = [
+            'title' => 'required|min_length[3]|max_length[500]',
+            'content' => 'required',
+            'status' => 'required|in_list[draft,published]',
+        ];
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        helper('program_upload');
+        $title = $this->request->getPost('title');
+        $slug = $this->newsModel->generateSlug($title);
+        $newsData = [
+            'title' => $title,
+            'slug' => $slug,
+            'content' => $this->request->getPost('content'),
+            'excerpt' => $this->request->getPost('excerpt'),
+            'status' => $this->request->getPost('status'),
+            'display_as_event' => (int) $this->request->getPost('display_as_event'),
+            'author_id' => session()->get('admin_id'),
+            'published_at' => $this->request->getPost('status') === 'published' ? date('Y-m-d H:i:s') : null,
+        ];
+        $newsId = $this->newsModel->insert($newsData);
+        if (!$newsId) {
+            return redirect()->back()->withInput()->with('error', 'บันทึกข่าวไม่สำเร็จ');
+        }
+
+        $programTag = $this->newsTagModel->findOrCreateForProgram($programId, $program['name_th'] ?? $program['name_en']);
+        if ($programTag) {
+            $this->newsTagModel->setTagsForNews((int) $newsId, [(int) $programTag['id']]);
+        }
+
+        $uploadPath = program_upload_path($programId, 'news');
+        $prefix = 'p' . $programId . '_';
+        $featuredImage = $this->request->getFile('featured_image');
+        if ($featuredImage && $featuredImage->isValid() && !$featuredImage->hasMoved()) {
+            $ext = strtolower($featuredImage->getExtension()) ?: 'jpg';
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+                $filename = featured_image_filename($featuredImage, $programId, null);
+                $relativePath = program_upload_relative_path($programId, 'news', $filename);
+                try {
+                    $featuredImage->move($uploadPath, $filename);
+                    $fullPath = rtrim($uploadPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename;
+                    program_create_image_thumbnail($fullPath);
+                    $this->newsModel->update($newsId, ['featured_image' => $relativePath]);
+                } catch (\Throwable $e) {
+                    log_message('error', 'Program news featured image: ' . $e->getMessage());
+                }
+            }
+        }
+
+        $files = $this->request->getFiles();
+        $sortOrder = 0;
+        foreach (['attachments_images' => 'image', 'attachments_docs' => 'document'] as $inputName => $type) {
+            if (empty($files[$inputName])) {
+                continue;
+            }
+            $list = is_array($files[$inputName]) ? $files[$inputName] : [$files[$inputName]];
+            foreach ($list as $file) {
+                if (!$file->isValid() || $file->hasMoved()) {
+                    continue;
+                }
+                $ext = strtolower($file->getExtension());
+                $allowedImg = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                $allowedDoc = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+                $ok = ($type === 'image' && in_array($ext, $allowedImg, true)) || ($type === 'document' && in_array($ext, $allowedDoc, true));
+                if (!$ok) {
+                    continue;
+                }
+                $filename = $prefix . program_unique_filename($file, $type === 'document' ? 'doc' : 'img');
+                $relativePath = program_upload_relative_path($programId, 'news', $filename);
+                try {
+                    $file->move($uploadPath, $filename);
+                    if ($type === 'image') {
+                        $fullPath = rtrim($uploadPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename;
+                        program_create_image_thumbnail($fullPath);
+                    }
+                    $this->newsImageModel->addAttachment($newsId, $relativePath, $type, $type === 'document' ? $file->getClientName() : null, $sortOrder);
+                    $sortOrder++;
+                } catch (\Throwable $e) {
+                    log_message('error', 'Program news attachment: ' . $e->getMessage());
+                }
+            }
+        }
+
+        return redirect()->to(base_url('program-admin/edit/' . $programId) . '?tab=news')
+            ->with('success', 'เพิ่มข่าวหลักสูตรเรียบร้อยแล้ว');
     }
 }

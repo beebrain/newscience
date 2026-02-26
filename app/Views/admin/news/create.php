@@ -273,7 +273,7 @@
                 var quillContent = quill.root.innerHTML.trim();
                 if (!quillContent || quillContent === '<p><br></p>' || quillContent === '<p></p>') {
                     e.preventDefault();
-                    alert('กรุณากรอกเนื้อหาข่าว');
+                    swalAlert('กรุณากรอกเนื้อหาข่าว', 'warning');
                     editorEl.focus();
                     return false;
                 }

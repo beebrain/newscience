@@ -1,7 +1,7 @@
 <?= $this->extend($layout) ?>
 
 <?= $this->section('content') ?>
-
+<?php helper('program_upload'); ?>
 <!-- Skip link for accessibility (Rule: skip link for main content) -->
 <a href="#news-detail-main" class="news-detail-skip">ข้ามไปเนื้อหา</a>
 
@@ -25,12 +25,7 @@
             <!-- Main Content -->
             <article id="news-detail-main" class="news-detail" tabindex="-1">
                 <?php if (!empty($news['featured_image'])): ?>
-                    <?php
-                    $fi = $news['featured_image'];
-                    $imgUrl = (strpos($fi, 'http') === 0 || strpos($fi, 'newsimages/') === 0)
-                        ? base_url($fi)
-                        : base_url('serve/uploads/news/' . esc(basename($fi)));
-                    ?>
+                    <?php $imgUrl = featured_image_serve_url($news['featured_image'], false); ?>
                     <div class="news-detail__image">
                         <img src="<?= $imgUrl ?>" alt="<?= esc($news['title']) ?>" width="1200" height="630" loading="lazy" decoding="async">
                     </div>
@@ -125,7 +120,7 @@
                             <div class="news-detail__gallery" id="newsGallery" role="list">
                                 <h3 class="news-detail__subsection-title">รูปภาพประกอบ</h3>
                                 <?php foreach ($news_images as $idx => $img): ?>
-                                    <?php $imgUrl = base_url('serve/uploads/news/' . esc(basename($img['image_path']))); $imgCaption = $img['caption'] ?? $news['title']; ?>
+                                    <?php $imgUrl = featured_image_serve_url($img['image_path'], false); $imgCaption = $img['caption'] ?? $news['title']; ?>
                                     <figure class="news-detail__gallery-item">
                                         <button type="button" class="news-gallery-thumb" data-index="<?= $idx ?>" data-src="<?= $imgUrl ?>" data-alt="<?= esc($imgCaption) ?>" aria-label="ดูรูปภาพขนาดใหญ่">
                                             <img src="<?= $imgUrl ?>" alt="<?= esc($imgCaption) ?>" width="400" height="300" loading="lazy" decoding="async">
@@ -205,7 +200,7 @@
                                         <a href="<?= base_url('news/' . esc($related['id'])) ?>" class="related-news__item">
                                             <span class="related-news__image">
                                                 <?php if (!empty($related['featured_image'])): ?>
-                                                    <img src="<?= base_url('serve/thumb/news/' . esc(basename($related['featured_image']))) ?>" alt="" width="80" height="60" loading="lazy" decoding="async">
+                                                    <img src="<?= featured_image_serve_url($related['featured_image'], true) ?>" alt="" width="80" height="60" loading="lazy" decoding="async">
                                                 <?php else: ?>
                                                     <span class="related-news__placeholder" aria-hidden="true"></span>
                                                 <?php endif; ?>
@@ -916,9 +911,9 @@ function thaiDateFull($date)
     var href = el.getAttribute('data-href');
     el.addEventListener('click', function (e) {
         e.preventDefault();
-        if (window.confirm('จะพาท่านไปยัง Facebook')) {
-            window.open(href, '_blank', 'noopener,noreferrer');
-        }
+        (typeof swalConfirm !== 'undefined' ? swalConfirm('จะพาท่านไปยัง Facebook') : Promise.resolve(confirm('จะพาท่านไปยัง Facebook'))).then(function (ok) {
+            if (ok) window.open(href, '_blank', 'noopener,noreferrer');
+        });
     });
 })();
 </script>

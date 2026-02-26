@@ -18,13 +18,14 @@
 <section class="section">
     <div class="container container--narrow">
         <?php if (!empty($news_items)): ?>
+            <?php helper('program_upload'); ?>
             <div class="news-grid">
                 <?php foreach ($news_items as $index => $news): ?>
                     <article class="news-card animate-on-scroll <?= $index < 2 ? 'news-card--featured' : '' ?>">
                         <a href="<?= base_url('news/' . esc($news['id'])) ?>" class="news-card__wrap" aria-label="อ่านข่าว: <?= esc($news['title']) ?>">
                             <div class="news-card__image">
                                 <?php if (!empty($news['featured_image'])): ?>
-                                    <img src="<?= base_url('serve/thumb/news/' . esc(basename($news['featured_image']))) ?>" alt="<?= esc($news['title']) ?>" loading="lazy">
+                                    <img src="<?= featured_image_serve_url($news['featured_image'], true) ?>" alt="<?= esc($news['title']) ?>" loading="lazy">
                                 <?php else: ?>
                                     <div class="news-card__placeholder">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">

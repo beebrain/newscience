@@ -1,3 +1,6 @@
+<?php
+
+use App\Libraries\AccessControl; ?>
 <!DOCTYPE html>
 <html lang="th">
 
@@ -44,10 +47,11 @@
                     สลับไปหน้า Dashboard
                 </a>
                 <?php
-                $edocSso = config(\Config\EdocSso::class);
-                if ($edocSso->enabled && $edocSso->baseUrl !== ''):
+                $adminId = session()->get('admin_id');
+                $hasEdocAccess = AccessControl::hasAccess($adminId, 'edoc');
+                if ($hasEdocAccess):
                 ?>
-                    <a href="<?= esc(rtrim($edocSso->baseUrl, '/')) ?>" target="_blank" rel="noopener noreferrer" aria-label="เข้าสู่ Edoc (เปิดในแท็บใหม่)">
+                    <a href="<?= base_url('edoc') ?>" class="<?= (strpos(uri_string(), 'edoc') === 0) ? 'active' : '' ?>">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                             <polyline points="14 2 14 8 20 8" />
@@ -55,7 +59,18 @@
                             <line x1="16" y1="17" x2="8" y2="17" />
                             <polyline points="10 9 9 9 8 9" />
                         </svg>
-                        เข้าสู่ Edoc
+                        E-Document (ดูเอกสาร)
+                    </a>
+                <?php endif; ?>
+                <?php
+                $hasEdocAdmin = AccessControl::hasAccess($adminId, 'edoc_admin');
+                if ($hasEdocAdmin):
+                ?>
+                    <a href="<?= base_url('edoc/admin') ?>" class="<?= (uri_string() == 'edoc/admin' || strpos(uri_string(), 'edoc/admin') === 0) ? 'active' : '' ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        E-Document (จัดการ)
                     </a>
                 <?php endif; ?>
                 <?php
@@ -259,19 +274,40 @@
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function toggleSidebar() {
             const width = window.innerWidth;
             if (width < 1024) {
-                // Mobile: Toggle Active (Show)
                 document.querySelector('.sidebar').classList.toggle('active');
                 document.querySelector('.sidebar-overlay').classList.toggle('active');
             } else {
-                // Desktop: Toggle Closed (Hide)
                 document.querySelector('.sidebar').classList.toggle('desktop-closed');
                 document.querySelector('.main-content').classList.toggle('desktop-closed');
             }
         }
+        window.swalAlert = function(msg, type) {
+            type = type || 'info';
+            var icon = { success: 'success', error: 'error', warning: 'warning', info: 'info' }[type] || 'info';
+            return (typeof Swal !== 'undefined') ? Swal.fire({ icon: icon, title: type === 'error' ? 'เกิดข้อผิดพลาด' : (type === 'success' ? 'สำเร็จ' : ''), text: msg }) : Promise.resolve(alert(msg));
+        };
+        window.swalConfirm = function(opts) {
+            var title = (typeof opts === 'string') ? opts : (opts.title || 'ยืนยัน');
+            var text = (typeof opts === 'string') ? '' : (opts.text || '');
+            var confirmText = (typeof opts === 'object' && opts.confirmText) ? opts.confirmText : 'ตกลง';
+            var cancelText = (typeof opts === 'object' && opts.cancelText) ? opts.cancelText : 'ยกเลิก';
+            if (typeof Swal === 'undefined') return Promise.resolve(window.confirm(title + (text ? '\n' + text : '')));
+            return Swal.fire({
+                title: title,
+                text: text,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: confirmText,
+                cancelButtonText: cancelText,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d'
+            }).then(function(r) { return r.isConfirmed; });
+        };
     </script>
     <?= $this->renderSection('scripts') ?>
 </body>

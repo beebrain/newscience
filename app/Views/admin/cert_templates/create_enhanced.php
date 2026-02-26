@@ -23,7 +23,7 @@
 
         <!-- Step 1: Upload PDF -->
         <div id="upload-section" class="form-section">
-            <h3>ขั้นตอนที่ 1: อัพโหลด PDF Template</h3>
+            <h3>ขั้นตอนที่ 1: อัปโหลด PDF Template</h3>
             <div class="form-group">
                 <label>เลือกไฟล์ PDF <span class="text-danger">*</span></label>
                 <input type="file" id="pdf-upload" class="form-control" accept="application/pdf">
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
     btnAnalyze.addEventListener('click', async function() {
         const file = pdfUpload.files[0];
         if (!file) {
-            alert('กรุณาเลือกไฟล์ PDF');
+            swalAlert('กรุณาเลือกไฟล์ PDF', 'warning');
             return;
         }
 
@@ -235,11 +235,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 previewSection.style.display = 'block';
                 templateForm.style.display = 'block';
             } else {
-                alert(data.error || 'เกิดข้อผิดพลาด');
+                swalAlert(data.error || 'เกิดข้อผิดพลาด', 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('เกิดข้อผิดพลาดในการอัพโหลด');
+            swalAlert('เกิดข้อผิดพลาดในการอัปโหลด', 'error');
         } finally {
             btnAnalyze.querySelector('.btn-text').style.display = 'inline';
             btnAnalyze.querySelector('.btn-loading').style.display = 'none';
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const size = parseFloat(document.getElementById('new-field-size').value) || 14;
 
         if (!name) {
-            alert('กรุณาระบุชื่อฟิลด์');
+            swalAlert('กรุณาระบุชื่อฟิลด์', 'warning');
             return;
         }
 

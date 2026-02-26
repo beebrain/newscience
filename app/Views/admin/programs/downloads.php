@@ -134,9 +134,9 @@
 
 <script>
 function confirmDelete(url) {
-    if (confirm('คุณแน่ใจว่าต้องการลบไฟล์นี้? การลบไฟล์จะไม่สามารถกู้คืนได้')) {
-        window.location.href = url;
-    }
+    swalConfirm({ title: 'คุณแน่ใจว่าต้องการลบไฟล์นี้?', text: 'การลบไฟล์จะไม่สามารถกู้คืนได้', confirmText: 'ลบ', cancelText: 'ยกเลิก' }).then(function(ok) {
+        if (ok) window.location.href = url;
+    });
 }
 </script>
 

@@ -1,7 +1,7 @@
 <?= $this->extend('admin/layouts/admin_layout') ?>
 
 <?= $this->section('content') ?>
-
+<?php helper('program_upload'); ?>
 <div class="card card--edit-news">
     <div class="card-header card-header--with-context">
         <div>
@@ -108,7 +108,7 @@
                     <div class="featured-image-box <?= !empty($news['featured_image']) ? 'has-image' : '' ?>" id="featuredImageBox" data-has-original="<?= !empty($news['featured_image']) ? '1' : '0' ?>" role="button" tabindex="0" aria-label="เลือกภาพปก">
                         <div id="featuredImagePlaceholder">
                             <?php if (!empty($news['featured_image'])): ?>
-                                <?php $imgUrl = base_url('serve/uploads/news/' . basename($news['featured_image'])); ?>
+                                <?php $imgUrl = featured_image_serve_url($news['featured_image'], false); ?>
                                 <div class="featured-image-preview">
                                     <img src="<?= $imgUrl ?>" alt="" width="280" height="157">
                                 </div>
@@ -209,7 +209,7 @@
                         <div class="attachment-list" id="existingImages">
                             <?php foreach ($images as $img): ?>
                                 <div class="attachment-preview-item attachment-preview-item--image" data-id="<?= $img['id'] ?>">
-                                    <img src="<?= base_url('serve/uploads/news/' . basename($img['image_path'])) ?>" alt="">
+                                    <img src="<?= featured_image_serve_url($img['image_path'], false) ?>" alt="">
                                     <button type="button" class="remove-btn delete-existing" data-id="<?= $img['id'] ?>" title="ลบรูปภาพนี้" aria-label="ลบรูปภาพนี้">×</button>
                                 </div>
                             <?php endforeach; ?>
@@ -465,21 +465,21 @@
 
         document.querySelectorAll('.delete-existing').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                if (!confirm('ต้องการลบไฟล์นี้หรือไม่?')) return;
                 var imageId = this.dataset.id;
                 var item = this.closest('.image-preview-item') || this.closest('.attachment-preview-item');
-                fetch('<?= base_url('utility/upload/delete/') ?>' + imageId, {
-                        method: 'POST',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(r => r.json())
-                    .then(function(data) {
-                        if (data.success && item) item.remove();
-                        else alert(data.message || 'ลบไฟล์ไม่สำเร็จ');
-                    })
-                    .catch(() => alert('เกิดข้อผิดพลาด'));
+                swalConfirm({ title: 'ต้องการลบไฟล์นี้หรือไม่?', confirmText: 'ลบ', cancelText: 'ยกเลิก' }).then(function(ok) {
+                    if (!ok) return;
+                    fetch('<?= base_url('utility/upload/delete/') ?>' + imageId, {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        })
+                        .then(r => r.json())
+                        .then(function(data) {
+                            if (data.success && item) item.remove();
+                            else swalAlert(data.message || 'ลบไฟล์ไม่สำเร็จ', 'error');
+                        })
+                        .catch(function() { swalAlert('เกิดข้อผิดพลาด', 'error'); });
+                });
             });
         });
     });

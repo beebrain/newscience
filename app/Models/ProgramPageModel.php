@@ -15,6 +15,8 @@ class ProgramPageModel extends Model
         'philosophy',
         'objectives',
         'graduate_profile',
+        'elos_json',
+        'curriculum_json',
         'curriculum_structure',
         'study_plan',
         'career_prospects',

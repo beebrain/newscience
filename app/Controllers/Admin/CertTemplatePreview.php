@@ -22,7 +22,7 @@ class CertTemplatePreview extends BaseController
     }
 
     /**
-     * AJAX: อัพโหลด PDF ชั่วคราวและดึงข้อมูล
+     * AJAX: อัปโหลด PDF ชั่วคราวและดึงข้อมูล
      */
     public function uploadPreview()
     {
@@ -37,7 +37,7 @@ class CertTemplatePreview extends BaseController
 
         if (!$tempName) {
             return $this->response->setJSON([
-                'error' => $this->uploadService->getFirstError() ?: 'อัพโหลดไฟล์ไม่สำเร็จ'
+                'error' => $this->uploadService->getFirstError() ?: 'อัปโหลดไฟล์ไม่สำเร็จ'
             ]);
         }
 
@@ -60,7 +60,7 @@ class CertTemplatePreview extends BaseController
     }
 
     /**
-     * AJAX: ดึงข้อความจาก PDF ที่อัพโหลดแล้ว
+     * AJAX: ดึงข้อความจาก PDF ที่อัปโหลดแล้ว
      */
     public function extractText()
     {

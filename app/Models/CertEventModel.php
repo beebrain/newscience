@@ -69,7 +69,7 @@ class CertEventModel extends Model
     }
 
     /**
-     * อัพเดทสถานะกิจกรรม
+     * อัปเดตสถานะกิจกรรม
      */
     public function updateStatus(int $id, string $status): bool
     {

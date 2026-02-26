@@ -70,31 +70,8 @@ class Api extends BaseController
         if (empty($imagePath) || trim($imagePath) === '') {
             return '';
         }
-        $imagePath = trim($imagePath);
-
-        if (strpos($imagePath, 'http') === 0) {
-            return $imagePath;
-        }
-
-        if (strpos($imagePath, 'newsimages/') === 0) {
-            return base_url($imagePath);
-        }
-
-        $basename = basename($imagePath);
-        if (strpos($imagePath, 'uploads/') === 0) {
-            return $useThumb
-                ? base_url('serve/thumb/news/' . $basename)
-                : base_url('serve/uploads/news/' . $basename);
-        }
-
-        $newsImagesPath = FCPATH . 'newsimages/' . $imagePath;
-        if (file_exists($newsImagesPath)) {
-            return base_url('newsimages/' . $imagePath);
-        }
-
-        return $useThumb
-            ? base_url('serve/thumb/news/' . $basename)
-            : base_url('serve/uploads/news/' . basename($imagePath));
+        helper('program_upload');
+        return featured_image_serve_url(trim($imagePath), $useThumb);
     }
 
     /**
@@ -196,9 +173,10 @@ class Api extends BaseController
             'formatted_date' => date('F j, Y', strtotime($news['published_at'] ?? $news['created_at'])),
             'view_count' => $news['view_count'],
             'images' => array_map(function ($img) {
+                helper('program_upload');
                 return [
                     'id' => $img['id'],
-                    'url' => base_url('serve/uploads/news/' . basename($img['image_path'])),
+                    'url' => featured_image_serve_url($img['image_path'], false),
                     'caption' => $img['caption']
                 ];
             }, $images)
@@ -597,6 +575,185 @@ class Api extends BaseController
         return $this->response->setJSON([
             'success' => true,
             'data' => $programs
+        ]);
+    }
+
+    /**
+     * Get single program detail for AUN-QA program-detail page (JSON for AJAX)
+     * GET /api/program/{id}
+     * Returns: program + page (philosophy, vision, elos, curriculum) + staff + documents + news
+     */
+    public function programDetail($id)
+    {
+        $id = (int) $id;
+        if ($id <= 0) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Invalid program ID',
+            ]);
+        }
+
+        $programModel  = new \App\Models\ProgramModel();
+        $programPageModel = new \App\Models\ProgramPageModel();
+        $programDownloadModel = new \App\Models\ProgramDownloadModel();
+        $personnelModel = new \App\Models\PersonnelModel();
+        $personnelProgramModel = new \App\Models\PersonnelProgramModel();
+        $newsModel = new \App\Models\NewsModel();
+
+        $program = $programModel->find($id);
+        if (! $program || ($program['status'] ?? '') !== 'active') {
+            return $this->response->setStatusCode(404)->setJSON([
+                'success' => false,
+                'message' => 'Program not found',
+            ]);
+        }
+
+        $page = $programPageModel->findByProgramId($id) ?? [];
+
+        // Level label in Thai
+        $levelLabels = [
+            'bachelor'  => 'ปริญญาตรี',
+            'master'    => 'ปริญญาโท',
+            'doctorate' => 'ปริญญาเอก',
+        ];
+        $level = $program['level'] ?? 'bachelor';
+        $levelLabel = $levelLabels[$level] ?? $level;
+
+        // Hero image: prefer page hero_image, then program image
+        $heroImage = trim($page['hero_image'] ?? '');
+        if ($heroImage === '') {
+            $heroImage = trim($program['image'] ?? '');
+        }
+        $heroImageUrl = '';
+        if ($heroImage !== '') {
+            $heroImageUrl = strpos($heroImage, 'http') === 0
+                ? $heroImage
+                : base_url('serve/uploads/programs/' . basename(str_replace('\\', '/', $heroImage)));
+        }
+
+        // ELOs and curriculum from JSON columns
+        $elos = [];
+        $elosRaw = $page['elos_json'] ?? '';
+        if ($elosRaw !== '') {
+            $decoded = json_decode($elosRaw, true);
+            if (is_array($decoded)) {
+                $elos = $decoded;
+            }
+        }
+
+        $curriculum = [];
+        $curriculumRaw = $page['curriculum_json'] ?? '';
+        if ($curriculumRaw !== '') {
+            $decoded = json_decode($curriculumRaw, true);
+            if (is_array($decoded)) {
+                $curriculum = $decoded;
+            }
+        }
+
+        // Staff (same logic as ProgramController::buildPersonnelList)
+        $staff = [];
+        $ppRows = $personnelProgramModel->getByProgramId($id);
+        if (! empty($ppRows)) {
+            $personnelIds = array_map(fn($r) => (int) $r['personnel_id'], $ppRows);
+            $roleMap = [];
+            foreach ($ppRows as $row) {
+                $roleMap[(int) $row['personnel_id']] = $row['role_in_curriculum'] ?? '';
+            }
+            $rows = $personnelModel->getActiveByIdsWithUser($personnelIds);
+            foreach ($rows as $p) {
+                $pid = (int) ($p['id'] ?? 0);
+                $img = trim($p['image'] ?? '');
+                $imageUrl = $img !== '' ? base_url('serve/thumb/staff/' . basename(str_replace('\\', '/', $img))) : '';
+                if ($img !== '' && strpos($img, 'http') === 0) {
+                    $imageUrl = $img;
+                }
+                $staff[] = [
+                    'name'     => trim($p['name'] ?? ''),
+                    'position' => trim($p['position'] ?? ''),
+                    'role'     => $roleMap[$pid] ?? '',
+                    'image'    => $imageUrl,
+                ];
+            }
+            usort($staff, function ($a, $b) {
+                $aChair = mb_strpos($a['role'], 'ประธาน') !== false ? 0 : 1;
+                $bChair = mb_strpos($b['role'], 'ประธาน') !== false ? 0 : 1;
+                return $aChair - $bChair;
+            });
+        }
+
+        // Documents from program_downloads
+        $documents = [];
+        $downloads = $programDownloadModel->getByProgramId($id);
+        foreach ($downloads as $d) {
+            $documents[] = [
+                'title'     => $d['title'] ?? '',
+                'type'      => strtoupper($d['file_type'] ?? 'PDF'),
+                'size'      => $programDownloadModel->getFormattedSize((int) ($d['file_size'] ?? 0)),
+                'is_public' => true,
+                'url'       => base_url('serve/' . $d['file_path']),
+            ];
+        }
+
+        // News by tag program_{id}
+        $news = [];
+        try {
+            $db = \Config\Database::connect();
+            if ($db->tableExists('news_tags') && $db->tableExists('news_news_tags')) {
+                $newsRows = $newsModel->getPublishedByTag('program_' . $id, 6, 0);
+                foreach ($newsRows as $n) {
+                    $img = $this->formatFeaturedImageThumb($n['featured_image'] ?? '');
+                    $news[] = [
+                        'id'         => (int) ($n['id'] ?? 0),
+                        'title'      => $n['title'] ?? '',
+                        'title_th'   => $n['title'] ?? '',
+                        'excerpt'    => $n['excerpt'] ?? mb_substr(strip_tags($n['content'] ?? ''), 0, 150) . '...',
+                        'image_url'  => $img,
+                        'thumbnail'  => $img,
+                        'date'       => isset($n['published_at']) ? date('d/m/Y', strtotime($n['published_at'])) : '',
+                        'created_at' => $n['published_at'] ?? $n['created_at'] ?? '',
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            log_message('debug', 'Api::programDetail news: ' . $e->getMessage());
+        }
+
+        // Careers: not stored in DB yet; return empty array (section hidden when empty)
+        $careers = [];
+
+        $data = [
+            'slug'                 => (string) $id,
+            'id'                   => $id,
+            'name_th'              => $program['name_th'] ?? '',
+            'name_en'              => $program['name_en'] ?? '',
+            'degree_th'            => $program['degree_th'] ?? '',
+            'degree_en'            => $program['degree_en'] ?? '',
+            'level'                => $levelLabel,
+            'credits'              => (int) ($program['credits'] ?? 0) ?: null,
+            'duration'             => (int) ($program['duration'] ?? 0) ?: null,
+            'hero_image'           => $heroImageUrl,
+            'theme_color'          => $page['theme_color'] ?? '#1e40af',
+            'philosophy'           => $page['philosophy'] ?? '',
+            'vision'               => $page['objectives'] ?? '',
+            'graduate_profile'     => $page['graduate_profile'] ?? '',
+            'curriculum_structure' => $page['curriculum_structure'] ?? '',
+            'study_plan'           => $page['study_plan'] ?? '',
+            'career_prospects'     => $page['career_prospects'] ?? '',
+            'tuition_fees'         => $page['tuition_fees'] ?? '',
+            'admission_info'       => $page['admission_info'] ?? '',
+            'contact_info'         => $page['contact_info'] ?? '',
+            'intro_video_url'      => $page['intro_video_url'] ?? '',
+            'elos'                 => $elos,
+            'curriculum'           => $curriculum,
+            'careers'              => $careers,
+            'staff'                => $staff,
+            'documents'            => $documents,
+            'news'                 => $news,
+        ];
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data'    => $data,
         ]);
     }
 

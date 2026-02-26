@@ -52,7 +52,7 @@ class CertTemplates extends BaseController
         }
 
         if (!$templateFilePath) {
-            return redirect()->back()->withInput()->with('error', 'กรุณาอัพโหลดไฟล์ PDF');
+            return redirect()->back()->withInput()->with('error', 'กรุณาอัปโหลดไฟล์ PDF');
         }
 
         $fieldMapping = $this->normalizeFieldMapping($this->request->getPost('field_mapping'));

@@ -56,6 +56,31 @@ class NewsTagModel extends Model
     }
 
     /**
+     * หาหรือสร้าง tag สำหรับหลักสูตร (slug = program_{programId})
+     * @return array|null tag row with id, name, slug
+     */
+    public function findOrCreateForProgram(int $programId, string $programName): ?array
+    {
+        $slug = 'program_' . $programId;
+        $row = $this->findBySlug($slug);
+        if ($row) {
+            return $row;
+        }
+        $name = 'หลักสูตร ' . $programName;
+        $maxOrder = $this->selectMax('sort_order')->first();
+        $sortOrder = (int) ($maxOrder['sort_order'] ?? 0) + 1;
+        $id = $this->insert([
+            'name' => $name,
+            'slug' => $slug,
+            'sort_order' => $sortOrder,
+        ]);
+        if (!$id) {
+            return null;
+        }
+        return $this->find($id);
+    }
+
+    /**
      * ตั้งค่า tags ของข่าว (ลบเดิมแล้วใส่ใหม่)
      */
     public function setTagsForNews(int $newsId, array $tagIds): void

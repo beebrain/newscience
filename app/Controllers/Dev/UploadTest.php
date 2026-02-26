@@ -7,7 +7,7 @@ use App\Services\FileUploadService;
 use Config\Certificate as CertificateConfig;
 
 /**
- * Upload Test Controller - ทดสอบระบบอัพโหลดไฟล์
+ * Upload Test Controller - ทดสอบระบบอัปโหลดไฟล์
  * 
  * URL: /dev/upload-test
  */
@@ -23,7 +23,7 @@ class UploadTest extends BaseController
     }
 
     /**
-     * หน้าทดสอบอัพโหลดทั้งหมด
+     * หน้าทดสอบอัปโหลดทั้งหมด
      */
     public function index()
     {
@@ -34,13 +34,13 @@ class UploadTest extends BaseController
         ];
 
         return view('dev/upload_test', [
-            'page_title' => 'ทดสอบระบบอัพโหลดไฟล์',
+            'page_title' => 'ทดสอบระบบอัปโหลดไฟล์',
             'tests' => $tests,
         ]);
     }
 
     /**
-     * AJAX: ทดสอบอัพโหลด PDF Template
+     * AJAX: ทดสอบอัปโหลด PDF Template
      */
     public function testPdfUpload()
     {
@@ -81,7 +81,7 @@ class UploadTest extends BaseController
         
         return $this->response->setJSON([
             'success' => true,
-            'message' => 'อัพโหลดสำเร็จ',
+            'message' => 'อัปโหลดสำเร็จ',
             'temp_file' => $tempName,
             'file_size' => $this->formatBytes(filesize($tempPath)),
             'mime_type' => mime_content_type($tempPath),
@@ -89,7 +89,7 @@ class UploadTest extends BaseController
     }
 
     /**
-     * AJAX: ทดสอบอัพโหลด CSV Import
+     * AJAX: ทดสอบอัปโหลด CSV Import
      */
     public function testCsvUpload()
     {
@@ -143,7 +143,7 @@ class UploadTest extends BaseController
         
         return $this->response->setJSON([
             'success' => true,
-            'message' => 'อัพโหลดและอ่าน CSV สำเร็จ',
+            'message' => 'อัปโหลดและอ่าน CSV สำเร็จ',
             'headers' => $headers ?? [],
             'preview' => $preview,
             'total_rows' => count($preview),

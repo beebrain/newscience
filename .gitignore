@@ -63,6 +63,8 @@ writable/uploads/*
 
 writable/debugbar/*
 !writable/debugbar/index.html
+writable/edoc_documents/*
+!writable/edoc_documents/index.html
 
 php_errors.log
 
@@ -77,6 +79,9 @@ user_guide_src/cilexer/pycilexer.egg-info/*
 #-------------------------
 # Database Setup & Test Files
 #-------------------------
+# Ignore entire migrations directory per user instructions
+app/Database/Migrations/
+
 # Test setup files only (keep migration files)
 database/setup_*.sql
 database/*_test_*.sql
