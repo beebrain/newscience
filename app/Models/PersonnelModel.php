@@ -23,7 +23,7 @@ class PersonnelModel extends Model
         'academic_title_en',
         'organization_unit_id',
         'program_id',
-        'user_uid',
+        'user_email',
         'phone',
         'bio',
         'bio_en',
@@ -85,7 +85,7 @@ class PersonnelModel extends Model
                 personnel.name_en
             )";
 
-        $extra = "user.uid as user_uid";
+        $extra = "user.email as user_email";
         if ($hasTitle) $extra .= ", user.title as user_title";
         if ($hasTfName) $extra .= ", user.tf_name as user_tf_name";
         if ($hasTlName) $extra .= ", user.tl_name as user_tl_name";
@@ -176,7 +176,7 @@ class PersonnelModel extends Model
     public function getActive()
     {
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.uid = personnel.user_uid', 'left')
+            ->join('user', 'user.email = personnel.user_email', 'left')
             ->where('personnel.status', 'active')
             ->orderBy('personnel.sort_order', 'ASC')
             ->findAll();
@@ -201,7 +201,7 @@ class PersonnelModel extends Model
             return [];
         }
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.uid = personnel.user_uid', 'left')
+            ->join('user', 'user.email = personnel.user_email', 'left')
             ->where('personnel.organization_unit_id', $organizationUnitId)
             ->where('personnel.status', 'active')
             ->orderBy('personnel.sort_order', 'ASC')
@@ -214,7 +214,7 @@ class PersonnelModel extends Model
     public function getExecutives()
     {
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.uid = personnel.user_uid', 'left')
+            ->join('user', 'user.email = personnel.user_email', 'left')
             ->where('personnel.status', 'active')
             ->where('personnel.position IS NOT NULL')
             ->orderBy('personnel.sort_order', 'ASC')
@@ -227,7 +227,7 @@ class PersonnelModel extends Model
     public function getDean()
     {
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.uid = personnel.user_uid', 'left')
+            ->join('user', 'user.email = personnel.user_email', 'left')
             ->like('personnel.position', 'คณบดี')
             ->where('personnel.status', 'active')
             ->first();
@@ -239,20 +239,34 @@ class PersonnelModel extends Model
     public function findWithUser($id)
     {
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.uid = personnel.user_uid', 'left')
+            ->join('user', 'user.email = personnel.user_email', 'left')
             ->where('personnel.id', $id)
             ->first();
     }
 
     /**
-     * Find personnel by user_uid with user data
+     * Find personnel by user email with user data
+     */
+    public function findByUserEmail(string $email)
+    {
+        $email = trim($email);
+        if ($email === '') {
+            return null;
+        }
+        return $this->select($this->selectWithUser())
+            ->join('user', 'user.email = personnel.user_email', 'left')
+            ->where('personnel.user_email', $email)
+            ->first();
+    }
+
+    /**
+     * Find personnel by user_uid (legacy) — แปลงเป็น email แล้วเรียก findByUserEmail
      */
     public function findByUserUid($userUid)
     {
-        return $this->select($this->selectWithUser())
-            ->join('user', 'user.uid = personnel.user_uid', 'left')
-            ->where('personnel.user_uid', $userUid)
-            ->first();
+        $userModel = new UserModel();
+        $user = $userModel->find((int) $userUid);
+        return $user && !empty($user['email']) ? $this->findByUserEmail($user['email']) : null;
     }
 
     /**
@@ -260,10 +274,15 @@ class PersonnelModel extends Model
      */
     public function findByEmail(string $email)
     {
+        $email = trim($email);
+        if ($email === '') {
+            return null;
+        }
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.uid = personnel.user_uid', 'left')
+            ->join('user', 'user.email = personnel.user_email', 'left')
             ->groupStart()
-            ->where('user.email', $email)
+            ->where('personnel.user_email', $email)
+            ->orWhere('user.email', $email)
             ->orWhere('personnel.email', $email)
             ->groupEnd()
             ->first();
@@ -280,7 +299,7 @@ class PersonnelModel extends Model
                 $select .= ', programs.name_th as program_name_th, programs.name_en as program_name_en';
             }
             $builder = $this->select($select)
-                ->join('user', 'user.uid = personnel.user_uid', 'left')
+                ->join('user', 'user.email = personnel.user_email', 'left')
                 ->where('personnel.status', 'active');
             if ($this->db->fieldExists('program_id', 'personnel')) {
                 $builder->join('programs', 'programs.id = personnel.program_id', 'left');
@@ -292,7 +311,7 @@ class PersonnelModel extends Model
             $select .= ', programs.name_th as program_name_th, programs.name_en as program_name_en';
         }
         $builder = $this->select($select)
-            ->join('user', 'user.uid = personnel.user_uid', 'left')
+            ->join('user', 'user.email = personnel.user_email', 'left')
             ->join('organization_units', 'organization_units.id = personnel.organization_unit_id', 'left')
             ->where('personnel.status', 'active');
         if ($this->db->fieldExists('program_id', 'personnel')) {
@@ -314,7 +333,7 @@ class PersonnelModel extends Model
             return [];
         }
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.uid = personnel.user_uid', 'left')
+            ->join('user', 'user.email = personnel.user_email', 'left')
             ->where('personnel.status', 'active')
             ->whereIn('personnel.id', $ids)
             ->orderBy('personnel.sort_order', 'ASC')
@@ -401,7 +420,7 @@ class PersonnelModel extends Model
         $user = $userModel->findByEmail($personnel['email']);
 
         if ($user) {
-            return $this->update($personnelId, ['user_uid' => $user['uid']]);
+            return $this->update($personnelId, ['user_email' => $user['email']]);
         }
 
         return false;
@@ -413,11 +432,11 @@ class PersonnelModel extends Model
     public function getUserData(int $personnelId): ?array
     {
         $personnel = $this->find($personnelId);
-        if (!$personnel || empty($personnel['user_uid'])) {
+        if (!$personnel || empty($personnel['user_email'])) {
             return null;
         }
 
         $userModel = new UserModel();
-        return $userModel->find($personnel['user_uid']);
+        return $userModel->findByEmail(trim($personnel['user_email']));
     }
 }

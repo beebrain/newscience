@@ -54,7 +54,15 @@ class UserSystemAccessModel extends Model
         if (!$system) {
             return false;
         }
-        $access = $this->where('user_email', $email)->where('system_id', $system['id'])->first();
+        if ($this->db->fieldExists('user_email', 'user_system_access')) {
+            $access = $this->where('user_email', $email)->where('system_id', $system['id'])->first();
+        } else {
+            $user = (new \App\Models\UserModel())->findByIdentifier($email);
+            if (!$user) {
+                return false;
+            }
+            $access = $this->where('user_uid', $user['uid'])->where('system_id', $system['id'])->first();
+        }
         if (!$access) {
             return false;
         }
@@ -69,16 +77,20 @@ class UserSystemAccessModel extends Model
      */
     public function getAccessLevel(int $userUid, string $systemSlug): ?string
     {
-        $email = $this->uidToEmail($userUid);
-        if ($email === null) {
-            return null;
-        }
         $systemModel = new SystemModel();
         $system = $systemModel->getBySlug($systemSlug);
         if (!$system) {
             return null;
         }
-        $access = $this->where('user_email', $email)->where('system_id', $system['id'])->first();
+        if ($this->db->fieldExists('user_email', 'user_system_access')) {
+            $email = $this->uidToEmail($userUid);
+            if ($email === null) {
+                return null;
+            }
+            $access = $this->where('user_email', $email)->where('system_id', $system['id'])->first();
+        } else {
+            $access = $this->where('user_uid', $userUid)->where('system_id', $system['id'])->first();
+        }
         return $access ? $access['access_level'] : null;
     }
 
@@ -137,7 +149,11 @@ class UserSystemAccessModel extends Model
         if ($userUid !== null && $this->db->fieldExists('user_uid', 'user_system_access')) {
             $data['user_uid'] = $userUid;
         }
-        $existing = $this->where('user_email', $email)->where('system_id', $system['id'])->first();
+        if ($this->db->fieldExists('user_email', 'user_system_access')) {
+            $existing = $this->where('user_email', $email)->where('system_id', $system['id'])->first();
+        } else {
+            $existing = $userUid !== null ? $this->where('user_uid', $userUid)->where('system_id', $system['id'])->first() : null;
+        }
         if ($existing) {
             return $this->update($existing['id'], $data);
         }

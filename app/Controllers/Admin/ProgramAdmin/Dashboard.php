@@ -11,6 +11,8 @@ use App\Models\PersonnelProgramModel;
 use App\Models\NewsModel;
 use App\Models\NewsTagModel;
 use App\Models\NewsImageModel;
+use App\Models\UserModel;
+use App\Models\UserProgramModel;
 
 class Dashboard extends BaseController
 {
@@ -22,10 +24,12 @@ class Dashboard extends BaseController
     protected $newsModel;
     protected $newsTagModel;
     protected $newsImageModel;
+    protected $userProgramModel;
 
     public function __construct()
     {
         $this->programModel = new ProgramModel();
+        $this->userProgramModel = new UserProgramModel();
         $this->programPageModel = new ProgramPageModel();
         $this->programDownloadModel = new ProgramDownloadModel();
         $this->personnelModel = new PersonnelModel();
@@ -36,65 +40,133 @@ class Dashboard extends BaseController
     }
 
     /**
-     * Check if user can manage this program
-     * super_admin/admin: ได้ทุกหลักสูตร
-     * faculty (chair): เฉพาะหลักสูตรที่เป็นประธาน
+     * ดึง user ปัจจุบันจาก session (ตาราง user)
      */
-    protected function canManageProgram(int $programId): bool
+    protected function getCurrentUser(): ?array
     {
         $userId = session()->get('admin_id');
-        $userRole = session()->get('admin_role');
-
-        // super_admin และ admin จัดการได้ทุกหลักสูตร
-        if ($userRole === 'super_admin' || $userRole === 'admin') {
-            return true;
+        if ($userId === null) {
+            return null;
         }
-
-        // faculty ต้องเป็นประธานหลักสูตร
-        $isChair = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId) === $userId;
-        if (!$isChair) {
-            $program = $this->programModel->find($programId);
-            if ($program && $program['chair_personnel_id']) {
-                $isChair = $program['chair_personnel_id'] == $userId;
-            }
-        }
-
-        return $isChair;
+        $userModel = new UserModel();
+        return $userModel->find((int) $userId);
     }
 
     /**
-     * Dashboard - แสดงหลักสูตรที่ผู้ใช้สามารถจัดการได้
-     * super_admin/admin: แสดงทุกหลักสูตร
-     * faculty (chair): แสดงเฉพาะหลักสูตรที่เป็นประธาน
+     * รายการ program_id ที่ user มีสิทธิ์จัดการ (จาก user_programs โดยใช้ email เป็น key; ถ้าว่างใช้ user.program_id เป็น fallback)
+     * ไม่รวมสิทธิ์จาก personnel (ประธาน/ผู้ประสาน) — ใช้ร่วมกับ canManageProgram
+     */
+    protected function getUserProgramIds(array $user): array
+    {
+        $email = trim((string) ($user['email'] ?? ''));
+        if ($email !== '') {
+            $ids = $this->userProgramModel->getProgramIdsForUser($email);
+            if (!empty($ids)) {
+                return $ids;
+            }
+        }
+        $legacy = isset($user['program_id']) && $user['program_id'] !== '' ? (int) $user['program_id'] : null;
+        return $legacy !== null && $legacy > 0 ? [$legacy] : [];
+    }
+
+    /**
+     * Check if user can manage this program
+     * super_admin: ได้ทุกหลักสูตร
+     * admin: ได้ทุกหลักสูตร (หรือเฉพาะหลักสูตรใน user_programs ถ้ามีการกำหนด)
+     * editor: ได้หลักสูตรใน user_programs เท่านั้น (หรือทุกหลักสูตรถ้ายังไม่มีใน pivot)
+     * อื่นๆ: หลักสูตรใน user_programs + หลักสูตรที่ตนเป็นประธาน/ผู้ประสาน (personnel)
+     */
+    protected function canManageProgram(int $programId): bool
+    {
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            return false;
+        }
+        $userRole = session()->get('admin_role');
+
+        if ($userRole === 'super_admin') {
+            return true;
+        }
+
+        $userProgramIds = $this->getUserProgramIds($user);
+
+        if ($userRole === 'admin') {
+            return empty($userProgramIds) || in_array((int) $programId, $userProgramIds, true);
+        }
+
+        if ($userRole === 'editor') {
+            return empty($userProgramIds) || in_array((int) $programId, $userProgramIds, true);
+        }
+
+        if (in_array((int) $programId, $userProgramIds, true)) {
+            return true;
+        }
+
+        // สิทธิ์จาก personnel: ประธานหลักสูตร / ผู้ประสาน
+        $coordinatorId = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId);
+        if ($coordinatorId !== null && (int) $coordinatorId === (int) $user['uid']) {
+            return true;
+        }
+        $program = $this->programModel->find($programId);
+        if ($program && !empty($program['chair_personnel_id']) && (int) $program['chair_personnel_id'] === (int) $user['uid']) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Dashboard - แสดงหลักสูตรตามสิทธิ์ (user_programs + personnel)
+     * super_admin: แสดงทุกหลักสูตร
+     * admin: ทุกหลักสูตร หรือเฉพาะหลักสูตรใน user_programs ถ้ามี
+     * editor: หลักสูตรใน user_programs (ถ้าว่างแสดงทั้งหมด)
+     * อื่นๆ: หลักสูตรใน user_programs + หลักสูตรที่ตนเป็นประธาน/ผู้ประสาน
      */
     public function index()
     {
-        $userId = session()->get('admin_id');
+        $user = $this->getCurrentUser();
+        if (!$user) {
+            return redirect()->to(base_url('/admin/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
+        }
         $userRole = session()->get('admin_role');
+        $userProgramIds = $this->getUserProgramIds($user);
 
-        // super_admin และ admin เห็นทุกหลักสูตร
-        if ($userRole === 'super_admin' || $userRole === 'admin') {
-            $programs = $this->programModel->getWithCoordinator();
+        $allPrograms = $this->programModel->getWithCoordinator();
+
+        if ($userRole === 'super_admin') {
+            $programs = $allPrograms;
             $pageTitle = 'จัดการหลักสูตร (ผู้ดูแลระบบ)';
+        } elseif ($userRole === 'admin') {
+            if (!empty($userProgramIds)) {
+                $programs = array_filter($allPrograms, fn($p) => in_array((int) $p['id'], $userProgramIds, true));
+                $pageTitle = 'จัดการหลักสูตร';
+            } else {
+                $programs = $allPrograms;
+                $pageTitle = 'จัดการหลักสูตร (ผู้ดูแลระบบ)';
+            }
+        } elseif ($userRole === 'editor') {
+            if (!empty($userProgramIds)) {
+                $programs = array_filter($allPrograms, fn($p) => in_array((int) $p['id'], $userProgramIds, true));
+            } else {
+                $programs = $allPrograms;
+            }
+            $pageTitle = 'จัดการหลักสูตร';
         } else {
-            // faculty (chair) เห็นเฉพาะหลักสูตรที่เป็นประธาน
-            $user = $this->personnelModel->find($userId);
-            if (!$user || $user['role'] !== 'faculty') {
-                return redirect()->to(base_url('/dashboard'))->with('error', 'ไม่พบสิทธิ์ในการจัดการหลักสูตร');
+            $allowedIds = array_values($userProgramIds);
+            $coordinatorMap = $this->personnelProgramModel->getAllCoordinators();
+            foreach ($coordinatorMap as $pid => $personnelId) {
+                if ((int) $personnelId === (int) $user['uid']) {
+                    $allowedIds[] = (int) $pid;
+                }
             }
-
-            // Get programs where user is chair
-            $coordinatorIds = $this->personnelProgramModel->getAllCoordinators();
-            $programIds = array_keys($coordinatorIds);
-
-            $programs = [];
-            if (!empty($programIds)) {
-                $allPrograms = $this->programModel->getWithCoordinator();
-                $programs = array_filter($allPrograms, function ($program) use ($programIds) {
-                    return in_array($program['id'], $programIds);
-                });
+            foreach ($allPrograms as $p) {
+                if (!empty($p['chair_personnel_id']) && (int) $p['chair_personnel_id'] === (int) $user['uid']) {
+                    $allowedIds[] = (int) $p['id'];
+                }
             }
-            $pageTitle = 'จัดการหลักสูตร (ประธานหลักสูตร)';
+            $allowedIds = array_unique($allowedIds);
+            $programs = array_filter($allPrograms, fn($p) => in_array((int) $p['id'], $allowedIds, true));
+            $pageTitle = 'จัดการหลักสูตร';
         }
 
         // Get program pages for these programs

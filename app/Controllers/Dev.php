@@ -18,8 +18,10 @@ class Dev extends BaseController
     }
 
     /**
-     * เข้าเป็น Admin (user คนแรกในตาราง user)
-     * GET /dev/login-as-admin
+     * เข้าเป็น Admin (user คนแรก หรือระบุ uid/email ผ่าน query)
+     * GET /dev/login-as-admin          → user คนแรก
+     * GET /dev/login-as-admin?uid=5    → user ที่ uid=5
+     * GET /dev/login-as-admin?email=xxx@yyy  → user ที่ email ตรง
      */
     public function loginAsAdmin()
     {
@@ -28,17 +30,28 @@ class Dev extends BaseController
         }
 
         $userModel = new UserModel();
-        $user = $userModel->first();
-        if (!$user) {
+        $uidParam = $this->request->getGet('uid');
+        $emailParam = $this->request->getGet('email');
+
+        if ($uidParam !== null && $uidParam !== '') {
+            $user = $userModel->find((int) $uidParam);
+        } elseif ($emailParam !== null && $emailParam !== '') {
+            // ใช้ findByEmail เท่านั้น เพื่อไม่ให้ไปตรงกับ login_uid ของ user อื่น (เช่น pisit)
+            $user = $userModel->findByEmail(trim($emailParam));
+        } else {
+            $user = $userModel->first();
+        }
+
+        if (!$user || !is_array($user)) {
             return redirect()->to(base_url('admin/login'))
-                ->with('error', 'ไม่พบ user ในระบบ (สร้าง user ก่อน)');
+                ->with('error', 'ไม่พบ user ในระบบ (สร้าง user ก่อน หรือตรวจสอบ uid/email)');
         }
 
         $role = $user['role'] ?? 'user';
         $allowedRoles = ['admin', 'editor', 'super_admin', 'faculty_admin'];
         $adminRole = in_array($role, $allowedRoles, true) ? $role : 'admin';
-        // ในโหมด dev ให้ใช้ super_admin เพื่อให้แก้ไขผู้ใช้/กำหนดสิทธิ์ได้ครบ
-        if (ENVIRONMENT === 'development') {
+        // ใน development: ถ้าระบุ email หรือ uid มา ให้ใช้ role จริงจาก DB (เพื่อทดสอบการจำกัดหลักสูตรตาม user_programs)
+        if (ENVIRONMENT === 'development' && $emailParam === null && $uidParam === null) {
             $adminRole = 'super_admin';
         }
 
@@ -50,7 +63,8 @@ class Dev extends BaseController
             'admin_role' => $adminRole,
         ]);
 
-        return redirect()->to(base_url('dashboard'))->with('success', '[Local] เข้าสู่ระบบเป็น Admin แล้ว');
+        $who = $user['email'] . ' (uid=' . $user['uid'] . ')';
+        return redirect()->to(base_url('dashboard'))->with('success', '[Local] เข้าสู่ระบบเป็น ' . $who . ' แล้ว');
     }
 
     /**
