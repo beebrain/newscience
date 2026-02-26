@@ -282,6 +282,8 @@ class UserManagement extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการผู้ใช้นี้']);
         }
 
+        $requestedRole = (string) ($this->request->getPost('role') ?? '');
+
         $data = [
             'login_uid' => $this->request->getPost('login_uid'),
             'email' => $this->request->getPost('email'),
@@ -291,13 +293,29 @@ class UserManagement extends BaseController
             'th_name' => $this->request->getPost('th_name'),
             'thai_name' => $this->request->getPost('thai_name'),
             'thai_lastname' => $this->request->getPost('thai_lastname'),
-            'role' => $this->request->getPost('role'),
+            'role' => $requestedRole,
             'program_id' => $this->request->getPost('program_id') ? (int)$this->request->getPost('program_id') : null,
             'status' => $this->request->getPost('status'),
         ];
 
+        if ($requestedRole === '') {
+            log_message('warning', 'UserManagement::ajaxUpdateUser missing role input', [
+                'target_uid' => $uid,
+                'requested_by' => $this->currentUser['uid'] ?? null,
+                'post' => json_encode($this->request->getPost(null, FILTER_SANITIZE_SPECIAL_CHARS))
+            ]);
+            return $this->response->setJSON(['success' => false, 'message' => 'กรุณาเลือกสิทธิ์ผู้ใช้']);
+        }
+
         // Validate role assignment
         if (!$this->canAssignRole($data['role'], $data['program_id'])) {
+            log_message('warning', 'UserManagement::ajaxUpdateUser role assignment denied', [
+                'target_uid' => $uid,
+                'requested_role' => $data['role'],
+                'program_id' => $data['program_id'],
+                'requested_by' => $this->currentUser['uid'] ?? null,
+                'requester_role' => $this->currentUser['role'] ?? null,
+            ]);
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่สามารถกำหนดสิทธิ์นี้ได้']);
         }
 
@@ -509,6 +527,11 @@ class UserManagement extends BaseController
      */
     private function canAssignRole(string $role, ?int $programId): bool
     {
+        $role = trim($role);
+        if ($role === '') {
+            return false;
+        }
+
         // Super admin can assign any role
         if ($this->currentUser['role'] === self::ROLE_SUPER_ADMIN) {
             return true;
