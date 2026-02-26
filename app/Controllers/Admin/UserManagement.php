@@ -268,7 +268,7 @@ class UserManagement extends BaseController
     }
 
     /**
-     * AJAX: Update user
+     * AJAX: Update user (รับได้ทั้ง JSON และ form)
      */
     public function ajaxUpdateUser($uid)
     {
@@ -282,27 +282,36 @@ class UserManagement extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการผู้ใช้นี้']);
         }
 
-        $requestedRole = (string) ($this->request->getPost('role') ?? '');
+        $input = $this->request->getJSON(true);
+        if (!is_array($input)) {
+            $input = $this->request->getPost() ?? [];
+        }
+
+        $requestedRole = (string) ($input['role'] ?? '');
+
+        $programId = isset($input['program_id']) && $input['program_id'] !== '' ? (int) $input['program_id'] : null;
+        $statusVal = $input['status'] ?? 'active';
+        $active = ($statusVal === 'active') ? 1 : 0;
 
         $data = [
-            'login_uid' => $this->request->getPost('login_uid'),
-            'email' => $this->request->getPost('email'),
-            'title' => $this->request->getPost('title'),
-            'gf_name' => $this->request->getPost('gf_name'),
-            'gl_name' => $this->request->getPost('gl_name'),
-            'th_name' => $this->request->getPost('th_name'),
-            'thai_name' => $this->request->getPost('thai_name'),
-            'thai_lastname' => $this->request->getPost('thai_lastname'),
+            'login_uid' => $input['login_uid'] ?? $user['login_uid'],
+            'email' => $input['email'] ?? $user['email'],
+            'title' => $input['title'] ?? $user['title'] ?? '',
+            'gf_name' => $input['gf_name'] ?? $user['gf_name'] ?? '',
+            'gl_name' => $input['gl_name'] ?? $user['gl_name'] ?? '',
+            'th_name' => $input['th_name'] ?? $user['th_name'] ?? '',
+            'thai_name' => $input['thai_name'] ?? $user['thai_name'] ?? '',
+            'thai_lastname' => $input['thai_lastname'] ?? $user['thai_lastname'] ?? '',
             'role' => $requestedRole,
-            'program_id' => $this->request->getPost('program_id') ? (int)$this->request->getPost('program_id') : null,
-            'status' => $this->request->getPost('status'),
+            'program_id' => $programId,
+            'active' => $active,
         ];
 
         if ($requestedRole === '') {
             log_message('warning', 'UserManagement::ajaxUpdateUser missing role input', [
                 'target_uid' => $uid,
                 'requested_by' => $this->currentUser['uid'] ?? null,
-                'post' => json_encode($this->request->getPost(null, FILTER_SANITIZE_SPECIAL_CHARS))
+                'input' => json_encode($input)
             ]);
             return $this->response->setJSON(['success' => false, 'message' => 'กรุณาเลือกสิทธิ์ผู้ใช้']);
         }
@@ -319,11 +328,51 @@ class UserManagement extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่สามารถกำหนดสิทธิ์นี้ได้']);
         }
 
-        if ($this->userModel->update($uid, $data)) {
-            return $this->response->setJSON(['success' => true, 'message' => 'อัปเดตข้อมูลผู้ใช้สำเร็จ']);
+        $dataToUpdate = $this->filterDataForUserTable($data);
+        $newEmail = $dataToUpdate['email'] ?? null;
+        $currentEmail = $user['email'] ?? '';
+        if ($newEmail !== null && $newEmail !== $currentEmail) {
+            $existing = $this->userModel->where('email', $newEmail)->first();
+            if ($existing) {
+                return $this->response->setJSON(['success' => false, 'message' => 'อีเมลนี้ถูกใช้โดยผู้ใช้อื่นแล้ว']);
+            }
+        }
+
+        if ($currentEmail === '') {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบอีเมลของผู้ใช้ที่จะอัปเดต']);
+        }
+
+        unset($dataToUpdate['uid']);
+        try {
+            $db = $this->userModel->db;
+            $ok = $db->table($this->userModel->getTable())->where('email', $currentEmail)->update($dataToUpdate);
+            if ($ok) {
+                return $this->response->setJSON(['success' => true, 'message' => 'อัปเดตข้อมูลผู้ใช้สำเร็จ']);
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'UserManagement::ajaxUpdateUser ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'อัปเดตข้อมูลผู้ใช้ไม่สำเร็จ: ' . $e->getMessage()]);
         }
 
         return $this->response->setJSON(['success' => false, 'message' => 'อัปเดตข้อมูลผู้ใช้ไม่สำเร็จ']);
+    }
+
+    /**
+     * กรองข้อมูลให้เหลือเฉพาะคอลัมน์ที่มีในตาราง user (รองรับทั้ง active และ status)
+     */
+    private function filterDataForUserTable(array $data): array
+    {
+        $fields = $this->userModel->db->getFieldNames($this->userModel->getTable());
+        $out = [];
+        foreach ($data as $key => $value) {
+            if (in_array($key, $fields, true)) {
+                $out[$key] = $value;
+            }
+        }
+        if (array_key_exists('active', $data) && !in_array('active', $fields, true) && in_array('status', $fields, true)) {
+            $out['status'] = ((int) $data['active']) === 1 ? 'active' : 'inactive';
+        }
+        return $out;
     }
 
     /**
@@ -537,8 +586,13 @@ class UserManagement extends BaseController
             return true;
         }
 
-        // Admin, Editor, Faculty admin can only assign faculty_admin to their own program
+        // Admin, Editor, Faculty admin can assign faculty_admin to their own program
         if ($role === self::ROLE_FACULTY_ADMIN) {
+            return $programId == ($this->currentUser['program_id'] ?? null);
+        }
+
+        // Admin, Editor, Faculty admin can assign admin/editor to their own program
+        if (in_array($role, [self::ROLE_ADMIN, self::ROLE_EDITOR], true)) {
             return $programId == ($this->currentUser['program_id'] ?? null);
         }
 
@@ -625,6 +679,10 @@ class UserManagement extends BaseController
         }
 
         $accessData = $this->request->getPost('access');
+        if (!is_array($accessData)) {
+            $json = $this->request->getJSON(true);
+            $accessData = is_array($json) ? ($json['access'] ?? null) : null;
+        }
         if (!is_array($accessData)) {
             return $this->response->setJSON(['success' => false, 'message' => 'ข้อมูลไม่ถูกต้อง']);
         }

@@ -26,7 +26,9 @@ class UserModel extends Model
         'role',
         'program_id',
         'profile_image',
+        'profile_picture',
         'status',
+        'active',
         'edoc',
         'admin_edoc'
     ];
@@ -37,7 +39,7 @@ class UserModel extends Model
     protected $validationRules = [
         'email' => 'required|valid_email|is_unique[user.email,uid,{uid}]',
         'password' => 'permit_empty|min_length[6]',
-        'role' => 'required|in_list[super_admin,faculty_admin,user]',
+        'role' => 'required|in_list[super_admin,faculty_admin,admin,editor,user]',
         'program_id' => 'permit_empty|integer',
     ];
 

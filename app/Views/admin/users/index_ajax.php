@@ -165,6 +165,8 @@
                     <label class="form-label">บทบาท <span style="color: var(--color-danger);">*</span></label>
                     <select id="editUserRole" name="role" class="form-control" required>
                         <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                        <option value="editor">Editor</option>
                         <option value="faculty_admin">Faculty Admin</option>
                         <option value="super_admin">Super Admin</option>
                     </select>
@@ -809,10 +811,12 @@
                     document.getElementById('editUserProgramId').value = u.program_id || '';
                     document.getElementById('editUserStatus').value = u.status || 'active';
 
-                    // Load system access permissions
-                    loadSystemAccess(u.uid);
-
-                    openModal('editUserModal');
+                    // โหลดสิทธิ์การเข้าถึงระบบของคนนั้นให้เสร็จก่อน แล้วค่อยเปิด modal
+                    loadSystemAccess(u.uid).then(function() {
+                        openModal('editUserModal');
+                    }).catch(function() {
+                        openModal('editUserModal');
+                    });
                 } else {
                     swalAlert(data.message || 'เกิดข้อผิดพลาด', 'error');
                 }
@@ -832,35 +836,39 @@
         const superAdminNotice = document.getElementById('superAdminNotice');
         const tableBody = document.getElementById('systemAccessTableBody');
 
+        if (!loadingEl || !contentEl || !tableBody) return Promise.resolve();
+
+        loadingEl.textContent = 'กำลังโหลดสิทธิ์การเข้าถึงระบบ...';
         loadingEl.style.display = 'block';
         contentEl.style.display = 'none';
+        superAdminNotice.style.display = 'none';
         currentSystemAccess = {};
 
-        fetch(`${baseUrl}admin/users/system-access/${uid}`)
+        const url = (baseUrl.replace(/\/?$/, '/') + 'admin/users/system-access/' + uid);
+        return fetch(url)
             .then(r => r.json())
             .then(data => {
                 loadingEl.style.display = 'none';
 
                 if (data.success) {
+                    const systems = Array.isArray(data.systems) ? data.systems : [];
                     if (data.is_super_admin) {
-                        // Super admin - show notice and disable inputs
                         superAdminNotice.style.display = 'block';
-                        tableBody.innerHTML = data.systems.map(s => `
+                        tableBody.innerHTML = systems.map(s => `
                             <tr>
-                                <td>${s.name_th}</td>
+                                <td>${s.name_th || s.slug || ''}</td>
                                 <td colspan="4" style="text-align: center; color: var(--color-gray-500);">เข้าถึงอัตโนมัติ</td>
                             </tr>
                         `).join('');
                     } else {
-                        // Normal user - show checkboxes
                         superAdminNotice.style.display = 'none';
                         currentSystemAccess = data.user_access || {};
 
-                        tableBody.innerHTML = data.systems.map(s => {
+                        tableBody.innerHTML = systems.map(s => {
                             const currentLevel = currentSystemAccess[s.slug] || 'none';
                             return `
                             <tr>
-                                <td>${s.name_th}</td>
+                                <td>${s.name_th || s.slug || ''}</td>
                                 <td style="text-align: center;">
                                     <input type="radio" name="system_${s.slug}" value="none" ${currentLevel === 'none' ? 'checked' : ''}>
                                 </td>
@@ -880,11 +888,14 @@
                     contentEl.style.display = 'block';
                 } else {
                     loadingEl.textContent = data.message || 'ไม่สามารถโหลดข้อมูลสิทธิ์';
+                    loadingEl.style.display = 'block';
                 }
             })
             .catch(err => {
                 console.error(err);
-                loadingEl.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
+                loadingEl.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูลสิทธิ์';
+                loadingEl.style.display = 'block';
+                contentEl.style.display = 'none';
             });
     }
 

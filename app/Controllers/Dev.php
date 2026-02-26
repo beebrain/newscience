@@ -37,6 +37,10 @@ class Dev extends BaseController
         $role = $user['role'] ?? 'user';
         $allowedRoles = ['admin', 'editor', 'super_admin', 'faculty_admin'];
         $adminRole = in_array($role, $allowedRoles, true) ? $role : 'admin';
+        // ในโหมด dev ให้ใช้ super_admin เพื่อให้แก้ไขผู้ใช้/กำหนดสิทธิ์ได้ครบ
+        if (ENVIRONMENT === 'development') {
+            $adminRole = 'super_admin';
+        }
 
         session()->set([
             'admin_logged_in' => true,
