@@ -526,31 +526,21 @@ class Dashboard extends BaseController
     }
 
     /**
-     * Preview program page
+     * Preview program page — เปิด Single Page จริง (/p/{id}/main)
      */
     public function preview($programId)
     {
+        $programId = (int) $programId;
         $program = $this->programModel->find($programId);
         if (!$program) {
             return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
         }
 
-        // Check authorization
         if (!$this->canManageProgram($programId)) {
             return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
         }
 
-        $programPage = $this->programPageModel->findByProgramId($programId);
-        $programPage['program'] = $program;
-
-        $data = [
-            'page_title' => 'ตัวอย่างหน้าเว็บไซต์หลักสูตร - ' . ($program['name_th'] ?? $program['name_en']),
-            'program' => $program,
-            'page' => $programPage,
-            'layout' => 'admin/layouts/admin_layout',
-        ];
-
-        return view('admin/programs/preview', $data);
+        return redirect()->to(base_url('p/' . $programId . '/main'))->with('preview', true);
     }
 
     /**
