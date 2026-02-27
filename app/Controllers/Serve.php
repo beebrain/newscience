@@ -139,11 +139,20 @@ class Serve extends BaseController
     }
 
     /**
-     * Serve file by full relative path under uploads/ (e.g. programs/1/activities/img_xxx.jpg).
-     * URL: /serve/uploads/programs/1/activities/filename.jpg
+     * Serve file by full relative path under uploads/ (e.g. programs/1/hero/filename.jpg).
+     * URL: /serve/uploads/programs/1/hero/filename.jpg
+     * Note: CI4 splits route params by slash, so we get path from URI instead of $path argument.
      */
-    public function fileByPath(string $path): ResponseInterface
+    public function fileByPath(string $path = ''): ResponseInterface
     {
+        // ดึง path เต็มจาก URI เพราะ route pass ที่มี / จะถูกแยกเป็นหลาย parameter
+        $uriPath = $this->request->getUri()->getPath();
+        $prefix = 'serve/uploads';
+        $pos = strpos($uriPath, $prefix);
+        if ($pos !== false) {
+            $path = substr($uriPath, $pos + strlen($prefix));
+            $path = trim(str_replace('\\', '/', $path), '/');
+        }
         $path = str_replace(['\\', '..'], ['/', ''], $path);
         if ($path === '' || strpos($path, '..') !== false) {
             return $this->response->setStatusCode(404);

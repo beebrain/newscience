@@ -28,6 +28,8 @@ class ProgramPageModel extends Model
         'social_links',
         'hero_image',
         'theme_color',
+        'text_color',
+        'background_color',
         'meta_description',
         'is_published'
     ];
@@ -126,20 +128,26 @@ class ProgramPageModel extends Model
 
     /**
      * Create or update program page with proper slug
+     * ป้องกัน Duplicate entry '' for key 'slug': ไม่ให้ slug เป็นค่าว่าง
      */
     public function updateOrCreate(array $condition, array $data): bool
     {
-        // Ensure slug is URL-safe
-        if (isset($data['slug'])) {
-            $data['slug'] = 'program-' . $condition['program_id'];
-        }
+        $programId = (int) ($condition['program_id'] ?? 0);
+        $safeSlug = 'program-' . $programId;
 
         $existing = $this->where($condition)->first();
         if ($existing) {
+            // อัปเดต: ใส่ slug เฉพาะเมื่อส่งมาและเป็นค่าว่าง (ไม่เขียนทับ slug ที่ตั้งเอง)
+            if (array_key_exists('slug', $data) && trim((string) $data['slug']) === '') {
+                $data['slug'] = $safeSlug;
+            }
             return $this->update($existing['id'], $data);
-        } else {
-            return $this->insert(array_merge($condition, $data)) !== false;
         }
+        // สร้างใหม่: ต้องมี slug เสมอเพื่อไม่ให้ default เป็น '' แล้วชน UNIQUE
+        if (! isset($data['slug']) || trim((string) $data['slug']) === '') {
+            $data['slug'] = $safeSlug;
+        }
+        return $this->insert(array_merge($condition, $data)) !== false;
     }
 
     /**

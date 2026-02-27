@@ -46,8 +46,10 @@
             <li><a href="#pd-curriculum" class="pd-sticky-nav__link">หลักสูตร</a></li>
             <li><a href="#pd-career" class="pd-sticky-nav__link">อาชีพ</a></li>
             <li><a href="#pd-staff" class="pd-sticky-nav__link">บุคลากร</a></li>
+            <li><a href="#pd-facilities" class="pd-sticky-nav__link">สิ่งอำนวยความสะดวก</a></li>
             <li><a href="#pd-news" class="pd-sticky-nav__link">ข่าวสาร</a></li>
             <li><a href="#pd-docs" class="pd-sticky-nav__link">เอกสาร QA</a></li>
+            <li><a href="#pd-video" class="pd-sticky-nav__link">วิดีโอแนะนำ</a></li>
         </ul>
     </nav>
 
@@ -128,11 +130,25 @@
         </div>
     </section>
 
-    <!-- ===================== 7. News ===================== -->
-    <section id="pd-news" class="pd-section">
+    <!-- ===================== 7. Facilities (สิ่งอำนวยความสะดวก สำหรับ AUN-QA) ===================== -->
+    <section id="pd-facilities" class="pd-section" style="display:none;">
         <div class="container">
             <div class="pd-section__header">
                 <span class="pd-section__number">6</span>
+                <h2 class="pd-section__title">สิ่งอำนวยความสะดวกและการสนับสนุนการเรียนรู้</h2>
+                <p class="pd-section__subtitle">Facilities & Learning Support — สนับสนุนการประกันคุณภาพ AUN-QA</p>
+            </div>
+            <div class="pd-facilities-grid" id="pd-facilities-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== 8. News ===================== -->
+    <section id="pd-news" class="pd-section">
+        <div class="container">
+            <div class="pd-section__header">
+                <span class="pd-section__number">7</span>
                 <h2 class="pd-section__title">ข่าวสารและกิจกรรม</h2>
                 <p class="pd-section__subtitle">News & Activities</p>
             </div>
@@ -142,17 +158,28 @@
         </div>
     </section>
 
-    <!-- ===================== 8. QA Documents ===================== -->
+    <!-- ===================== 9. QA Documents ===================== -->
     <section id="pd-docs" class="pd-section section-light">
         <div class="container">
             <div class="pd-section__header">
-                <span class="pd-section__number">7</span>
+                <span class="pd-section__number">8</span>
                 <h2 class="pd-section__title">เอกสารประกันคุณภาพ</h2>
                 <p class="pd-section__subtitle">QA Document Hub — เอกสารสำหรับดาวน์โหลด</p>
             </div>
             <div class="pd-doc-list" id="pd-doc-list">
                 <!-- Populated by JS -->
             </div>
+        </div>
+    </section>
+
+    <!-- ===================== 10. วิดีโอแนะนำ (สำหรับ AUN-QA) ===================== -->
+    <section id="pd-video" class="pd-section" style="display:none;">
+        <div class="container">
+            <div class="pd-section__header">
+                <h2 class="pd-section__title">วิดีโอแนะนำหลักสูตร</h2>
+                <p class="pd-section__subtitle">คลิปวิดีโอและสื่อสนับสนุนการประกันคุณภาพ</p>
+            </div>
+            <div class="program-video-wrap" id="pd-video-wrap"></div>
         </div>
     </section>
 

@@ -53,13 +53,22 @@ class Dashboard extends BaseController
     }
 
     /**
-     * รายการ program_id ที่ user มีสิทธิ์จัดการ (จาก user_programs โดยใช้ email เป็น key; ถ้าว่างใช้ user.program_id เป็น fallback)
-     * ไม่รวมสิทธิ์จาก personnel (ประธาน/ผู้ประสาน) — ใช้ร่วมกับ canManageProgram
+     * รายการ program_id ที่ user มีสิทธิ์จัดการ (สำหรับ program-admin)
+     * ดูจาก Personnel + personnel_programs ก่อน: หา personnel จาก user email แล้วดึงหลักสูตรจาก personnel_programs
+     * ถ้าไม่มีหรือว่าง ใช้ user_programs / user.program_id เป็น fallback
      */
     protected function getUserProgramIds(array $user): array
     {
         $email = trim((string) ($user['email'] ?? ''));
         if ($email !== '') {
+            $personnel = $this->personnelModel->findByUserEmail($email);
+            if ($personnel && !empty($personnel['id'])) {
+                $rows = $this->personnelProgramModel->getByPersonnelId((int) $personnel['id']);
+                $ids = array_map(fn($r) => (int) $r['program_id'], $rows);
+                if (!empty($ids)) {
+                    return array_values(array_unique($ids));
+                }
+            }
             $ids = $this->userProgramModel->getProgramIdsForUser($email);
             if (!empty($ids)) {
                 return $ids;
@@ -72,9 +81,8 @@ class Dashboard extends BaseController
     /**
      * Check if user can manage this program
      * super_admin: ได้ทุกหลักสูตร
-     * admin: ได้ทุกหลักสูตร (หรือเฉพาะหลักสูตรใน user_programs ถ้ามีการกำหนด)
-     * editor: ได้หลักสูตรใน user_programs เท่านั้น (หรือทุกหลักสูตรถ้ายังไม่มีใน pivot)
-     * อื่นๆ: หลักสูตรใน user_programs + หลักสูตรที่ตนเป็นประธาน/ผู้ประสาน (personnel)
+     * admin/editor: ได้หลักสูตรจาก personnel_programs (ตาม personnel ที่เชื่อม user email) หรือ user_programs/user.program_id
+     * อื่นๆ: หลักสูตรจาก personnel_programs/user_programs + หลักสูตรที่ตนเป็นประธาน/ผู้ประสาน
      */
     protected function canManageProgram(int $programId): bool
     {
@@ -116,11 +124,10 @@ class Dashboard extends BaseController
     }
 
     /**
-     * Dashboard - แสดงหลักสูตรตามสิทธิ์ (user_programs + personnel)
+     * Dashboard - แสดงหลักสูตรตามสิทธิ์ (ดูจาก personnel_programs ก่อน แล้ว fallback user_programs/user.program_id)
      * super_admin: แสดงทุกหลักสูตร
-     * admin: ทุกหลักสูตร หรือเฉพาะหลักสูตรใน user_programs ถ้ามี
-     * editor: หลักสูตรใน user_programs (ถ้าว่างแสดงทั้งหมด)
-     * อื่นๆ: หลักสูตรใน user_programs + หลักสูตรที่ตนเป็นประธาน/ผู้ประสาน
+     * admin/editor: หลักสูตรที่ user สังกัดจาก personnel_programs (Personnel) หรือ user_programs
+     * อื่นๆ: หลักสูตรจาก personnel_programs/user_programs + หลักสูตรที่ตนเป็นประธาน/ผู้ประสาน
      */
     public function index()
     {
@@ -318,7 +325,6 @@ class Dashboard extends BaseController
             'admission_info' => 'max_length[5000]',
             'contact_info' => 'max_length[5000]',
             'intro_video_url' => 'max_length[500]',
-            'theme_color' => 'max_length[7]',
             'meta_description' => 'max_length[500]',
         ];
 
@@ -340,10 +346,28 @@ class Dashboard extends BaseController
             'admission_info' => $this->request->getPost('admission_info'),
             'contact_info' => $this->request->getPost('contact_info'),
             'intro_video_url' => $this->request->getPost('intro_video_url'),
-            'theme_color' => $this->request->getPost('theme_color') ?: '#1e40af',
             'meta_description' => $this->request->getPost('meta_description'),
             'is_published' => $this->request->getPost('is_published') ? 1 : 0,
         ];
+
+        if ($this->request->getPost('hero_image_remove')) {
+            $updateData['hero_image'] = '';
+        } else {
+            $heroFile = $this->request->getFile('hero_image');
+            if ($heroFile && $heroFile->isValid() && ! $heroFile->hasMoved()) {
+                $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                $ext = strtolower($heroFile->getExtension() ?: pathinfo($heroFile->getClientName(), PATHINFO_EXTENSION));
+                if (in_array($ext, $allowed, true)) {
+                    helper('program_upload');
+                    $uploadPath = program_upload_path($programId, 'hero');
+                    $filename = 'hero_' . program_unique_filename($heroFile, 'img');
+                    $relativePath = program_upload_relative_path($programId, 'hero', $filename);
+                    if ($heroFile->move($uploadPath, $filename)) {
+                        $updateData['hero_image'] = $relativePath;
+                    }
+                }
+            }
+        }
 
         try {
             $this->programPageModel->updateOrCreate(['program_id' => $programId], $updateData);
@@ -401,6 +425,104 @@ class Dashboard extends BaseController
         } catch (\Exception $e) {
             return $this->response->setJSON(['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()])->setStatusCode(500);
         }
+    }
+
+    /**
+     * Update website settings (text color, background color) for program page.
+     * POST program-admin/update-website/{id}
+     */
+    public function updateWebsite($programId)
+    {
+        $programId = (int) $programId;
+        $program = $this->programModel->find($programId);
+        if (!$program) {
+            return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
+        }
+        if (!$this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
+        }
+
+        $themeColor = trim((string) $this->request->getPost('theme_color'));
+        $textColor = trim((string) $this->request->getPost('text_color'));
+        $bgColor = trim((string) $this->request->getPost('background_color'));
+
+        if ($themeColor !== '' && !preg_match('/^#[0-9A-Fa-f]{6}$/', $themeColor)) {
+            $themeColor = '#1e40af';
+        }
+        if ($textColor !== '' && !preg_match('/^#[0-9A-Fa-f]{6}$/', $textColor)) {
+            $textColor = '';
+        }
+        if ($bgColor !== '' && !preg_match('/^#[0-9A-Fa-f]{6}$/', $bgColor)) {
+            $bgColor = '';
+        }
+
+        $updateData = [
+            'theme_color' => $themeColor ?: '#1e40af',
+            'text_color' => $textColor ?: null,
+            'background_color' => $bgColor ?: null,
+        ];
+
+        try {
+            $this->programPageModel->updateOrCreate(['program_id' => $programId], $updateData);
+            return redirect()->to(base_url('program-admin/edit/' . $programId) . '?tab=website')
+                ->with('success', 'บันทึกการตั้งค่าเว็บไซต์เรียบร้อยแล้ว');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Upload hero image only (สำหรับ drag-drop + crop จากแท็บข้อมูลพื้นฐาน).
+     * POST program-admin/upload-hero/{id}
+     * Body: hero_image (file), หรือ hero_image_remove=1 เพื่อลบ
+     */
+    public function uploadHero($programId)
+    {
+        $programId = (int) $programId;
+        $program = $this->programModel->find($programId);
+        if (!$program) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบหลักสูตร'])->setStatusCode(404);
+        }
+        if (!$this->canManageProgram($programId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการหลักสูตรนี้'])->setStatusCode(403);
+        }
+
+        if ($this->request->getPost('hero_image_remove')) {
+            try {
+                $this->programPageModel->updateOrCreate(['program_id' => $programId], ['hero_image' => '']);
+                return $this->response->setJSON(['success' => true, 'message' => 'ลบรูปหน้าปกแล้ว', 'hero_url' => '']);
+            } catch (\Exception $e) {
+                return $this->response->setJSON(['success' => false, 'message' => $e->getMessage()])->setStatusCode(500);
+            }
+        }
+
+        $file = $this->request->getFile('hero_image');
+        if (!$file || !$file->isValid()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'กรุณาเลือกไฟล์รูปภาพ'])->setStatusCode(400);
+        }
+        $ext = strtolower($file->getExtension() ?: pathinfo($file->getClientName(), PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if (!in_array($ext, $allowed, true)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'รองรับเฉพาะ JPG, PNG, GIF, WEBP'])->setStatusCode(400);
+        }
+
+        helper('program_upload');
+        $uploadPath = program_upload_path($programId, 'hero');
+        $filename = 'hero_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . ($ext === 'jpeg' ? 'jpg' : $ext);
+        $relativePath = program_upload_relative_path($programId, 'hero', $filename);
+
+        if (!$file->move($uploadPath, $filename)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'บันทึกไฟล์ไม่สำเร็จ'])->setStatusCode(500);
+        }
+
+        try {
+            $this->programPageModel->updateOrCreate(['program_id' => $programId], ['hero_image' => $relativePath]);
+        } catch (\Exception $e) {
+            return $this->response->setJSON(['success' => false, 'message' => $e->getMessage()])->setStatusCode(500);
+        }
+
+        $heroUrl = base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $relativePath), '/'));
+        return $this->response->setJSON(['success' => true, 'message' => 'อัปโหลดรูปหน้าปกเรียบร้อย', 'hero_url' => $heroUrl]);
     }
 
     /**

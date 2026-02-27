@@ -599,6 +599,7 @@ class Api extends BaseController
         $personnelModel = new \App\Models\PersonnelModel();
         $personnelProgramModel = new \App\Models\PersonnelProgramModel();
         $newsModel = new \App\Models\NewsModel();
+        $facilityModel = new \App\Models\ProgramFacilityModel();
 
         $program = $programModel->find($id);
         if (! $program || ($program['status'] ?? '') !== 'active') {
@@ -721,6 +722,21 @@ class Api extends BaseController
         // Careers: not stored in DB yet; return empty array (section hidden when empty)
         $careers = [];
 
+        // Facilities (สิ่งอำนวยความสะดวก) สำหรับ AUN-QA / สนับสนุนการเรียน
+        $facilities = [];
+        $facilityRows = $facilityModel->getPublishedByProgramId($id);
+        foreach ($facilityRows as $f) {
+            $img = trim($f['image'] ?? '');
+            $imgUrl = $img !== '' ? (strpos($img, 'http') === 0 ? $img : base_url('serve/' . $img)) : '';
+            $facilities[] = [
+                'id'          => (int) ($f['id'] ?? 0),
+                'title'       => $f['title'] ?? '',
+                'description' => $f['description'] ?? '',
+                'image'       => $imgUrl,
+                'facility_type' => $f['facility_type'] ?? 'other',
+            ];
+        }
+
         $data = [
             'slug'                 => (string) $id,
             'id'                   => $id,
@@ -749,6 +765,7 @@ class Api extends BaseController
             'staff'                => $staff,
             'documents'            => $documents,
             'news'                 => $news,
+            'facilities'           => $facilities,
         ];
 
         return $this->response->setJSON([

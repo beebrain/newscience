@@ -79,6 +79,13 @@
                 </svg>
                 บุคลากร
             </button>
+            <button type="button" class="tab-button" data-tab="website" onclick="switchTab('website')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-1.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h1.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v1.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-1.09a1.65 1.65 0 00-1.51 1z" />
+                </svg>
+                การตั้งค่าเว็บไซต์
+            </button>
         </div>
 
         <!-- Tab Content -->
@@ -120,6 +127,29 @@
                             </div>
                         </div>
 
+                        <?php
+                        $heroBasic = $program_page['hero_image'] ?? '';
+                        $heroBasicUrl = '';
+                        if ($heroBasic !== '') {
+                            $heroBasicUrl = (strpos($heroBasic, 'http') === 0) ? $heroBasic : base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $heroBasic), '/'));
+                        }
+                        ?>
+                        <div class="form-group hero-basic-wrap">
+                            <label class="form-label">รูปหน้าปกหลักสูตร</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">ใช้เป็นภาพหน้าปกบนหน้าเว็บหลักสูตร แนะนำอัตราส่วน 16:9 (กว้าง 1920px ขึ้นไป) ลากวางหรือเลือกไฟล์แล้วครอปให้พอดี</p>
+                            <div id="hero-basic-preview" class="hero-basic-preview" style="<?= $heroBasicUrl ? '' : 'display:none;' ?> margin-bottom: 0.75rem;">
+                                <img id="hero-basic-img" src="<?= esc($heroBasicUrl) ?>" alt="หน้าปกปัจจุบัน" style="max-width: 100%; max-height: 220px; width: auto; object-fit: contain; border: 1px solid var(--color-gray-200); border-radius: 8px;">
+                                <div style="margin-top: 0.5rem;">
+                                    <button type="button" id="hero-basic-remove" class="btn btn-outline btn-sm">ลบรูปหน้าปก</button>
+                                </div>
+                            </div>
+                            <div id="hero-basic-drop" class="hero-basic-drop <?= $heroBasicUrl ? 'hero-basic-drop--hidden' : '' ?>">
+                                <input type="file" id="hero-basic-file" accept="image/jpeg,image/png,image/webp,image/gif" style="position:absolute;opacity:0;width:100%;height:100%;left:0;top:0;cursor:pointer;">
+                                <span class="hero-basic-drop__text">ลากวางรูปที่นี่ หรือคลิกเพื่อเลือกไฟล์</span>
+                                <span class="hero-basic-drop__hint">JPG, PNG, WEBP, GIF</span>
+                            </div>
+                        </div>
+
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary" id="basic-save-btn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -138,7 +168,7 @@
 
             <!-- Content Tab -->
             <div id="content-tab" class="tab-content">
-                <form id="content-page-form" action="<?= base_url('program-admin/update-page/' . $program['id']) ?>" method="post" style="padding: 1.5rem;">
+                <form id="content-page-form" action="<?= base_url('program-admin/update-page/' . $program['id']) ?>" method="post" enctype="multipart/form-data" style="padding: 1.5rem;">
                     <?= csrf_field() ?>
 
                     <div class="form-section">
@@ -284,11 +314,37 @@
                             <input type="url" id="intro_video_url" name="intro_video_url" class="form-control" value="<?= esc($program_page['intro_video_url'] ?? '') ?>" placeholder="https://youtube.com/watch?v=...">
                         </div>
 
-                        <div class="form-row">
+                        <div class="form-section" style="margin-top: 1.5rem;">
+                            <h4 class="form-section-title">หน้าตัวแทนหลักสูตร (SPA)</h4>
                             <div class="form-group">
-                                <label for="theme_color" class="form-label">สีธีม</label>
-                                <input type="color" id="theme_color" name="theme_color" class="form-control" value="<?= esc($program_page['theme_color'] ?? '#1e40af') ?>">
+                                <label class="form-label">รูปหน้าปกหลักสูตร (Hero)</label>
+                                <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">ใช้แสดงเป็นพื้นหลังส่วน Hero บนหน้าเว็บหลักสูตร (แนะนำขนาดกว้าง 1920px ขึ้นไป)</p>
+                                <?php
+                                $hero = $program_page['hero_image'] ?? '';
+                                $heroUrl = '';
+                                if ($hero !== '') {
+                                    $heroUrl = (strpos($hero, 'http') === 0) ? $hero : base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $hero), '/'));
+                                }
+                                ?>
+                                <?php if ($heroUrl !== ''): ?>
+                                <div class="hero-preview-wrap" style="margin-bottom: 0.75rem;">
+                                    <img id="hero-preview-img" src="<?= esc($heroUrl) ?>" alt="หน้าปกปัจจุบัน" style="max-width: 100%; max-height: 200px; object-fit: contain; border: 1px solid var(--color-gray-200); border-radius: 8px;">
+                                </div>
+                                <?php else: ?>
+                                <div class="hero-preview-wrap" style="margin-bottom: 0.75rem; display: none;">
+                                    <img id="hero-preview-img" src="" alt="" style="max-width: 100%; max-height: 200px; object-fit: contain; border: 1px solid var(--color-gray-200); border-radius: 8px;">
+                                </div>
+                                <?php endif; ?>
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                                    <input type="file" id="hero_image" name="hero_image" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif" style="max-width: 280px;">
+                                    <label class="form-label" style="margin: 0; display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+                                        <input type="checkbox" name="hero_image_remove" value="1" id="hero_image_remove"> ลบรูปหน้าปก
+                                    </label>
+                                </div>
                             </div>
+                        </div>
+
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="is_published" class="form-label">สถานะการเผยแพร่</label>
                                 <select id="is_published" name="is_published" class="form-control">
@@ -592,9 +648,120 @@
                     <?php endif; ?>
                 </div>
             </div>
+
+            <!-- Website Settings Tab -->
+            <div id="website-tab" class="tab-content">
+                <form action="<?= base_url('program-admin/update-website/' . $program['id']) ?>" method="post" style="padding: 1.5rem;">
+                    <?= csrf_field() ?>
+                    <div class="form-section">
+                        <h4 class="form-section-title">การตั้งค่าเว็บไซต์หลักสูตร</h4>
+                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">กำหนดสีธีม สีข้อความ และสีพื้นหลังของหน้าเว็บหลักสูตร (SPA)</p>
+
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label for="theme_color_hex" class="form-label">สีธีมหลักสูตร</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">ใช้เป็นสีหลัก (ปุ่ม, ไฮไลต์) บนหน้าเว็บหลักสูตร (รูปแบบ #RRGGBB)</p>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <input type="color" id="theme_color" class="form-control" value="<?= esc($program_page['theme_color'] ?? '#1e40af') ?>" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
+                                <input type="text" id="theme_color_hex" name="theme_color" class="form-control" value="<?= esc($program_page['theme_color'] ?? '#1e40af') ?>" style="width: 100px; font-family: monospace;" maxlength="7" placeholder="#1e40af">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="text_color" class="form-label">สีข้อความ</label>
+                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">สีของข้อความหลักบนหน้าเว็บ (รูปแบบ #RRGGBB)</p>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <input type="color" id="text_color" class="form-control" value="<?= esc($program_page['text_color'] ?? '#1e293b') ?>" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
+                                    <input type="text" id="text_color_hex" name="text_color" class="form-control" value="<?= esc($program_page['text_color'] ?? '') ?>" style="width: 100px; font-family: monospace;" maxlength="7" placeholder="#1e293b">
+                                    <button type="button" class="btn btn-outline btn-sm" onclick="var h=document.getElementById('text_color_hex'); var c=document.getElementById('text_color'); h.value=''; c.value='#1e293b';" title="ใช้ค่าตั้งต้น">ล้าง</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="background_color" class="form-label">สีพื้นหลัง</label>
+                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">สีพื้นหลังหลักของหน้าเว็บ (รูปแบบ #RRGGBB)</p>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <input type="color" id="background_color" class="form-control" value="<?= esc($program_page['background_color'] ?? '#f8fafc') ?>" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
+                                    <input type="text" id="background_color_hex" name="background_color" class="form-control" value="<?= esc($program_page['background_color'] ?? '') ?>" style="width: 100px; font-family: monospace;" maxlength="7" placeholder="#f8fafc">
+                                    <button type="button" class="btn btn-outline btn-sm" onclick="var h=document.getElementById('background_color_hex'); var c=document.getElementById('background_color'); h.value=''; c.value='#f8fafc';" title="ใช้ค่าตั้งต้น">ล้าง</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="form-text text-muted" style="font-size: 0.8125rem; margin-top: 0.5rem;">เว้นว่างเพื่อใช้ค่าตั้งต้นของระบบ</p>
+
+                        <div class="form-actions" style="margin-top: 1.5rem;">
+                            <button type="submit" class="btn btn-primary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                                    <polyline points="17 21 17 13 7 13 7 21" />
+                                    <polyline points="7 3 7 8 15 8" />
+                                    <line x1="12" y1="21" x2="12" y2="13" />
+                                </svg>
+                                บันทึกการตั้งค่าเว็บไซต์
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Modal ครอปรูปหน้าปก -->
+<div id="hero-crop-modal" class="hero-crop-modal" role="dialog" aria-labelledby="hero-crop-modal-title" aria-modal="true" style="display:none;">
+    <div class="hero-crop-modal__backdrop"></div>
+    <div class="hero-crop-modal__box">
+        <div class="hero-crop-modal__header">
+            <h3 id="hero-crop-modal-title" class="hero-crop-modal__title">ครอปภาพหน้าปก</h3>
+            <p class="hero-crop-modal__subtitle">ปรับกรอบให้พอดีกับภาพหน้าปก (อัตราส่วน 16:9)</p>
+            <button type="button" class="hero-crop-modal__close" id="hero-crop-close" aria-label="ปิด">&times;</button>
+        </div>
+        <div class="hero-crop-modal__body">
+            <div class="hero-crop-container">
+                <img id="hero-crop-image" src="" alt="">
+            </div>
+        </div>
+        <div class="hero-crop-modal__footer">
+            <button type="button" class="btn btn-outline" id="hero-crop-cancel">ยกเลิก</button>
+            <button type="button" class="btn btn-primary" id="hero-crop-confirm">
+                <span class="hero-crop-confirm-text">ตกลง ใช้รูปนี้</span>
+                <span class="hero-crop-confirm-loading" style="display:none;">กำลังอัปโหลด...</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.hero-basic-drop {
+    position: relative;
+    border: 2px dashed var(--color-gray-300);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    background: var(--color-gray-50);
+    transition: border-color 0.2s, background 0.2s;
+}
+.hero-basic-drop:hover, .hero-basic-drop.dragover { border-color: var(--color-primary); background: rgba(var(--color-primary-rgb, 59, 130, 246), 0.05); }
+.hero-basic-drop__text { display: block; font-weight: 500; color: var(--color-gray-700); margin-bottom: 0.25rem; }
+.hero-basic-drop__hint { font-size: 0.8125rem; color: var(--color-gray-500); }
+.hero-basic-drop--hidden { display: none !important; }
+.hero-crop-modal { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.hero-crop-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
+.hero-crop-modal__box { position: relative; background: #fff; border-radius: 12px; max-width: 900px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.hero-crop-modal__header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--color-gray-200); flex-shrink: 0; }
+.hero-crop-modal__title { margin: 0 2rem 0 0; font-size: 1.125rem; }
+.hero-crop-modal__subtitle { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--color-gray-600); }
+.hero-crop-modal__close { position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px; border: none; background: none; font-size: 1.5rem; line-height: 1; color: var(--color-gray-500); cursor: pointer; }
+.hero-crop-modal__close:hover { color: var(--color-gray-800); }
+.hero-crop-modal__body { padding: 1rem; overflow: hidden; flex: 1; min-height: 0; }
+.hero-crop-container { width: 100%; height: 60vh; max-height: 500px; background: #000; overflow: hidden; }
+.hero-crop-container img { max-width: 100%; max-height: 100%; display: block; }
+.hero-crop-modal__footer { padding: 1rem 1.25rem; border-top: 1px solid var(--color-gray-200); display: flex; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0; }
+</style>
+
+<!-- Cropper.js -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css" crossorigin="anonymous" />
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js" crossorigin="anonymous"></script>
 
 <!-- JavaScript for Tab Navigation -->
 <script>
@@ -678,6 +845,181 @@
         }
     }
 
+    // Theme color picker <-> hex sync & hero image preview
+    (function() {
+        var colorInput = document.getElementById('theme_color');
+        var hexInput = document.getElementById('theme_color_hex');
+        if (colorInput && hexInput) {
+            colorInput.addEventListener('input', function() { hexInput.value = this.value; });
+            hexInput.addEventListener('input', function() {
+                var v = this.value.trim();
+                if (/^#[0-9A-Fa-f]{6}$/.test(v)) colorInput.value = v;
+            });
+        }
+        var heroFile = document.getElementById('hero_image');
+        var heroPreview = document.getElementById('hero-preview-img');
+        var heroPreviewWrap = heroPreview && heroPreview.closest('.hero-preview-wrap');
+        var heroRemove = document.getElementById('hero_image_remove');
+        if (heroFile && heroPreviewWrap) {
+            heroFile.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    var r = new FileReader();
+                    r.onload = function() { heroPreview.src = r.result; heroPreviewWrap.style.display = 'block'; };
+                    r.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+        if (heroRemove && heroPreviewWrap) {
+            heroRemove.addEventListener('change', function() {
+                heroPreviewWrap.style.display = this.checked ? 'none' : 'block';
+            });
+        }
+    })();
+
+    // Hero image: drag-drop + crop modal (แท็บข้อมูลพื้นฐาน)
+    (function() {
+        var programId = <?= (int)($program['id'] ?? 0) ?>;
+        var uploadHeroUrl = '<?= base_url('program-admin/upload-hero/' . (int)($program['id'] ?? 0)) ?>';
+        var csrfInput = document.querySelector('input[name="<?= csrf_token() ?>"]');
+        var dropZone = document.getElementById('hero-basic-drop');
+        var preview = document.getElementById('hero-basic-preview');
+        var previewImg = document.getElementById('hero-basic-img');
+        var fileInput = document.getElementById('hero-basic-file');
+        var removeBtn = document.getElementById('hero-basic-remove');
+        var modal = document.getElementById('hero-crop-modal');
+        var cropImage = document.getElementById('hero-crop-image');
+        var cropClose = document.getElementById('hero-crop-close');
+        var cropCancel = document.getElementById('hero-crop-cancel');
+        var cropConfirm = document.getElementById('hero-crop-confirm');
+        var cropConfirmText = cropConfirm && cropConfirm.querySelector('.hero-crop-confirm-text');
+        var cropConfirmLoading = cropConfirm && cropConfirm.querySelector('.hero-crop-confirm-loading');
+        var cropperInstance = null;
+        var currentObjectUrl = null;
+
+        function openCropModal(file) {
+            if (!file || !file.type.match(/^image\/(jpeg|png|gif|webp)$/)) return;
+            if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+            currentObjectUrl = URL.createObjectURL(file);
+            cropImage.src = currentObjectUrl;
+            modal.style.display = 'flex';
+            if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+            setTimeout(function() {
+                if (typeof Cropper !== 'undefined' && cropImage) {
+                    cropperInstance = new Cropper(cropImage, {
+                        aspectRatio: 16 / 9,
+                        viewMode: 1,
+                        dragMode: 'move',
+                        autoCropArea: 0.8,
+                        restore: false,
+                        guides: true,
+                        center: true,
+                        highlight: false,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true
+                    });
+                }
+            }, 100);
+        }
+
+        function closeCropModal() {
+            modal.style.display = 'none';
+            if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+            if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+            if (fileInput) fileInput.value = '';
+        }
+
+        function uploadCropped() {
+            if (!cropperInstance || !uploadHeroUrl) return;
+            if (cropConfirmText) cropConfirmText.style.display = 'none';
+            if (cropConfirmLoading) cropConfirmLoading.style.display = 'inline';
+            cropConfirm.disabled = true;
+            cropperInstance.getCroppedCanvas({ maxWidth: 1920, maxHeight: 1080, imageSmoothingQuality: 'high' }).toBlob(function(blob) {
+                var fd = new FormData();
+                fd.append('hero_image', blob, 'hero.jpg');
+                if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
+                fetch(uploadHeroUrl, { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        if (res.success && res.hero_url) {
+                            previewImg.src = res.hero_url;
+                            preview.style.display = 'block';
+                            if (dropZone) dropZone.classList.add('hero-basic-drop--hidden');
+                            closeCropModal();
+                        } else {
+                            alert(res.message || 'อัปโหลดไม่สำเร็จ');
+                        }
+                    })
+                    .catch(function() { alert('เกิดข้อผิดพลาดในการเชื่อมต่อ'); })
+                    .finally(function() {
+                        cropConfirm.disabled = false;
+                        if (cropConfirmText) cropConfirmText.style.display = 'inline';
+                        if (cropConfirmLoading) cropConfirmLoading.style.display = 'none';
+                    });
+            }, 'image/jpeg', 0.9);
+        }
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) openCropModal(this.files[0]);
+            });
+        }
+        if (dropZone) {
+            dropZone.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); this.classList.add('dragover'); });
+            dropZone.addEventListener('dragleave', function(e) { e.preventDefault(); this.classList.remove('dragover'); });
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.remove('dragover');
+                if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) openCropModal(e.dataTransfer.files[0]);
+            });
+        }
+        if (cropClose) cropClose.addEventListener('click', closeCropModal);
+        if (cropCancel) cropCancel.addEventListener('click', closeCropModal);
+        if (cropConfirm) cropConfirm.addEventListener('click', uploadCropped);
+        if (modal && modal.querySelector('.hero-crop-modal__backdrop')) {
+            modal.querySelector('.hero-crop-modal__backdrop').addEventListener('click', closeCropModal);
+        }
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                if (!confirm('ต้องการลบรูปหน้าปกใช่หรือไม่?')) return;
+                var fd = new FormData();
+                fd.append('hero_image_remove', '1');
+                if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
+                fetch(uploadHeroUrl, { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        if (res.success) {
+                            previewImg.src = '';
+                            preview.style.display = 'none';
+                            if (dropZone) dropZone.classList.remove('hero-basic-drop--hidden');
+                        }
+                    });
+            });
+        }
+    })();
+
+    // Website color pickers sync
+    (function() {
+        var textColor = document.getElementById('text_color');
+        var textColorHex = document.getElementById('text_color_hex');
+        if (textColor && textColorHex) {
+            textColor.addEventListener('input', function() { textColorHex.value = this.value; });
+            textColorHex.addEventListener('input', function() {
+                var v = this.value.trim();
+                if (/^#[0-9A-Fa-f]{6}$/.test(v)) textColor.value = v;
+            });
+        }
+        var bgColor = document.getElementById('background_color');
+        var bgColorHex = document.getElementById('background_color_hex');
+        if (bgColor && bgColorHex) {
+            bgColor.addEventListener('input', function() { bgColorHex.value = this.value; });
+            bgColorHex.addEventListener('input', function() {
+                var v = this.value.trim();
+                if (/^#[0-9A-Fa-f]{6}$/.test(v)) bgColor.value = v;
+            });
+        }
+    })();
+
     // Initialize first tab (or tab from query string)
     document.addEventListener('DOMContentLoaded', function() {
         var params = new URLSearchParams(window.location.search);
@@ -686,13 +1028,15 @@
             switchTab('news');
             loadProgramNews();
             setTimeout(initNewsCKEditor, 100);
+        } else if (tab === 'website' && document.getElementById('website-tab')) {
+            switchTab('website');
         } else {
             switchTab('basic');
         }
         document.getElementById('program-news-form') && document.getElementById('program-news-form').addEventListener('submit', function() {
             ensureNewsEditorSync();
         });
-    });
+        });
     var origSwitchTab = window.switchTab;
     if (typeof origSwitchTab === 'function') {
         window.switchTab = function(tabName) {

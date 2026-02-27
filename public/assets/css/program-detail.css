@@ -575,6 +575,64 @@
 /* ================================
    QA Document Hub
    ================================ */
+/* Facilities grid — สิ่งอำนวยความสะดวก (AUN-QA) */
+.pd-facilities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--spacing-6);
+}
+
+.pd-facility-card {
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all var(--transition);
+}
+
+.pd-facility-card:hover {
+    border-color: var(--program-accent, var(--color-primary));
+    box-shadow: var(--shadow);
+}
+
+.pd-facility-card__img,
+.pd-facility-card__placeholder {
+    width: 100%;
+    height: 180px;
+    background: var(--color-gray-100);
+}
+
+.pd-facility-card__img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pd-facility-card__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-400);
+}
+
+.pd-facility-card__body {
+    padding: var(--spacing-5);
+}
+
+.pd-facility-card__title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-gray-900);
+    margin: 0 0 var(--spacing-2);
+}
+
+.pd-facility-card__desc {
+    font-size: var(--text-sm);
+    color: var(--color-gray-600);
+    line-height: 1.5;
+    margin: 0;
+}
+
 .pd-doc-list {
     display: flex;
     flex-direction: column;

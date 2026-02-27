@@ -22,15 +22,21 @@ $routes->get('/support-documents', 'Pages::supportDocuments');
 $routes->get('/official-documents', 'Pages::officialDocuments');
 $routes->get('/promotion-criteria', 'Pages::promotionCriteria');
 
-// Program Website Routes (Public)
-$routes->get('program/(:num)', 'ProgramController::show/$1');
+// Program Website Routes (Public) — /program/{id} redirects to new SPA /p/{id}
+$routes->get('program/(:num)', 'ProgramSpaController::showByProgramId/$1');
 $routes->get('program-site/(:num)', 'ProgramWebsite::index/$1');
 $routes->get('program-detail', 'ProgramDetailController::index');
 
+// Program SPA (Modern Luxury): ใช้ program id
+$routes->get('p/(:num)', 'ProgramSpaController::index/$1');
+$routes->get('p/(:num)/check', 'ProgramSpaController::checkSystem/$1');
+$routes->get('p/(:num)/data', 'ProgramSpaController::getData/$1');
+$routes->get('p/(:num)/main', 'ProgramSpaController::main/$1');
+
 // Serve uploaded files from writable (fallback to public)
-// ใส่ 2 segments ก่อน: news/xxx.jpg, activities/xxx.jpg ไปที่ file() — path เกิน 2 segments ไปที่ fileByPath
-$routes->get('serve/uploads/(:segment)/(:segment)', 'Serve::file/$1/$2');
+// ใส่ path เต็มก่อน (programs/8/hero/xxx.jpg) ไป fileByPath — เหลือ 2 segments ค่อยไป file()
 $routes->get('serve/uploads/(.+)', 'Serve::fileByPath/$1');
+$routes->get('serve/uploads/(:segment)/(:segment)', 'Serve::file/$1/$2');
 $routes->get('serve/thumb/(:segment)/(:segment)', 'Serve::thumb/$1/$2');
 
 // Faculty personnel from external Research Record API (see doc_api.rd)
@@ -311,6 +317,8 @@ $routes->group('program-admin', ['filter' => 'programadmin'], function ($routes)
     $routes->post('update/(:num)', 'Admin\ProgramAdmin\Dashboard::update/$1');
     $routes->post('update-page/(:num)', 'Admin\ProgramAdmin\Dashboard::updatePage/$1');
     $routes->post('update-page-json/(:num)', 'Admin\ProgramAdmin\Dashboard::updatePageJson/$1');
+    $routes->post('update-website/(:num)', 'Admin\ProgramAdmin\Dashboard::updateWebsite/$1');
+    $routes->post('upload-hero/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadHero/$1');
     $routes->get('downloads/(:num)', 'Admin\ProgramAdmin\Dashboard::downloads/$1');
     $routes->post('upload-download/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadDownload/$1');
     $routes->post('delete-download/(:num)', 'Admin\ProgramAdmin\Dashboard::deleteDownload/$1');

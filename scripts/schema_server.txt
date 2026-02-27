@@ -1,0 +1,859 @@
+# hostname=sci.uru.ac.th database=newscience | 2026-02-26 10:58:51
+
+## TABLE: about_sections
+CREATE TABLE `about_sections` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `section_key` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'vision, mission, identity, history',
+  `title_th` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `title_en` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `content_th` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `content_en` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `sort_order` int DEFAULT '0',
+  `status` enum('active','inactive') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'active',
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `section_key` (`section_key`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: activities
+CREATE TABLE `activities` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `activity_date` date DEFAULT NULL,
+  `location` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `featured_image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('draft','published') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `slug` (`slug`),
+  KEY `status` (`status`),
+  KEY `activity_date` (`activity_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: activity_images
+CREATE TABLE `activity_images` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `activity_id` int unsigned NOT NULL,
+  `image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `caption` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sort_order` int DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `activity_id` (`activity_id`),
+  CONSTRAINT `fk_activity_images` FOREIGN KEY (`activity_id`) REFERENCES `activities` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: barcode_event_eligibles
+CREATE TABLE `barcode_event_eligibles` (
+  `barcode_event_id` int unsigned NOT NULL,
+  `student_user_id` int unsigned NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`barcode_event_id`,`student_user_id`),
+  KEY `student_user_id` (`student_user_id`),
+  CONSTRAINT `fk_eligibles_event` FOREIGN KEY (`barcode_event_id`) REFERENCES `barcode_events` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_eligibles_student_user` FOREIGN KEY (`student_user_id`) REFERENCES `student_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: barcode_events
+CREATE TABLE `barcode_events` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `event_date` date NOT NULL,
+  `status` enum('draft','active','closed') COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `created_by_student_user_id` int unsigned DEFAULT NULL COMMENT 'set when created by club (student_user role=club)',
+  `created_by_user_uid` int unsigned DEFAULT NULL COMMENT 'set when created by system admin (user.uid)',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `status` (`status`),
+  KEY `event_date` (`event_date`),
+  KEY `created_by_student_user_id` (`created_by_student_user_id`),
+  KEY `created_by_user_uid` (`created_by_user_uid`),
+  CONSTRAINT `fk_barcode_events_student_user` FOREIGN KEY (`created_by_student_user_id`) REFERENCES `student_user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_barcode_events_user` FOREIGN KEY (`created_by_user_uid`) REFERENCES `user` (`uid`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: barcodes
+CREATE TABLE `barcodes` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `barcode_event_id` int unsigned NOT NULL,
+  `code` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'barcode string',
+  `student_user_id` int unsigned DEFAULT NULL COMMENT 'assigned student; NULL until assigned',
+  `assigned_at` datetime DEFAULT NULL,
+  `claimed_at` datetime DEFAULT NULL COMMENT 'เมื่อนักศึกษากดรับบาร์โค้ด (ยืนยันการรับ)',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `barcode_event_code` (`barcode_event_id`,`code`),
+  KEY `student_user_id` (`student_user_id`),
+  CONSTRAINT `fk_barcodes_event` FOREIGN KEY (`barcode_event_id`) REFERENCES `barcode_events` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_barcodes_student_user` FOREIGN KEY (`student_user_id`) REFERENCES `student_user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: cert_approvals
+CREATE TABLE `cert_approvals` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `request_id` int unsigned NOT NULL,
+  `action` enum('submit','verify','approve','reject','return') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `actor_id` int(3) unsigned zerofill NOT NULL,
+  `actor_role` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `comment` text COLLATE utf8mb4_unicode_ci,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_cert_approvals_request` (`request_id`),
+  KEY `fk_cert_approvals_actor` (`actor_id`),
+  CONSTRAINT `fk_cert_approvals_actor` FOREIGN KEY (`actor_id`) REFERENCES `user` (`uid`),
+  CONSTRAINT `fk_cert_approvals_request` FOREIGN KEY (`request_id`) REFERENCES `cert_requests` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: cert_event_recipients
+CREATE TABLE `cert_event_recipients` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `event_id` int unsigned NOT NULL COMMENT 'FK cert_events',
+  `student_id` int unsigned DEFAULT NULL COMMENT 'FK student_user (?????????????????????????????????)',
+  `recipient_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '??????????????????????????????',
+  `recipient_email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '?????????????????????????????????',
+  `recipient_id_no` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '????????????????????????????????????/????????????????????????????????????',
+  `extra_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin COMMENT '????????????????????????????????????????????? (????????????, ?????????, ????????????, etc.)',
+  `certificate_id` int unsigned DEFAULT NULL COMMENT 'FK certificates (????????????????????? cert ????????????)',
+  `status` enum('pending','issued','failed') COLLATE utf8mb4_unicode_ci DEFAULT 'pending' COMMENT '???????????????',
+  `error_message` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '????????????????????? error ?????????????????? Cert ???????????????????????????',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_event_id` (`event_id`),
+  KEY `idx_student_id` (`student_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_certificate_id` (`certificate_id`),
+  CONSTRAINT `fk_cert_event_recipients_certificate` FOREIGN KEY (`certificate_id`) REFERENCES `certificates` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_cert_event_recipients_event` FOREIGN KEY (`event_id`) REFERENCES `cert_events` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_cert_event_recipients_student` FOREIGN KEY (`student_id`) REFERENCES `student_user` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `cert_event_recipients_chk_1` CHECK (json_valid(`extra_data`))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: cert_events
+CREATE TABLE `cert_events` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '?????????????????????????????????/??????????????????????????????',
+  `description` text COLLATE utf8mb4_unicode_ci COMMENT '???????????????????????????????????????????????????',
+  `event_date` date DEFAULT NULL COMMENT '????????????????????????????????????????????????',
+  `template_id` int unsigned NOT NULL COMMENT '???????????????????????????????????????',
+  `signer_id` int(3) unsigned zerofill DEFAULT NULL COMMENT '???????????????????????? (FK user.uid)',
+  `status` enum('draft','open','issued','closed') COLLATE utf8mb4_unicode_ci DEFAULT 'draft' COMMENT '???????????????',
+  `created_by` int(3) unsigned zerofill DEFAULT NULL COMMENT '???????????????????????? (FK user.uid)',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_event_date` (`event_date`),
+  KEY `fk_cert_events_template` (`template_id`),
+  KEY `fk_cert_events_signer` (`signer_id`),
+  KEY `fk_cert_events_created_by` (`created_by`),
+  CONSTRAINT `fk_cert_events_created_by` FOREIGN KEY (`created_by`) REFERENCES `user` (`uid`) ON DELETE SET NULL,
+  CONSTRAINT `fk_cert_events_signer` FOREIGN KEY (`signer_id`) REFERENCES `user` (`uid`) ON DELETE SET NULL,
+  CONSTRAINT `fk_cert_events_template` FOREIGN KEY (`template_id`) REFERENCES `cert_templates` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: cert_requests
+CREATE TABLE `cert_requests` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `request_number` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `student_id` int unsigned NOT NULL,
+  `template_id` int unsigned NOT NULL,
+  `program_id` int unsigned DEFAULT NULL,
+  `level` enum('program','faculty') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `purpose` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `copies` tinyint unsigned DEFAULT '1',
+  `note` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('pending','verified','approved','generating','completed','rejected') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `rejected_reason` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `verified_by` int(3) unsigned zerofill DEFAULT NULL,
+  `verified_at` datetime DEFAULT NULL,
+  `approved_by` int(3) unsigned zerofill DEFAULT NULL,
+  `approved_at` datetime DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `request_number` (`request_number`),
+  KEY `idx_cert_requests_student` (`student_id`),
+  KEY `idx_cert_requests_status` (`status`),
+  KEY `idx_cert_requests_program` (`program_id`),
+  KEY `fk_cert_requests_template` (`template_id`),
+  KEY `fk_cert_requests_verified_by` (`verified_by`),
+  KEY `fk_cert_requests_approved_by` (`approved_by`),
+  CONSTRAINT `fk_cert_requests_approved_by` FOREIGN KEY (`approved_by`) REFERENCES `user` (`uid`),
+  CONSTRAINT `fk_cert_requests_program` FOREIGN KEY (`program_id`) REFERENCES `programs` (`id`),
+  CONSTRAINT `fk_cert_requests_student` FOREIGN KEY (`student_id`) REFERENCES `student_user` (`id`),
+  CONSTRAINT `fk_cert_requests_template` FOREIGN KEY (`template_id`) REFERENCES `cert_templates` (`id`),
+  CONSTRAINT `fk_cert_requests_verified_by` FOREIGN KEY (`verified_by`) REFERENCES `user` (`uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: cert_signers
+CREATE TABLE `cert_signers` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `user_uid` int(3) unsigned zerofill NOT NULL,
+  `signer_role` enum('program_chair','dean') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `program_id` int unsigned DEFAULT NULL,
+  `signature_image` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pfx_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pfx_password_enc` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_cert_signers_user_role_program` (`user_uid`,`signer_role`,`program_id`),
+  KEY `fk_cert_signers_program` (`program_id`),
+  CONSTRAINT `fk_cert_signers_program` FOREIGN KEY (`program_id`) REFERENCES `programs` (`id`),
+  CONSTRAINT `fk_cert_signers_user` FOREIGN KEY (`user_uid`) REFERENCES `user` (`uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: cert_templates
+CREATE TABLE `cert_templates` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `name_th` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name_en` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `level` enum('program','faculty') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `template_file` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `field_mapping` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  `signature_x` decimal(6,2) DEFAULT '300.00',
+  `signature_y` decimal(6,2) DEFAULT '600.00',
+  `qr_x` decimal(6,2) DEFAULT '450.00',
+  `qr_y` decimal(6,2) DEFAULT '700.00',
+  `qr_size` decimal(6,2) DEFAULT '60.00',
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_by` int(3) unsigned zerofill DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_level` (`level`),
+  KEY `fk_cert_templates_created_by` (`created_by`),
+  CONSTRAINT `fk_cert_templates_created_by` FOREIGN KEY (`created_by`) REFERENCES `user` (`uid`),
+  CONSTRAINT `cert_templates_chk_1` CHECK (json_valid(`field_mapping`))
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: certificates
+CREATE TABLE `certificates` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `request_id` int unsigned NOT NULL,
+  `certificate_no` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `pdf_path` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `pdf_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `verification_token` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `student_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  `signed_by` int(3) unsigned zerofill DEFAULT NULL,
+  `signed_at` datetime DEFAULT NULL,
+  `download_count` int unsigned DEFAULT '0',
+  `last_downloaded_at` datetime DEFAULT NULL,
+  `issued_date` date NOT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `is_revoked` tinyint(1) DEFAULT '0',
+  `revoked_reason` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `revoked_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `certificate_no` (`certificate_no`),
+  UNIQUE KEY `verification_token` (`verification_token`),
+  KEY `idx_certificates_request` (`request_id`),
+  KEY `fk_certificates_signed_by` (`signed_by`),
+  CONSTRAINT `fk_certificates_request` FOREIGN KEY (`request_id`) REFERENCES `cert_requests` (`id`),
+  CONSTRAINT `fk_certificates_signed_by` FOREIGN KEY (`signed_by`) REFERENCES `user` (`uid`),
+  CONSTRAINT `certificates_chk_1` CHECK (json_valid(`student_snapshot`))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: contact_info
+CREATE TABLE `contact_info` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'address, phone, email, social',
+  `label_th` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `label_en` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `value` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `icon` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `sort_order` int DEFAULT '0',
+  `status` enum('active','inactive') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'active',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: document_views
+CREATE TABLE `document_views` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `document_id` int unsigned DEFAULT NULL,
+  `user_id` int unsigned DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `viewed_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `document_id` (`document_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: edoc_document_tags
+CREATE TABLE `edoc_document_tags` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `document_id` int unsigned NOT NULL,
+  `tag_email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `source_table` enum('user','student_user') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'user',
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `document_id_tag_email` (`document_id`,`tag_email`),
+  KEY `document_id` (`document_id`),
+  KEY `tag_email` (`tag_email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: edoc_tag_groups
+CREATE TABLE `edoc_tag_groups` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `group_name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `tags` text COLLATE utf8mb4_general_ci,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: edoc_volumes
+CREATE TABLE `edoc_volumes` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `year` int unsigned NOT NULL,
+  `volume_type` enum('send_internal','receive_internal','external','order','announcement') COLLATE utf8mb4_general_ci NOT NULL,
+  `volume_label` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_by` int unsigned DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `year_volume_type` (`year`,`volume_type`),
+  KEY `year` (`year`),
+  KEY `is_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: edoctag
+CREATE TABLE `edoctag` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `last_name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `nickname` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `first_name` (`first_name`),
+  KEY `last_name` (`last_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: edoctitle
+CREATE TABLE `edoctitle` (
+  `iddoc` int unsigned NOT NULL AUTO_INCREMENT,
+  `volume_id` int unsigned DEFAULT NULL,
+  `doc_year` int unsigned DEFAULT NULL,
+  `officeiddoc` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `title` text COLLATE utf8mb4_general_ci,
+  `datedoc` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `doctype` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `owner` text COLLATE utf8mb4_general_ci,
+  `participant` text COLLATE utf8mb4_general_ci,
+  `fileaddress` text COLLATE utf8mb4_general_ci,
+  `userid` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `pages` int NOT NULL DEFAULT '0',
+  `copynum` int NOT NULL DEFAULT '1',
+  `order` int NOT NULL DEFAULT '0',
+  `regisdate` datetime DEFAULT NULL,
+  PRIMARY KEY (`iddoc`),
+  KEY `doctype` (`doctype`),
+  KEY `regisdate` (`regisdate`),
+  KEY `idx_volume_id` (`volume_id`),
+  KEY `idx_doc_year` (`doc_year`)
+) ENGINE=InnoDB AUTO_INCREMENT=9540 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: events
+CREATE TABLE `events` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `excerpt` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `event_date` date NOT NULL,
+  `event_time` time DEFAULT NULL,
+  `event_end_date` date DEFAULT NULL,
+  `event_end_time` time DEFAULT NULL,
+  `location` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `featured_image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('draft','published') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `sort_order` int DEFAULT '0',
+  `author_id` int(3) unsigned zerofill DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `slug` (`slug`),
+  KEY `status` (`status`),
+  KEY `event_date` (`event_date`),
+  KEY `author_id` (`author_id`),
+  CONSTRAINT `fk_events_author` FOREIGN KEY (`author_id`) REFERENCES `user` (`uid`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: hero_slides
+CREATE TABLE `hero_slides` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `subtitle` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `image` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `link` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `link_text` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `show_buttons` tinyint(1) NOT NULL DEFAULT '0',
+  `sort_order` int NOT NULL DEFAULT '0',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `start_date` datetime DEFAULT NULL,
+  `end_date` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: links
+CREATE TABLE `links` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'general',
+  `icon` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `target` enum('_self','_blank') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '_blank',
+  `sort_order` int DEFAULT '0',
+  `status` enum('active','inactive') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `category` (`category`),
+  KEY `status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: migrations
+CREATE TABLE `migrations` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `version` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `class` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `group` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `namespace` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `time` int NOT NULL,
+  `batch` int unsigned NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: news
+CREATE TABLE `news` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `excerpt` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('draft','published') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `display_as_event` tinyint(1) NOT NULL DEFAULT '0' COMMENT '1 = แสดงใน section กิจกรรมที่จะมาถึง',
+  `category` enum('general','student_activity','research_grant') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'general',
+  `featured_image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `author_id` int(3) unsigned zerofill DEFAULT NULL,
+  `view_count` int DEFAULT '0',
+  `published_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `facebook_url` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `slug` (`slug`),
+  KEY `status` (`status`),
+  KEY `author_id` (`author_id`),
+  CONSTRAINT `fk_news_author` FOREIGN KEY (`author_id`) REFERENCES `user` (`uid`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=364 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: news_images
+CREATE TABLE `news_images` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `news_id` int unsigned NOT NULL,
+  `image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'image',
+  `caption` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sort_order` int DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `news_id` (`news_id`),
+  CONSTRAINT `fk_news_images_news` FOREIGN KEY (`news_id`) REFERENCES `news` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: news_news_tags
+CREATE TABLE `news_news_tags` (
+  `news_id` int unsigned NOT NULL,
+  `news_tag_id` int unsigned NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`news_id`,`news_tag_id`),
+  KEY `news_tag_id` (`news_tag_id`),
+  CONSTRAINT `fk_nnt_news` FOREIGN KEY (`news_id`) REFERENCES `news` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_nnt_tag` FOREIGN KEY (`news_tag_id`) REFERENCES `news_tags` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: news_tags
+CREATE TABLE `news_tags` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ชื่อแสดง เช่น ข่าวทั่วไป',
+  `slug` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ใช้ใน URL/API เช่น general',
+  `sort_order` int DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `slug` (`slug`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: organization_units
+CREATE TABLE `organization_units` (
+  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
+  `name_th` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ชื่อหน่วยงาน (ไทย)',
+  `name_en` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'ชื่อหน่วยงาน (อังกฤษ)',
+  `code` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'รหัสใช้ในระบบ: executives, office, research, bachelor, graduate',
+  `sort_order` tinyint unsigned NOT NULL DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='หน่วยงาน 5 กลุ่ม: ผู้บริหาร, สำนักงานคณบดี, หัวหน้าหน่วยวิจัย, หลักสูตรป.ตรี, หลักสูตรบัณฑิต'
+
+## TABLE: personnel
+CREATE TABLE `personnel` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `name_en` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'ชื่อ-นามสกุล (อังกฤษ)',
+  `position` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '??????????????????????????????????????? ???????????? ???????????????',
+  `position_en` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `organization_unit_id` tinyint unsigned DEFAULT NULL COMMENT 'FK organization_units',
+  `program_id` int unsigned DEFAULT NULL,
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `user_email` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `phone` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `bio` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `bio_en` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `education` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'JSON array of education history',
+  `expertise` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT 'JSON array of expertise areas',
+  `sort_order` int DEFAULT '0',
+  `status` enum('active','inactive') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'active',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `position_detail` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'รายละเอียดตำแหน่ง เช่น รองคณบดี ฝ่ายกิจกรรมนักศึกษา',
+  `academic_title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'ตำแหน่งทางวิชาการ เช่น ผู้ช่วยศาสตราจารย์ รองศาสตราจารย์ ศาสตราจารย์',
+  `academic_title_en` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Name prefix in English (e.g. Dr., Asst. Prof.)',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `idx_status` (`status`),
+  KEY `idx_sort` (`sort_order`),
+  KEY `program_id` (`program_id`),
+  KEY `organization_unit_id` (`organization_unit_id`),
+  CONSTRAINT `fk_personnel_organization_unit` FOREIGN KEY (`organization_unit_id`) REFERENCES `organization_units` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=204 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: personnel_programs
+CREATE TABLE `personnel_programs` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `personnel_id` int unsigned NOT NULL,
+  `program_id` int unsigned NOT NULL,
+  `role_in_curriculum` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_primary` tinyint(1) DEFAULT '0',
+  `sort_order` int DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `personnel_program` (`personnel_id`,`program_id`),
+  KEY `program_id` (`program_id`),
+  KEY `personnel_id` (`personnel_id`),
+  KEY `idx_pp_primary` (`personnel_id`,`is_primary`),
+  CONSTRAINT `fk_pp_personnel` FOREIGN KEY (`personnel_id`) REFERENCES `personnel` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_pp_program` FOREIGN KEY (`program_id`) REFERENCES `programs` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=363 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Pivot บุคลากร–หลักสูตร. กฎ: 1 คนเป็นประธานได้1หลักสูตร, 1หลักสูตรมีประธานได้1คน. Enforce ในแอป'
+
+## TABLE: program_activities
+CREATE TABLE `program_activities` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `program_id` int unsigned NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `description` text COLLATE utf8mb4_general_ci,
+  `activity_date` date DEFAULT NULL,
+  `location` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `sort_order` int NOT NULL DEFAULT '0',
+  `is_published` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `program_id` (`program_id`),
+  CONSTRAINT `program_activities_program_id_foreign` FOREIGN KEY (`program_id`) REFERENCES `programs` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: program_activity_images
+CREATE TABLE `program_activity_images` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `activity_id` int unsigned NOT NULL,
+  `image_path` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `caption` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `sort_order` int NOT NULL DEFAULT '0',
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `activity_id` (`activity_id`),
+  CONSTRAINT `program_activity_images_activity_id_foreign` FOREIGN KEY (`activity_id`) REFERENCES `program_activities` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: program_content_blocks
+CREATE TABLE `program_content_blocks` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `program_id` int NOT NULL,
+  `block_key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `block_type` enum('html','css','js','wysiwyg','markdown') COLLATE utf8mb4_unicode_ci DEFAULT 'wysiwyg',
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `content` longtext COLLATE utf8mb4_unicode_ci,
+  `custom_css` text COLLATE utf8mb4_unicode_ci,
+  `custom_js` text COLLATE utf8mb4_unicode_ci,
+  `sort_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `is_published` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_block_key` (`program_id`,`block_key`),
+  KEY `idx_program_id` (`program_id`),
+  KEY `idx_sort_order` (`sort_order`),
+  KEY `idx_is_published` (`is_published`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Stores custom content blocks for each program website'
+
+## TABLE: program_downloads
+CREATE TABLE `program_downloads` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `program_id` int NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `file_path` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `file_type` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `file_size` int DEFAULT NULL,
+  `sort_order` int DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_program_id` (`program_id`),
+  KEY `idx_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: program_pages
+CREATE TABLE `program_pages` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `program_id` int NOT NULL,
+  `slug` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `philosophy` text COLLATE utf8mb4_general_ci,
+  `objectives` text COLLATE utf8mb4_general_ci,
+  `graduate_profile` text COLLATE utf8mb4_general_ci,
+  `curriculum_structure` text COLLATE utf8mb4_general_ci,
+  `study_plan` text COLLATE utf8mb4_general_ci,
+  `career_prospects` text COLLATE utf8mb4_general_ci,
+  `tuition_fees` text COLLATE utf8mb4_general_ci,
+  `admission_info` text COLLATE utf8mb4_general_ci,
+  `contact_info` text COLLATE utf8mb4_general_ci,
+  `intro_video_url` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `gallery_images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  `social_links` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+  `hero_image` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `theme_color` varchar(7) COLLATE utf8mb4_general_ci DEFAULT '#1e40af',
+  `meta_description` text COLLATE utf8mb4_general_ci,
+  `is_published` tinyint(1) DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `program_id` (`program_id`),
+  UNIQUE KEY `slug` (`slug`),
+  KEY `idx_program_id` (`program_id`),
+  KEY `idx_slug` (`slug`),
+  KEY `idx_is_published` (`is_published`),
+  CONSTRAINT `program_pages_chk_1` CHECK (json_valid(`gallery_images`)),
+  CONSTRAINT `program_pages_chk_2` CHECK (json_valid(`social_links`))
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: programs
+CREATE TABLE `programs` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `name_th` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `name_en` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `degree_th` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '??????.???., ??????.???., ??????.???.',
+  `degree_en` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'B.Sc., M.Sc., Ph.D.',
+  `level` enum('bachelor','master','doctorate') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `organization_unit_id` tinyint unsigned DEFAULT NULL COMMENT 'FK organization_units: 4=หลักสูตรป.ตรี, 5=หลักสูตรบัณฑิต',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `description_en` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `credits` int DEFAULT NULL COMMENT 'Total credits',
+  `duration` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Program duration e.g., 4 years',
+  `website` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `curriculum_file` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'PDF of curriculum',
+  `image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `coordinator_id` int unsigned DEFAULT NULL COMMENT 'Program coordinator',
+  `chair_personnel_id` int unsigned DEFAULT NULL COMMENT 'ประธานหลักสูตร (personnel.id)',
+  `sort_order` int DEFAULT '0',
+  `status` enum('active','inactive') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'active',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_level` (`level`),
+  KEY `idx_status` (`status`),
+  KEY `chair_personnel_id` (`chair_personnel_id`),
+  KEY `organization_unit_id` (`organization_unit_id`),
+  CONSTRAINT `fk_programs_chair_personnel` FOREIGN KEY (`chair_personnel_id`) REFERENCES `personnel` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_programs_organization_unit` FOREIGN KEY (`organization_unit_id`) REFERENCES `organization_units` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: research_centers
+CREATE TABLE `research_centers` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `name_th` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `name_en` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `description_en` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `website` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `director_id` int unsigned DEFAULT NULL,
+  `sort_order` int DEFAULT '0',
+  `status` enum('active','inactive') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'active',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: site_settings
+CREATE TABLE `site_settings` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `setting_key` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `setting_value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+  `setting_type` enum('text','textarea','image','json','boolean') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'text',
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'general',
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `setting_key` (`setting_key`)
+) ENGINE=InnoDB AUTO_INCREMENT=230 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: student_user
+CREATE TABLE `student_user` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `login_uid` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'UNIQUE; key for linking',
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gf_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gl_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `tf_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `tl_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `th_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'ชื่อ (ไทย)',
+  `thai_lastname` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'นามสกุล (ไทย)',
+  `profile_image` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `role` enum('student','club') COLLATE utf8mb4_unicode_ci DEFAULT 'student' COMMENT 'student=นักศึกษา, club=นักศึกษาสโมสร',
+  `program_id` int unsigned DEFAULT NULL,
+  `status` enum('active','inactive') COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `role` (`role`),
+  KEY `status` (`status`),
+  KEY `program_id` (`program_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: systems
+CREATE TABLE `systems` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `slug` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `name_th` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `name_en` varchar(100) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `description` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `icon` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `sort_order` int NOT NULL DEFAULT '0',
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `slug` (`slug`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: user
+CREATE TABLE `user` (
+  `uid` int(3) unsigned zerofill NOT NULL AUTO_INCREMENT,
+  `login_uid` varchar(255) DEFAULT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `gf_name` varchar(255) DEFAULT NULL,
+  `gl_name` varchar(255) DEFAULT NULL,
+  `major` varchar(255) DEFAULT NULL,
+  `thai_name` varchar(255) DEFAULT NULL,
+  `thai_lastname` varchar(255) DEFAULT NULL,
+  `profile_picture` text,
+  `profile_customer` varchar(255) DEFAULT NULL,
+  `created_at` varchar(255) NOT NULL,
+  `titleThai` varchar(255) DEFAULT NULL,
+  `updated_at` varchar(255) DEFAULT NULL,
+  `active` int(1) unsigned zerofill NOT NULL DEFAULT '0',
+  `admin` int NOT NULL DEFAULT '0',
+  `role` enum('user','faculty_admin','super_admin') NOT NULL DEFAULT 'user',
+  `managed_faculties` text COMMENT 'JSON array of faculty IDs for faculty admins',
+  `edoc` int NOT NULL DEFAULT '0',
+  `curriculum_id` int DEFAULT NULL,
+  `faculty_id` int DEFAULT NULL,
+  `department_id` int DEFAULT NULL,
+  `user_type` varchar(50) DEFAULT NULL COMMENT 'TEACHER, STUDENT, STAFF, etc.',
+  `degree` varchar(50) DEFAULT NULL COMMENT 'BACHELOR, MASTER, DOCTORAL',
+  `gender` varchar(20) DEFAULT NULL,
+  `nickname` varchar(100) DEFAULT NULL,
+  `birth_date` date DEFAULT NULL,
+  `nationality` varchar(50) DEFAULT NULL,
+  `citizen_id` varchar(20) DEFAULT NULL COMMENT 'Thai citizen ID (13 digits)',
+  `passport_id` varchar(20) DEFAULT NULL COMMENT 'Passport number for international users',
+  `bio` text COMMENT 'Professional biography/summary for CV',
+  `expertise` text COMMENT 'Areas of expertise (comma-separated)',
+  `phone` varchar(50) DEFAULT NULL COMMENT 'Contact phone number',
+  `institution` varchar(255) DEFAULT NULL COMMENT 'Current institution/affiliation',
+  `google_scholar` varchar(500) DEFAULT NULL COMMENT 'Google Scholar profile URL',
+  `orcid` varchar(500) DEFAULT NULL COMMENT 'ORCID profile URL',
+  `scopus` varchar(500) DEFAULT NULL COMMENT 'Scopus profile URL',
+  `researchgate` varchar(500) DEFAULT NULL COMMENT 'ResearchGate profile URL',
+  `linkedin` varchar(500) DEFAULT NULL COMMENT 'LinkedIn profile URL',
+  `admin_edoc` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`uid`),
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `user_email_unique` (`email`),
+  KEY `fk_user_curriculum` (`curriculum_id`),
+  CONSTRAINT `fk_user_curriculum` FOREIGN KEY (`curriculum_id`) REFERENCES `curriculum` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=665 DEFAULT CHARSET=utf8mb3
+
+## TABLE: user_programs
+CREATE TABLE `user_programs` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `user_email` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
+  `program_id` int unsigned NOT NULL,
+  `is_primary` tinyint(1) NOT NULL DEFAULT '0',
+  `sort_order` int NOT NULL DEFAULT '0',
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_email_program_id` (`user_email`,`program_id`),
+  KEY `user_programs_program_id_foreign` (`program_id`),
+  CONSTRAINT `user_programs_program_id_foreign` FOREIGN KEY (`program_id`) REFERENCES `programs` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `user_programs_user_email_foreign` FOREIGN KEY (`user_email`) REFERENCES `user` (`email`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+## TABLE: user_system_access
+CREATE TABLE `user_system_access` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `user_uid` int unsigned NOT NULL,
+  `user_email` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `system_id` int unsigned NOT NULL,
+  `access_level` enum('view','manage','admin') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'view',
+  `granted_by` int unsigned DEFAULT NULL,
+  `granted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_system` (`user_uid`,`system_id`),
+  KEY `idx_system` (`system_id`),
+  KEY `idx_user` (`user_uid`),
+  KEY `fk_usa_granted_by` (`granted_by`),
+  CONSTRAINT `fk_usa_granted_by` FOREIGN KEY (`granted_by`) REFERENCES `user` (`uid`) ON DELETE SET NULL,
+  CONSTRAINT `fk_usa_system` FOREIGN KEY (`system_id`) REFERENCES `systems` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_usa_user` FOREIGN KEY (`user_uid`) REFERENCES `user` (`uid`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+
+## TABLE: view_cert_event_summary
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`%` SQL SECURITY DEFINER VIEW `view_cert_event_summary` AS select `ce`.`id` AS `event_id`,`ce`.`title` AS `event_title`,`ce`.`event_date` AS `event_date`,`ce`.`status` AS `event_status`,`ct`.`name_th` AS `template_name`,count(`cer`.`id`) AS `total_recipients`,sum((case when (`cer`.`status` = 'issued') then 1 else 0 end)) AS `issued_count`,sum((case when (`cer`.`status` = 'pending') then 1 else 0 end)) AS `pending_count`,sum((case when (`cer`.`status` = 'failed') then 1 else 0 end)) AS `failed_count` from ((`cert_events` `ce` left join `cert_templates` `ct` on((`ct`.`id` = `ce`.`template_id`))) left join `cert_event_recipients` `cer` on((`cer`.`event_id` = `ce`.`id`))) group by `ce`.`id`,`ce`.`title`,`ce`.`event_date`,`ce`.`status`,`ct`.`name_th`
+
+# END
