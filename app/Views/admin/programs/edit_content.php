@@ -1292,6 +1292,9 @@
     .elo-row__fields {
         flex: 1;
         min-width: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
     }
 
     .elo-row__actions {
@@ -1306,6 +1309,7 @@
 
     @media (max-width: 640px) {
         .elo-row { flex-direction: column; }
+        .elo-row__fields { grid-template-columns: 1fr; }
         .form-row--2 { grid-template-columns: 1fr; }
     }
 
