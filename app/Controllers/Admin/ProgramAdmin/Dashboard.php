@@ -12,7 +12,6 @@ use App\Models\NewsModel;
 use App\Models\NewsTagModel;
 use App\Models\NewsImageModel;
 use App\Models\UserModel;
-use App\Models\UserProgramModel;
 
 class Dashboard extends BaseController
 {
@@ -24,12 +23,10 @@ class Dashboard extends BaseController
     protected $newsModel;
     protected $newsTagModel;
     protected $newsImageModel;
-    protected $userProgramModel;
 
     public function __construct()
     {
         $this->programModel = new ProgramModel();
-        $this->userProgramModel = new UserProgramModel();
         $this->programPageModel = new ProgramPageModel();
         $this->programDownloadModel = new ProgramDownloadModel();
         $this->personnelModel = new PersonnelModel();
@@ -54,35 +51,28 @@ class Dashboard extends BaseController
 
     /**
      * รายการ program_id ที่ user มีสิทธิ์จัดการ (สำหรับ program-admin)
-     * ดูจาก Personnel + personnel_programs ก่อน: หา personnel จาก user email แล้วดึงหลักสูตรจาก personnel_programs
-     * ถ้าไม่มีหรือว่าง ใช้ user_programs / user.program_id เป็น fallback
+     * ใช้เฉพาะ Personnel + personnel_programs: หา personnel จาก user email แล้วดึงหลักสูตรจาก personnel_programs
      */
     protected function getUserProgramIds(array $user): array
     {
         $email = trim((string) ($user['email'] ?? ''));
-        if ($email !== '') {
-            $personnel = $this->personnelModel->findByUserEmail($email);
-            if ($personnel && !empty($personnel['id'])) {
-                $rows = $this->personnelProgramModel->getByPersonnelId((int) $personnel['id']);
-                $ids = array_map(fn($r) => (int) $r['program_id'], $rows);
-                if (!empty($ids)) {
-                    return array_values(array_unique($ids));
-                }
-            }
-            $ids = $this->userProgramModel->getProgramIdsForUser($email);
-            if (!empty($ids)) {
-                return $ids;
-            }
+        if ($email === '') {
+            return [];
         }
-        $legacy = isset($user['program_id']) && $user['program_id'] !== '' ? (int) $user['program_id'] : null;
-        return $legacy !== null && $legacy > 0 ? [$legacy] : [];
+        $personnel = $this->personnelModel->findByUserEmail($email);
+        if (!$personnel || empty($personnel['id'])) {
+            return [];
+        }
+        $rows = $this->personnelProgramModel->getByPersonnelId((int) $personnel['id']);
+        $ids = array_map(fn($r) => (int) $r['program_id'], $rows);
+        return array_values(array_unique($ids));
     }
 
     /**
      * Check if user can manage this program
      * super_admin: ได้ทุกหลักสูตร
-     * admin/editor: ได้หลักสูตรจาก personnel_programs (ตาม personnel ที่เชื่อม user email) หรือ user_programs/user.program_id
-     * อื่นๆ: หลักสูตรจาก personnel_programs/user_programs + หลักสูตรที่ตนเป็นประธาน/ผู้ประสาน
+     * admin/editor: ได้หลักสูตรจาก personnel_programs (ตาม personnel ที่เชื่อม user email)
+     * อื่นๆ: หลักสูตรจาก personnel_programs + หลักสูตรที่ตนเป็นประธาน/ผู้ประสาน
      */
     protected function canManageProgram(int $programId): bool
     {
@@ -124,10 +114,10 @@ class Dashboard extends BaseController
     }
 
     /**
-     * Dashboard - แสดงหลักสูตรตามสิทธิ์ (ดูจาก personnel_programs ก่อน แล้ว fallback user_programs/user.program_id)
+     * Dashboard - แสดงหลักสูตรตามสิทธิ์ (ใช้เฉพาะ personnel_programs ตาม personnel ที่เชื่อม user email)
      * super_admin: แสดงทุกหลักสูตร
-     * admin/editor: หลักสูตรที่ user สังกัดจาก personnel_programs (Personnel) หรือ user_programs
-     * อื่นๆ: หลักสูตรจาก personnel_programs/user_programs + หลักสูตรที่ตนเป็นประธาน/ผู้ประสาน
+     * admin/editor: หลักสูตรที่ user สังกัดจาก personnel_programs (Personnel)
+     * อื่นๆ: หลักสูตรจาก personnel_programs + หลักสูตรที่ตนเป็นประธาน/ผู้ประสาน
      */
     public function index()
     {

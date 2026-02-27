@@ -50,7 +50,7 @@ class Dev extends BaseController
         $role = $user['role'] ?? 'user';
         $allowedRoles = ['admin', 'editor', 'super_admin', 'faculty_admin'];
         $adminRole = in_array($role, $allowedRoles, true) ? $role : 'admin';
-        // ใน development: ถ้าระบุ email หรือ uid มา ให้ใช้ role จริงจาก DB (เพื่อทดสอบการจำกัดหลักสูตรตาม user_programs)
+        // ใน development: ถ้าระบุ email หรือ uid มา ให้ใช้ role จริงจาก DB (เพื่อทดสอบการจำกัดหลักสูตรตาม personnel_programs)
         if (ENVIRONMENT === 'development' && $emailParam === null && $uidParam === null) {
             $adminRole = 'super_admin';
         }
