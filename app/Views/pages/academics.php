@@ -1,7 +1,7 @@
 <?= $this->extend($layout) ?>
 
 <?php
-// Helper function to get program image
+// Helper function to get program image (fallback when no hero_image)
 function getProgramImage($programName)
 {
     $name = mb_strtolower($programName);
@@ -24,6 +24,17 @@ function getProgramImage($programName)
 
     // Default fallback
     return base_url($basePath . 'biology_lab.png');
+}
+
+// Card image: prefer program hero_image (from program_pages), else fallback
+function getProgramCardImageUrl(array $program): string
+{
+    $hero = trim($program['hero_image'] ?? '');
+    if ($hero !== '') {
+        $path = ltrim(str_replace('\\', '/', $hero), '/');
+        return base_url('serve/uploads/' . $path);
+    }
+    return getProgramImage($program['name_th'] ?? $program['name_en'] ?? '');
 }
 ?>
 
@@ -86,7 +97,7 @@ function getProgramImage($programName)
                 <?php foreach ($bachelor_programs as $program): ?>
                     <a href="<?= base_url('program/' . $program['id']) ?>" class="card program-card animate-on-scroll" aria-label="<?= esc($program['name_th'] ?? $program['name_en'] ?? '') ?>">
                         <div class="card__image-wrapper">
-                            <img src="<?= getProgramImage($program['name_th'] ?? $program['name_en'] ?? '') ?>" alt="<?= esc($program['name_th'] ?? '') ?>" class="card__image">
+                            <img src="<?= esc(getProgramCardImageUrl($program)) ?>" alt="<?= esc($program['name_th'] ?? '') ?>" class="card__image">
                         </div>
                         <div class="card__content">
                             <div class="program-degree-badge">
@@ -130,7 +141,7 @@ function getProgramImage($programName)
                 <?php foreach ($master_programs as $program): ?>
                     <a href="<?= base_url('program/' . $program['id']) ?>" class="card program-card program-card--master animate-on-scroll" aria-label="<?= esc($program['name_th'] ?? $program['name_en'] ?? '') ?>">
                         <div class="card__image-wrapper">
-                            <img src="<?= getProgramImage($program['name_th'] ?? $program['name_en'] ?? '') ?>" alt="<?= esc($program['name_th'] ?? '') ?>" class="card__image">
+                            <img src="<?= esc(getProgramCardImageUrl($program)) ?>" alt="<?= esc($program['name_th'] ?? '') ?>" class="card__image">
                         </div>
                         <div class="card__content">
                             <div class="program-degree-badge program-degree-badge--master">
@@ -174,7 +185,7 @@ function getProgramImage($programName)
                 <?php foreach ($doctorate_programs as $program): ?>
                     <a href="<?= base_url('program/' . $program['id']) ?>" class="card program-card program-card--doctorate animate-on-scroll" aria-label="<?= esc($program['name_th'] ?? $program['name_en'] ?? '') ?>">
                         <div class="card__image-wrapper">
-                            <img src="<?= getProgramImage($program['name_th'] ?? $program['name_en'] ?? '') ?>" alt="<?= esc($program['name_th'] ?? '') ?>" class="card__image">
+                            <img src="<?= esc(getProgramCardImageUrl($program)) ?>" alt="<?= esc($program['name_th'] ?? '') ?>" class="card__image">
                         </div>
                         <div class="card__content">
                             <div class="program-degree-badge program-degree-badge--doctorate">

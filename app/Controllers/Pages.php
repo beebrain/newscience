@@ -12,6 +12,7 @@ use App\Models\PersonnelModel;
 use App\Models\PersonnelProgramModel;
 use App\Models\OrganizationUnitModel;
 use App\Models\EventModel;
+use App\Models\ProgramPageModel;
 
 class Pages extends BaseController
 {
@@ -23,6 +24,7 @@ class Pages extends BaseController
     protected $personnelProgramModel;
     protected $organizationUnitModel;
     protected $eventModel;
+    protected $programPageModel;
 
     public function __construct()
     {
@@ -33,6 +35,7 @@ class Pages extends BaseController
         $this->personnelModel = new PersonnelModel();
         $this->personnelProgramModel = new PersonnelProgramModel();
         $this->organizationUnitModel = new OrganizationUnitModel();
+        $this->programPageModel = new ProgramPageModel();
         $this->eventModel = new EventModel();
     }
 
@@ -128,6 +131,29 @@ class Pages extends BaseController
         $bachelorPrograms = array_filter($programs, fn($p) => ($p['level'] ?? 'bachelor') === 'bachelor');
         $masterPrograms = array_filter($programs, fn($p) => ($p['level'] ?? 'bachelor') === 'master');
         $doctoratePrograms = array_filter($programs, fn($p) => ($p['level'] ?? 'bachelor') === 'doctorate');
+
+        // Attach hero_image from program_pages for card images on academics page
+        $programIds = array_values(array_unique(array_map(fn($p) => (int)($p['id'] ?? 0), $programs)));
+        $programIds = array_filter($programIds, fn($id) => $id > 0);
+        $heroByProgramId = [];
+        if ($programIds !== []) {
+            $pages = $this->programPageModel->whereIn('program_id', $programIds)->findAll();
+            foreach ($pages as $page) {
+                $pid = (int)($page['program_id'] ?? 0);
+                if ($pid > 0 && !empty(trim($page['hero_image'] ?? ''))) {
+                    $heroByProgramId[$pid] = $page['hero_image'];
+                }
+            }
+        }
+        $attachHero = function (array &$list) use ($heroByProgramId) {
+            foreach ($list as &$p) {
+                $p['hero_image'] = $heroByProgramId[(int)($p['id'] ?? 0)] ?? '';
+            }
+            unset($p);
+        };
+        $attachHero($bachelorPrograms);
+        $attachHero($masterPrograms);
+        $attachHero($doctoratePrograms);
 
         $data = array_merge($this->getCommonData(), [
             'page_title' => 'หลักสูตร | ' . ($siteInfo['site_name_th'] ?? 'Academics'),

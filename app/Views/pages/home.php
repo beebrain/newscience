@@ -45,6 +45,41 @@ function getProgramIcon($programName)
         return '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
     }
 }
+
+// Carousel card image: prefer program hero_image, else program image or name-based fallback
+function getProgramCarouselImageUrl(array $program): string
+{
+    $hero = trim($program['hero_image'] ?? '');
+    if ($hero !== '') {
+        return base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $hero), '/'));
+    }
+    $programImage = $program['image'] ?? '';
+    if ($programImage !== '' && strpos($programImage, 'http') === 0) {
+        return $programImage;
+    }
+    if ($programImage !== '') {
+        return base_url(ltrim($programImage, '/'));
+    }
+    $name = $program['name_th'] ?? $program['name_en'] ?? '';
+    $programImageMap = [
+        'ชีววิทยา' => 'biology.png', 'ชีว' => 'biology.png',
+        'เคมี' => 'วิทยาศาสตรบัณฑิต สาขาวิชาเคมี.jpg',
+        'คณิตศาสตร์' => 'วิทยาศาสตรบัณฑิต สาขาวิชาคณิตศาสตร์ประยุกต์.jpg',
+        'คอมพิวเตอร์' => 'วิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์.jpg',
+        'เทคโนโลยีสารสนเทศ' => 'วิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ.jpg',
+        'วิทยาการข้อมูล' => 'วิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการข้อมูล.jpg', 'ข้อมูล' => 'ai_data_science.png',
+        'สิ่งแวดล้อม' => 'environmental_science.png', 'กีฬา' => 'sports_science.png',
+        'สาธารณสุข' => 'สาธารณสุขศาสตรบัณฑิต สาขาวิชาสาธารณสุขศาสตร์.jpg',
+        'อาหาร' => 'วิทยาศาสตรบัณฑิต สาขาวิชาอาหารและโภชนาการ.jpg', 'โภชนาการ' => 'วิทยาศาสตรบัณฑิต สาขาวิชาอาหารและโภชนาการ.jpg',
+        'ปัญญาประดิษฐ์' => 'ai_data_science.png',
+    ];
+    foreach ($programImageMap as $keyword => $filename) {
+        if (mb_strpos($name, $keyword) !== false) {
+            return base_url('assets/images/programs/' . $filename);
+        }
+    }
+    return base_url('assets/images/programs/biology.png');
+}
 ?>
 
 <?= $this->section('content') ?>
@@ -223,68 +258,9 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
             <div class="programs-carousel-wrapper">
                 <div class="programs-carousel" id="bachelorProgramsCarousel">
                     <?php foreach ($bachelor_programs as $program): ?>
-                        <?php
-                        // Program link mapping
-                        $programLinks = [
-                            'คณิตศาสตร์' => 'https://sci.uru.ac.th/doctopic/237',
-                            'ชีววิทยา' => 'https://sci.uru.ac.th/doctopic/236',
-                            'เคมี' => 'https://sci.uru.ac.th/doctopic/235',
-                            'เทคโนโลยีสารสนเทศ' => 'https://sci.uru.ac.th/doctopic/234',
-                            'วิยาการคอมพิวเตอร์' => 'https://sci.uru.ac.th/doctopic/233', // Note: Check typo in key if needed, or use 'คอมพิวเตอร์'
-                            'คอมพิวเตอร์' => 'https://sci.uru.ac.th/doctopic/233',
-                            'วิทยาการข้อมูล' => 'https://sci.uru.ac.th/doctopic/232',
-                            'กีฬา' => 'https://sci.uru.ac.th/doctopic/231',
-                            'สิ่งแวดล้อม' => 'https://sci.uru.ac.th/doctopic/230',
-                            'สาธารณสุข' => 'https://sci.uru.ac.th/doctopic/229',
-                            'อาหาร' => 'https://sci.uru.ac.th/doctopic/228',
-                        ];
-
-                        $programLink = '#'; // Default
-                        foreach ($programLinks as $keyword => $link) {
-                            if (mb_strpos($program['name_th'], $keyword) !== false) {
-                                $programLink = $link;
-                                break;
-                            }
-                        }
-                        ?>
-                        <a href="<?= htmlspecialchars($programLink) ?>" target="_blank" class="program-carousel-card" style="text-decoration: none; color: inherit;">
-                            <?php
-                            // Program image mapping (Thai name keywords -> short English filename)
-                            $programImageMap = [
-                                'ชีววิทยา' => 'biology.png',
-                                'ชีว' => 'biology.png',
-                                'เคมี' => 'วิทยาศาสตรบัณฑิต สาขาวิชาเคมี.jpg',
-                                'คณิตศาสตร์' => 'วิทยาศาสตรบัณฑิต สาขาวิชาคณิตศาสตร์ประยุกต์.jpg',
-                                'คอมพิวเตอร์' => 'วิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการคอมพิวเตอร์.jpg',
-                                'เทคโนโลยีสารสนเทศ' => 'วิทยาศาสตรบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ.jpg',
-                                'วิทยาการข้อมูล' => 'วิทยาศาสตรบัณฑิต สาขาวิชาวิทยาการข้อมูล.jpg',
-                                'ข้อมูล' => 'ai_data_science.png',
-                                'สิ่งแวดล้อม' => 'environmental_science.png',
-                                'กีฬา' => 'sports_science.png',
-                                'สาธารณสุข' => 'สาธารณสุขศาสตรบัณฑิต สาขาวิชาสาธารณสุขศาสตร์.jpg',
-                                'อาหาร' => 'วิทยาศาสตรบัณฑิต สาขาวิชาอาหารและโภชนาการ.jpg',
-                                'โภชนาการ' => 'วิทยาศาสตรบัณฑิต สาขาวิชาอาหารและโภชนาการ.jpg',
-                                'ปัญญาประดิษฐ์' => 'ai_data_science.png',
-                            ];
-
-                            $programImage = $program['image'] ?? '';
-                            if (empty($programImage) && !empty($program['name_th'])) {
-                                $foundImage = false;
-                                foreach ($programImageMap as $keyword => $filename) {
-                                    if (mb_strpos($program['name_th'], $keyword) !== false) {
-                                        $programImage = base_url('assets/images/programs/' . $filename);
-                                        $foundImage = true;
-                                        break;
-                                    }
-                                }
-                                if (!$foundImage) {
-                                    $programImage = base_url('assets/images/programs/biology.png');
-                                }
-                            }
-                            if (empty($programImage)) {
-                                $programImage = base_url('assets/images/programs/biology.png');
-                            }
-                            ?>
+                        <?php $programLink = base_url('program/' . (int)($program['id'] ?? 0)); ?>
+                        <a href="<?= esc($programLink) ?>" class="program-carousel-card" style="text-decoration: none; color: inherit;">
+                            <?php $programImage = getProgramCarouselImageUrl($program); ?>
                             <div class="program-carousel-card__image-wrapper">
                                 <img src="<?= esc($programImage) ?>"
                                     alt="<?= esc($program['name_th']) ?>"
@@ -336,27 +312,8 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
             <div class="programs-carousel-wrapper">
                 <div class="programs-carousel" id="graduateProgramsCarousel">
                     <?php foreach ($master_programs as $program): ?>
-                        <div class="program-carousel-card program-carousel-card--master">
-                            <?php
-                            // Reuse program image mapping
-                            $programImage = $program['image'] ?? '';
-                            if (empty($programImage) && !empty($program['name_th'])) {
-                                $foundImage = false;
-                                foreach ($programImageMap as $keyword => $filename) {
-                                    if (mb_strpos($program['name_th'], $keyword) !== false) {
-                                        $programImage = base_url('assets/images/programs/' . $filename);
-                                        $foundImage = true;
-                                        break;
-                                    }
-                                }
-                                if (!$foundImage) {
-                                    $programImage = base_url('assets/images/programs/biology.png');
-                                }
-                            }
-                            if (empty($programImage)) {
-                                $programImage = base_url('assets/images/programs/biology.png');
-                            }
-                            ?>
+                        <a href="<?= esc(base_url('program/' . (int)($program['id'] ?? 0))) ?>" class="program-carousel-card program-carousel-card--master" style="text-decoration: none; color: inherit;">
+                            <?php $programImage = getProgramCarouselImageUrl($program); ?>
                             <div class="program-carousel-card__image-wrapper">
                                 <img src="<?= esc($programImage) ?>"
                                     alt="<?= esc($program['name_th']) ?>"
@@ -377,30 +334,11 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                                     </p>
                                 <?php endif; ?>
                             </div>
-                        </div>
+                        </a>
                     <?php endforeach; ?>
                     <?php foreach ($doctorate_programs as $program): ?>
-                        <div class="program-carousel-card program-carousel-card--doctorate">
-                            <?php
-                            // Reuse program image mapping
-                            $programImage = $program['image'] ?? '';
-                            if (empty($programImage) && !empty($program['name_th'])) {
-                                $foundImage = false;
-                                foreach ($programImageMap as $keyword => $filename) {
-                                    if (mb_strpos($program['name_th'], $keyword) !== false) {
-                                        $programImage = base_url('assets/images/programs/' . $filename);
-                                        $foundImage = true;
-                                        break;
-                                    }
-                                }
-                                if (!$foundImage) {
-                                    $programImage = base_url('assets/images/programs/biology.png');
-                                }
-                            }
-                            if (empty($programImage)) {
-                                $programImage = base_url('assets/images/programs/biology.png');
-                            }
-                            ?>
+                        <a href="<?= esc(base_url('program/' . (int)($program['id'] ?? 0))) ?>" class="program-carousel-card program-carousel-card--doctorate" style="text-decoration: none; color: inherit;">
+                            <?php $programImage = getProgramCarouselImageUrl($program); ?>
                             <div class="program-carousel-card__image-wrapper">
                                 <img src="<?= esc($programImage) ?>"
                                     alt="<?= esc($program['name_th']) ?>"
@@ -421,7 +359,7 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                                     </p>
                                 <?php endif; ?>
                             </div>
-                        </div>
+                        </a>
                     <?php endforeach; ?>
                 </div>
 

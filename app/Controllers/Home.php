@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\NewsModel;
 use App\Models\ProgramModel;
+use App\Models\ProgramPageModel;
 use App\Models\SiteSettingModel;
 use App\Models\PersonnelModel;
 use App\Models\HeroSlideModel;
@@ -34,6 +35,30 @@ class Home extends BaseController
         $bachelorPrograms = $programModel->getBachelor();
         $masterPrograms = $programModel->getMaster();
         $doctoratePrograms = $programModel->getDoctorate();
+
+        // Attach hero_image from program_pages for carousel card images
+        $programPageModel = new ProgramPageModel();
+        $allPrograms = array_merge($bachelorPrograms, $masterPrograms, $doctoratePrograms);
+        $programIds = array_values(array_unique(array_filter(array_map(fn($p) => (int)($p['id'] ?? 0), $allPrograms))));
+        $heroByProgramId = [];
+        if ($programIds !== []) {
+            $pages = $programPageModel->whereIn('program_id', $programIds)->findAll();
+            foreach ($pages as $page) {
+                $pid = (int)($page['program_id'] ?? 0);
+                if ($pid > 0 && !empty(trim($page['hero_image'] ?? ''))) {
+                    $heroByProgramId[$pid] = $page['hero_image'];
+                }
+            }
+        }
+        $attachHero = function (array &$list) use ($heroByProgramId) {
+            foreach ($list as &$p) {
+                $p['hero_image'] = $heroByProgramId[(int)($p['id'] ?? 0)] ?? '';
+            }
+            unset($p);
+        };
+        $attachHero($bachelorPrograms);
+        $attachHero($masterPrograms);
+        $attachHero($doctoratePrograms);
 
         // ทีมผู้บริหาร: ดึงจาก personnel (คณบดี = tier 1, รองคณบดี = tier 2)
         $personnel = $personnelModel->getActiveWithDepartment();
