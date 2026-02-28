@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * Document Analysis Dashboard
@@ -18,7 +18,8 @@
     <title><?= $title ?? 'Document Analytics Dashboard' ?></title>
 
     <!-- Favicon -->
-    <link rel="shortcut icon" href="<?= base_url('assets/images/favicon.ico') ?>" />
+    <?php helper('site'); ?>
+    <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
     <link rel="stylesheet" href="<?= base_url('assets/css/backend-plugin.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/backend.css') ?>?v=1.0.0">
     <link rel="stylesheet" href="<?= base_url('assets/vendor/@fortawesome/fontawesome-free/css/all.min.css') ?>">

@@ -7,7 +7,8 @@
     <title>ระบบจัดการเอกสาร</title>
 
     <!-- Favicon -->
-    <link rel="shortcut icon" href="<?= base_url('assets/images/favicon.ico') ?>" />
+    <?php helper('site'); ?>
+    <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>

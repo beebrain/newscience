@@ -5,7 +5,8 @@
     <meta name="robots" content="noindex">
 
     <title><?= lang('Errors.whoops') ?></title>
-
+    <?php helper('site'); ?>
+    <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
     <style>
         <?= preg_replace('#[\r\n\t ]+#', ' ', file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'debug.css')) ?>
     </style>

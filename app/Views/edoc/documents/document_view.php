@@ -18,7 +18,8 @@
     <meta name="description" content="" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="<?= base_url(); ?>assets/img/favicon/favicon.ico" />
+    <?php helper('site'); ?>
+    <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

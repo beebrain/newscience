@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#1a1a1a">
     <title><?= esc($page_title ?? 'Student Admin') ?> | คณะวิทยาศาสตร์และเทคโนโลยี</title>
-    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo250.png') ?>" sizes="32x32">
+    <?php helper('site'); ?>
+    <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
     <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/admin.css') ?>">

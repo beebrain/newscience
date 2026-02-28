@@ -9,7 +9,8 @@ use App\Libraries\AccessControl; ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#1a1a1a">
     <title><?= $page_title ?? 'Admin' ?> | University Admin</title>
-    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo250.png') ?>" sizes="32x32">
+    <?php helper('site'); ?>
+    <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
 
     <!-- ฟอนต์ Sarabun (โหลดจากโปรเจกต์) -->
     <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>">

@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <title><?= lang('Errors.badRequest') ?></title>
-
+    <?php helper('site'); ?>
+    <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
     <style>
         div.logo {
             height: 200px;

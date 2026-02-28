@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Document Manager | จัดการเอกสาร</title>
-    <link rel="shortcut icon" href="<?= base_url('assets/images/favicon.ico') ?>" />
+    <?php helper('site'); ?>
+    <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>

@@ -7,7 +7,8 @@
     <meta name="theme-color" content="#1a1a1a">
     <meta name="description" content="<?= $meta_description ?? 'คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์' ?>">
     <title><?= $page_title ?? 'คณะวิทยาศาสตร์และเทคโนโลยี' ?> | มหาวิทยาลัยราชภัฏอุตรดิตถ์</title>
-    <link rel="icon" type="image/png" href="<?= base_url('assets/images/logo250.png') ?>" sizes="32x32">
+    <?php helper('site'); ?>
+    <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
 
     <!-- ฟอนต์ Sarabun + Noto Sans Thai (โหลดจากโปรเจกต์) -->
     <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>?v=<?= (defined('FCPATH') && is_file(FCPATH . 'assets/css/fonts.css')) ? filemtime(FCPATH . 'assets/css/fonts.css') : '1' ?>">
