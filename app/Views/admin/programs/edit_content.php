@@ -45,6 +45,15 @@
                 </svg>
                 เนื้อหาหลักสูตร
             </button>
+            <button type="button" class="tab-button" data-tab="alumni" onclick="switchTab('alumni')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                    <path d="M16 3.13a4 4 0 010 7.75" />
+                </svg>
+                ศิษย์เก่าถึงรุ่นน้อง
+            </button>
             <button type="button" class="tab-button" data-tab="downloads" onclick="switchTab('downloads')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -373,6 +382,31 @@
                         </div>
                     </div>
                 </form>
+            </div>
+
+            <!-- ศิษย์เก่าถึงรุ่นน้อง Tab -->
+            <?php
+            $alumni_initial = [];
+            if (!empty($program_page['alumni_messages_json'])) {
+                $decoded = json_decode($program_page['alumni_messages_json'], true);
+                if (is_array($decoded)) {
+                    $alumni_initial = $decoded;
+                }
+            }
+            ?>
+            <div id="alumni-tab" class="tab-content">
+                <div style="padding: 1.5rem;">
+                    <div class="form-section">
+                        <h4 class="form-section-title">ศิษย์เก่าถึงรุ่นน้อง</h4>
+                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">เพิ่มข้อความจากศิษย์เก่า (ข้อความที่ฝากถึง รูป ตำแหน่งงาน สถานที่ทำงาน ปีที่จบ) แล้วกดบันทึก</p>
+                        <div id="alumni-list" class="alumni-list" data-initial="<?= htmlspecialchars(json_encode($alumni_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
+                        <div class="alumni-actions" style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                            <button type="button" class="btn btn-outline btn-sm" id="alumni-add-btn">+ เพิ่มคน</button>
+                            <button type="button" class="btn btn-primary btn-sm" id="alumni-save-ajax-btn">บันทึกศิษย์เก่าถึงรุ่นน้อง</button>
+                            <span id="alumni-ajax-msg" class="ajax-msg" aria-live="polite"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Downloads Tab -->
@@ -731,6 +765,30 @@
     </div>
 </div>
 
+<!-- Modal ครอปรูปโปรไฟล์ศิษย์เก่า (1:1) -->
+<div id="alumni-crop-modal" class="hero-crop-modal" role="dialog" aria-labelledby="alumni-crop-modal-title" aria-modal="true" style="display:none;">
+    <div class="hero-crop-modal__backdrop"></div>
+    <div class="hero-crop-modal__box">
+        <div class="hero-crop-modal__header">
+            <h3 id="alumni-crop-modal-title" class="hero-crop-modal__title">ครอปรูปโปรไฟล์ศิษย์เก่า</h3>
+            <p class="hero-crop-modal__subtitle">ปรับกรอบรูปโปรไฟล์ (อัตราส่วน 1:1)</p>
+            <button type="button" class="hero-crop-modal__close" id="alumni-crop-close" aria-label="ปิด">&times;</button>
+        </div>
+        <div class="hero-crop-modal__body">
+            <div class="hero-crop-container">
+                <img id="alumni-crop-image" src="" alt="">
+            </div>
+        </div>
+        <div class="hero-crop-modal__footer">
+            <button type="button" class="btn btn-outline" id="alumni-crop-cancel">ยกเลิก</button>
+            <button type="button" class="btn btn-primary" id="alumni-crop-confirm">
+                <span class="alumni-crop-confirm-text">ตกลง ใช้รูปนี้</span>
+                <span class="alumni-crop-confirm-loading" style="display:none;">กำลังอัปโหลด...</span>
+            </button>
+        </div>
+    </div>
+</div>
+
 <style>
 .hero-basic-drop {
     position: relative;
@@ -1030,6 +1088,8 @@
             setTimeout(initNewsCKEditor, 100);
         } else if (tab === 'website' && document.getElementById('website-tab')) {
             switchTab('website');
+        } else if (tab === 'alumni' && document.getElementById('alumni-tab')) {
+            switchTab('alumni');
         } else {
             switchTab('basic');
         }
@@ -1313,6 +1373,17 @@
         .form-row--2 { grid-template-columns: 1fr; }
     }
 
+    .alumni-list { display: flex; flex-direction: column; gap: 1rem; }
+    .alumni-row { display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; border: 1px solid var(--color-gray-200); border-radius: 8px; background: var(--color-gray-50); flex-wrap: wrap; }
+    .alumni-row__fields { flex: 1; min-width: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .alumni-row__fields .form-group { margin-bottom: 0; }
+    .alumni-row__fields .form-group.full-width { grid-column: 1 / -1; }
+    .alumni-row__photo { flex-shrink: 0; width: 100px; text-align: center; }
+    .alumni-row__photo img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--color-gray-200); }
+    .alumni-row__photo .btn { margin-top: 0.35rem; font-size: 0.75rem; }
+    .alumni-row__actions { flex-shrink: 0; }
+    @media (max-width: 640px) { .alumni-row__fields { grid-template-columns: 1fr; } .alumni-row { flex-direction: column; } }
+
     .curriculum-list { display: flex; flex-direction: column; gap: 1.5rem; }
     .curriculum-year-card { border: 1px solid var(--color-gray-200); border-radius: 8px; padding: 1rem; background: var(--color-gray-50); }
     .curriculum-year-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
@@ -1429,6 +1500,175 @@
     document.getElementById('elos-add-btn') && document.getElementById('elos-add-btn').addEventListener('click', function () {
         addElosRow({});
     });
+
+    // --- ศิษย์เก่าถึงรุ่นน้อง: repeater + อัปโหลดรูป (ครอป 1:1) + บันทึก Ajax ---
+    var alumniList = document.getElementById('alumni-list');
+    var uploadAlumniPhotoUrl = '<?= base_url('program-admin/upload-alumni-photo/' . (int)($program['id'] ?? 0)) ?>';
+    var serveBase = '<?= rtrim(base_url(), '/') ?>';
+    if (alumniList) {
+        var alumniCropModal = document.getElementById('alumni-crop-modal');
+        var alumniCropImage = document.getElementById('alumni-crop-image');
+        var alumniCropClose = document.getElementById('alumni-crop-close');
+        var alumniCropCancel = document.getElementById('alumni-crop-cancel');
+        var alumniCropConfirm = document.getElementById('alumni-crop-confirm');
+        var alumniCropperInstance = null;
+        var alumniCropObjectUrl = null;
+        var currentAlumniRow = null;
+
+        function openAlumniCropModal(file, row) {
+            if (!file || !file.type.match(/^image\/(jpeg|png|gif|webp)$/)) return;
+            if (alumniCropObjectUrl) URL.revokeObjectURL(alumniCropObjectUrl);
+            alumniCropObjectUrl = URL.createObjectURL(file);
+            currentAlumniRow = row;
+            alumniCropImage.src = alumniCropObjectUrl;
+            if (alumniCropModal) alumniCropModal.style.display = 'flex';
+            if (alumniCropperInstance) { alumniCropperInstance.destroy(); alumniCropperInstance = null; }
+            setTimeout(function () {
+                if (typeof Cropper !== 'undefined' && alumniCropImage) {
+                    alumniCropperInstance = new Cropper(alumniCropImage, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        dragMode: 'move',
+                        autoCropArea: 0.8,
+                        restore: false,
+                        guides: true,
+                        center: true,
+                        highlight: false,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true
+                    });
+                }
+            }, 100);
+        }
+        function closeAlumniCropModal() {
+            if (alumniCropModal) alumniCropModal.style.display = 'none';
+            if (alumniCropperInstance) { alumniCropperInstance.destroy(); alumniCropperInstance = null; }
+            if (alumniCropObjectUrl) { URL.revokeObjectURL(alumniCropObjectUrl); alumniCropObjectUrl = null; }
+            currentAlumniRow = null;
+        }
+        function uploadAlumniCropped() {
+            if (!alumniCropperInstance || !uploadAlumniPhotoUrl || !currentAlumniRow) return;
+            var confirmText = alumniCropConfirm && alumniCropConfirm.querySelector('.alumni-crop-confirm-text');
+            var confirmLoading = alumniCropConfirm && alumniCropConfirm.querySelector('.alumni-crop-confirm-loading');
+            if (confirmText) confirmText.style.display = 'none';
+            if (confirmLoading) confirmLoading.style.display = 'inline';
+            alumniCropConfirm.disabled = true;
+            alumniCropperInstance.getCroppedCanvas({ width: 400, height: 400, imageSmoothingQuality: 'high' }).toBlob(function (blob) {
+                var fd = new FormData();
+                fd.append('photo', blob, 'alumni.jpg');
+                if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
+                var row = currentAlumniRow;
+                fetch(uploadAlumniPhotoUrl, { method: 'POST', body: fd })
+                    .then(function (r) { return r.json(); })
+                    .then(function (res) {
+                        if (res.success && res.path) {
+                            var pathInput = row.querySelector('.alumni-photo-path');
+                            var preview = row.querySelector('.alumni-photo-preview');
+                            if (pathInput) pathInput.value = res.path;
+                            if (preview) preview.src = res.photo_url || (serveBase + '/serve/uploads/' + res.path);
+                            closeAlumniCropModal();
+                        } else {
+                            alert(res.message || 'อัปโหลดไม่สำเร็จ');
+                        }
+                    })
+                    .catch(function () { alert('เกิดข้อผิดพลาดในการเชื่อมต่อ'); })
+                    .finally(function () {
+                        alumniCropConfirm.disabled = false;
+                        if (confirmText) confirmText.style.display = 'inline';
+                        if (confirmLoading) confirmLoading.style.display = 'none';
+                    });
+            }, 'image/jpeg', 0.9);
+        }
+        if (alumniCropClose) alumniCropClose.addEventListener('click', closeAlumniCropModal);
+        if (alumniCropCancel) alumniCropCancel.addEventListener('click', closeAlumniCropModal);
+        if (alumniCropConfirm) alumniCropConfirm.addEventListener('click', uploadAlumniCropped);
+        if (alumniCropModal && alumniCropModal.querySelector('.hero-crop-modal__backdrop')) {
+            alumniCropModal.querySelector('.hero-crop-modal__backdrop').addEventListener('click', closeAlumniCropModal);
+        }
+
+        function alumniEsc(s) { if (s == null) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function addAlumniRow(data) {
+            data = data || {};
+            var message = alumniEsc(data.message || '');
+            var position = alumniEsc(data.position || '');
+            var workplace = alumniEsc(data.workplace || '');
+            var graduationYear = alumniEsc(data.graduation_year || '');
+            var photoPath = (data.photo_path || data.photo_url || '').toString();
+            if (photoPath && photoPath.indexOf('http') === 0) { photoPath = ''; }
+            var photoSrc = photoPath ? (serveBase + '/serve/uploads/' + photoPath.replace(/^\/+/, '')) : '';
+            var row = document.createElement('div');
+            row.className = 'alumni-row';
+            row.innerHTML =
+                '<div class="alumni-row__photo">' +
+                '<img class="alumni-photo-preview" src="' + (photoSrc || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'80\' height=\'80\' viewBox=\'0 0 80 80\'%3E%3Crect fill=\'%23eee\' width=\'80\' height=\'80\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23999\' font-size=\'10\'%3Eไม่มีรูป%3C/text%3E%3C/svg%3E') + '" alt="" style="max-width:80px;max-height:80px;">' +
+                '<input type="hidden" class="alumni-photo-path" value="' + alumniEsc(photoPath) + '">' +
+                '<input type="file" class="alumni-photo-input form-control form-control-sm" accept="image/*" style="margin-top:0.35rem;">' +
+                '</div>' +
+                '<div class="alumni-row__fields">' +
+                '<div class="form-group full-width"><label class="form-label">ข้อความที่ฝากถึง / คำพูด</label><textarea class="form-control alumni-field alumni-message" rows="3" placeholder="ข้อความหรือคำพูดที่ต้องการบอก">' + message + '</textarea></div>' +
+                '<div class="form-group"><label class="form-label">ตำแหน่งงานปัจจุบัน</label><input type="text" class="form-control alumni-field alumni-position" value="' + position + '" placeholder="ตำแหน่ง"></div>' +
+                '<div class="form-group"><label class="form-label">สถานที่ทำงาน</label><input type="text" class="form-control alumni-field alumni-workplace" value="' + workplace + '" placeholder="หน่วยงาน/บริษัท"></div>' +
+                '<div class="form-group"><label class="form-label">ปีที่จบการศึกษา</label><input type="text" class="form-control alumni-field alumni-graduation-year" value="' + graduationYear + '" placeholder="พ.ศ. หรือ ค.ศ."></div>' +
+                '</div>' +
+                '<div class="alumni-row__actions"><button type="button" class="btn btn-danger btn-sm alumni-remove-btn">ลบ</button></div>';
+            alumniList.appendChild(row);
+            row.querySelector('.alumni-remove-btn').addEventListener('click', function () { row.remove(); });
+            row.querySelector('.alumni-photo-input').addEventListener('change', function () {
+                var file = this.files && this.files[0];
+                if (!file) return;
+                openAlumniCropModal(file, row);
+                this.value = '';
+            });
+        }
+        function buildAlumniJson() {
+            var rows = alumniList.querySelectorAll('.alumni-row');
+            var arr = [];
+            rows.forEach(function (row) {
+                var message = (row.querySelector('.alumni-message') && row.querySelector('.alumni-message').value) || '';
+                var position = (row.querySelector('.alumni-position') && row.querySelector('.alumni-position').value) || '';
+                var workplace = (row.querySelector('.alumni-workplace') && row.querySelector('.alumni-workplace').value) || '';
+                var graduationYear = (row.querySelector('.alumni-graduation-year') && row.querySelector('.alumni-graduation-year').value) || '';
+                var photoPath = (row.querySelector('.alumni-photo-path') && row.querySelector('.alumni-photo-path').value) || '';
+                arr.push({ message: message, position: position, workplace: workplace, graduation_year: graduationYear, photo_path: photoPath });
+            });
+            return JSON.stringify(arr);
+        }
+        function showAlumniMsg(msg, isError) {
+            var el = document.getElementById('alumni-ajax-msg');
+            if (el) { el.textContent = msg; el.style.color = isError ? 'var(--color-error)' : 'var(--secondary)'; }
+        }
+        document.getElementById('alumni-save-ajax-btn') && document.getElementById('alumni-save-ajax-btn').addEventListener('click', function () {
+            var btn = this;
+            var json = buildAlumniJson();
+            btn.disabled = true;
+            showAlumniMsg('กำลังบันทึก...');
+            var fd = new FormData();
+            fd.append('alumni_messages_json', json);
+            if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
+            fetch(updatePageJsonUrl, { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    btn.disabled = false;
+                    showAlumniMsg(res.success ? 'บันทึกศิษย์เก่าถึงรุ่นน้องเรียบร้อย' : (res.message || 'เกิดข้อผิดพลาด'), !res.success);
+                })
+                .catch(function () { btn.disabled = false; showAlumniMsg('เกิดข้อผิดพลาดในการเชื่อมต่อ', true); });
+        });
+        var alumniInitial = [];
+        try {
+            var raw = alumniList.getAttribute('data-initial') || '[]';
+            alumniInitial = JSON.parse(raw);
+            if (!Array.isArray(alumniInitial)) alumniInitial = [];
+        } catch (e) { alumniInitial = []; }
+        if (alumniInitial.length === 0) {
+            addAlumniRow({});
+        } else {
+            alumniInitial.forEach(function (item) {
+                var path = item.photo_path || (item.photo_url && item.photo_url.indexOf('http') !== 0 ? item.photo_url : '') || '';
+                addAlumniRow({ message: item.message, position: item.position, workplace: item.workplace, graduation_year: item.graduation_year, photo_path: path });
+            });
+        }
+        document.getElementById('alumni-add-btn') && document.getElementById('alumni-add-btn').addEventListener('click', function () { addAlumniRow({}); });
+    }
 
     // --- หลักสูตร/แผนการเรียน: repeater ปี > ภาคเรียน > วิชา + บันทึก Ajax ---
     var curriculumList = document.getElementById('curriculum-list');

@@ -315,6 +315,30 @@ class ProgramSpaController extends BaseController
             ];
         }
 
+        $alumni = [];
+        $alumniRaw = $page['alumni_messages_json'] ?? '';
+        if ($alumniRaw !== '') {
+            $decoded = json_decode($alumniRaw, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $a) {
+                    $path = trim($a['photo_path'] ?? $a['photo_url'] ?? '');
+                    $photoUrl = '';
+                    if ($path !== '' && strpos($path, 'http') !== 0) {
+                        $photoUrl = base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $path), '/'));
+                    } elseif ($path !== '') {
+                        $photoUrl = $path;
+                    }
+                    $alumni[] = [
+                        'message'         => $a['message'] ?? '',
+                        'position'        => $a['position'] ?? '',
+                        'workplace'       => $a['workplace'] ?? '',
+                        'graduation_year' => $a['graduation_year'] ?? '',
+                        'photo_url'       => $photoUrl,
+                    ];
+                }
+            }
+        }
+
         $data = [
             'id'                   => $id,
             'name_th'              => $program['name_th'] ?? '',
@@ -345,6 +369,7 @@ class ProgramSpaController extends BaseController
             'news'                  => $news,
             'activities'           => $activities,
             'facilities'            => $facilities,
+            'alumni'                => $alumni,
         ];
 
         return $this->response->setJSON([

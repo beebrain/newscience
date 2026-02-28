@@ -94,7 +94,8 @@
             box-shadow: 0 12px 24px rgba(0,0,0,0.08), 0 0 20px rgba(var(--theme-rgb), 0.1);
         }
 
-        /* Faculty card - overlay โทนสว่าง */
+        /* Faculty card — เล็กลง ~30% แบบ Meet the team (Major Tom) */
+        .faculty-grid-compact .faculty-card { max-width: 180px; margin: 0 auto; }
         .faculty-card { position: relative; overflow: hidden; }
         .faculty-card .faculty-overlay {
             position: absolute; inset: 0; background: linear-gradient(to top, rgba(255,255,255,0.95) 0%, transparent 55%);
@@ -140,10 +141,19 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .scroll-top-btn { background: rgba(var(--theme-rgb), 0.85) !important; }
         .scroll-top-btn:hover { background: rgba(var(--theme-rgb), 1) !important; }
-        /* Hero overlay - โทนอ่อนให้อ่านข้อความได้ */
-        .hero-overlay { background: linear-gradient(to bottom, rgba(255,255,255,0.3), color-mix(in srgb, var(--theme) 25%, white) 50%, color-mix(in srgb, var(--theme) 50%, white) 80%); }
+        /* Hero — ให้รูปเด่นขึ้นแบบ Major Tom (opacity สูงขึ้น, overlay เบาลง) */
+        .hero-bg-image { opacity: 0.45; }
+        .hero-overlay { background: linear-gradient(to bottom, rgba(255,255,255,0.15), color-mix(in srgb, var(--theme) 15%, white) 40%, color-mix(in srgb, var(--theme) 35%, white) 75%); }
         /* Section tint โทนสว่าง */
         .section-theme-tint { background: linear-gradient(to bottom, transparent, rgba(var(--theme-rgb), 0.04), transparent); }
+        /* แต่ละ Section พื้นหลังคนละโทน สอดคล้องกับสีที่ผู้ใช้เลือก (--website-bg, --theme) */
+        .section-bg-base { background: var(--website-bg, color-mix(in srgb, var(--theme) 8%, #f8fafc)); }
+        .section-bg-tint-1 { background: color-mix(in srgb, var(--theme) 5%, var(--website-bg, #f8fafc)); }
+        .section-bg-tint-2 { background: color-mix(in srgb, var(--theme) 10%, var(--website-bg, #f8fafc)); }
+        .section-bg-tint-3 { background: color-mix(in srgb, var(--theme) 7%, var(--website-bg, #f8fafc)); }
+        .section-bg-tint-4 { background: color-mix(in srgb, var(--theme) 12%, var(--website-bg, #f8fafc)); }
+        /* ศิษย์เก่า testimonial — ไม่มีกรอบ/การ์ด กลืนกับพื้นหลังแบบ Clean (Major Tom style) */
+        .alumni-testimonial-card { background: transparent; border: none; box-shadow: none; }
         .nav-light { background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); }
         .nav-brand-theme { color: var(--theme); }
         .nav-link-theme:hover { color: var(--theme); }
@@ -192,6 +202,7 @@
                 <a href="#about" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">เกี่ยวกับ</a>
                 <a href="#faculty" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">คณาจารย์</a>
                 <a href="#news" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">ข่าวสาร</a>
+                <a href="#alumni" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">ศิษย์เก่า</a>
                 <a href="#activities" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">กิจกรรม</a>
                 <a href="#facilities" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">สิ่งอำนวยความสะดวก</a>
                 <a href="#documents" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">เอกสาร</a>
@@ -203,6 +214,7 @@
             <a href="#faculty" class="block text-slate-600 nav-link-theme">คณาจารย์</a>
             <a href="#news" class="block text-slate-600 nav-link-theme">ข่าวสาร</a>
             <a href="#activities" class="block text-slate-600 nav-link-theme">กิจกรรม</a>
+            <a href="#alumni" class="block text-slate-600 nav-link-theme">ศิษย์เก่า</a>
             <a href="#facilities" class="block text-slate-600 nav-link-theme">สิ่งอำนวยความสะดวก</a>
             <a href="#documents" class="block text-slate-600 nav-link-theme">เอกสาร</a>
             <a href="#video" class="block text-slate-600 nav-link-theme">วิดีโอ</a>
@@ -212,18 +224,18 @@
 
 <main id="app" class="hidden">
 
-<!-- ==================== HERO ==================== -->
-<section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+<!-- ==================== HERO (โครงแบบ Major Tom — Hero image เด่น, ข้อความชัด) ==================== -->
+<section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden section-bg-base">
     <canvas id="neural-canvas"></canvas>
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
-    <div class="absolute inset-0 bg-cover bg-center opacity-20" id="hero-bg"></div>
+    <div class="absolute inset-0 bg-cover bg-center hero-bg-image" id="hero-bg"></div>
     <div class="absolute inset-0 hero-overlay"></div>
     <div class="relative z-10 text-center max-w-4xl mx-auto px-6">
         <p id="hero-level" class="hero-sub text-sm tracking-[0.3em] uppercase mb-4 opacity-0" style="transition:opacity 1s 0.3s"></p>
-        <h1 id="hero-title" class="text-4xl md:text-6xl lg:text-7xl font-extrabold hero-title leading-tight mb-4"></h1>
-        <p id="hero-degree" class="text-xl md:text-2xl hero-sub font-light mb-10 opacity-0" style="transition:opacity 1s 1.2s"></p>
+        <h1 id="hero-title" class="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold hero-title leading-tight mb-4"></h1>
+        <p id="hero-degree" class="text-xl md:text-2xl lg:text-3xl hero-sub font-light mb-10 opacity-0" style="transition:opacity 1s 1.2s"></p>
         <a href="#about" class="glow-btn inline-block px-8 py-4 text-white font-bold rounded-full text-lg opacity-0" style="transition:opacity 1s 1.6s">
             สำรวจหลักสูตร
         </a>
@@ -234,7 +246,7 @@
 </section>
 
 <!-- ==================== ABOUT & AUN-QA ==================== -->
-<section id="about" class="relative py-24 md:py-32">
+<section id="about" class="relative py-24 md:py-32 section-bg-base">
     <div class="max-w-7xl mx-auto px-6">
         <div class="grid lg:grid-cols-2 gap-16 items-start">
             <div class="reveal-left">
@@ -257,18 +269,59 @@
     </div>
 </section>
 
-<!-- ==================== FACULTY ==================== -->
-<section id="faculty" class="relative py-24 md:py-32">
-    <div class="absolute inset-0 section-theme-tint"></div>
-    <div class="relative max-w-7xl mx-auto px-6">
+<!-- ==================== FACULTY (Meet the team style — รูปเล็กลง ~30%) ==================== -->
+<section id="faculty" class="relative py-24 md:py-32 section-bg-tint-1">
+    <div class="relative max-w-5xl mx-auto px-6">
         <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-800 mb-12 text-center reveal">คณาจารย์ประจำหลักสูตร</h2>
-        <div id="faculty-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 stagger-children"></div>
+        <div id="faculty-grid" class="faculty-grid-compact grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5 stagger-children"></div>
         <p id="faculty-empty" class="text-slate-500 text-center hidden">ยังไม่มีข้อมูลคณาจารย์</p>
     </div>
 </section>
 
+<!-- ==================== ศิษย์เก่าถึงรุ่นน้อง (Testimonial Carousel) ==================== -->
+<section id="alumni" class="relative py-24 md:py-32 section-bg-tint-2" style="display:none;">
+    <div class="relative max-w-5xl mx-auto px-6">
+        <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-800 mb-12 text-center reveal">ศิษย์เก่า<span class="section-accent">ถึงรุ่นน้อง</span></h2>
+        <div id="alumni-carousel-card" class="alumni-testimonial-card p-8 md:p-12 flex flex-col md:flex-row gap-8 md:gap-12 items-center md:items-start text-center md:text-left reveal">
+            <!-- รูปวงกลม + ข้อความ + ตำแหน่ง/ที่ทำงาน (เติมด้วย JS) — ไม่มีกรอบ กลืนกับพื้นหลังแบบ Clean -->
+        </div>
+        <div id="alumni-carousel-nav" class="flex items-center justify-center gap-4 mt-8 reveal" style="display:none;">
+            <button type="button" id="alumni-prev" class="w-12 h-12 rounded-full flex items-center justify-center border-2 transition bg-white/80 hover:bg-[var(--theme)] hover:border-[var(--theme)] hover:text-white text-slate-600 border-slate-300" aria-label="ก่อนหน้า">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <div class="flex items-center gap-1 min-w-[120px] justify-center">
+                <span id="alumni-counter" class="text-sm text-slate-600 font-medium">1 / 1</span>
+                <div id="alumni-progress" class="flex-1 h-1 rounded-full bg-slate-200 max-w-[80px] overflow-hidden">
+                    <div id="alumni-progress-bar" class="h-full rounded-full transition-all duration-300" style="width:100%; background: var(--theme);"></div>
+                </div>
+            </div>
+            <button type="button" id="alumni-next" class="w-12 h-12 rounded-full flex items-center justify-center border-2 transition bg-white/80 hover:bg-[var(--theme)] hover:border-[var(--theme)] hover:text-white text-slate-600 border-slate-300" aria-label="ถัดไป">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+        <div id="alumni-more-wrap" class="text-center mt-10 reveal" style="display:none;">
+            <button type="button" id="alumni-show-all-btn" class="glow-btn px-8 py-4 text-white font-bold rounded-full text-lg transition">
+                ดูศิษย์เก่าทั้งหมด
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Modal ศิษย์เก่าทั้งหมด -->
+<div id="alumni-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog" aria-labelledby="alumni-modal-title">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between p-6 border-b border-slate-200 flex-shrink-0">
+            <h3 id="alumni-modal-title" class="text-xl font-bold section-accent">ศิษย์เก่าถึงรุ่นน้อง — ทั้งหมด</h3>
+            <button type="button" id="alumni-modal-close" class="w-10 h-10 rounded-full border border-slate-300 text-slate-600 hover:bg-slate-100 flex items-center justify-center transition" aria-label="ปิด">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div id="alumni-modal-body" class="p-6 overflow-y-auto flex-1 space-y-6"></div>
+    </div>
+</div>
+
 <!-- ==================== NEWS ==================== -->
-<section id="news" class="relative py-24 md:py-32 overflow-hidden">
+<section id="news" class="relative py-24 md:py-32 overflow-hidden section-bg-tint-3">
     <div class="max-w-7xl mx-auto px-6">
         <div class="flex items-center justify-between mb-12">
             <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-800 reveal">ข่าวสาร<br><span class="section-accent">& ประชาสัมพันธ์</span></h2>
@@ -289,8 +342,7 @@
 </section>
 
 <!-- ==================== ACTIVITIES ==================== -->
-<section id="activities" class="relative py-24 md:py-32">
-    <div class="absolute inset-0 section-theme-tint"></div>
+<section id="activities" class="relative py-24 md:py-32 section-bg-tint-4">
     <div class="relative max-w-7xl mx-auto px-6">
         <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-800 mb-12 text-center reveal">กิจกรรม<span class="section-accent">ของหลักสูตร</span></h2>
         <div id="activities-grid" class="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6"></div>
@@ -299,7 +351,7 @@
 </section>
 
 <!-- ==================== FACILITIES ==================== -->
-<section id="facilities" class="relative py-24 md:py-32">
+<section id="facilities" class="relative py-24 md:py-32 section-bg-tint-1">
     <div class="max-w-7xl mx-auto px-6">
         <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-800 mb-12 text-center reveal">สิ่งอำนวยความสะดวก<br><span class="section-accent">& การสนับสนุนการเรียนรู้</span></h2>
         <div id="facilities-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 stagger-children"></div>
@@ -308,8 +360,7 @@
 </section>
 
 <!-- ==================== DOCUMENTS ==================== -->
-<section id="documents" class="relative py-24 md:py-32">
-    <div class="absolute inset-0 section-theme-tint"></div>
+<section id="documents" class="relative py-24 md:py-32 section-bg-tint-2">
     <div class="relative max-w-7xl mx-auto px-6">
         <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-800 mb-12 text-center reveal">เอกสาร<span class="section-accent">ดาวน์โหลด</span></h2>
         <div id="documents-list" class="max-w-3xl mx-auto space-y-4 stagger-children"></div>
@@ -318,7 +369,7 @@
 </section>
 
 <!-- ==================== VIDEO (คลิปวิดีโอ สนับสนุน AUN-QA) ==================== -->
-<section id="video" class="relative py-24 md:py-32" style="display:none;">
+<section id="video" class="relative py-24 md:py-32 section-bg-tint-3" style="display:none;">
     <div class="max-w-4xl mx-auto px-6">
         <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-800 mb-12 text-center reveal">วิดีโอแนะนำหลักสูตร<br><span class="section-accent">คลิปและสื่อสนับสนุนการประกันคุณภาพ</span></h2>
         <div id="video-wrap" class="relative rounded-2xl overflow-hidden shadow-xl aspect-video bg-slate-200"></div>
@@ -326,7 +377,7 @@
 </section>
 
 <!-- ==================== FOOTER ==================== -->
-<footer id="footer" class="relative py-16 border-t border-slate-200">
+<footer id="footer" class="relative py-16 border-t border-slate-200/50 section-bg-tint-4">
     <div class="max-w-7xl mx-auto px-6">
         <div class="grid md:grid-cols-2 gap-12 mb-12">
             <div class="reveal-left">
@@ -472,7 +523,7 @@
         if (Array.isArray(d.staff) && d.staff.length) {
             d.staff.forEach(function(s) {
                 var img = s.image ? '<img src="' + esc(s.image) + '" alt="" class="w-full h-full object-cover">' : '<div class="w-full h-full bg-slate-200 flex items-center justify-center"><svg class="w-12 h-12 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></div>';
-                fg.innerHTML += '<div class="faculty-card luxury-card rounded-2xl overflow-hidden aspect-[3/4] relative group cursor-pointer">' + img + '<div class="faculty-overlay flex flex-col justify-end p-4"><div class="faculty-info"><p class="font-semibold text-slate-800 text-sm">' + esc(s.name) + '</p><p class="text-xs mt-1 faculty-role">' + esc(s.role || s.position) + '</p></div></div></div>';
+                fg.innerHTML += '<div class="faculty-card luxury-card rounded-2xl overflow-hidden aspect-square max-w-[180px] w-full mx-auto relative group cursor-pointer">' + img + '<div class="faculty-overlay flex flex-col justify-end p-3"><div class="faculty-info"><p class="font-semibold text-slate-800 text-xs leading-tight">' + esc(s.name) + '</p><p class="text-[10px] mt-0.5 faculty-role">' + esc(s.role || s.position) + '</p></div></div></div>';
             });
         } else {
             document.getElementById('faculty-empty').classList.remove('hidden');
@@ -510,6 +561,65 @@
             });
         } else {
             document.getElementById('activities-empty').classList.remove('hidden');
+        }
+
+        // ศิษย์เก่าถึงรุ่นน้อง (Testimonial carousel: แสดงทีละคน — รูปวงกลม + คำพูดเด่น + ตำแหน่ง/ที่ทำงาน)
+        var alumniSection = document.getElementById('alumni');
+        var alumniCarouselCard = document.getElementById('alumni-carousel-card');
+        var alumniCarouselNav = document.getElementById('alumni-carousel-nav');
+        var alumniMoreWrap = document.getElementById('alumni-more-wrap');
+        var alumniModalBody = document.getElementById('alumni-modal-body');
+        window.__alumniList = Array.isArray(d.alumni) ? d.alumni : [];
+        window.__alumniIdx = 0;
+        function alumniCardHtml(a, truncate) {
+            var photo = a.photo_url ? '<img src="' + esc(a.photo_url) + '" alt="" class="w-20 h-20 rounded-full object-cover flex-shrink-0">' : '<div class="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0"><svg class="w-10 h-10 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></div>';
+            var meta = [];
+            if (a.position) meta.push(esc(a.position));
+            if (a.workplace) meta.push(esc(a.workplace));
+            if (a.graduation_year) meta.push('จบปี ' + esc(a.graduation_year));
+            var metaStr = meta.length ? '<p class="text-slate-500 text-sm mt-1">' + meta.join(' · ') + '</p>' : '';
+            var msg = a.message || '';
+            if (truncate && msg.length > 200) msg = msg.substring(0, 200) + '…';
+            var msgHtml = msg ? '<p class="text-slate-700 leading-relaxed whitespace-pre-wrap">' + esc(msg).replace(/\n/g, '<br>') + '</p>' : '';
+            return '<div class="luxury-card rounded-2xl p-6 flex gap-4 items-start">' + photo + '<div class="min-w-0 flex-1">' + msgHtml + metaStr + '</div></div>';
+        }
+        function renderAlumniSlide() {
+            var list = window.__alumniList || [];
+            var idx = window.__alumniIdx || 0;
+            if (!alumniCarouselCard) return;
+            if (list.length === 0) {
+                alumniCarouselCard.innerHTML = '';
+                return;
+            }
+            var a = list[idx];
+            var photoHtml = a.photo_url
+                ? '<img src="' + esc(a.photo_url) + '" alt="" class="w-28 h-28 md:w-36 md:h-36 rounded-full object-cover flex-shrink-0 border-4 border-white shadow-lg">'
+                : '<div class="w-28 h-28 md:w-36 md:h-36 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-lg"><svg class="w-14 h-14 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></div>';
+            var msg = (a.message || '').trim();
+            var msgBlock = msg ? '<p class="text-slate-700 md:text-lg leading-relaxed whitespace-pre-wrap">' + esc(msg).replace(/\n/g, '<br>') + '</p>' : '<p class="text-slate-500 italic">ไม่มีข้อความ</p>';
+            var metaParts = [];
+            if (a.position) metaParts.push(esc(a.position));
+            if (a.workplace) metaParts.push(esc(a.workplace));
+            if (a.graduation_year) metaParts.push('จบปี ' + esc(a.graduation_year));
+            var metaLine = metaParts.length ? '<p class="text-slate-500 text-sm mt-4 font-medium">' + metaParts.join(' · ') + '</p>' : '';
+            alumniCarouselCard.innerHTML = '<div class="flex-shrink-0">' + photoHtml + '</div><div class="min-w-0 flex-1">' + msgBlock + metaLine + '</div>';
+            var counterEl = document.getElementById('alumni-counter');
+            var progressBar = document.getElementById('alumni-progress-bar');
+            if (counterEl) counterEl.textContent = (idx + 1) + ' / ' + list.length;
+            if (progressBar && list.length > 0) progressBar.style.width = ((idx + 1) / list.length * 100) + '%';
+        }
+        if (window.__alumniList.length) {
+            alumniSection.style.display = 'block';
+            renderAlumniSlide();
+            if (alumniCarouselNav) alumniCarouselNav.style.display = window.__alumniList.length > 1 ? 'flex' : 'none';
+            alumniModalBody.innerHTML = '';
+            window.__alumniList.forEach(function(a) {
+                alumniModalBody.innerHTML += alumniCardHtml(a, false);
+            });
+            alumniMoreWrap.style.display = 'block';
+        } else {
+            alumniSection.style.display = 'none';
+            if (alumniCarouselNav) alumniCarouselNav.style.display = 'none';
         }
 
         // Facilities
@@ -588,6 +698,58 @@
 
     document.getElementById('news-prev').addEventListener('click', function() { slideNews(-1); });
     document.getElementById('news-next').addEventListener('click', function() { slideNews(1); });
+
+    var alumniModal = document.getElementById('alumni-modal');
+    if (alumniModal) {
+        document.getElementById('alumni-show-all-btn') && document.getElementById('alumni-show-all-btn').addEventListener('click', function() {
+            alumniModal.classList.remove('hidden');
+            alumniModal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        });
+        document.getElementById('alumni-modal-close') && document.getElementById('alumni-modal-close').addEventListener('click', function() {
+            alumniModal.classList.add('hidden');
+            alumniModal.classList.remove('flex');
+            document.body.style.overflow = '';
+        });
+        alumniModal.addEventListener('click', function(e) {
+            if (e.target === alumniModal) {
+                alumniModal.classList.add('hidden');
+                alumniModal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+    function updateAlumniSlide() {
+        var esc = function(s){ if(!s) return ''; var d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
+        var card = document.getElementById('alumni-carousel-card');
+        if (!card) return;
+        var list = window.__alumniList || [];
+        var idx = window.__alumniIdx || 0;
+        if (list.length === 0) return;
+        var a = list[idx];
+        var photoHtml = a.photo_url
+            ? '<img src="' + esc(a.photo_url) + '" alt="" class="w-28 h-28 md:w-36 md:h-36 rounded-full object-cover flex-shrink-0 border-4 border-white shadow-lg">'
+            : '<div class="w-28 h-28 md:w-36 md:h-36 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-lg"><svg class="w-14 h-14 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></div>';
+        var msg = (a.message || '').trim();
+        var msgBlock = msg ? '<p class="text-slate-700 md:text-lg leading-relaxed whitespace-pre-wrap">' + esc(msg).replace(/\n/g, '<br>') + '</p>' : '<p class="text-slate-500 italic">ไม่มีข้อความ</p>';
+        var metaParts = []; if (a.position) metaParts.push(esc(a.position)); if (a.workplace) metaParts.push(esc(a.workplace)); if (a.graduation_year) metaParts.push('จบปี ' + esc(a.graduation_year));
+        var metaLine = metaParts.length ? '<p class="text-slate-500 text-sm mt-4 font-medium">' + metaParts.join(' · ') + '</p>' : '';
+        card.innerHTML = '<div class="flex-shrink-0">' + photoHtml + '</div><div class="min-w-0 flex-1">' + msgBlock + metaLine + '</div>';
+        var counterEl = document.getElementById('alumni-counter'); if (counterEl) counterEl.textContent = (idx + 1) + ' / ' + list.length;
+        var progressBar = document.getElementById('alumni-progress-bar'); if (progressBar && list.length > 0) progressBar.style.width = ((idx + 1) / list.length * 100) + '%';
+    }
+    document.getElementById('alumni-prev') && document.getElementById('alumni-prev').addEventListener('click', function() {
+        var list = window.__alumniList || [];
+        if (list.length === 0) return;
+        window.__alumniIdx = (window.__alumniIdx - 1 + list.length) % list.length;
+        updateAlumniSlide();
+    });
+    document.getElementById('alumni-next') && document.getElementById('alumni-next').addEventListener('click', function() {
+        var list = window.__alumniList || [];
+        if (list.length === 0) return;
+        window.__alumniIdx = (window.__alumniIdx + 1) % list.length;
+        updateAlumniSlide();
+    });
 
     $.ajax({ url: dataUrl, method: 'GET', dataType: 'json' })
         .done(function(res) {

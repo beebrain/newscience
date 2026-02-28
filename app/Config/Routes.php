@@ -319,6 +319,7 @@ $routes->group('program-admin', ['filter' => 'programadmin'], function ($routes)
     $routes->post('update-page-json/(:num)', 'Admin\ProgramAdmin\Dashboard::updatePageJson/$1');
     $routes->post('update-website/(:num)', 'Admin\ProgramAdmin\Dashboard::updateWebsite/$1');
     $routes->post('upload-hero/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadHero/$1');
+    $routes->post('upload-alumni-photo/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadAlumniPhoto/$1');
     $routes->get('downloads/(:num)', 'Admin\ProgramAdmin\Dashboard::downloads/$1');
     $routes->post('upload-download/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadDownload/$1');
     $routes->post('delete-download/(:num)', 'Admin\ProgramAdmin\Dashboard::deleteDownload/$1');

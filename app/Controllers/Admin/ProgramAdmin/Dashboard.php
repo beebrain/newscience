@@ -404,6 +404,12 @@ class Dashboard extends BaseController
                 $updateData['curriculum_structure'] = $raw;
             }
         }
+        if ($this->request->getPost('alumni_messages_json') !== null) {
+            $raw = $this->request->getPost('alumni_messages_json');
+            if (is_string($raw) && strlen($raw) <= 100000) {
+                $updateData['alumni_messages_json'] = $raw;
+            }
+        }
 
         if (empty($updateData)) {
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีข้อมูลที่จะบันทึก']);
@@ -513,6 +519,50 @@ class Dashboard extends BaseController
 
         $heroUrl = base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $relativePath), '/'));
         return $this->response->setJSON(['success' => true, 'message' => 'อัปโหลดรูปหน้าปกเรียบร้อย', 'hero_url' => $heroUrl]);
+    }
+
+    /**
+     * อัปโหลดรูปศิษย์เก่า (ศิษย์เก่าถึงรุ่นน้อง). คืน path สำหรับเก็บใน alumni_messages_json
+     * POST program-admin/upload-alumni-photo/{id}
+     * Body: photo (file)
+     */
+    public function uploadAlumniPhoto($programId)
+    {
+        $programId = (int) $programId;
+        $program = $this->programModel->find($programId);
+        if (!$program) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบหลักสูตร'])->setStatusCode(404);
+        }
+        if (!$this->canManageProgram($programId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการหลักสูตรนี้'])->setStatusCode(403);
+        }
+
+        $file = $this->request->getFile('photo');
+        if (!$file || !$file->isValid()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'กรุณาเลือกไฟล์รูปภาพ'])->setStatusCode(400);
+        }
+        $ext = strtolower($file->getExtension() ?: pathinfo($file->getClientName(), PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if (!in_array($ext, $allowed, true)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'รองรับเฉพาะ JPG, PNG, GIF, WEBP'])->setStatusCode(400);
+        }
+
+        helper('program_upload');
+        $uploadPath = program_upload_path($programId, 'alumni');
+        $filename = 'alumni_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . ($ext === 'jpeg' ? 'jpg' : $ext);
+        $relativePath = program_upload_relative_path($programId, 'alumni', $filename);
+
+        if (!$file->move($uploadPath, $filename)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'บันทึกไฟล์ไม่สำเร็จ'])->setStatusCode(500);
+        }
+
+        $photoUrl = base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $relativePath), '/'));
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'อัปโหลดรูปเรียบร้อย',
+            'photo_url' => $photoUrl,
+            'path' => $relativePath,
+        ]);
     }
 
     /**
