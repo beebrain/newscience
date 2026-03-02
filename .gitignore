@@ -98,10 +98,9 @@ tests/unit/ContentBuilderAccessTest.php
 # Composer
 #-------------------------
 vendor/
-# Allow frontend vendor assets (Quill editor)
+# Allow frontend vendor assets under public/assets (tracked)
 !public/assets/vendor/
-!public/assets/vendor/quill/
-!public/assets/vendor/quill/*
+!public/assets/vendor/**
 
 #-------------------------
 # IDE / Development Files
@@ -150,8 +149,9 @@ _modules/*
 #-------------------------
 scraped_data/
 scripts/scraped_data/
-public/uploads/news/
-public/uploads/personnel/
-public/uploads/staff/
+# public/ is tracked; exclude generated/user content below
+public/newsimages/
+public/thumbnails/
+public/uploads/
 # Uploads stored in writable (served via /serve/uploads/)
 writable/uploads/
