@@ -236,11 +236,46 @@
     </div>
 </div>
 
+<!-- โมดัล crop ภาพปกข่าว -->
+<div id="featured-image-crop-modal" class="featured-crop-modal" role="dialog" aria-modal="true" aria-labelledby="featured-crop-modal-title" style="display: none;">
+    <div class="featured-crop-modal__backdrop"></div>
+    <div class="featured-crop-modal__box">
+        <div class="featured-crop-modal__header">
+            <h3 id="featured-crop-modal-title" class="featured-crop-modal__title">ตัดภาพปก</h3>
+            <button type="button" class="featured-crop-modal__close" id="featuredCropClose" aria-label="ปิด">×</button>
+        </div>
+        <div class="featured-crop-modal__body">
+            <div class="featured-crop-container">
+                <img id="featured-crop-image" src="" alt="">
+            </div>
+        </div>
+        <div class="featured-crop-modal__footer">
+            <button type="button" class="btn btn-secondary" id="featuredCropCancel">ยกเลิก</button>
+            <button type="button" class="btn btn-primary" id="featuredCropConfirm">ตัดและใช้ภาพ</button>
+        </div>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <link href="<?= base_url('assets/vendor/quill/quill.snow.css') ?>" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css" crossorigin="anonymous">
 <script src="<?= base_url('assets/vendor/quill/quill.js') ?>"></script>
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js" crossorigin="anonymous"></script>
+<style>
+.featured-crop-modal { position: fixed; inset: 0; z-index: 1050; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.featured-crop-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
+.featured-crop-modal__box { position: relative; background: #fff; border-radius: 12px; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.featured-crop-modal__header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--color-gray-200); flex-shrink: 0; }
+.featured-crop-modal__title { margin: 0; font-size: 1.125rem; font-weight: 600; }
+.featured-crop-modal__close { background: none; border: none; font-size: 1.5rem; line-height: 1; cursor: pointer; color: var(--color-gray-600); padding: 0 0.25rem; }
+.featured-crop-modal__close:hover { color: #000; }
+.featured-crop-modal__body { padding: 0; overflow: hidden; flex: 1; min-height: 0; }
+.featured-crop-container { width: 100%; height: 60vh; max-height: 500px; background: #000; overflow: hidden; }
+.featured-crop-container img { max-width: 100%; max-height: 100%; display: block; }
+.featured-crop-modal__footer { padding: 1rem 1.25rem; border-top: 1px solid var(--color-gray-200); display: flex; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0; }
+</style>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var contentTextarea = document.getElementById('content');
@@ -284,6 +319,59 @@
         const featuredImage = document.getElementById('featured_image');
         const featuredImageBox = document.getElementById('featuredImageBox');
         const featuredImagePlaceholder = document.getElementById('featuredImagePlaceholder');
+        const cropModal = document.getElementById('featured-image-crop-modal');
+        const cropImageEl = document.getElementById('featured-crop-image');
+        const cropCloseBtn = document.getElementById('featuredCropClose');
+        const cropCancelBtn = document.getElementById('featuredCropCancel');
+        const cropConfirmBtn = document.getElementById('featuredCropConfirm');
+        var featuredCropperInstance = null;
+        var featuredCropObjectUrl = null;
+
+        function openFeaturedCropModal(file) {
+            if (!file || !file.type.match(/^image\/(jpeg|png|gif|webp)$/)) return;
+            if (featuredCropObjectUrl) URL.revokeObjectURL(featuredCropObjectUrl);
+            featuredCropObjectUrl = URL.createObjectURL(file);
+            cropImageEl.src = featuredCropObjectUrl;
+            if (cropModal) cropModal.style.display = 'flex';
+            if (featuredCropperInstance) { featuredCropperInstance.destroy(); featuredCropperInstance = null; }
+            setTimeout(function() {
+                if (typeof Cropper !== 'undefined' && cropImageEl) {
+                    featuredCropperInstance = new Cropper(cropImageEl, {
+                        aspectRatio: 16 / 9,
+                        viewMode: 1,
+                        dragMode: 'move',
+                        autoCropArea: 0.8,
+                        restore: false,
+                        guides: true,
+                        center: true,
+                        highlight: false,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true
+                    });
+                }
+            }, 100);
+        }
+
+        function closeFeaturedCropModal() {
+            if (cropModal) cropModal.style.display = 'none';
+            if (featuredCropperInstance) { featuredCropperInstance.destroy(); featuredCropperInstance = null; }
+            if (featuredCropObjectUrl) { URL.revokeObjectURL(featuredCropObjectUrl); featuredCropObjectUrl = null; }
+            if (featuredImage) featuredImage.value = '';
+        }
+
+        function applyFeaturedCrop() {
+            if (!featuredCropperInstance || !featuredImage) return;
+            featuredCropperInstance.getCroppedCanvas({ maxWidth: 1920, maxHeight: 1080, imageSmoothingQuality: 'high' }).toBlob(function(blob) {
+                var file = new File([blob], 'featured.jpg', { type: 'image/jpeg' });
+                var dt = new DataTransfer();
+                dt.items.add(file);
+                featuredImage.files = dt.files;
+                featuredImageBox.classList.add('has-image');
+                featuredImagePlaceholder.innerHTML = '<div class="featured-image-preview"><img src="' + URL.createObjectURL(blob) + '" alt="" width="280" height="157"></div><p style="margin:0.5rem 0 0;font-size:0.875rem;color:var(--color-gray-500);">คลิกเพื่อเปลี่ยนภาพ</p>';
+                closeFeaturedCropModal();
+            }, 'image/jpeg', 0.9);
+        }
+
         if (featuredImage && featuredImageBox && featuredImagePlaceholder) {
             featuredImageBox.style.cursor = 'pointer';
             featuredImageBox.addEventListener('click', function() {
@@ -295,17 +383,34 @@
                     featuredImage.click();
                 }
             });
+            featuredImageBox.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.add('dragover');
+            });
+            featuredImageBox.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+            featuredImageBox.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.remove('dragover');
+                var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) openFeaturedCropModal(file);
+            });
             featuredImage.addEventListener('change', function() {
-                const file = this.files[0];
+                var file = this.files[0];
                 if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        featuredImageBox.classList.add('has-image');
-                        featuredImagePlaceholder.innerHTML = '<div class="featured-image-preview"><img src="' + e.target.result + '" alt="" width="280" height="157"></div><p style="margin:0.5rem 0 0;font-size:0.875rem;color:var(--color-gray-500);">คลิกเพื่อเปลี่ยนภาพ</p>';
-                    };
-                    reader.readAsDataURL(file);
+                    openFeaturedCropModal(file);
                 }
             });
+        }
+        if (cropCloseBtn) cropCloseBtn.addEventListener('click', closeFeaturedCropModal);
+        if (cropCancelBtn) cropCancelBtn.addEventListener('click', closeFeaturedCropModal);
+        if (cropConfirmBtn) cropConfirmBtn.addEventListener('click', applyFeaturedCrop);
+        if (cropModal && cropModal.querySelector('.featured-crop-modal__backdrop')) {
+            cropModal.querySelector('.featured-crop-modal__backdrop').addEventListener('click', closeFeaturedCropModal);
         }
 
         var dropZoneImages = document.getElementById('dropZoneImages');
