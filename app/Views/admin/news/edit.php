@@ -127,6 +127,7 @@
                         </div>
                     </div>
                     <input type="file" id="featured_image" name="featured_image" accept="image/*" class="input-file-hidden" aria-describedby="featuredImagePlaceholder">
+                    <input type="hidden" name="featured_image_base64" id="featured_image_base64" value="">
                 </div>
             </section>
 
@@ -407,20 +408,25 @@
         function applyFeaturedCrop() {
             if (!featuredCropperInstance || !featuredImage) return;
             featuredCropperInstance.getCroppedCanvas({ maxWidth: 1920, maxHeight: 1080, imageSmoothingQuality: 'high' }).toBlob(function(blob) {
-                var file = new File([blob], 'featured.jpg', { type: 'image/jpeg' });
-                var dt = new DataTransfer();
-                dt.items.add(file);
-                featuredImage.files = dt.files;
-                featuredImageBox.classList.add('has-image');
-                var resetHtml = hasOriginal ? '<button type="button" class="btn-featured-reset" style="margin-top:0.5rem;font-size:0.8125rem;color:var(--color-gray-500);background:none;border:none;cursor:pointer;text-decoration:underline;">ใช้ภาพเดิม</button>' : '';
-                featuredImagePlaceholder.innerHTML = '<div class="featured-image-preview"><img src="' + URL.createObjectURL(blob) + '" alt="" width="280" height="157"></div><p style="margin:0.5rem 0 0;font-size:0.875rem;color:var(--color-gray-500);">คลิกเพื่อเปลี่ยนภาพ</p>' + resetHtml;
-                var resetBtn = featuredImagePlaceholder.querySelector('.btn-featured-reset');
-                if (resetBtn) resetBtn.addEventListener('click', function(ev) {
-                    ev.stopPropagation();
-                    featuredImage.value = '';
-                    featuredImagePlaceholder.innerHTML = originalPlaceholderContent;
-                });
-                closeFeaturedCropModal();
+                var reader = new FileReader();
+                reader.onload = function() {
+                    var base64Input = document.getElementById('featured_image_base64');
+                    if (base64Input) base64Input.value = reader.result;
+                    if (featuredImage) featuredImage.value = '';
+                    featuredImageBox.classList.add('has-image');
+                    var resetHtml = hasOriginal ? '<button type="button" class="btn-featured-reset" style="margin-top:0.5rem;font-size:0.8125rem;color:var(--color-gray-500);background:none;border:none;cursor:pointer;text-decoration:underline;">ใช้ภาพเดิม</button>' : '';
+                    featuredImagePlaceholder.innerHTML = '<div class="featured-image-preview"><img src="' + reader.result + '" alt="" width="280" height="157"></div><p style="margin:0.5rem 0 0;font-size:0.875rem;color:var(--color-gray-500);">คลิกเพื่อเปลี่ยนภาพ</p>' + resetHtml;
+                    var resetBtn = featuredImagePlaceholder.querySelector('.btn-featured-reset');
+                    if (resetBtn) resetBtn.addEventListener('click', function(ev) {
+                        ev.stopPropagation();
+                        featuredImage.value = '';
+                        var b64El = document.getElementById('featured_image_base64');
+                        if (b64El) b64El.value = '';
+                        featuredImagePlaceholder.innerHTML = originalPlaceholderContent;
+                    });
+                    closeFeaturedCropModal();
+                };
+                reader.readAsDataURL(blob);
             }, 'image/jpeg', 0.9);
         }
 

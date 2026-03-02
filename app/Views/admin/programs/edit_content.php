@@ -597,8 +597,15 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="news_featured_image" class="form-label">ภาพปกข่าว (Featured Image)</label>
-                                    <input type="file" id="news_featured_image" name="featured_image" accept="image/jpeg,image/png,image/gif,image/webp" class="form-control">
-                                    <div class="file-upload-info">รองรับไฟล์: JPG, PNG, WEBP (แนะนำขนาด 1200x630px)</div>
+                                    <div class="featured-image-box program-news-featured-box" id="programNewsFeaturedBox" role="button" tabindex="0" aria-label="เลือกภาพปก" style="min-height: 120px; border: 2px dashed var(--color-gray-300); border-radius: 8px; padding: 1rem; cursor: pointer; text-align: center;">
+                                        <div id="programNewsFeaturedPlaceholder">
+                                            <p style="margin: 0; color: var(--color-gray-600);">คลิกหรือลากวางเพื่อเลือกภาพ แล้วตัด (crop) ตามต้องการ</p>
+                                            <small style="color: var(--color-gray-500);">JPG, PNG, WEBP — อัตราส่วน 16:9</small>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="news_featured_image" name="featured_image" accept="image/jpeg,image/png,image/gif,image/webp" class="form-control" style="display: none;">
+                                    <input type="hidden" name="featured_image_base64" id="program_news_featured_image_base64" value="">
+                                    <div class="file-upload-info">รองรับไฟล์: JPG, PNG, WEBP (แนะนำขนาด 1200x630px) — สามารถตัดภาพก่อนบันทึกได้</div>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">รูปภาพประกอบเพิ่มเติม (เลือกได้หลายไฟล์)</label>
@@ -785,6 +792,27 @@
                 <span class="alumni-crop-confirm-text">ตกลง ใช้รูปนี้</span>
                 <span class="alumni-crop-confirm-loading" style="display:none;">กำลังอัปโหลด...</span>
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- โมดัล crop ภาพปกข่าวหลักสูตร (เหมือน admin/news) -->
+<div id="program-news-featured-crop-modal" class="hero-crop-modal" role="dialog" aria-labelledby="program-news-featured-crop-title" aria-modal="true" style="display:none;">
+    <div class="hero-crop-modal__backdrop"></div>
+    <div class="hero-crop-modal__box">
+        <div class="hero-crop-modal__header">
+            <h3 id="program-news-featured-crop-title" class="hero-crop-modal__title">ตัดภาพปกข่าว</h3>
+            <p class="hero-crop-modal__subtitle">ปรับกรอบภาพปก (อัตราส่วน 16:9)</p>
+            <button type="button" class="hero-crop-modal__close" id="program-news-featured-crop-close" aria-label="ปิด">&times;</button>
+        </div>
+        <div class="hero-crop-modal__body">
+            <div class="hero-crop-container">
+                <img id="program-news-featured-crop-image" src="" alt="">
+            </div>
+        </div>
+        <div class="hero-crop-modal__footer">
+            <button type="button" class="btn btn-outline" id="program-news-featured-crop-cancel">ยกเลิก</button>
+            <button type="button" class="btn btn-primary" id="program-news-featured-crop-confirm">ตัดและใช้ภาพ</button>
         </div>
     </div>
 </div>
@@ -1585,6 +1613,73 @@
         if (alumniCropModal && alumniCropModal.querySelector('.hero-crop-modal__backdrop')) {
             alumniCropModal.querySelector('.hero-crop-modal__backdrop').addEventListener('click', closeAlumniCropModal);
         }
+
+        // --- ภาพปกข่าวหลักสูตร: crop แล้วส่ง base64 (เหมือน admin/news) ---
+        (function () {
+            var pnModal = document.getElementById('program-news-featured-crop-modal');
+            var pnCropImage = document.getElementById('program-news-featured-crop-image');
+            var pnFileInput = document.getElementById('news_featured_image');
+            var pnBox = document.getElementById('programNewsFeaturedBox');
+            var pnPlaceholder = document.getElementById('programNewsFeaturedPlaceholder');
+            var pnBase64Input = document.getElementById('program_news_featured_image_base64');
+            var pnCloseBtn = document.getElementById('program-news-featured-crop-close');
+            var pnCancelBtn = document.getElementById('program-news-featured-crop-cancel');
+            var pnConfirmBtn = document.getElementById('program-news-featured-crop-confirm');
+            var pnCropper = null;
+            var pnObjectUrl = null;
+            function pnOpenModal(file) {
+                if (!file || !file.type.match(/^image\/(jpeg|png|gif|webp)$/)) return;
+                if (pnObjectUrl) URL.revokeObjectURL(pnObjectUrl);
+                pnObjectUrl = URL.createObjectURL(file);
+                pnCropImage.src = pnObjectUrl;
+                if (pnModal) pnModal.style.display = 'flex';
+                if (pnCropper) { pnCropper.destroy(); pnCropper = null; }
+                setTimeout(function () {
+                    if (typeof Cropper !== 'undefined' && pnCropImage) {
+                        pnCropper = new Cropper(pnCropImage, { aspectRatio: 16 / 9, viewMode: 1, dragMode: 'move', autoCropArea: 0.8, restore: false, guides: true, center: true, highlight: false, cropBoxMovable: true, cropBoxResizable: true });
+                    }
+                }, 100);
+            }
+            function pnCloseModal() {
+                if (pnModal) pnModal.style.display = 'none';
+                if (pnCropper) { pnCropper.destroy(); pnCropper = null; }
+                if (pnObjectUrl) { URL.revokeObjectURL(pnObjectUrl); pnObjectUrl = null; }
+                if (pnFileInput) pnFileInput.value = '';
+            }
+            function pnApplyCrop() {
+                if (!pnCropper || !pnBase64Input) return;
+                pnCropper.getCroppedCanvas({ maxWidth: 1920, maxHeight: 1080, imageSmoothingQuality: 'high' }).toBlob(function (blob) {
+                    var reader = new FileReader();
+                    reader.onload = function () {
+                        pnBase64Input.value = reader.result;
+                        if (pnFileInput) pnFileInput.value = '';
+                        if (pnPlaceholder) pnPlaceholder.innerHTML = '<div class="featured-image-preview"><img src="' + reader.result + '" alt="" style="max-width:100%;max-height:200px;object-fit:contain;"></div><p style="margin:0.5rem 0 0;font-size:0.875rem;color:var(--color-gray-500);">คลิกเพื่อเปลี่ยนภาพ</p>';
+                        pnCloseModal();
+                    };
+                    reader.readAsDataURL(blob);
+                }, 'image/jpeg', 0.9);
+            }
+            if (pnBox) pnBox.addEventListener('click', function () { if (pnFileInput) pnFileInput.click(); });
+            if (pnFileInput) pnFileInput.addEventListener('change', function () {
+                var file = this.files && this.files[0];
+                if (file && file.type.match(/^image\//)) pnOpenModal(file);
+            });
+            if (pnBox) {
+                pnBox.addEventListener('dragover', function (e) { e.preventDefault(); e.stopPropagation(); this.classList.add('dragover'); });
+                pnBox.addEventListener('dragleave', function (e) { e.preventDefault(); this.classList.remove('dragover'); });
+                pnBox.addEventListener('drop', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.classList.remove('dragover');
+                    var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+                    if (file && file.type.match(/^image\//)) pnOpenModal(file);
+                });
+            }
+            if (pnCloseBtn) pnCloseBtn.addEventListener('click', pnCloseModal);
+            if (pnCancelBtn) pnCancelBtn.addEventListener('click', pnCloseModal);
+            if (pnConfirmBtn) pnConfirmBtn.addEventListener('click', pnApplyCrop);
+            if (pnModal && pnModal.querySelector('.hero-crop-modal__backdrop')) pnModal.querySelector('.hero-crop-modal__backdrop').addEventListener('click', pnCloseModal);
+        })();
 
         function alumniEsc(s) { if (s == null) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
         function addAlumniRow(data) {

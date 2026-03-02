@@ -848,6 +848,27 @@ class Dashboard extends BaseController
                     log_message('error', 'Program news featured image: ' . $e->getMessage());
                 }
             }
+        } else {
+            // ภาพที่ crop จากฝั่งลูกค้า ส่งมาเป็น base64 (เหมือน admin/news)
+            $base64 = $this->request->getPost('featured_image_base64');
+            if (!empty($base64) && is_string($base64)) {
+                $raw = $base64;
+                if (strpos($raw, 'base64,') !== false) {
+                    $raw = substr($raw, strpos($raw, 'base64,') + 7);
+                }
+                $bin = base64_decode($raw, true);
+                if ($bin !== false && strlen($bin) > 0 && is_writable($uploadPath)) {
+                    $part = date('Ymd_His') . '_' . bin2hex(random_bytes(4));
+                    $filename = 'Feature_p' . $programId . '_' . $part . '.jpg';
+                    $fullPath = rtrim($uploadPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename;
+                    if (file_put_contents($fullPath, $bin) !== false) {
+                        $relativePath = program_upload_relative_path($programId, 'news', $filename);
+                        program_create_image_thumbnail($fullPath);
+                        $this->newsModel->update($newsId, ['featured_image' => $relativePath]);
+                        log_message('info', "Program news featured image (cropped base64) saved for program $programId news $newsId ($filename)");
+                    }
+                }
+            }
         }
 
         $files = $this->request->getFiles();
