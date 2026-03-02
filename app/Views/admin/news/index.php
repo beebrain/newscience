@@ -242,7 +242,8 @@
             '<span class="badge badge-success">เผยแพร่</span>' :
             '<span class="badge badge-warning">ร่าง</span>';
 
-        const eventBadge = article.display_as_event ?
+        const isEvent = article.display_as_event === 1 || article.display_as_event === '1';
+        const eventBadge = isEvent ?
             '<span class="badge badge-success" title="แสดงใน section กิจกรรมที่จะมาถึง">Event</span>' :
             '<span style="color: var(--color-gray-400); font-size: 0.875rem;">—</span>';
 

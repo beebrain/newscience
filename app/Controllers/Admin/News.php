@@ -112,13 +112,15 @@ class News extends BaseController
         $slug = $this->newsModel->generateSlug($title);
 
         $facebookUrl = trim((string) $this->request->getPost('facebook_url'));
+        $displayAsEvent = $this->request->getPost('display_as_event');
+        $displayAsEvent = ($displayAsEvent === '1' || $displayAsEvent === 1) ? 1 : 0;
         $newsData = [
             'title' => $title,
             'slug' => $slug,
             'content' => $this->request->getPost('content'),
             'excerpt' => $this->request->getPost('excerpt'),
             'status' => $this->request->getPost('status'),
-            'display_as_event' => (int) $this->request->getPost('display_as_event'),
+            'display_as_event' => $displayAsEvent,
             'facebook_url' => $facebookUrl !== '' ? $facebookUrl : null,
             'author_id' => session()->get('admin_id'),
             'published_at' => $this->request->getPost('status') === 'published' ? date('Y-m-d H:i:s') : null
@@ -309,6 +311,8 @@ class News extends BaseController
         }
 
         $facebookUrl = trim((string) $this->request->getPost('facebook_url'));
+        $displayAsEvent = $this->request->getPost('display_as_event');
+        $displayAsEvent = ($displayAsEvent === '1' || $displayAsEvent === 1) ? 1 : 0;
         $newsData = [
             'id' => $id, // จำเป็นสำหรับ validation rule is_unique[news.slug,id,{id}]
             'title' => $title,
@@ -316,7 +320,7 @@ class News extends BaseController
             'content' => $this->request->getPost('content'),
             'excerpt' => $this->request->getPost('excerpt'),
             'status' => $this->request->getPost('status'),
-            'display_as_event' => (int) $this->request->getPost('display_as_event'),
+            'display_as_event' => $displayAsEvent,
             'facebook_url' => $facebookUrl !== '' ? $facebookUrl : null,
         ];
 

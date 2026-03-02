@@ -252,12 +252,7 @@
                                         </li>
                                     <?php endforeach; ?>
 
-                                    <?php if (session()->get('admin_logged_in')): ?>
-                                        <li><a href="<?= base_url('dashboard') ?>" class="nav__dropdown-link">การจัดการ</a></li>
-                                        <li><a href="<?= base_url('admin/logout') ?>" class="nav__dropdown-link">ออกจากระบบ</a></li>
-                                    <?php else: ?>
-                                        <li><a href="<?= base_url('admin/login') ?>" class="nav__dropdown-link">เข้าสู่ระบบ</a></li>
-                                    <?php endif; ?>
+                                    <li><a href="<?= base_url('dashboard') ?>" class="nav__dropdown-link">การจัดการ (Dashboard)</a></li>
                                 </ul>
                             </li>
                         </ul>
@@ -278,6 +273,18 @@
                             <li><a href="<?= base_url('contact') ?>" class="nav__dropdown-link">ติดต่อ</a></li>
                         </ul>
                     </li>
+                    <?php if (session()->get('admin_logged_in')): ?>
+                    <li>
+                        <a href="<?= base_url('dashboard') ?>" class="nav__link nav__link--user" title="ไปที่ Dashboard"><?= esc(session()->get('admin_name') ?: session()->get('admin_email')) ?></a>
+                    </li>
+                    <li>
+                        <a href="<?= base_url('admin/logout') ?>" class="nav__link nav__link--logout">ออกจากระบบ</a>
+                    </li>
+                    <?php else: ?>
+                    <li>
+                        <a href="<?= base_url('admin/login') ?>" class="nav__link nav__link--login">เข้าสู่ระบบ</a>
+                    </li>
+                    <?php endif; ?>
                 </ul>
 
                 <!-- Search Button -->
@@ -332,9 +339,11 @@
             <li><a href="<?= base_url('about') ?>" class="mobile-nav__link">เกี่ยวกับ</a></li>
             <li><a href="<?= base_url('contact') ?>" class="mobile-nav__link">ติดต่อ</a></li>
             <li><a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener noreferrer" class="mobile-nav__link">สมัครเรียน</a></li>
+            <li class="mobile-nav__divider" role="presentation"></li>
             <?php if (session()->get('admin_logged_in')): ?>
-                <li><a href="<?= base_url('dashboard') ?>" class="mobile-nav__link">การจัดการ</a></li>
-                <li><a href="<?= base_url('admin/logout') ?>" class="mobile-nav__link">ออกจากระบบ</a></li>
+                <li class="mobile-nav__header-item">บัญชีของฉัน</li>
+                <li><a href="<?= base_url('dashboard') ?>" class="mobile-nav__link" style="padding-left: 2rem;"><?= esc(session()->get('admin_name') ?: session()->get('admin_email')) ?> (Dashboard)</a></li>
+                <li><a href="<?= base_url('admin/logout') ?>" class="mobile-nav__link" style="padding-left: 2rem;">ออกจากระบบ</a></li>
             <?php else: ?>
                 <li><a href="<?= base_url('admin/login') ?>" class="mobile-nav__link">เข้าสู่ระบบ</a></li>
             <?php endif; ?>

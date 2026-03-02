@@ -131,7 +131,10 @@
                 </div>
             </section>
 
-            <?php $displayAsEvent = (int) (old('display_as_event') ?? $news['display_as_event'] ?? 0); ?>
+            <?php
+            $rawDisplay = old('display_as_event') ?? $news['display_as_event'] ?? 0;
+            $displayAsEvent = ($rawDisplay === '1' || $rawDisplay === 1) ? 1 : 0;
+            ?>
             <section class="form-section">
                 <h3 class="form-section-title">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

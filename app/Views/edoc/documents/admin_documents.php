@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Document Manager | จัดการเอกสาร</title>
-    <?php helper('site'); ?>
+    <?php helper(['site', 'form']); ?>
     <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
 
     <!-- Tailwind CSS -->
@@ -468,6 +468,14 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </div>
+                                <button type="button" id="btn-volumes-panel" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-medium rounded-lg transition-all" title="จัดการเล่มเอกสาร">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                                    <span class="hidden sm:inline">จัดการเล่ม</span>
+                                </button>
+                                <button type="button" id="btn-tag-groups-panel" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-medium rounded-lg transition-all" title="จัดการกลุ่ม Tag">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                                    <span class="hidden sm:inline">กลุ่ม Tag</span>
+                                </button>
                                 <button type="button" id="add-btn" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg shadow shadow-blue-500/20 transition-all">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -481,6 +489,81 @@
 
                 <!-- Main: DataTables ขยายตามขนาดหน้าจอ -->
                 <main class="w-full px-3 sm:px-4 py-3">
+                    <!-- จัดการเล่มเอกสาร (Volume) -->
+                    <div id="volumes-panel" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden px-4 py-4 mb-4 hidden">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                                จัดการเล่มเอกสารในแต่ละปี
+                            </h2>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <label class="text-sm text-gray-600">ปี:</label>
+                                <select id="volume-year-select" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                    <?php foreach ($availableYears ?? [] as $y): ?>
+                                    <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? date('Y'))) ? 'selected' : '' ?>><?= (int)$y ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <button type="button" id="btn-create-year-volumes" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-all">
+                                    <i class="fas fa-plus me-1"></i>สร้างเล่มปี <span id="volume-year-label"><?= (int)($currentYear ?? date('Y')) ?></span>
+                                </button>
+                                <button type="button" id="btn-close-volumes-panel" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm">ปิด</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm text-left border border-gray-200 rounded-lg overflow-hidden">
+                                <thead class="bg-gray-50 text-gray-700">
+                                    <tr>
+                                        <th class="px-4 py-2 border-b">เล่ม</th>
+                                        <th class="px-4 py-2 border-b">จำนวนเอกสาร</th>
+                                        <th class="px-4 py-2 border-b">สถานะ</th>
+                                        <th class="px-4 py-2 border-b">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="volumes-tbody">
+                                    <tr><td colspan="4" class="px-4 py-6 text-center text-gray-500">เลือกปีแล้วโหลดข้อมูล</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- จัดการกลุ่ม Tag -->
+                    <div id="tag-groups-panel" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden px-4 py-4 mb-4 hidden">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                                จัดการกลุ่ม Tag (ผู้รับ)
+                            </h2>
+                            <button type="button" id="btn-close-tag-groups-panel" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm">ปิด</button>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อกลุ่ม</label>
+                                    <input type="text" id="tagGroupName" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="ชื่อกลุ่ม (เช่น คณบดี, หัวหน้าภาค)">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">รายการ Tag (คั่นด้วย comma)</label>
+                                    <input type="text" id="tagGroupTagsInput" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="email1@mail.com, email2@mail.com หรือ ชื่อ นามสกุล">
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" id="btn-tag-group-save" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg">
+                                    <i class="fas fa-save me-1"></i><span id="btn-tag-group-save-text">บันทึกกลุ่มใหม่</span>
+                                </button>
+                                <button type="button" id="btn-tag-group-cancel-edit" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm rounded-lg hidden">ยกเลิกการแก้ไข</button>
+                                <button type="button" id="btn-tag-group-delete" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg hidden">
+                                    <i class="fas fa-trash me-1"></i>ลบกลุ่ม
+                                </button>
+                            </div>
+                            <div class="border-t pt-4">
+                                <p class="text-sm font-medium text-gray-700 mb-2">กลุ่มที่มีอยู่</p>
+                                <ul id="tag-groups-list" class="space-y-2 max-h-64 overflow-y-auto">
+                                    <li class="text-gray-500 text-sm">กำลังโหลด...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="doc-table-card" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden px-3 py-2 hidden">
                         <table id="documents-table" class="display stripe hover" style="width:100%">
                             <thead>
@@ -966,16 +1049,234 @@
             window.documentsTable = documentsTable;
         }
 
+        // ---------- จัดการเล่ม (Volume) ----------
+        function loadVolumes(year) {
+            year = year || $('#volume-year-select').val() || <?= (int)($currentYear ?? date('Y')) ?>;
+            $.ajax({
+                url: '<?= base_url("index.php/edoc/admin/volumes") ?>',
+                type: 'GET',
+                data: { year: year },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success' && res.data) {
+                        let options = '<option value="">-- ไม่ระบุ --</option>';
+                        res.data.forEach(function(v) {
+                            if (v.is_active == 1) {
+                                options += '<option value="' + v.id + '">' + (v.volume_label || v.volume_type) + ' (' + (v.doc_count || 0) + ' เอกสาร)</option>';
+                            }
+                        });
+                        $('#volume_id').html(options);
+                        renderVolumesTable(res.data);
+                    }
+                }
+            });
+        }
+
+        function renderVolumesTable(volumes) {
+            const tbody = $('#volumes-tbody');
+            if (!volumes || volumes.length === 0) {
+                tbody.html('<tr><td colspan="4" class="px-4 py-6 text-center text-gray-500">ไม่มีเล่มในปีนี้ กด "สร้างเล่มปี" เพื่อสร้าง</td></tr>');
+                return;
+            }
+            let html = '';
+            volumes.forEach(function(v) {
+                const status = v.is_active == 1 ? '<span class="text-green-600">เปิดใช้</span>' : '<span class="text-gray-500">ปิดใช้</span>';
+                html += '<tr class="border-b hover:bg-gray-50">';
+                html += '<td class="px-4 py-2">' + (v.volume_label || v.volume_type) + '</td>';
+                html += '<td class="px-4 py-2">' + (v.doc_count || 0) + '</td>';
+                html += '<td class="px-4 py-2">' + status + '</td>';
+                html += '<td class="px-4 py-2"><button type="button" class="volume-toggle-btn px-2 py-1 rounded text-sm ' + (v.is_active == 1 ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-green-100 text-green-800 hover:bg-green-200') + '" data-id="' + v.id + '" data-active="' + v.is_active + '">' + (v.is_active == 1 ? 'ปิดใช้' : 'เปิดใช้') + '</button></td>';
+                html += '</tr>';
+            });
+            tbody.html(html);
+        }
+
+        $('#btn-volumes-panel').on('click', function() {
+            $('#volumes-panel').removeClass('hidden');
+            $('#volume-year-label').text($('#volume-year-select').val());
+            loadVolumes($('#volume-year-select').val());
+        });
+        $('#btn-close-volumes-panel').on('click', function() {
+            $('#volumes-panel').addClass('hidden');
+        });
+        $('#volume-year-select').on('change', function() {
+            const y = $(this).val();
+            $('#volume-year-label').text(y);
+            loadVolumes(y);
+        });
+        $('#btn-create-year-volumes').on('click', function() {
+            const year = $('#volume-year-select').val();
+            if (!year) return;
+            $.ajax({
+                url: '<?= base_url("index.php/edoc/admin/volumes/create-year") ?>',
+                type: 'POST',
+                data: { year: year, <?= csrf_token() ?>: '<?= csrf_hash() ?>' },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        swalAlert(res.message || 'สร้างเล่มปี ' + year + ' สำเร็จ', 'success');
+                        loadVolumes(year);
+                    } else {
+                        swalAlert(res.message || 'เกิดข้อผิดพลาด', 'error');
+                    }
+                },
+                error: function() { swalAlert('เกิดข้อผิดพลาด', 'error'); }
+            });
+        });
+        $(document).on('click', '.volume-toggle-btn', function() {
+            const id = $(this).data('id');
+            $.ajax({
+                url: '<?= base_url("index.php/edoc/admin/volumes/toggle") ?>',
+                type: 'POST',
+                data: { id: id, <?= csrf_token() ?>: '<?= csrf_hash() ?>' },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        loadVolumes($('#volume-year-select').val());
+                    } else {
+                        swalAlert(res.message || 'เกิดข้อผิดพลาด', 'error');
+                    }
+                }
+            });
+        });
+
+        // ---------- จัดการกลุ่ม Tag ----------
+        let editingTagGroupId = null;
+
+        function loadTagGroupsList() {
+            $.get('<?= base_url("index.php/edoc/admin/gettaggroups") ?>', function(response) {
+                if (response.status === 'success') {
+                    tagGroupsData = response.data;
+                    renderTagGroupSelect();
+                    const listEl = $('#tag-groups-list');
+                    if (!response.data || response.data.length === 0) {
+                        listEl.html('<li class="text-gray-500 text-sm">ยังไม่มีกลุ่ม สร้างใหม่ได้จากฟอร์มด้านบน</li>');
+                        return;
+                    }
+                    let html = '';
+                    response.data.forEach(function(g) {
+                        const tags = Array.isArray(g.tags) ? g.tags.join(', ') : (g.tags || '');
+                        const name = (g.name || g.group_name || '');
+                        html += '<li class="flex items-center justify-between gap-2 p-2 rounded-lg border border-gray-200 hover:bg-gray-50">';
+                        html += '<div class="min-w-0 flex-1"><span class="font-medium text-gray-800">' + $('<div>').text(name).html() + '</span><span class="text-gray-500 text-xs ml-2">(' + (Array.isArray(g.tags) ? g.tags.length : 0) + ' รายการ)</span></div>';
+                        html += '<button type="button" class="tag-group-edit-btn px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200" data-id="' + g.id + '">แก้ไข</button>';
+                        html += '</li>';
+                    });
+                    listEl.html(html);
+                }
+            }, 'json');
+        }
+
+        $('#btn-tag-groups-panel').on('click', function() {
+            $('#tag-groups-panel').removeClass('hidden');
+            editingTagGroupId = null;
+            $('#tagGroupName').val('');
+            $('#tagGroupTagsInput').val('');
+            $('#btn-tag-group-save-text').text('บันทึกกลุ่มใหม่');
+            $('#btn-tag-group-cancel-edit').addClass('hidden');
+            $('#btn-tag-group-delete').addClass('hidden');
+            loadTagGroupsList();
+        });
+        $('#btn-close-tag-groups-panel').on('click', function() {
+            $('#tag-groups-panel').addClass('hidden');
+        });
+        $(document).on('click', '.tag-group-edit-btn', function() {
+            const id = $(this).data('id');
+            const g = tagGroupsData.find(function(x) { return x.id == id; });
+            if (!g) return;
+            const name = g.name || g.group_name || '';
+            const tags = Array.isArray(g.tags) ? g.tags.join(', ') : (g.tags || '');
+            editingTagGroupId = id;
+            $('#tagGroupName').val(name);
+            $('#tagGroupTagsInput').val(tags);
+            $('#btn-tag-group-save-text').text('อัปเดตกลุ่ม');
+            $('#btn-tag-group-cancel-edit').removeClass('hidden');
+            $('#btn-tag-group-delete').removeClass('hidden');
+        });
+        $('#btn-tag-group-cancel-edit').on('click', function() {
+            editingTagGroupId = null;
+            $('#tagGroupName').val('');
+            $('#tagGroupTagsInput').val('');
+            $('#btn-tag-group-save-text').text('บันทึกกลุ่มใหม่');
+            $(this).addClass('hidden');
+            $('#btn-tag-group-delete').addClass('hidden');
+        });
+        $('#btn-tag-group-save').on('click', function() {
+            const name = $.trim($('#tagGroupName').val());
+            const tagsStr = $.trim($('#tagGroupTagsInput').val());
+            if (!name) {
+                swalAlert('กรุณากรอกชื่อกลุ่ม', 'warning');
+                return;
+            }
+            const tags = tagsStr ? tagsStr.split(',').map(function(t) { return $.trim(t); }).filter(Boolean) : [];
+            if (tags.length === 0) {
+                swalAlert('กรุณากรอกรายการ Tag อย่างน้อย 1 รายการ (คั่นด้วย comma)', 'warning');
+                return;
+            }
+            const data = { name: name, tags: tags };
+            if (editingTagGroupId) data.id = editingTagGroupId;
+            $.ajax({
+                url: '<?= base_url("index.php/edoc/admin/savetaggroup") ?>',
+                type: 'POST',
+                data: data,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        swalAlert(editingTagGroupId ? 'อัปเดตกลุ่มสำเร็จ' : 'สร้างกลุ่มใหม่สำเร็จ', 'success');
+                        editingTagGroupId = null;
+                        $('#tagGroupName').val('');
+                        $('#tagGroupTagsInput').val('');
+                        $('#btn-tag-group-save-text').text('บันทึกกลุ่มใหม่');
+                        $('#btn-tag-group-cancel-edit').addClass('hidden');
+                        $('#btn-tag-group-delete').addClass('hidden');
+                        loadTagGroupsList();
+                        loadTagGroups();
+                    } else {
+                        swalAlert(response.message || 'เกิดข้อผิดพลาด', 'error');
+                    }
+                },
+                error: function() { swalAlert('เกิดข้อผิดพลาด', 'error'); }
+            });
+        });
+        $('#btn-tag-group-delete').on('click', function() {
+            if (!editingTagGroupId) return;
+            swalConfirm({ title: 'ต้องการลบกลุ่มนี้ใช่หรือไม่?', confirmText: 'ลบ', cancelText: 'ยกเลิก' }).then(function(ok) {
+                if (!ok) return;
+                $.ajax({
+                    url: '<?= base_url("index.php/edoc/admin/deletetaggroup") ?>',
+                    type: 'POST',
+                    data: { id: editingTagGroupId },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            swalAlert('ลบกลุ่มสำเร็จ', 'success');
+                            editingTagGroupId = null;
+                            $('#tagGroupName').val('');
+                            $('#tagGroupTagsInput').val('');
+                            $('#btn-tag-group-save-text').text('บันทึกกลุ่มใหม่');
+                            $('#btn-tag-group-cancel-edit').addClass('hidden');
+                            $('#btn-tag-group-delete').addClass('hidden');
+                            loadTagGroupsList();
+                            loadTagGroups();
+                        } else {
+                            swalAlert(response.message || 'เกิดข้อผิดพลาด', 'error');
+                        }
+                    }
+                });
+            });
+        });
+
         $(document).ready(function() {
             $("#datedoc").datepicker();
             $("#msgfile").hide();
             initsuggest();
             initDocumentsTable();
-            loadVolumes();
+            loadVolumes(<?= (int)($currentYear ?? date('Y')) ?>);
             initEmailAutocomplete();
 
             $('#add-btn, #empty-add-btn').on('click', function() {
-                openFormModal();
+                if (typeof openFormModal === 'function') openFormModal();
+                else $('#formModal').modal('show');
             });
             var searchTimeout;
             $('#search-input').on('keyup', function() {

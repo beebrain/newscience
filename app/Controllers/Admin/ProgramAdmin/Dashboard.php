@@ -811,13 +811,15 @@ class Dashboard extends BaseController
         helper('program_upload');
         $title = $this->request->getPost('title');
         $slug = $this->newsModel->generateSlug($title);
+        $displayAsEvent = $this->request->getPost('display_as_event');
+        $displayAsEvent = ($displayAsEvent === '1' || $displayAsEvent === 1) ? 1 : 0;
         $newsData = [
             'title' => $title,
             'slug' => $slug,
             'content' => $this->request->getPost('content'),
             'excerpt' => $this->request->getPost('excerpt'),
             'status' => $this->request->getPost('status'),
-            'display_as_event' => (int) $this->request->getPost('display_as_event'),
+            'display_as_event' => $displayAsEvent,
             'author_id' => session()->get('admin_id'),
             'published_at' => $this->request->getPost('status') === 'published' ? date('Y-m-d H:i:s') : null,
         ];

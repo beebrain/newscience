@@ -117,13 +117,14 @@
                 <div class="form-group">
                     <label class="form-label">แสดงใน section กิจกรรมที่จะมาถึง</label>
                     <p class="form-hint">เลือกประเภทข่าว: ข่าวทั่วไป หรือข่าวเกี่ยวกับ Event ที่จะเกิดขึ้น</p>
+                    <?php $defDisplayAsEvent = (int)(old('display_as_event') ?? 0); ?>
                     <div class="radio-group">
                         <label class="radio-option">
-                            <input type="radio" name="display_as_event" value="0" <?= (int)(old('display_as_event') ?? 0) === 0 ? 'checked' : '' ?>>
+                            <input type="radio" name="display_as_event" value="0" <?= $defDisplayAsEvent === 0 ? 'checked' : '' ?>>
                             <span>ข่าวประชาสัมพันธ์ / กิจกรรมทั่วไป</span>
                         </label>
                         <label class="radio-option">
-                            <input type="radio" name="display_as_event" value="1" <?= (int)(old('display_as_event') ?? 0) === 1 ? 'checked' : '' ?>>
+                            <input type="radio" name="display_as_event" value="1" <?= $defDisplayAsEvent === 1 ? 'checked' : '' ?>>
                             <span>ข่าว Event ที่จะเกิดขึ้น</span>
                         </label>
                     </div>
