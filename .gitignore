@@ -98,6 +98,10 @@ tests/unit/ContentBuilderAccessTest.php
 # Composer
 #-------------------------
 vendor/
+# Allow frontend vendor assets (Quill editor)
+!public/assets/vendor/
+!public/assets/vendor/quill/
+!public/assets/vendor/quill/*
 
 #-------------------------
 # IDE / Development Files
