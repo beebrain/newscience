@@ -21,7 +21,7 @@ class AdminSystemAccessFilter implements FilterInterface
 {
     /** @var array URI segment หลัง admin/ -> system_slug (เฉพาะ path ที่ต้องเช็คสิทธิ์) */
     private const URI_TO_SYSTEM = [
-        'news'           => 'admin_core',
+        'news'           => 'admin_news',   // สิทธิ์แยก: ประกาศข่าว (หรือ admin_core ก็เข้าได้)
         'organization'   => 'admin_core',
         'programs'       => 'admin_core',
         'hero-slides'    => 'admin_core',
@@ -41,17 +41,41 @@ class AdminSystemAccessFilter implements FilterInterface
             return redirect()->to(base_url('admin/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
         }
 
-        $uri = $request->getUri()->getPath();
-        $slug = $this->uriToSystemSlug($uri);
-        if ($slug === null) {
-            return null; // ไม่ได้อยู่ในรายการที่ต้องเช็ค (หรือ path อื่นให้ผ่าน)
+        $uri = trim($request->getUri()->getPath(), '/');
+
+        // utility/* ใช้สิทธิ์ระบบ utility
+        if (strpos($uri, 'utility') === 0) {
+            if (AccessControl::hasAccess((int) $adminId, 'utility')) {
+                return null;
+            }
+            log_message('debug', 'AdminSystemAccessFilter: access denied (utility). admin_id=' . $adminId . ' uri=' . $uri);
+            return redirect()->to(base_url('dashboard'))->with('error', 'คุณไม่มีสิทธิ์เข้าใช้ส่วนนี้');
         }
 
-        if (AccessControl::hasAccess((int) $adminId, $slug)) {
+        $segment = $this->uriToFirstSegment($uri);
+        if ($segment === null) {
             return null;
         }
 
-        log_message('debug', 'AdminSystemAccessFilter: access denied. admin_id=' . $adminId . ' slug=' . $slug . ' uri=' . $uri);
+        $slug = self::URI_TO_SYSTEM[$segment] ?? null;
+        if ($slug === null) {
+            return null;
+        }
+
+        $allowed = false;
+        if ($slug === 'admin_news') {
+            // หน้าประกาศข่าว: เข้าได้ถ้ามี admin_news หรือ admin_core
+            $allowed = AccessControl::hasAccess((int) $adminId, 'admin_news')
+                || AccessControl::hasAccess((int) $adminId, 'admin_core');
+        } else {
+            $allowed = AccessControl::hasAccess((int) $adminId, $slug);
+        }
+
+        if ($allowed) {
+            return null;
+        }
+
+        log_message('debug', 'AdminSystemAccessFilter: access denied. admin_id=' . $adminId . ' segment=' . $segment . ' uri=' . $uri);
         return redirect()->to(base_url('dashboard'))->with('error', 'คุณไม่มีสิทธิ์เข้าใช้ส่วนนี้');
     }
 
@@ -60,7 +84,7 @@ class AdminSystemAccessFilter implements FilterInterface
         return $response;
     }
 
-    private function uriToSystemSlug(string $uri): ?string
+    private function uriToFirstSegment(string $uri): ?string
     {
         $uri = trim($uri, '/');
         if (strpos($uri, 'utility') === 0) {
@@ -70,7 +94,6 @@ class AdminSystemAccessFilter implements FilterInterface
             return null;
         }
         $after = substr($uri, 6); // หลัง "admin/"
-        $segment = strpos($after, '/') !== false ? strstr($after, '/', true) : $after;
-        return self::URI_TO_SYSTEM[$segment] ?? 'admin_core'; // default กลุ่มหลัก = admin_core
+        return strpos($after, '/') !== false ? strstr($after, '/', true) : $after;
     }
 }

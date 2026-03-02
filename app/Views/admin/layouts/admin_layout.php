@@ -68,14 +68,22 @@ use App\Libraries\AccessControl; ?>
                 </div>
                 <?php endif; ?>
 
-                <!-- จัดการเนื้อหา (admin_core) -->
-                <?php if ($sidebarAdminId && AccessControl::hasAccess($sid, 'admin_core')): ?>
+                <!-- จัดการเนื้อหา (admin_core) + ประกาศข่าว (admin_news แยกสิทธิ์ได้) -->
+                <?php
+                $hasAdminCore = $sidebarAdminId && AccessControl::hasAccess($sid, 'admin_core');
+                $hasAdminNews = $sidebarAdminId && AccessControl::hasAccess($sid, 'admin_news');
+                $showContentMenu = $hasAdminCore || $hasAdminNews;
+                ?>
+                <?php if ($showContentMenu): ?>
                 <div class="sidebar-submenu" style="margin: 0.5rem 0;">
                     <div class="submenu-header" style="padding: 0.5rem 1rem; color: var(--color-gray-500); font-size: 12px; text-transform: uppercase;">จัดการเนื้อหา</div>
+                    <?php if ($hasAdminCore || $hasAdminNews): ?>
                     <a href="<?= base_url('admin/news') ?>" class="<?= (uri_string() == 'admin/news' || strpos(uri_string(), 'admin/news') === 0) ? 'active' : '' ?>">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>
-                        News Management
+                        ประกาศข่าว / News
                     </a>
+                    <?php endif; ?>
+                    <?php if ($hasAdminCore): ?>
                     <a href="<?= base_url('admin/organization') ?>" class="<?= (uri_string() == 'admin/organization' || strpos(uri_string(), 'admin/organization') === 0) ? 'active' : '' ?>">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></svg>
                         โครงสร้างองค์กร
@@ -92,6 +100,7 @@ use App\Libraries\AccessControl; ?>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
                         Events Coming Up
                     </a>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 
