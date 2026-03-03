@@ -286,9 +286,8 @@
             border-bottom: none;
         }
 
-        /* ประเภทเอกสาร dropdown ให้เข้ากับฟอร์ม */
-        #formModal .bootstrap-select .dropdown-toggle,
-        #formModal select#doctype {
+        /* ประเภทเอกสาร select ให้กรอบและสไตล์สอดคล้องกับ input อื่น */
+        #formModal select#doctype.form-control-doctype {
             border: 1px solid #d1d5db;
             border-radius: 0.5rem;
             padding: 0.5rem 0.75rem;
@@ -298,24 +297,13 @@
             min-height: 2.5rem;
             outline: none;
             box-shadow: none;
+            appearance: auto;
+            width: 100%;
         }
 
-        #formModal .bootstrap-select .dropdown-toggle:focus {
+        #formModal select#doctype.form-control-doctype:focus {
             border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        #formModal .bootstrap-select .dropdown-toggle:hover {
-            border-color: #9ca3af;
-            background: #f9fafb;
-        }
-
-        #formModal .bootstrap-select.btn-group {
-            width: 100% !important;
-        }
-
-        #formModal .bootstrap-select .dropdown-toggle .filter-option {
-            text-align: right;
+            box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
         }
 
         /* หน้าเต็มไม่มี sidebar */
@@ -468,6 +456,10 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </div>
+                                <button type="button" id="btn-advanced-search" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-medium rounded-lg transition-all" title="ค้นหาละเอียด">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                                    <span class="hidden sm:inline" id="btn-advanced-search-text">ค้นหาละเอียด</span>
+                                </button>
                                 <button type="button" id="btn-volumes-panel" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-medium rounded-lg transition-all" title="จัดการเล่มเอกสาร">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                                     <span class="hidden sm:inline">จัดการเล่ม</span>
@@ -537,13 +529,18 @@
                         </div>
                         <div class="space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
+                                <div class="relative">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อกลุ่ม</label>
-                                    <input type="text" id="tagGroupName" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="ชื่อกลุ่ม (เช่น คณบดี, หัวหน้าภาค)">
+                                    <input type="text" id="tagGroupName" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="ชื่อกลุ่ม (เช่น คณบดี, หัวหน้าภาค)" autocomplete="off">
+                                    <div id="tagGroupNameDropdown" class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"></div>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">รายการ Tag (คั่นด้วย comma)</label>
-                                    <input type="text" id="tagGroupTagsInput" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="email1@mail.com, email2@mail.com หรือ ชื่อ นามสกุล">
+                                    <div class="relative mb-1">
+                                        <input type="text" id="tagGroupTagsSearch" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="ค้นหาอีเมลหรือชื่อเพื่อเพิ่มในกลุ่ม (พิมพ์ 2 ตัวอักษรขึ้นไป)" autocomplete="off">
+                                        <div id="tagGroupTagsDropdown" class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto"></div>
+                                    </div>
+                                    <input type="text" id="tagGroupTagsInput" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="หรือพิมพ์โดยตรง: email1@mail.com, email2@mail.com">
                                 </div>
                             </div>
                             <div class="flex flex-wrap gap-2">
@@ -562,6 +559,75 @@
                                 </ul>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Advanced Search Panel -->
+                    <div id="advanced-search-panel" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden px-4 py-4 mb-4 hidden">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                                ค้นหาละเอียด
+                            </h2>
+                            <button type="button" id="btn-close-advanced-search" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm">ปิด</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทเอกสาร</label>
+                                <select id="adv-doctype" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <option value="">ทุกประเภท</option>
+                                    <option value="หนังสือรับภายใน">หนังสือรับภายใน</option>
+                                    <option value="หนังสือรับภายนอก">หนังสือรับภายนอก</option>
+                                    <option value="หนังสือส่งภายใน">หนังสือส่งภายใน</option>
+                                    <option value="ใบลา">ใบลา</option>
+                                    <option value="คำสั่ง">คำสั่ง</option>
+                                    <option value="ประกาศ">ประกาศ</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ปี</label>
+                                <select id="adv-year" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <option value="">ทุกปี</option>
+                                    <?php foreach ($availableYears ?? [] as $y): ?>
+                                    <option value="<?= (int)$y ?>"><?= (int)$y ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เล่ม</label>
+                                <select id="adv-volume" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                    <option value="">ทุกเล่ม</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">วันที่เริ่ม</label>
+                                <input type="date" id="adv-date-from" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">วันที่สิ้นสุด</label>
+                                <input type="date" id="adv-date-to" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                            </div>
+                            <div class="md:col-span-2 flex items-end">
+                                <button type="button" id="adv-btn-search" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg">ค้นหา</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+                            <div class="md:col-span-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เลขที่หนังสือ</label>
+                                <input type="text" id="adv-officeiddoc" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="ส่วนของเลขที่">
+                            </div>
+                            <div class="md:col-span-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เจ้าของเอกสาร</label>
+                                <input type="text" id="adv-owner" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="ชื่อเจ้าของ">
+                            </div>
+                            <div class="md:col-span-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ผู้มีส่วนร่วม</label>
+                                <input type="text" id="adv-participant" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="อีเมลหรือชื่อ">
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" id="adv-btn-clear" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-lg">ล้างตัวกรอง</button>
+                        </div>
+                        <div id="advanced-search-badges" class="mt-3 flex flex-wrap gap-2 hidden"></div>
                     </div>
 
                     <div id="doc-table-card" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden px-3 py-2 hidden">
@@ -615,13 +681,19 @@
                 <div class="modal-body p-6">
                     <form id="frmdata" class="space-y-5">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                            <div class="md:col-span-3">
+                            <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">เลขที่หนังสือ</label>
                                 <input type="text" id="officeiddoc" name="officeiddoc" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                                 <input type="hidden" id="iddoc" name="iddoc">
                                 <input type="hidden" id="userid" name="userid" value="<?= $infoUser['uid'] ?>">
                             </div>
-                            <div class="md:col-span-7">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เล่มเอกสาร (Volume)</label>
+                                <select name="volume_id" id="volume_id" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                    <option value="">-- ไม่ระบุ --</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-6">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อเรื่อง</label>
                                 <input type="text" id="title" name="title" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                             </div>
@@ -633,7 +705,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
                             <div class="md:col-span-3">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทเอกสาร</label>
-                                <select name="doctype" id="doctype" class="selectpicker form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" data-style="py-0" required>
+                                <select name="doctype" id="doctype" class="form-control form-control-doctype w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" required>
                                     <option value="">กรุณาระบุ</option>
                                     <option value="หนังสือรับภายใน">หนังสือรับภายใน</option>
                                     <option value="หนังสือรับภายนอก">หนังสือรับภายนอก</option>
@@ -644,16 +716,10 @@
                                 </select>
                             </div>
                             <div class="md:col-span-3">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">เล่มเอกสาร (Volume)</label>
-                                <select name="volume_id" id="volume_id" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                    <option value="">-- ไม่ระบุ --</option>
-                                </select>
-                            </div>
-                            <div class="md:col-span-3">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">วันที่ลงหนังสือ</label>
                                 <input type="text" data-date-format="yyyy-mm-dd" name="datedoc" id="datedoc" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                             </div>
-                            <div class="md:col-span-3">
+                            <div class="md:col-span-6">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">เจ้าของเอกสาร</label>
                                 <input type="text" name="owner" id="owner" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                             </div>
@@ -665,17 +731,21 @@
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                             <div class="md:col-span-12">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">กลุ่มผู้รับ (Tag Groups)</label>
-                                <div class="flex gap-2 mb-2">
-                                    <select id="tagGroupSelect" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                        <option value="">-- เลือกกลุ่ม --</option>
-                                    </select>
+                                <div class="flex flex-wrap gap-2 mb-2 items-start">
+                                    <div class="flex-1 min-w-0 relative">
+                                        <input type="text" id="tagGroupSearch" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="พิมพ์ชื่อกลุ่มเพื่อเลือก (เช่น คณบดี, หัวหน้าภาค)" autocomplete="off">
+                                        <div id="tagGroupDropdown" class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto"></div>
+                                    </div>
                                     <button type="button" id="btnSaveGroup" class="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm whitespace-nowrap"><i class="fas fa-save me-1"></i>บันทึกกลุ่ม</button>
-                                    <button type="button" id="btnDeleteGroup" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm whitespace-nowrap" style="display:none;"><i class="fas fa-trash"></i></button>
                                 </div>
                             </div>
                             <div class="md:col-span-10">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">ผู้มีส่วนร่วม</label>
-                                <input type="text" name="participant" id="participant" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <div class="mb-2 relative">
+                                    <input type="text" id="participant-email-search" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="ค้นหาอีเมลหรือชื่อเพื่อเพิ่มผู้มีส่วนร่วม (พิมพ์อย่างน้อย 2 ตัวอักษร)" autocomplete="off">
+                                    <div id="participant-email-dropdown" class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"></div>
+                                </div>
+                                <input type="text" name="participant" id="participant" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="อีเมลหรือชื่อ (เลือกจากช่องค้นด้านบน หรือเลือกกลุ่ม Tag)">
                                 <input type="hidden" name="copynum" id="copynum">
                                 <input type="hidden" name="allname" id="allname" value="<?= "'" . implode("','", $suggestname) . "'" ?>">
                             </div>
@@ -979,6 +1049,14 @@
                             });
                         }
                         d.columnSearch = [];
+                        d.doctype = $('#adv-doctype').val() || '';
+                        d.doc_year = $('#adv-year').val() || '';
+                        d.volume_id = $('#adv-volume').val() || '';
+                        d.date_from = $('#adv-date-from').val() || '';
+                        d.date_to = $('#adv-date-to').val() || '';
+                        d.filter_owner = $('#adv-owner').val() || '';
+                        d.filter_participant = $('#adv-participant').val() || '';
+                        d.filter_officeiddoc = $('#adv-officeiddoc').val() || '';
                     }
                 },
                 columns: [{
@@ -1036,14 +1114,17 @@
                 },
                 drawCallback: function() {
                     var info = this.api().page.info();
-                    $('#doc-count').text(info.recordsFiltered + ' เอกสาร');
-                    if (info.recordsFiltered === 0) {
+                    var count = info.recordsDisplay != null ? info.recordsDisplay : (info.recordsFiltered != null ? info.recordsFiltered : 0);
+                    $('#doc-count').text(count + ' เอกสาร');
+                    if (count === 0) {
                         $('#doc-table-card').addClass('hidden');
                         $('#empty-state').removeClass('hidden').addClass('flex');
                     } else {
                         $('#doc-table-card').removeClass('hidden');
                         $('#empty-state').addClass('hidden').removeClass('flex');
                     }
+                    if (typeof updateAdvancedFilterBadges === 'function') updateAdvancedFilterBadges();
+                    if (typeof updateAdvancedSearchButtonText === 'function') updateAdvancedSearchButtonText();
                 }
             });
             window.documentsTable = documentsTable;
@@ -1140,6 +1221,120 @@
             });
         });
 
+        // ---------- Advanced Search Panel ----------
+        function loadAdvVolumes(year) {
+            year = year || $('#adv-year').val() || <?= (int)($currentYear ?? date('Y')) ?>;
+            $.ajax({
+                url: '<?= base_url("index.php/edoc/admin/volumes") ?>',
+                type: 'GET',
+                data: { year: year },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success' && res.data) {
+                        var opts = '<option value="">ทุกเล่ม</option>';
+                        res.data.forEach(function(v) {
+                            opts += '<option value="' + v.id + '">' + (v.volume_label || v.volume_type) + '</option>';
+                        });
+                        $('#adv-volume').html(opts);
+                    }
+                }
+            });
+        }
+
+        $('#btn-advanced-search').on('click', function() {
+            var $panel = $('#advanced-search-panel');
+            if ($panel.hasClass('hidden')) {
+                $panel.removeClass('hidden');
+                loadAdvVolumes($('#adv-year').val());
+                updateAdvancedFilterBadges();
+            } else {
+                $panel.addClass('hidden');
+            }
+        });
+        $('#btn-close-advanced-search').on('click', function() {
+            $('#advanced-search-panel').addClass('hidden');
+        });
+        $('#adv-year').on('change', function() {
+            loadAdvVolumes($(this).val());
+        });
+        $('#adv-btn-search').on('click', function() {
+            if (window.documentsTable) documentsTable.ajax.reload();
+            updateAdvancedFilterBadges();
+            updateAdvancedSearchButtonText();
+        });
+        $('#adv-btn-clear').on('click', function() {
+            $('#adv-doctype').val('');
+            $('#adv-year').val('');
+            $('#adv-volume').html('<option value="">ทุกเล่ม</option>');
+            $('#adv-date-from').val('');
+            $('#adv-date-to').val('');
+            $('#adv-owner').val('');
+            $('#adv-participant').val('');
+            $('#adv-officeiddoc').val('');
+            loadAdvVolumes($('#adv-year').val());
+            if (window.documentsTable) documentsTable.ajax.reload();
+            updateAdvancedFilterBadges();
+            updateAdvancedSearchButtonText();
+        });
+
+        function getAdvancedFilterCount() {
+            var n = 0;
+            if ($('#adv-doctype').val()) n++;
+            if ($('#adv-year').val()) n++;
+            if ($('#adv-volume').val()) n++;
+            if ($('#adv-date-from').val()) n++;
+            if ($('#adv-date-to').val()) n++;
+            if ($.trim($('#adv-owner').val())) n++;
+            if ($.trim($('#adv-participant').val())) n++;
+            if ($.trim($('#adv-officeiddoc').val())) n++;
+            return n;
+        }
+
+        function updateAdvancedSearchButtonText() {
+            var c = getAdvancedFilterCount();
+            $('#btn-advanced-search-text').text(c > 0 ? 'ค้นหาละเอียด (' + c + ')' : 'ค้นหาละเอียด');
+        }
+
+        function updateAdvancedFilterBadges() {
+            var labels = [];
+            if ($('#adv-doctype').val()) labels.push({ key: 'doctype', label: 'ประเภท: ' + $('#adv-doctype option:selected').text(), clearId: 'adv-doctype' });
+            if ($('#adv-year').val()) labels.push({ key: 'year', label: 'ปี: ' + $('#adv-year').val(), clearId: 'adv-year' });
+            if ($('#adv-volume').val()) labels.push({ key: 'volume', label: 'เล่ม: ' + $('#adv-volume option:selected').text(), clearId: 'adv-volume' });
+            if ($('#adv-date-from').val()) labels.push({ key: 'date_from', label: 'ตั้งแต่: ' + $('#adv-date-from').val(), clearId: 'adv-date-from' });
+            if ($('#adv-date-to').val()) labels.push({ key: 'date_to', label: 'ถึง: ' + $('#adv-date-to').val(), clearId: 'adv-date-to' });
+            if ($.trim($('#adv-owner').val())) labels.push({ key: 'owner', label: 'เจ้าของ: ' + $('#adv-owner').val(), clearId: 'adv-owner' });
+            if ($.trim($('#adv-participant').val())) labels.push({ key: 'participant', label: 'ผู้รับ: ' + $('#adv-participant').val(), clearId: 'adv-participant' });
+            if ($.trim($('#adv-officeiddoc').val())) labels.push({ key: 'officeiddoc', label: 'เลขที่: ' + $('#adv-officeiddoc').val(), clearId: 'adv-officeiddoc' });
+
+            var $c = $('#advanced-search-badges');
+            $c.empty();
+            if (labels.length === 0) {
+                $c.addClass('hidden');
+                return;
+            }
+            $c.removeClass('hidden');
+            labels.forEach(function(item) {
+                var $b = $('<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 cursor-pointer hover:bg-blue-200" data-clear-id="' + item.clearId + '">' + $('<div>').text(item.label).html() + ' <i class="fas fa-times"></i></span>');
+                $c.append($b);
+            });
+        }
+
+        $(document).on('click', '#advanced-search-badges [data-clear-id]', function() {
+            var id = $(this).data('clear-id');
+            if (id === 'adv-doctype') $('#adv-doctype').val('');
+            if (id === 'adv-year') $('#adv-year').val('');
+            if (id === 'adv-volume') $('#adv-volume').val('');
+            if (id === 'adv-date-from') $('#adv-date-from').val('');
+            if (id === 'adv-date-to') $('#adv-date-to').val('');
+            if (id === 'adv-owner') $('#adv-owner').val('');
+            if (id === 'adv-participant') $('#adv-participant').val('');
+            if (id === 'adv-officeiddoc') $('#adv-officeiddoc').val('');
+            if (id === 'adv-volume') loadAdvVolumes($('#adv-year').val());
+            if (window.documentsTable) documentsTable.ajax.reload();
+            updateAdvancedFilterBadges();
+            updateAdvancedSearchButtonText();
+        });
+
         // ---------- จัดการกลุ่ม Tag ----------
         let editingTagGroupId = null;
 
@@ -1167,15 +1362,107 @@
             }, 'json');
         }
 
+        function initTagGroupsPanelAutocomplete() {
+            var $nameInput = $('#tagGroupName');
+            var $nameDrop = $('#tagGroupNameDropdown');
+            var $tagsSearch = $('#tagGroupTagsSearch');
+            var $tagsDrop = $('#tagGroupTagsDropdown');
+            var $tagsInput = $('#tagGroupTagsInput');
+            var tagsSuggestTimer = null;
+
+            // ชื่อกลุ่ม: แนะนำกลุ่มที่มีอยู่ (เลือกแล้วโหลดมาแก้ไข)
+            $nameInput.off('input focus').on('input focus', function() {
+                var q = $.trim($nameInput.val()).toLowerCase();
+                var list = (tagGroupsData || []).slice();
+                if (q) list = list.filter(function(g) {
+                    return (g.name || g.group_name || '').toLowerCase().indexOf(q) !== -1;
+                });
+                $nameDrop.empty();
+                if (list.length === 0) {
+                    $nameDrop.html('<div class="px-3 py-2 text-gray-500 text-sm">' + (q ? 'ไม่พบกลุ่ม' : 'พิมพ์เพื่อค้นหากลุ่มที่มีอยู่') + '</div>').removeClass('hidden');
+                } else {
+                    list.forEach(function(g) {
+                        var name = (g.name || g.group_name || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+                        $nameDrop.append('<div class="tag-group-name-ac px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-gray-100 text-sm" data-id="' + (g.id || '') + '">' + name + '</div>');
+                    });
+                    $nameDrop.removeClass('hidden');
+                }
+            });
+            $nameInput.on('blur', function() {
+                setTimeout(function() {
+                    if (!$(document.activeElement).closest('#tagGroupNameDropdown').length) $nameDrop.addClass('hidden');
+                }, 150);
+            });
+            $(document).on('click', '.tag-group-name-ac', function() {
+                var id = $(this).data('id');
+                var g = (tagGroupsData || []).find(function(x) { return x.id == id; });
+                if (g) {
+                    editingTagGroupId = id;
+                    $nameInput.val(g.name || g.group_name || '');
+                    $tagsInput.val(Array.isArray(g.tags) ? g.tags.join(', ') : (g.tags || ''));
+                    $('#btn-tag-group-save-text').text('อัปเดตกลุ่ม');
+                    $('#btn-tag-group-cancel-edit').removeClass('hidden');
+                    $('#btn-tag-group-delete').removeClass('hidden');
+                }
+                $nameDrop.addClass('hidden').empty();
+            });
+
+            // รายการ Tag: แนะนำอีเมล/ชื่อจาก API
+            $tagsSearch.off('input focus').on('input focus', function() {
+                var q = $.trim($tagsSearch.val());
+                $tagsDrop.addClass('hidden').empty();
+                if (q.length < 2) return;
+                if (tagsSuggestTimer) clearTimeout(tagsSuggestTimer);
+                tagsSuggestTimer = setTimeout(function() {
+                    $.get('<?= base_url("index.php/edoc/admin/suggest-emails") ?>', { q: q }, function(res) {
+                        if (res.status !== 'success' || !res.data || !res.data.length) {
+                            $tagsDrop.html('<div class="px-3 py-2 text-gray-500 text-sm">ไม่พบรายการ</div>').removeClass('hidden');
+                            return;
+                        }
+                        res.data.forEach(function(item) {
+                            var email = (item.email || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+                            var name = (item.name || '').replace(/</g, '&lt;');
+                            var label = name ? (email + ' — ' + name) : email;
+                            $tagsDrop.append('<div class="tag-group-tag-ac px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-gray-100 text-sm" data-email="' + email + '">' + label + '</div>');
+                        });
+                        $tagsDrop.removeClass('hidden');
+                    }, 'json');
+                }, 300);
+            });
+            $tagsSearch.on('blur', function() {
+                setTimeout(function() {
+                    if (!$(document.activeElement).closest('#tagGroupTagsDropdown').length) $tagsDrop.addClass('hidden');
+                }, 150);
+            });
+            $(document).on('click', '.tag-group-tag-ac', function() {
+                var email = $(this).data('email');
+                if (!email) return;
+                var current = $.trim($tagsInput.val());
+                var parts = current ? current.split(',').map(function(s) { return $.trim(s); }).filter(Boolean) : [];
+                if (parts.indexOf(email) !== -1) return;
+                parts.push(email);
+                $tagsInput.val(parts.join(', '));
+                $tagsSearch.val('');
+                $tagsDrop.addClass('hidden').empty();
+            });
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#tagGroupName, #tagGroupNameDropdown').length) $nameDrop.addClass('hidden');
+                if (!$(e.target).closest('#tagGroupTagsSearch, #tagGroupTagsDropdown').length) $tagsDrop.addClass('hidden');
+            });
+        }
+
         $('#btn-tag-groups-panel').on('click', function() {
             $('#tag-groups-panel').removeClass('hidden');
             editingTagGroupId = null;
             $('#tagGroupName').val('');
             $('#tagGroupTagsInput').val('');
+            $('#tagGroupTagsSearch').val('');
+            $('#tagGroupNameDropdown, #tagGroupTagsDropdown').addClass('hidden').empty();
             $('#btn-tag-group-save-text').text('บันทึกกลุ่มใหม่');
             $('#btn-tag-group-cancel-edit').addClass('hidden');
             $('#btn-tag-group-delete').addClass('hidden');
             loadTagGroupsList();
+            if (typeof initTagGroupsPanelAutocomplete === 'function') initTagGroupsPanelAutocomplete();
         });
         $('#btn-close-tag-groups-panel').on('click', function() {
             $('#tag-groups-panel').addClass('hidden');
@@ -1197,6 +1484,8 @@
             editingTagGroupId = null;
             $('#tagGroupName').val('');
             $('#tagGroupTagsInput').val('');
+            $('#tagGroupTagsSearch').val('');
+            $('#tagGroupNameDropdown, #tagGroupTagsDropdown').addClass('hidden').empty();
             $('#btn-tag-group-save-text').text('บันทึกกลุ่มใหม่');
             $(this).addClass('hidden');
             $('#btn-tag-group-delete').addClass('hidden');
@@ -1293,6 +1582,8 @@
                 $('#saveForm').html("เพิ่มข้อมูล").prop('disabled', false);
                 $('#formModalTitle').html('<i class="fas fa-file-alt me-2"></i>เพิ่มเอกสาร');
                 clearEmailTags();
+                $('#tagGroupSearch').val('');
+                $('#tagGroupDropdown').addClass('hidden').empty();
             });
             $('#formModal').on('shown.bs.modal', function() {
                 if ($.fn.selectpicker && $('#doctype').hasClass('selectpicker')) $('#doctype').selectpicker('refresh');
@@ -1338,6 +1629,88 @@
             initsuggest();
         }
 
+        function addEmailTag(email) {
+            if (!email) return;
+            var $p = $('#participant');
+            var current = $.trim($p.val());
+            var parts = current ? current.split(',').map(function(s) { return $.trim(s); }).filter(Boolean) : [];
+            if (parts.indexOf(email) !== -1) return;
+            parts.push(email);
+            $p.val(parts.join(', '));
+            initsuggest();
+        }
+
+        function clearEmailTags() {
+            $('#participant').val('');
+            $('#participant-email-search').val('');
+            $('#participant-email-dropdown').addClass('hidden').empty();
+            initsuggest();
+        }
+
+        // --- Email Autocomplete (ผู้มีส่วนร่วม จากอีเมล user) ---
+        function initEmailAutocomplete() {
+            var $search = $('#participant-email-search');
+            var $dropdown = $('#participant-email-dropdown');
+            var $participant = $('#participant');
+            var suggestTimeout = null;
+
+            $search.off('input focus').on('input focus', function() {
+                var q = $.trim($search.val());
+                $dropdown.addClass('hidden').empty();
+                if (suggestTimeout) clearTimeout(suggestTimeout);
+                if (q.length < 2) return;
+                suggestTimeout = setTimeout(function() {
+                    $.ajax({
+                        url: '<?= base_url("index.php/edoc/admin/suggest-emails") ?>',
+                        type: 'GET',
+                        data: { q: q },
+                        dataType: 'json',
+                        success: function(res) {
+                            if (res.status !== 'success' || !res.data || res.data.length === 0) {
+                                $dropdown.html('<div class="px-3 py-2 text-gray-500 text-sm">ไม่พบรายการ</div>').removeClass('hidden');
+                                return;
+                            }
+                            var html = '';
+                            res.data.forEach(function(item) {
+                                var email = (item.email || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+                                var name = (item.name || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+                                var label = name ? (email + ' — ' + name) : email;
+                                html += '<div class="participant-email-item px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-0 text-sm" data-email="' + email + '" title="คลิกเพื่อเพิ่ม">' + label + '</div>';
+                            });
+                            $dropdown.html(html).removeClass('hidden');
+                        },
+                        error: function() {
+                            $dropdown.html('<div class="px-3 py-2 text-gray-500 text-sm">โหลดไม่สำเร็จ</div>').removeClass('hidden');
+                        }
+                    });
+                }, 300);
+            });
+
+            $search.on('blur', function() {
+                setTimeout(function() {
+                    var $focused = $(document.activeElement);
+                    if (!$focused.closest('#participant-email-dropdown').length) $dropdown.addClass('hidden');
+                }, 200);
+            });
+
+            $(document).on('click', '.participant-email-item', function() {
+                var email = $(this).data('email');
+                if (!email) return;
+                var current = $.trim($participant.val());
+                var parts = current ? current.split(',').map(function(s) { return $.trim(s); }).filter(Boolean) : [];
+                if (parts.indexOf(email) !== -1) return;
+                parts.push(email);
+                $participant.val(parts.join(', '));
+                $search.val('');
+                $dropdown.addClass('hidden').empty();
+                initsuggest();
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#participant-email-search, #participant-email-dropdown').length) $dropdown.addClass('hidden');
+            });
+        }
+
         // --- Tag Group JS ---
         let tagGroupsData = [];
 
@@ -1348,50 +1721,72 @@
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
-                        tagGroupsData = response.data;
+                        tagGroupsData = response.data || [];
                         renderTagGroupSelect();
+                        if (typeof initTagGroupAutocomplete === 'function') initTagGroupAutocomplete();
                     }
                 }
             });
         }
 
         function renderTagGroupSelect() {
-            let options = '<option value="">-- เลือกกลุ่ม --</option>';
-            tagGroupsData.forEach(group => {
-                options += `<option value="${group.id}">${group.name}</option>`;
-            });
-            $('#tagGroupSelect').html(options);
-            $('#btnDeleteGroup').hide();
+            // Tag groups data is used by tag group autocomplete below
         }
 
-        $('#tagGroupSelect').on('change', function() {
-            const groupId = $(this).val();
-            if (!groupId) {
-                $('#btnDeleteGroup').hide();
-                return;
-            }
+        function applyTagGroupToParticipant(group) {
+            if (!group || !group.tags || !group.tags.length) return;
+            let currentVal = $('#participant').val();
+            let currentTags = currentVal ? currentVal.split(',').map(function(s) { return $.trim(s); }).filter(Boolean) : [];
+            let newTags = currentTags.slice();
+            group.tags.forEach(function(tag) {
+                var t = (typeof tag === 'string' ? tag : (tag.tag_email || tag)).trim();
+                if (t && newTags.indexOf(t) === -1) newTags.push(t);
+            });
+            $('#participant').val(newTags.join(', '));
+            initsuggest();
+        }
 
-            $('#btnDeleteGroup').show();
-            const group = tagGroupsData.find(g => g.id === groupId);
-            if (group) {
-                // Determine current tags
-                let currentVal = $('#participant').val();
-                let currentTags = currentVal ? currentVal.split(',') : [];
-
-                // Add new tags unique
-                let newTags = [...currentTags];
-                group.tags.forEach(tag => {
-                    if (!newTags.includes(tag)) {
-                        newTags.push(tag);
-                    }
+        function initTagGroupAutocomplete() {
+            var $search = $('#tagGroupSearch');
+            var $drop = $('#tagGroupDropdown');
+            $search.off('input focus').on('input focus', function() {
+                var q = $.trim($search.val()).toLowerCase();
+                var list = tagGroupsData || [];
+                if (q) list = list.filter(function(g) {
+                    var name = (g.name || g.group_name || '').toLowerCase();
+                    return name.indexOf(q) !== -1;
                 });
-
-                $('#participant').val(newTags.join(','));
-
-                // Refresh amsify
-                initsuggest();
-            }
-        });
+                $drop.empty();
+                if (list.length === 0) {
+                    $drop.html('<div class="px-3 py-2 text-gray-500 text-sm">' + (q ? 'ไม่พบกลุ่มที่ตรงกับ "' + $('<div>').text(q).html() + '"' : 'พิมพ์เพื่อค้นหากลุ่ม') + '</div>').removeClass('hidden');
+                    return;
+                }
+                list.forEach(function(group) {
+                    var name = (group.name || group.group_name || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+                    var count = Array.isArray(group.tags) ? group.tags.length : 0;
+                    var item = '<div class="tag-group-ac-item px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-0 text-sm flex justify-between items-center" data-id="' + (group.id || '') + '"><span>' + name + '</span><span class="text-gray-400 text-xs">' + count + ' รายการ</span></div>';
+                    $drop.append(item);
+                });
+                $drop.removeClass('hidden');
+            });
+            $search.on('blur', function() {
+                setTimeout(function() {
+                    if (!$(document.activeElement).closest('#tagGroupDropdown').length) $drop.addClass('hidden');
+                }, 150);
+            });
+            $(document).on('click', '.tag-group-ac-item', function() {
+                var id = $(this).data('id');
+                var group = tagGroupsData.find(function(g) { return g.id == id; });
+                if (group) {
+                    applyTagGroupToParticipant(group);
+                    $search.val('');
+                }
+                $drop.addClass('hidden').empty();
+            });
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#tagGroupSearch, #tagGroupDropdown').length) $drop.addClass('hidden');
+            });
+        }
 
         $('#btnSaveGroup').on('click', function() {
             let currentVal = $('#participant').val();
@@ -1402,7 +1797,7 @@
 
             const name = prompt("ตั้งชื่อกลุ่มใหม่:");
             if (name) {
-                const tags = currentVal.split(',');
+                const tags = currentVal.split(',').map(function(s) { return $.trim(s); }).filter(Boolean);
                 $.ajax({
                     url: '<?= base_url("index.php/edoc/admin/savetaggroup") ?>',
                     type: 'POST',
@@ -1414,39 +1809,13 @@
                     success: function(response) {
                         if (response.status === 'success') {
                             swalAlert('บันทึกกลุ่มสำเร็จ', 'success');
-                            loadTagGroups(); // Reload
+                            loadTagGroups();
                         } else {
                             swalAlert('เกิดข้อผิดพลาด: ' + response.message, 'error');
                         }
                     }
                 });
             }
-        });
-
-        $('#btnDeleteGroup').on('click', function() {
-            const groupId = $('#tagGroupSelect').val();
-            if (!groupId) return;
-
-            swalConfirm({ title: 'ต้องการลบกลุ่มนี้ใช่หรือไม่?', confirmText: 'ลบ', cancelText: 'ยกเลิก' }).then(function(ok) {
-                if (!ok) return;
-                $.ajax({
-                    url: '<?= base_url("index.php/edoc/admin/deletetaggroup") ?>',
-                    type: 'POST',
-                    data: {
-                        id: groupId
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            swalAlert('ลบกลุ่มสำเร็จ', 'success');
-                            loadTagGroups(); // Reload
-                            initsuggest(); // Refresh suggested tags to clear selection if we want, but simpler to just leave as is.
-                        } else {
-                            swalAlert('เกิดข้อผิดพลาด: ' + response.message, 'error');
-                        }
-                    }
-                });
-            });
         });
 
         // Initialize on doc ready
@@ -1681,6 +2050,8 @@
 
         $('#saveForm').off('click').on('click', function() {
             var datastring = $("#frmdata").serialize();
+            var participantVal = $('#participant').val() || '';
+            if (participantVal) datastring += '&tag_emails=' + encodeURIComponent(participantVal);
             $('#saveForm').prop('disabled', true);
             $.ajax({
                 type: "POST",

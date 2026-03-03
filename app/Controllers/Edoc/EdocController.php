@@ -201,6 +201,27 @@ class EdocController extends EdocBaseController
             $builder->where('edoctitle.doc_year', (int) $docYear);
         }
 
+        // Advanced filters
+        if (!empty($request['doctype'])) {
+            $types = is_array($request['doctype']) ? $request['doctype'] : [$request['doctype']];
+            $types = array_filter(array_map('trim', $types));
+            if (!empty($types)) {
+                $builder->whereIn('edoctitle.doctype', $types);
+            }
+        }
+        if (!empty($request['date_from'])) {
+            $builder->where('edoctitle.datedoc >=', $request['date_from']);
+        }
+        if (!empty($request['date_to'])) {
+            $builder->where('edoctitle.datedoc <=', $request['date_to']);
+        }
+        if (!empty($request['filter_owner'])) {
+            $builder->like('edoctitle.owner', $request['filter_owner']);
+        }
+        if (!empty($request['filter_officeiddoc'])) {
+            $builder->like('edoctitle.officeiddoc', $request['filter_officeiddoc']);
+        }
+
         if (!empty($request['search']['value'])) {
             $searchValue = $request['search']['value'];
             $builder->groupStart();
@@ -385,5 +406,25 @@ class EdocController extends EdocBaseController
         $out['list'] = $list;
         $out['first'] = $list[0] ?? '';
         return $out;
+    }
+
+    /**
+     * Get volumes for a given year (for user advanced search dropdown)
+     */
+    public function getVolumes()
+    {
+        try {
+            $year = (int) ($this->request->getGet('year') ?? date('Y'));
+            $volumes = $this->volumeModel->getVolumeDocCounts($year);
+
+            return $this->response->setJSON([
+                'status' => 'success',
+                'data'   => $volumes,
+                'year'   => $year,
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', '[EdocController::getVolumes] ' . $e->getMessage());
+            return $this->response->setJSON(['status' => 'error', 'message' => $e->getMessage()]);
+        }
     }
 }

@@ -423,6 +423,11 @@
                                 </select>
                             </div>
 
+                            <button type="button" id="btn-advanced-search" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition flex items-center text-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                                <span id="btn-advanced-search-text">ค้นหาละเอียด</span>
+                            </button>
+
                             <!-- Action Buttons -->
                             <div class="flex gap-2 w-full md:w-auto">
                                 <button id="clearFiltersBtn" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition flex items-center">
@@ -433,6 +438,73 @@
                                 </button>
 
                             </div>
+                        </div>
+
+                        <!-- Advanced Search Panel -->
+                        <div id="advanced-search-panel" class="hidden mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                                <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                                    ค้นหาละเอียด
+                                </h2>
+                                <button type="button" id="btn-close-advanced-search" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm">ปิด</button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทเอกสาร</label>
+                                    <select id="adv-doctype" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                        <option value="">ทุกประเภท</option>
+                                        <option value="หนังสือรับภายใน">หนังสือรับภายใน</option>
+                                        <option value="หนังสือรับภายนอก">หนังสือรับภายนอก</option>
+                                        <option value="หนังสือส่งภายใน">หนังสือส่งภายใน</option>
+                                        <option value="ใบลา">ใบลา</option>
+                                        <option value="คำสั่ง">คำสั่ง</option>
+                                        <option value="ประกาศ">ประกาศ</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">ปี</label>
+                                    <select id="adv-year" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                        <option value="">ทุกปี</option>
+                                        <?php if (!empty($availableYears)): ?>
+                                            <?php foreach ($availableYears as $y): ?>
+                                            <option value="<?= (int)$y ?>"><?= (int)$y ?></option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">เล่ม</label>
+                                    <select id="adv-volume" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                        <option value="">ทุกเล่ม</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">วันที่เริ่ม</label>
+                                    <input type="date" id="adv-date-from" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">วันที่สิ้นสุด</label>
+                                    <input type="date" id="adv-date-to" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                </div>
+                                <div class="md:col-span-2 flex items-end">
+                                    <button type="button" id="adv-btn-search" class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">ค้นหา</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+                                <div class="md:col-span-6">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">เลขที่หนังสือ</label>
+                                    <input type="text" id="adv-officeiddoc" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="ส่วนของเลขที่">
+                                </div>
+                                <div class="md:col-span-6">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">เจ้าของเอกสาร</label>
+                                    <input type="text" id="adv-owner" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="ชื่อเจ้าของ">
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" id="adv-btn-clear" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-lg">ล้างตัวกรอง</button>
+                            </div>
+                            <div id="advanced-search-badges" class="mt-3 flex flex-wrap gap-2 hidden"></div>
                         </div>
 
                         <!-- DataTable Container -->
@@ -648,11 +720,19 @@
                                 });
                             }
                         });
-                        // Year filter
+                        // Year filter (from main year dropdown)
                         var yearVal = $('#yearFilter').val();
                         if (yearVal) {
                             d.doc_year = yearVal;
                         }
+                        // Advanced filters
+                        d.doctype = $('#adv-doctype').val() || '';
+                        if ($('#adv-year').val()) d.doc_year = $('#adv-year').val();
+                        d.volume_id = $('#adv-volume').val() || '';
+                        d.date_from = $('#adv-date-from').val() || '';
+                        d.date_to = $('#adv-date-to').val() || '';
+                        d.filter_owner = $('#adv-owner').val() || '';
+                        d.filter_officeiddoc = $('#adv-officeiddoc').val() || '';
                     },
                     "dataSrc": function(json) {
                         if (!json.records) {
@@ -772,7 +852,8 @@
                     });
                 },
                 "drawCallback": function(settings) {
-                    console.log('DataTables has redrawn the table');
+                    if (typeof updateAdvFilterBadgesUser === 'function') updateAdvFilterBadgesUser();
+                    if (typeof updateAdvSearchButtonTextUser === 'function') updateAdvSearchButtonTextUser();
                 },
                 "error": function(xhr, error, thrown) {
                     console.error('DataTables error:', error, thrown);
@@ -804,6 +885,103 @@
             // Year filter change - reload table
             $('#yearFilter').on('change', function() {
                 table.ajax.reload();
+            });
+
+            // Advanced Search Panel
+            function loadAdvVolumesUser(year) {
+                year = year || $('#adv-year').val() || new Date().getFullYear();
+                $.ajax({
+                    url: "<?php echo base_url('index.php/edoc/volumes'); ?>",
+                    type: 'GET',
+                    data: { year: year },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.status === 'success' && res.data) {
+                            var opts = '<option value="">ทุกเล่ม</option>';
+                            res.data.forEach(function(v) {
+                                opts += '<option value="' + v.id + '">' + (v.volume_label || v.volume_type) + '</option>';
+                            });
+                            $('#adv-volume').html(opts);
+                        }
+                    }
+                });
+            }
+            $('#btn-advanced-search').on('click', function() {
+                var $panel = $('#advanced-search-panel');
+                if ($panel.hasClass('hidden')) {
+                    $panel.removeClass('hidden');
+                    loadAdvVolumesUser($('#adv-year').val());
+                    updateAdvFilterBadgesUser();
+                } else {
+                    $panel.addClass('hidden');
+                }
+            });
+            $('#btn-close-advanced-search').on('click', function() {
+                $('#advanced-search-panel').addClass('hidden');
+            });
+            $('#adv-year').on('change', function() {
+                loadAdvVolumesUser($(this).val());
+            });
+            $('#adv-btn-search').on('click', function() {
+                table.ajax.reload();
+                updateAdvFilterBadgesUser();
+                updateAdvSearchButtonTextUser();
+            });
+            $('#adv-btn-clear').on('click', function() {
+                $('#adv-doctype').val('');
+                $('#adv-year').val('');
+                $('#adv-volume').html('<option value="">ทุกเล่ม</option>');
+                $('#adv-date-from').val('');
+                $('#adv-date-to').val('');
+                $('#adv-owner').val('');
+                $('#adv-officeiddoc').val('');
+                loadAdvVolumesUser($('#adv-year').val());
+                table.ajax.reload();
+                updateAdvFilterBadgesUser();
+                updateAdvSearchButtonTextUser();
+            });
+
+            function getAdvancedFilterCountUser() {
+                var n = 0;
+                if ($('#adv-doctype').val()) n++;
+                if ($('#adv-year').val()) n++;
+                if ($('#adv-volume').val()) n++;
+                if ($('#adv-date-from').val()) n++;
+                if ($('#adv-date-to').val()) n++;
+                if ($.trim($('#adv-owner').val())) n++;
+                if ($.trim($('#adv-officeiddoc').val())) n++;
+                return n;
+            }
+            function updateAdvSearchButtonTextUser() {
+                var c = getAdvancedFilterCountUser();
+                $('#btn-advanced-search-text').text(c > 0 ? 'ค้นหาละเอียด (' + c + ')' : 'ค้นหาละเอียด');
+            }
+            function updateAdvFilterBadgesUser() {
+                var labels = [];
+                if ($('#adv-doctype').val()) labels.push({ key: 'doctype', label: 'ประเภท: ' + $('#adv-doctype option:selected').text(), clearId: 'adv-doctype' });
+                if ($('#adv-year').val()) labels.push({ key: 'year', label: 'ปี: ' + $('#adv-year').val(), clearId: 'adv-year' });
+                if ($('#adv-volume').val()) labels.push({ key: 'volume', label: 'เล่ม: ' + $('#adv-volume option:selected').text(), clearId: 'adv-volume' });
+                if ($('#adv-date-from').val()) labels.push({ key: 'date_from', label: 'ตั้งแต่: ' + $('#adv-date-from').val(), clearId: 'adv-date-from' });
+                if ($('#adv-date-to').val()) labels.push({ key: 'date_to', label: 'ถึง: ' + $('#adv-date-to').val(), clearId: 'adv-date-to' });
+                if ($.trim($('#adv-owner').val())) labels.push({ key: 'owner', label: 'เจ้าของ: ' + $('#adv-owner').val(), clearId: 'adv-owner' });
+                if ($.trim($('#adv-officeiddoc').val())) labels.push({ key: 'officeiddoc', label: 'เลขที่: ' + $('#adv-officeiddoc').val(), clearId: 'adv-officeiddoc' });
+
+                var $c = $('#advanced-search-badges');
+                $c.empty();
+                if (labels.length === 0) { $c.addClass('hidden'); return; }
+                $c.removeClass('hidden');
+                labels.forEach(function(item) {
+                    var safeLabel = $('<div>').text(item.label).html();
+                    $c.append($('<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 cursor-pointer hover:bg-indigo-200" data-clear-id="' + item.clearId + '">' + safeLabel + ' <i class="fas fa-times"></i></span>'));
+                });
+            }
+            $(document).on('click', '#advanced-search-badges [data-clear-id]', function() {
+                var id = $(this).data('clear-id');
+                $('#' + id).val('');
+                if (id === 'adv-volume') loadAdvVolumesUser($('#adv-year').val());
+                table.ajax.reload();
+                updateAdvFilterBadgesUser();
+                updateAdvSearchButtonTextUser();
             });
 
             $(document).on('click', '[data-bs-dismiss="modal"]', function() {

@@ -351,6 +351,7 @@ $routes->group('edoc', ['filter' => 'edocauth'], function ($routes) {
     $routes->post('getdocinfo', 'Edoc\EdocController::getDocInfo');
     $routes->post('getdoc', 'Edoc\EdocController::getDoc');
     $routes->post('getallviewers', 'Edoc\EdocController::getAllViewers');
+    $routes->get('volumes', 'Edoc\EdocController::getVolumes');
     $routes->get('viewPDF/(:any)', 'Edoc\EdocController::viewPDF/$1');
 
     // E-Document (Admin)

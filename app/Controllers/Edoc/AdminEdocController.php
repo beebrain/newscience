@@ -168,6 +168,36 @@ class AdminEdocController extends EdocBaseController
             '(SELECT COUNT(*) FROM document_views WHERE document_id = edoctitle.iddoc) as view_count'
         ]);
 
+        // Advanced filters
+        if (!empty($request['doctype'])) {
+            $types = is_array($request['doctype']) ? $request['doctype'] : [$request['doctype']];
+            $types = array_filter(array_map('trim', $types));
+            if (!empty($types)) {
+                $builder->whereIn('edoctitle.doctype', $types);
+            }
+        }
+        if (!empty($request['date_from'])) {
+            $builder->where('edoctitle.datedoc >=', $request['date_from']);
+        }
+        if (!empty($request['date_to'])) {
+            $builder->where('edoctitle.datedoc <=', $request['date_to']);
+        }
+        if (isset($request['doc_year']) && $request['doc_year'] !== '' && $request['doc_year'] !== null) {
+            $builder->where('edoctitle.doc_year', (int) $request['doc_year']);
+        }
+        if (isset($request['volume_id']) && $request['volume_id'] !== '' && $request['volume_id'] !== null) {
+            $builder->where('edoctitle.volume_id', (int) $request['volume_id']);
+        }
+        if (!empty($request['filter_owner'])) {
+            $builder->like('edoctitle.owner', $request['filter_owner']);
+        }
+        if (!empty($request['filter_participant'])) {
+            $builder->like('edoctitle.participant', $request['filter_participant']);
+        }
+        if (!empty($request['filter_officeiddoc'])) {
+            $builder->like('edoctitle.officeiddoc', $request['filter_officeiddoc']);
+        }
+
         if (!empty($request['search']['value'])) {
             $searchValue = $request['search']['value'];
             $builder->groupStart();
