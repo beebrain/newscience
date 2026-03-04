@@ -26,6 +26,7 @@ class AdminSystemAccessFilter implements FilterInterface
         'programs'       => 'admin_core',
         'hero-slides'    => 'admin_core',
         'events'         => 'admin_core',
+        'downloads'      => 'admin_downloads',
         'users'          => 'user_management',
         'settings'       => 'site_settings',
         'cert-templates' => 'ecert',
@@ -66,6 +67,10 @@ class AdminSystemAccessFilter implements FilterInterface
         if ($slug === 'admin_news') {
             // หน้าประกาศข่าว: เข้าได้ถ้ามี admin_news หรือ admin_core
             $allowed = AccessControl::hasAccess((int) $adminId, 'admin_news')
+                || AccessControl::hasAccess((int) $adminId, 'admin_core');
+        } elseif ($slug === 'admin_downloads') {
+            // จัดการดาวน์โหลดคณะ: เข้าได้ถ้ามี admin_downloads หรือ admin_core
+            $allowed = AccessControl::hasAccess((int) $adminId, 'admin_downloads')
                 || AccessControl::hasAccess((int) $adminId, 'admin_core');
         } else {
             $allowed = AccessControl::hasAccess((int) $adminId, $slug);

@@ -23,140 +23,57 @@
         </div>
         
         <div class="documents-grid">
-            <!-- Category: คำสั่ง -->
+            <?php foreach ($document_categories as $key => $category): ?>
             <div class="card animate-on-scroll">
                 <div class="card__header">
                     <div class="card__icon">
+                        <?php if ($key === 'orders'): ?>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
                         </svg>
-                    </div>
-                    <h3 class="card__title">คำสั่ง</h3>
-                </div>
-                <div class="document-list">
-                    <a href="https://sci.uru.ac.th/doctopic/250" target="_blank" class="document-item">
-                        <div class="document-item__icon type-link">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                        </div>
-                        <div class="document-item__content">
-                            <span class="document-item__name">คำสั่งแต่งตั้งอาจารย์ที่ปรึกษานักศึกษาภาคปกติ ปีการศึกษา 2567</span>
-                            <span class="document-item__type">Link</span>
-                        </div>
-                    </a>
-                    <a href="https://sci.uru.ac.th/doctopic/200" target="_blank" class="document-item">
-                        <div class="document-item__icon type-link">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                        </div>
-                        <div class="document-item__content">
-                            <span class="document-item__name">คำสั่งแต่งตั้งอาจารย์ที่ปรึกษานักศึกษาภาคปกติ ปีการศึกษา 2566</span>
-                            <span class="document-item__type">Link</span>
-                        </div>
-                    </a>
-                    <a href="https://sci.uru.ac.th/docs/download/teacher2565.pdf" target="_blank" class="document-item">
-                        <div class="document-item__icon type-pdf">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15l3 3 3-3"/><path d="M12 18V12"/></svg>
-                        </div>
-                        <div class="document-item__content">
-                            <span class="document-item__name">คำสั่งแต่งตั้งอาจารย์ที่ปรึกษานักศึกษาภาคปกติ ปีการศึกษา 2565</span>
-                            <span class="document-item__type">PDF</span>
-                        </div>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Category: แผนพัฒนาและระเบียบ -->
-            <div class="card animate-on-scroll">
-                <div class="card__header">
-                    <div class="card__icon">
+                        <?php elseif ($key === 'plans'): ?>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                         </svg>
-                    </div>
-                    <h3 class="card__title">แผนพัฒนาและระเบียบ</h3>
-                </div>
-                <div class="document-list">
-                    <a href="https://sci.uru.ac.th/doctopic/222" target="_blank" class="document-item">
-                        <div class="document-item__icon type-link">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                        </div>
-                        <div class="document-item__content">
-                            <span class="document-item__name">แผนพัฒนาบุคลากรระยะ 5 ปี (ปีงบประมาณ 2566-2569)</span>
-                            <span class="document-item__type">Link</span>
-                        </div>
-                    </a>
-                    <a href="https://sci.uru.ac.th/docs/download/6016.pdf" target="_blank" class="document-item">
-                        <div class="document-item__icon type-pdf">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15l3 3 3-3"/><path d="M12 18V12"/></svg>
-                        </div>
-                        <div class="document-item__content">
-                            <span class="document-item__name">หลักเกณฑ์ อัตราค่าใช้จ่าย และแนวทางการพิจารณางบประมาณ พ.ศ. 2561</span>
-                            <span class="document-item__type">PDF</span>
-                        </div>
-                    </a>
-                    <a href="https://sci.uru.ac.th/docs/download/6015.pdf" target="_blank" class="document-item">
-                        <div class="document-item__icon type-pdf">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15l3 3 3-3"/><path d="M12 18V12"/></svg>
-                        </div>
-                        <div class="document-item__content">
-                            <span class="document-item__name">หลักเกณฑ์และอัตราค่าใช้จ่ายในลักษณะค่าตอบแทน พ.ศ. 2561</span>
-                            <span class="document-item__type">PDF</span>
-                        </div>
-                    </a>
-                    <a href="https://sci.uru.ac.th/docs/download/6014.pdf" target="_blank" class="document-item">
-                        <div class="document-item__icon type-pdf">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15l3 3 3-3"/><path d="M12 18V12"/></svg>
-                        </div>
-                        <div class="document-item__content">
-                            <span class="document-item__name">ระเบียบกระทรวงการคลังว่าด้วยค่าใช้จ่ายในการฝึกอบรม</span>
-                            <span class="document-item__type">PDF</span>
-                        </div>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Category: สำหรับนักศึกษา -->
-            <div class="card animate-on-scroll">
-                <div class="card__header">
-                    <div class="card__icon">
+                        <?php else: ?>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
                             <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
                         </svg>
+                        <?php endif; ?>
                     </div>
-                    <h3 class="card__title">สำหรับนักศึกษา</h3>
+                    <h3 class="card__title"><?= esc($category['title']) ?></h3>
                 </div>
                 <div class="document-list">
-                    <a href="https://sci.uru.ac.th/doctopic/253" target="_blank" class="document-item">
-                        <div class="document-item__icon type-link">
+                    <?php foreach ($category['documents'] as $doc): ?>
+                    <?php if (empty($doc['url'])) { continue; } ?>
+                    <a href="<?= esc($doc['url']) ?>" target="_blank" rel="noopener" class="document-item">
+                        <div class="document-item__icon type-<?= esc($doc['type']) ?>">
+                            <?php if ($doc['type'] === 'pdf'): ?>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15l3 3 3-3"/><path d="M12 18V12"/></svg>
+                            <?php elseif ($doc['type'] === 'doc' || $doc['type'] === 'docx'): ?>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                            <?php else: ?>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            <?php endif; ?>
                         </div>
                         <div class="document-item__content">
-                            <span class="document-item__name">ปฏิทินกิจกรรมนักศึกษา ปีการศึกษา 2568</span>
-                            <span class="document-item__type">Link</span>
+                            <span class="document-item__name"><?= esc($doc['name']) ?></span>
+                            <span class="document-item__type"><?= strtoupper(esc($doc['type'])) ?></span>
+                        </div>
+                        <div class="document-item__action">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
                         </div>
                     </a>
-                    <a href="https://sci.uru.ac.th/doctopic/252" target="_blank" class="document-item">
-                        <div class="document-item__icon type-link">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                        </div>
-                        <div class="document-item__content">
-                            <span class="document-item__name">คู่มือผู้ปกครองคณะวิทยาศาสตร์และเทคโนโลยี</span>
-                            <span class="document-item__type">Link</span>
-                        </div>
-                    </a>
-                    <a href="https://sci.uru.ac.th/doctopic/205" target="_blank" class="document-item">
-                        <div class="document-item__icon type-link">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                        </div>
-                        <div class="document-item__content">
-                            <span class="document-item__name">แนวปฏิบัติการแต่งกายนักศึกษา</span>
-                            <span class="document-item__type">Link</span>
-                        </div>
-                    </a>
+                    <?php endforeach; ?>
                 </div>
             </div>
-            
+            <?php endforeach; ?>
         </div>
     </div>
 </section>
@@ -289,6 +206,21 @@
     font-size: 0.75rem;
     color: #64748b;
     margin-top: 0.125rem;
+}
+
+.document-item__action {
+    color: var(--text-secondary);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.document-item:hover .document-item__action {
+    opacity: 1;
+}
+
+.document-item__action svg {
+    width: 20px;
+    height: 20px;
 }
 
 @media (max-width: 640px) {

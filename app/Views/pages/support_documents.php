@@ -57,7 +57,8 @@
                 
                 <div class="document-list">
                     <?php foreach ($category['documents'] as $doc): ?>
-                    <a href="<?= esc($doc['url']) ?>" target="_blank" class="document-item">
+                    <?php if (empty($doc['url'])) { continue; } ?>
+                    <a href="<?= esc($doc['url']) ?>" target="_blank" rel="noopener" class="document-item">
                         <div class="document-item__icon type-<?= esc($doc['type']) ?>">
                             <?php if ($doc['type'] === 'pdf'): ?>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

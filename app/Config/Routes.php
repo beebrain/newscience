@@ -244,6 +244,19 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->post('events/update/(:num)', 'Admin\Events::update/$1');
     $routes->get('events/delete/(:num)', 'Admin\Events::delete/$1');
 
+    // Faculty Download Management (หมวดดาวน์โหลด + เอกสาร)
+    $routes->get('downloads', 'Admin\Downloads::index');
+    $routes->post('downloads/store-category', 'Admin\Downloads::storeCategory');
+    $routes->post('downloads/update-category/(:num)', 'Admin\Downloads::updateCategory/$1');
+    $routes->get('downloads/delete-category/(:num)', 'Admin\Downloads::deleteCategory/$1');
+    $routes->post('downloads/update-category-order', 'Admin\Downloads::updateCategoryOrder');
+    $routes->get('downloads/documents/(:num)', 'Admin\Downloads::documents/$1');
+    $routes->post('downloads/upload/(:num)', 'Admin\Downloads::upload/$1');
+    $routes->get('downloads/edit/(:num)', 'Admin\Downloads::edit/$1');
+    $routes->post('downloads/update/(:num)', 'Admin\Downloads::update/$1');
+    $routes->get('downloads/delete/(:num)', 'Admin\Downloads::delete/$1');
+    $routes->post('downloads/update-doc-order', 'Admin\Downloads::updateDocOrder');
+
     // Site Settings Management
     $routes->get('settings', 'Admin\Settings::index');
     $routes->post('settings/store', 'Admin\Settings::store');

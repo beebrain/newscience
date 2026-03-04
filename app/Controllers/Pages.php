@@ -13,6 +13,8 @@ use App\Models\PersonnelProgramModel;
 use App\Models\OrganizationUnitModel;
 use App\Models\EventModel;
 use App\Models\ProgramPageModel;
+use App\Models\DownloadCategoryModel;
+use App\Models\DownloadDocumentModel;
 
 class Pages extends BaseController
 {
@@ -743,89 +745,8 @@ class Pages extends BaseController
     public function supportDocuments(): string
     {
         $siteInfo = $this->siteSettingModel->getAll();
-
-        // Define document categories with links from sci.uru.ac.th
-        $documentCategories = [
-            'general' => [
-                'title' => 'งานบริหารทั่วไป',
-                'icon' => 'folder',
-                'documents' => [
-                    ['name' => 'ขอใช้สถานที่-อุปกรณ์', 'url' => 'https://sci.uru.ac.th/docs/download/0001.doc', 'type' => 'doc'],
-                    ['name' => 'ขอให้ออกหนังสือราชการ', 'url' => 'https://sci.uru.ac.th/docs/download/0004.doc', 'type' => 'doc'],
-                    ['name' => 'ขออนุญาตไปราชการ (แบบ งค.๐๓)', 'url' => 'https://sci.uru.ac.th/doctopic/254', 'type' => 'link'],
-                    ['name' => 'บันทึกขอใช้รถ 6 ล้อ', 'url' => 'https://sci.uru.ac.th/docs/download/0076.pdf', 'type' => 'pdf'],
-                    ['name' => 'แบบขอใช้รถยนต์มหาวิทยาลัย', 'url' => 'https://sci.uru.ac.th/docs/download/0007.doc', 'type' => 'doc'],
-                    ['name' => 'แบบขออนุญาตผู้ปกครองพานักศึกษาไปนอกสถานที่', 'url' => 'https://sci.uru.ac.th/docs/download/0009.doc', 'type' => 'doc'],
-                    ['name' => 'แบบขออนุญาตพานักศึกษาไปนอกสถานที่', 'url' => 'https://sci.uru.ac.th/docs/download/0010.doc', 'type' => 'doc'],
-                    ['name' => 'แบบขออนุญาตให้ผู้อื่นปฏิบัติหน้าที่เวรแทน', 'url' => 'https://sci.uru.ac.th/docs/download/0052.doc', 'type' => 'doc'],
-                    ['name' => 'แบบใบลาพักผ่อน', 'url' => 'https://sci.uru.ac.th/docs/download/0012.doc', 'type' => 'doc'],
-                    ['name' => 'แบบฟอร์มบันทึกข้อความ', 'url' => 'https://sci.uru.ac.th/docs/download/0054.doc', 'type' => 'doc'],
-                    ['name' => 'แบบฟอร์มบันทึกขอไปราชการ/ขอใช้รถยนต์ส่วนตัว', 'url' => 'https://sci.uru.ac.th/docs/download/0068.docx', 'type' => 'docx'],
-                    ['name' => 'แบบฟอร์มมอบหมายงานเพื่อลากิจ/ลาพักผ่อน/ไปราชการ', 'url' => 'https://sci.uru.ac.th/docs/download/0069.pdf', 'type' => 'pdf'],
-                    ['name' => 'แบบฟอร์มหนังสือภายนอก', 'url' => 'https://sci.uru.ac.th/docs/download/0055.doc', 'type' => 'doc'],
-                    ['name' => 'ใบมอบหมายงานเพื่อลากิจ', 'url' => 'https://sci.uru.ac.th/docs/download/0024.doc', 'type' => 'doc'],
-                    ['name' => 'รายงานผลการไปราชการ', 'url' => 'https://sci.uru.ac.th/docs/download/0027.doc', 'type' => 'doc'],
-                    ['name' => 'สัญญาจ้างเหมารถยนต์โดยสารพร้อมพนักงานขับรถ', 'url' => 'https://sci.uru.ac.th/docs/download/0077_1.docx', 'type' => 'docx'],
-                ],
-            ],
-            'finance' => [
-                'title' => 'งานการเงินและพัสดุ',
-                'icon' => 'banknotes',
-                'documents' => [
-                    ['name' => 'บันทึกข้อความ ขอโอนเงินผ่านธนาคาร', 'url' => 'https://sci.uru.ac.th/docs/download/0050.doc', 'type' => 'doc'],
-                    ['name' => 'แบบฟอร์มขอเบิกใบเสร็จรับเงินเบ็ดเตล็ด', 'url' => 'https://sci.uru.ac.th/docs/download/0067.docx', 'type' => 'docx'],
-                    ['name' => 'แบบฟอร์มใบส่งของ', 'url' => 'https://sci.uru.ac.th/docs/download/0083.docx', 'type' => 'docx'],
-                    ['name' => 'แบบสำรวจ จัดซื้อ-จัดจ้าง', 'url' => 'https://sci.uru.ac.th/docs/download/0017.doc', 'type' => 'doc'],
-                    ['name' => 'ใบขออนุมัติเบิกเงิน', 'url' => 'https://sci.uru.ac.th/docs/download/0020.doc', 'type' => 'doc'],
-                    ['name' => 'ใบตรวจรับสินค้า', 'url' => 'https://sci.uru.ac.th/docs/download/0021.doc', 'type' => 'doc'],
-                    ['name' => 'ใบเบิกค่าใช้จ่ายในการเดินทางไปราชการ', 'url' => 'https://sci.uru.ac.th/docs/download/0022.doc', 'type' => 'doc'],
-                    ['name' => 'ใบเบิกค่าใช้จ่าย (บุคคลภายนอก)', 'url' => 'https://sci.uru.ac.th/docs/download/0022_1.doc', 'type' => 'doc'],
-                    ['name' => 'ใบมอบฉันทะ', 'url' => 'https://sci.uru.ac.th/docs/download/0023.doc', 'type' => 'doc'],
-                    ['name' => 'ใบสำคัญรับเงิน', 'url' => 'https://sci.uru.ac.th/docs/download/0025.doc', 'type' => 'doc'],
-                    ['name' => 'ใบสำคัญรับเงินค่าอาหาร', 'url' => 'https://sci.uru.ac.th/docs/download/0103.docx', 'type' => 'docx'],
-                    ['name' => 'ใบเสนอราคา', 'url' => 'https://sci.uru.ac.th/docs/download/0026.doc', 'type' => 'doc'],
-                    ['name' => 'สัญญาค้ำประกันการยืมเงิน', 'url' => 'https://sci.uru.ac.th/docs/download/0028.pdf', 'type' => 'pdf'],
-                ],
-            ],
-            'academic' => [
-                'title' => 'งานวิชาการ',
-                'icon' => 'academic-cap',
-                'documents' => [
-                    ['name' => 'ขอเบิกค่าสอนการเปิดสอนกรณีพิเศษ', 'url' => 'https://sci.uru.ac.th/docs/download/0002.doc', 'type' => 'doc'],
-                    ['name' => 'แบบขอเปลี่ยน "ร" หรือ "I"', 'url' => 'https://sci.uru.ac.th/docs/download/0032.doc', 'type' => 'doc'],
-                    ['name' => 'แบบขอเปลี่ยนแปลงแผนการเรียนหลักสูตร', 'url' => 'https://sci.uru.ac.th/docs/download/0074.docx', 'type' => 'docx'],
-                    ['name' => 'แบบขออนุญาตสอนชดเชย/ให้ผู้อื่นสอนแทน', 'url' => 'https://sci.uru.ac.th/docs/download/0081.docx', 'type' => 'docx'],
-                    ['name' => 'แบบขออนุญาตไปราชการ ช่วงเวลาสอบ', 'url' => 'https://sci.uru.ac.th/docs/download/0089.docx', 'type' => 'docx'],
-                    ['name' => 'แบบขออนุญาตสอบนอกตาราง', 'url' => 'https://sci.uru.ac.th/docs/download/0090.docx', 'type' => 'docx'],
-                    ['name' => 'แบบฟอร์มการขอเปลี่ยนแปลงข้อมูลตารางเรียน', 'url' => 'https://sci.uru.ac.th/doctopic/208', 'type' => 'link'],
-                    ['name' => 'แบบฟอร์มแก้ไขผลการเรียน', 'url' => 'https://sci.uru.ac.th/docs/download/0075.docx', 'type' => 'docx'],
-                    ['name' => 'แบบฟอร์มขอแก้ไขตารางสอน', 'url' => 'https://sci.uru.ac.th/doctopic/209', 'type' => 'link'],
-                    ['name' => 'แบบฟอร์มแนวการสอน', 'url' => 'https://sci.uru.ac.th/docs/download/0043.doc', 'type' => 'doc'],
-                    ['name' => 'แบบรายงานการประเมิน ส่งเกรด', 'url' => 'https://sci.uru.ac.th/docs/download/grade_2023_04_20.doc', 'type' => 'doc'],
-                    ['name' => 'แบบเสนอเพื่อแต่งตั้งอาจารย์พิเศษ', 'url' => 'https://sci.uru.ac.th/docs/download/0066.docx', 'type' => 'docx'],
-                    ['name' => 'ฟอร์มแบบเสนอ มคอ.3', 'url' => 'https://sci.uru.ac.th/docs/download/0044.doc', 'type' => 'doc'],
-                ],
-            ],
-            'research' => [
-                'title' => 'งานวิจัยและบริการวิชาการ',
-                'icon' => 'beaker',
-                'documents' => [
-                    ['name' => 'แบบประเมินการติดตามการนำความรู้ไปใช้ประโยชน์', 'url' => 'https://sci.uru.ac.th/docs/download/0059.doc', 'type' => 'doc'],
-                    ['name' => 'แบบประเมินโครงการบริการวิชาการ', 'url' => 'https://sci.uru.ac.th/docs/download/0062.doc', 'type' => 'doc'],
-                    ['name' => 'แบบฟอร์มขอจดลิขสิทธิ์', 'url' => 'https://sci.uru.ac.th/docs/download/0056.doc', 'type' => 'doc'],
-                    ['name' => 'แบบฟอร์มสรุปโครงการทั่วไป', 'url' => 'https://sci.uru.ac.th/docs/download/0060.doc', 'type' => 'doc'],
-                    ['name' => 'แบบฟอร์มสรุปโครงการบริการวิชาการ', 'url' => 'https://sci.uru.ac.th/docs/download/0061.doc', 'type' => 'doc'],
-                    ['name' => 'แบบรายงานผลการดำเนินโครงการ', 'url' => 'https://sci.uru.ac.th/docs/download/0030.doc', 'type' => 'doc'],
-                    ['name' => 'แบบเสนอขอรับทุนสาขาวิทยาศาสตร์ฯ', 'url' => 'https://sci.uru.ac.th/docs/download/0049.doc', 'type' => 'doc'],
-                    ['name' => 'แบบเสนอโครงการวิจัย', 'url' => 'https://sci.uru.ac.th/docs/download/0018.doc', 'type' => 'doc'],
-                    ['name' => 'แบบเสนอภาระงานวิจัย', 'url' => 'https://sci.uru.ac.th/docs/download/0053.doc', 'type' => 'doc'],
-                    ['name' => 'หนังสือมอบอำนาจดำเนินการจดลิขสิทธิ์แทน', 'url' => 'https://sci.uru.ac.th/docs/download/0057.doc', 'type' => 'doc'],
-                    ['name' => 'แบบรายงานการนำผลงานวิจัยไปสู่การใช้ประโยชน์', 'url' => 'https://sci.uru.ac.th/docs/download/0038.doc', 'type' => 'doc'],
-                    ['name' => 'แบบฟอร์มขอรับรางวัลการเขียนบทความ (การนำเสนอ)', 'url' => 'https://sci.uru.ac.th/docs/download/0045.doc', 'type' => 'doc'],
-                    ['name' => 'แบบฟอร์มขอรับรางวัลการเขียนบทความ (วารสาร)', 'url' => 'https://sci.uru.ac.th/docs/download/0046.doc', 'type' => 'doc'],
-                ],
-            ],
-        ];
+        $documentModel = new DownloadDocumentModel();
+        $documentCategories = $this->buildDocumentCategoriesForView($documentModel->getByPageType('support'));
 
         $data = array_merge($this->getCommonData(), [
             'page_title' => 'เอกสารสายสนับสนุน | ' . ($siteInfo['site_name_th'] ?? 'Support Documents'),
@@ -839,14 +760,43 @@ class Pages extends BaseController
     public function officialDocuments(): string
     {
         $siteInfo = $this->siteSettingModel->getAll();
+        $documentModel = new DownloadDocumentModel();
+        $documentCategories = $this->buildDocumentCategoriesForView($documentModel->getByPageType('official'));
 
         $data = array_merge($this->getCommonData(), [
             'page_title' => 'คำสั่ง/ประกาศ/ระเบียบ | ' . ($siteInfo['site_name_th'] ?? 'Official Documents'),
             'meta_description' => 'ศูนย์รวมคำสั่ง ประกาศ และระเบียบต่างๆ ของคณะวิทยาศาสตร์และเทคโนโลยี',
             'active_page' => 'official-documents',
+            'document_categories' => $documentCategories,
         ]);
 
         return view('pages/official_documents', $data);
+    }
+
+    /**
+     * Build document_categories array for support_documents / official_documents views.
+     * @param array $groups From DownloadDocumentModel::getByPageType()
+     * @return array Keyed by category slug: [ slug => [ 'title' => ..., 'icon' => ..., 'documents' => [ ['name','url','type'], ... ] ] ]
+     */
+    protected function buildDocumentCategoriesForView(array $groups): array
+    {
+        $out = [];
+        foreach ($groups as $group) {
+            $cat = $group['category'];
+            $slug = $cat['slug'];
+            $out[$slug] = [
+                'title' => $cat['name'],
+                'icon' => $cat['icon'] ?? 'folder',
+                'documents' => array_map(function (array $doc) {
+                    return [
+                        'name' => $doc['title'],
+                        'url' => DownloadDocumentModel::getDocumentUrl($doc),
+                        'type' => $doc['file_type'],
+                    ];
+                }, $group['documents']),
+            ];
+        }
+        return $out;
     }
 
     public function promotionCriteria(): string

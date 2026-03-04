@@ -79,7 +79,8 @@ use App\Libraries\AccessControl; ?>
                 <?php
                 $hasAdminCore = $sidebarAdminId && AccessControl::hasAccess($sid, 'admin_core');
                 $hasAdminNews = $sidebarAdminId && AccessControl::hasAccess($sid, 'admin_news');
-                $showContentMenu = $hasAdminCore || $hasAdminNews;
+                $hasAdminDownloads = $sidebarAdminId && (AccessControl::hasAccess($sid, 'admin_downloads') || AccessControl::hasAccess($sid, 'admin_core'));
+                $showContentMenu = $hasAdminCore || $hasAdminNews || $hasAdminDownloads;
                 ?>
                 <?php if ($showContentMenu): ?>
                 <div class="sidebar-submenu" style="margin: 0.5rem 0;">
@@ -107,6 +108,12 @@ use App\Libraries\AccessControl; ?>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
                         Events Coming Up
                     </a>
+                    <?php if ($hasAdminDownloads): ?>
+                    <a href="<?= base_url('admin/downloads') ?>" class="<?= (uri_string() == 'admin/downloads' || strpos(uri_string(), 'admin/downloads') === 0) ? 'active' : '' ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                        จัดการดาวน์โหลดคณะ
+                    </a>
+                    <?php endif; ?>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
