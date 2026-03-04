@@ -72,7 +72,7 @@
                     <label for="external_url" class="form-label">URL ลิงก์ภายนอก *</label>
                     <input type="url" id="external_url" name="external_url" class="form-control" placeholder="https://...">
                 </div>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary btn-save-download" name="submit" value="1">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
                         <polyline points="17 8 12 3 7 8" />
@@ -164,6 +164,8 @@
 .btn-danger { background: #e03131; color: white; }
 .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
 .download-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.btn-save-download { min-width: 100px; background: #2563eb !important; color: #fff !important; cursor: pointer; }
+.btn-save-download:hover { background: #1d4ed8 !important; }
 </style>
 
 <?= $this->endSection() ?>

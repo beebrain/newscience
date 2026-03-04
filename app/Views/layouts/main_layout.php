@@ -178,8 +178,9 @@
                         </ul>
                     </li>
                     <li class="nav__item--has-dropdown">
-                        <a href="#" class="nav__link">บริการ <?= $navSvg ?></a>
+                        <a href="<?= base_url('documents') ?>" class="nav__link <?= ($active_page ?? '') === 'documents' ? 'active' : '' ?>">บริการ <?= $navSvg ?></a>
                         <ul class="nav__dropdown">
+                            <li><a href="<?= base_url('documents') ?>" class="nav__dropdown-link">บริการด้านเอกสาร</a></li>
                             <li class="nav__item--has-dropdown nav__item--has-subdropdown">
                                 <span class="nav__dropdown-link nav__dropdown-link--subtrigger">ระบบและวารสาร</span>
                                 <ul class="nav__dropdown nav__dropdown--sub">
@@ -258,15 +259,6 @@
                         </ul>
                     </li>
                     <li class="nav__item--has-dropdown">
-                        <a href="<?= base_url('support-documents') ?>" class="nav__link <?= in_array(($active_page ?? ''), ['support-documents', 'official-documents', 'promotion-criteria']) ? 'active' : '' ?>">เอกสาร <?= $navSvg ?></a>
-                        <ul class="nav__dropdown">
-                            <li><a href="<?= base_url('support-documents') ?>" class="nav__dropdown-link">แบบฟอร์มดาวน์โหลด</a></li>
-                            <li><a href="<?= base_url('internal-documents') ?>" class="nav__dropdown-link">เอกสารภายในมหาวิทยาลัย</a></li>
-                            <li><a href="<?= base_url('official-documents') ?>" class="nav__dropdown-link">คำสั่ง/ประกาศ/ระเบียบ</a></li>
-                            <li><a href="<?= base_url('promotion-criteria') ?>" class="nav__dropdown-link">เกณฑ์การประเมินบุคคล</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav__item--has-dropdown">
                         <a href="<?= base_url('about') ?>" class="nav__link <?= in_array($active_page ?? '', ['about', 'contact']) ? 'active' : '' ?>">เกี่ยวกับ <?= $navSvg ?></a>
                         <ul class="nav__dropdown">
                             <li><a href="<?= base_url('about') ?>" class="nav__dropdown-link">เกี่ยวกับเรา</a></li>
@@ -336,10 +328,8 @@
             <li class="mobile-nav__header-item">บุคลากร</li>
             <li><a href="<?= base_url('executives') ?>" class="mobile-nav__link" style="padding-left: 2rem;">ผู้บริหาร</a></li>
             <li><a href="<?= base_url('personnel') ?>" class="mobile-nav__link" style="padding-left: 2rem;">บุคลากร</a></li>
-            <li class="mobile-nav__header-item">เอกสาร</li>
-            <li><a href="<?= base_url('support-documents') ?>" class="mobile-nav__link" style="padding-left: 2rem;">แบบฟอร์มดาวน์โหลด</a></li>
-            <li><a href="<?= base_url('official-documents') ?>" class="mobile-nav__link" style="padding-left: 2rem;">คำสั่ง/ประกาศ/ระเบียบ</a></li>
-            <li><a href="<?= base_url('promotion-criteria') ?>" class="mobile-nav__link" style="padding-left: 2rem;">เกณฑ์การประเมินบุคคล</a></li>
+            <li class="mobile-nav__header-item">บริการ</li>
+            <li><a href="<?= base_url('documents') ?>" class="mobile-nav__link" style="padding-left: 2rem;">บริการด้านเอกสาร</a></li>
             <li><a href="<?= base_url('about') ?>" class="mobile-nav__link">เกี่ยวกับ</a></li>
             <li><a href="<?= base_url('contact') ?>" class="mobile-nav__link">ติดต่อ</a></li>
             <li><a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener noreferrer" class="mobile-nav__link">สมัครเรียน</a></li>

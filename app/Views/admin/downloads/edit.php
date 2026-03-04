@@ -49,8 +49,8 @@
                     <small class="form-hint">ไฟล์ปัจจุบัน: <?= esc(basename($document['file_path'])) ?></small>
                 <?php endif; ?>
             </div>
-            <div style="display: flex; gap: 0.5rem;">
-                <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+            <div class="form-actions-download" style="display: flex; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary btn-save-download" name="submit" value="1">บันทึกการแก้ไข</button>
                 <a href="<?= base_url('admin/downloads/documents/' . $category['id']) ?>" class="btn btn-secondary">ยกเลิก</a>
             </div>
         </form>
@@ -66,6 +66,8 @@
 .btn-secondary { background: var(--color-gray-200); color: var(--color-gray-700); }
 .btn-outline { background: transparent; border: 1px solid var(--color-gray-300); color: var(--color-gray-700); }
 .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
+.btn-save-download { min-width: 120px; background: #2563eb !important; color: #fff !important; cursor: pointer; }
+.btn-save-download:hover { background: #1d4ed8 !important; }
 </style>
 
 <?= $this->endSection() ?>

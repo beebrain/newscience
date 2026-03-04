@@ -95,49 +95,22 @@ $heroSubtitle = $settings['hero_subtitle_th'] ?? $university;
 $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิตที่มีความรู้ความสามารถ พัฒนางานวิจัยและนวัตกรรม เพื่อรับใช้ชุมชนและท้องถิ่น';
 ?>
 
-<!-- Hero Carousel Section -->
+<!-- Hero Carousel Section (ข้อมูลจากฐานข้อมูล: hero_slides + site_settings) -->
 <section class="hero-carousel">
     <?php
-    // Hero slides - can be managed from admin or hardcoded
-    $heroSlides = $hero_slides ?? [
-        [
-            'image' => 'https://sci.uru.ac.th/image/getimage/660',
-            'title' => 'รับสมัครนักศึกษา',
-            'subtitle' => 'Student Recruitment',
-            'description' => 'คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์ เปิดรับสมัครนักศึกษาใหม่ สร้างบัณฑิตที่มีความรู้ความสามารถ',
-            'show_buttons' => true,
-        ],
-        [
-            'image' => base_url('assets/images/hero_background.png'),
-            'title' => $heroTitle,
-            'subtitle' => $universityEn,
-            'description' => $heroDesc,
-            'show_buttons' => true,
-        ],
-        [
-            'image' => base_url('assets/images/research_laboratory.png'),
-            'title' => 'งานวิจัยและนวัตกรรม',
-            'subtitle' => 'Research & Innovation',
-            'description' => 'พัฒนางานวิจัยเพื่อตอบโจทย์ชุมชนและท้องถิ่น ส่งเสริมการสร้างนวัตกรรมที่มีคุณค่า',
-            'link' => base_url('research'),
-        ],
-        [
-            'image' => base_url('assets/images/student_activities.png'),
-            'title' => 'กิจกรรมนักศึกษา',
-            'subtitle' => 'Student Activities',
-            'description' => 'ร่วมสร้างประสบการณ์การเรียนรู้นอกห้องเรียน พัฒนาทักษะและความสามารถรอบด้าน',
-            'link' => base_url('campus-life'),
-        ],
-    ];
+    // Hero slides จากฐานข้อมูล (จัดการที่ Admin > Hero Slides)
+    $heroSlides = $hero_slides ?? [];
 
-    // If no slides from database, use default
+    // ถ้าไม่มีสไลด์จาก DB ใช้สไลด์เดียวจาก site_settings (ฐานข้อมูล)
     if (empty($heroSlides)) {
         $heroSlides = [[
-            'image' => base_url('assets/images/hero_background.png'),
+            'image' => !empty($settings['hero_image']) ? (strpos($settings['hero_image'], 'http') === 0 ? $settings['hero_image'] : base_url($settings['hero_image'])) : base_url('assets/images/hero_background.png'),
             'title' => $heroTitle,
             'subtitle' => $universityEn,
             'description' => $heroDesc,
             'show_buttons' => true,
+            'link' => '',
+            'link_text' => 'ดูรายละเอียด',
         ]];
     }
     ?>

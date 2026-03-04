@@ -47,42 +47,33 @@ class Downloads extends BaseController
     }
 
     /**
-     * POST: Create category
+     * POST: Create category (ใช้ id ในการอ้างอิง ไม่บังคับ slug)
      */
     public function storeCategory()
     {
         $name = trim((string) $this->request->getPost('name'));
-        $slug = trim((string) $this->request->getPost('slug'));
         $pageType = $this->request->getPost('page_type');
         $icon = trim((string) $this->request->getPost('icon')) ?: 'folder';
 
         $allowedPageTypes = ['support', 'official', 'promotion', 'internal'];
-        if (empty($name) || empty($slug) || !in_array($pageType, $allowedPageTypes, true)) {
-            return redirect()->back()->withInput()->with('error', 'กรุณากรอกชื่อและ slug และเลือกประเภทหน้า');
+        if (empty($name) || !in_array($pageType, $allowedPageTypes, true)) {
+            return redirect()->back()->withInput()->with('error', 'กรุณากรอกชื่อและเลือกประเภทหน้า');
         }
 
-        $slug = preg_replace('/[^a-z0-9_-]/', '', strtolower($slug));
-        if ($slug === '') {
-            return redirect()->back()->withInput()->with('error', 'slug ไม่ถูกต้อง');
-        }
-
-        if ($this->categoryModel->findBySlug($slug)) {
-            return redirect()->back()->withInput()->with('error', 'slug ซ้ำกับที่มีอยู่แล้ว');
-        }
-
-        $this->categoryModel->addCategory([
+        $id = $this->categoryModel->addCategory([
             'name' => $name,
-            'slug' => $slug,
+            'slug' => 'cat' . time(), // ชั่วคราว แล้วอัปเดตเป็น cat{id}
             'icon' => $icon,
             'page_type' => $pageType,
             'sort_order' => (int) $this->request->getPost('sort_order') ?: 0,
         ]);
+        $this->categoryModel->update($id, ['slug' => 'cat' . $id]);
 
         return redirect()->back()->with('success', 'เพิ่มหมวดหมู่เรียบร้อยแล้ว');
     }
 
     /**
-     * POST: Update category
+     * POST: Update category (อ้างอิงด้วย id ไม่ใช้ slug)
      */
     public function updateCategory($id)
     {
@@ -93,26 +84,15 @@ class Downloads extends BaseController
         }
 
         $name = trim((string) $this->request->getPost('name'));
-        $slug = trim((string) $this->request->getPost('slug'));
         $icon = trim((string) $this->request->getPost('icon')) ?: 'folder';
 
-        if (empty($name) || empty($slug)) {
-            return redirect()->back()->withInput()->with('error', 'กรุณากรอกชื่อและ slug');
-        }
-
-        $slug = preg_replace('/[^a-z0-9_-]/', '', strtolower($slug));
-        if ($slug === '') {
-            return redirect()->back()->withInput()->with('error', 'slug ไม่ถูกต้อง');
-        }
-
-        $existing = $this->categoryModel->findBySlug($slug);
-        if ($existing && (int) $existing['id'] !== $id) {
-            return redirect()->back()->withInput()->with('error', 'slug ซ้ำกับหมวดอื่น');
+        if (empty($name)) {
+            return redirect()->back()->withInput()->with('error', 'กรุณากรอกชื่อหมวด');
         }
 
         $this->categoryModel->updateCategory($id, [
             'name' => $name,
-            'slug' => $slug,
+            'slug' => 'cat' . $id,
             'icon' => $icon,
             'sort_order' => (int) $this->request->getPost('sort_order'),
         ]);

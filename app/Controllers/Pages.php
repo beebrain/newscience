@@ -742,49 +742,73 @@ class Pages extends BaseController
         return $items;
     }
 
-    public function supportDocuments(): string
+    /**
+     * หน้าเอกสารรวมเดียว — ดึงจากฐานข้อมูล (support, official, promotion, internal)
+     */
+    public function documents(): string
     {
         $siteInfo = $this->siteSettingModel->getAll();
         $documentModel = new DownloadDocumentModel();
-        $documentCategories = $this->buildDocumentCategoriesForView($documentModel->getByPageType('support'));
+        $document_sections = [
+            'support'  => [
+                'title'       => 'แบบฟอร์มดาวน์โหลด',
+                'description' => 'รวมแบบฟอร์มและเอกสารราชการสำหรับบุคลากรสายสนับสนุน',
+                'categories'  => $this->buildDocumentCategoriesForView($documentModel->getByPageType('support')),
+            ],
+            'official' => [
+                'title'       => 'คำสั่ง/ประกาศ/ระเบียบ',
+                'description' => 'รวมคำสั่ง ประกาศ และระเบียบต่างๆ ของคณะวิทยาศาสตร์และเทคโนโลยี',
+                'categories'  => $this->buildDocumentCategoriesForView($documentModel->getByPageType('official')),
+            ],
+            'promotion' => [
+                'title'       => 'เกณฑ์การประเมินบุคคล',
+                'description' => 'หลักเกณฑ์และวิธีการประเมินค่างานเพื่อกำหนดระดับตำแหน่งที่สูงขึ้น',
+                'categories'  => $this->buildDocumentCategoriesForView($documentModel->getByPageType('promotion')),
+            ],
+            'internal' => [
+                'title'       => 'เอกสารภายในมหาวิทยาลัย',
+                'description' => 'เอกสารสำหรับใช้ภายในมหาวิทยาลัย',
+                'categories'  => $this->buildDocumentCategoriesForView($documentModel->getByPageType('internal')),
+            ],
+        ];
 
         $data = array_merge($this->getCommonData(), [
-            'page_title' => 'เอกสารสายสนับสนุน | ' . ($siteInfo['site_name_th'] ?? 'Support Documents'),
-            'meta_description' => 'เอกสารแบบฟอร์มดาวน์โหลดสำหรับบุคลากรสายสนับสนุน คณะวิทยาศาสตร์และเทคโนโลยี',
-            'active_page' => 'support-documents',
-            'document_categories' => $documentCategories,
+            'page_title'        => 'บริการด้านเอกสาร | ' . ($siteInfo['site_name_th'] ?? 'Documents'),
+            'meta_description'  => 'ศูนย์รวมเอกสาร คณะวิทยาศาสตร์และเทคโนโลยี — แบบฟอร์มดาวน์โหลด คำสั่ง/ประกาศ/ระเบียบ เกณฑ์การประเมินบุคคล',
+            'active_page'       => 'documents',
+            'document_sections' => $document_sections,
         ]);
 
-        return view('pages/support_documents', $data);
+        return view('pages/documents', $data);
     }
-    public function officialDocuments(): string
+
+    /**
+     * Redirect หน้าเดิมไปหน้าเอกสารรวม (พร้อม anchor)
+     */
+    public function supportDocuments()
     {
-        $siteInfo = $this->siteSettingModel->getAll();
-        $documentModel = new DownloadDocumentModel();
-        $documentCategories = $this->buildDocumentCategoriesForView($documentModel->getByPageType('official'));
+        return redirect()->to(base_url('documents#section-support'));
+    }
 
-        $data = array_merge($this->getCommonData(), [
-            'page_title' => 'คำสั่ง/ประกาศ/ระเบียบ | ' . ($siteInfo['site_name_th'] ?? 'Official Documents'),
-            'meta_description' => 'ศูนย์รวมคำสั่ง ประกาศ และระเบียบต่างๆ ของคณะวิทยาศาสตร์และเทคโนโลยี',
-            'active_page' => 'official-documents',
-            'document_categories' => $documentCategories,
-        ]);
-
-        return view('pages/official_documents', $data);
+    public function officialDocuments()
+    {
+        return redirect()->to(base_url('documents#section-official'));
     }
 
     /**
      * Build document_categories array for support_documents / official_documents views.
+     * Keyed by category id (ใช้ id ในการอ้างอิง ไม่ใช้ slug).
      * @param array $groups From DownloadDocumentModel::getByPageType()
-     * @return array Keyed by category slug: [ slug => [ 'title' => ..., 'icon' => ..., 'documents' => [ ['name','url','type'], ... ] ] ]
+     * @return array Keyed by category id: [ id => [ 'id' => ..., 'title' => ..., 'icon' => ..., 'documents' => [...] ] ]
      */
     protected function buildDocumentCategoriesForView(array $groups): array
     {
         $out = [];
         foreach ($groups as $group) {
             $cat = $group['category'];
-            $slug = $cat['slug'];
-            $out[$slug] = [
+            $id = (int) $cat['id'];
+            $out[$id] = [
+                'id' => $id,
                 'title' => $cat['name'],
                 'icon' => $cat['icon'] ?? 'folder',
                 'documents' => array_map(function (array $doc) {
@@ -799,16 +823,19 @@ class Pages extends BaseController
         return $out;
     }
 
-    public function promotionCriteria(): string
+    /**
+     * Redirect หน้าเกณฑ์การประเมินไปหน้าเอกสารรวม
+     */
+    public function promotionCriteria()
     {
-        $siteInfo = $this->siteSettingModel->getAll();
+        return redirect()->to(base_url('documents#section-promotion'));
+    }
 
-        $data = array_merge($this->getCommonData(), [
-            'page_title' => 'เกณฑ์การประเมินบุคคล | ' . ($siteInfo['site_name_th'] ?? 'Promotion Criteria'),
-            'meta_description' => 'หลักเกณฑ์และวิธีการประเมินค่างานเพื่อกำหนดระดับตำแหน่งที่สูงขึ้น สำหรับพนักงานมหาวิทยาลัยสายสนับสนุน',
-            'active_page' => 'promotion-criteria',
-        ]);
-
-        return view('pages/promotion_criteria', $data);
+    /**
+     * Redirect หน้าเอกสารภายในไปหน้าเอกสารรวม
+     */
+    public function internalDocuments()
+    {
+        return redirect()->to(base_url('documents#section-internal'));
     }
 }

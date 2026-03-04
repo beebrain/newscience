@@ -23,23 +23,24 @@
         </div>
         
         <div class="documents-grid">
-            <?php foreach ($document_categories as $key => $category): ?>
+            <?php foreach ($document_categories as $category): ?>
             <div class="card animate-on-scroll">
                 <div class="card__header">
                     <div class="card__icon">
-                        <?php if ($key === 'orders'): ?>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                        </svg>
-                        <?php elseif ($key === 'plans'): ?>
+                        <?php $icon = $category['icon'] ?? 'folder'; ?>
+                        <?php if ($icon === 'cube'): ?>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                         </svg>
-                        <?php else: ?>
+                        <?php elseif ($icon === 'academic-cap'): ?>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
                             <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                        </svg>
+                        <?php else: ?>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
                         </svg>
                         <?php endif; ?>
                     </div>

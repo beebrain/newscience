@@ -18,9 +18,11 @@ $routes->get('/events/(:num)', 'Pages::eventDetail/$1');
 $routes->get('/contact', 'Pages::contact');
 $routes->get('/personnel', 'Pages::personnel');
 $routes->get('/executives', 'Pages::executives');
+$routes->get('/documents', 'Pages::documents');
 $routes->get('/support-documents', 'Pages::supportDocuments');
 $routes->get('/official-documents', 'Pages::officialDocuments');
 $routes->get('/promotion-criteria', 'Pages::promotionCriteria');
+$routes->get('/internal-documents', 'Pages::internalDocuments');
 
 // Program Website Routes (Public) — /program/{id} redirects to new SPA /p/{id}
 $routes->get('program/(:num)', 'ProgramSpaController::showByProgramId/$1');
@@ -47,8 +49,6 @@ $routes->group('personnel-api', static function ($routes) {
 
 // Personnel CV page (public)
 $routes->get('personnel-cv/(:segment)', 'PersonnelCvController::show/$1');
-$routes->get('/official-documents', 'Pages::officialDocuments');
-$routes->get('/promotion-criteria', 'Pages::promotionCriteria');
 
 // Local only: ข้าม Authen สำหรับทดสอบ (ทำงานเฉพาะ ENVIRONMENT === 'development')
 $routes->get('/dev/login-as-admin', 'Dev::loginAsAdmin');

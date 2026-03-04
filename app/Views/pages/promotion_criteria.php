@@ -14,7 +14,7 @@
     </div>
 </section>
 
-<!-- Content Section -->
+<!-- Content Section (ข้อมูลจากฐานข้อมูล: download_categories + download_documents, page_type = promotion) -->
 <section class="section">
     <div class="container">
         <div class="section-header">
@@ -22,94 +22,48 @@
             <p class="section-header__description">หลักเกณฑ์และวิธีการประเมินค่างานเพื่อกำหนดระดับตำแหน่งที่สูงขึ้น</p>
         </div>
 
+        <?php
+        $document_categories = $document_categories ?? [];
+        $has_any = false;
+        foreach ($document_categories as $category) {
+            if (!empty($category['documents'])) {
+                $has_any = true;
+                break;
+            }
+        }
+        ?>
+
+        <?php if (!$has_any): ?>
         <div class="content-box animate-on-scroll">
+            <p class="document-empty-message">ยังไม่มีเอกสารในหมวดเกณฑ์การประเมินบุคคล คุณสามารถเพิ่มได้ที่ <a href="<?= base_url('admin/downloads') ?>">จัดการดาวน์โหลดคณะ</a> (แท็บเกณฑ์การประเมิน)</p>
+        </div>
+        <?php else: ?>
+        <?php foreach ($document_categories as $category): ?>
+            <?php if (empty($category['documents'])) { continue; } ?>
+        <div class="content-box animate-on-scroll promotion-category-block">
+            <h3 class="promotion-category-title"><?= esc($category['title']) ?></h3>
             <ul class="document-list-vertical">
+                <?php foreach ($category['documents'] as $doc): ?>
+                    <?php if (empty($doc['url'])) { continue; } ?>
                 <li>
-                    <a href="#" class="document-list-vertical__link">
+                    <a href="<?= esc($doc['url']) ?>" target="_blank" rel="noopener" class="document-list-vertical__link">
                         <div class="document-list-vertical__icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                         </div>
                         <div class="document-list-vertical__info">
-                            <span class="document-list-vertical__title">หลักเกณฑ์และวิธีการประเมินค่างานเพื่อกำหนดระดับตำแหน่งที่สูงขึ้น</span>
-                            <span class="document-list-vertical__meta">สายสนับสนุน</span>
+                            <span class="document-list-vertical__title"><?= esc($doc['name']) ?></span>
+                            <span class="document-list-vertical__meta"><?= esc($category['title']) ?></span>
                         </div>
                         <div class="document-list-vertical__action">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         </div>
                     </a>
                 </li>
-                <li>
-                    <a href="#" class="document-list-vertical__link">
-                        <div class="document-list-vertical__icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        </div>
-                        <div class="document-list-vertical__info">
-                            <span class="document-list-vertical__title">กรอบระดับตำแหน่งพนักงานมหาวิทยาลัยสายสนับสนุน</span>
-                            <span class="document-list-vertical__meta">สายสนับสนุน</span>
-                        </div>
-                        <div class="document-list-vertical__action">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        </div>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="document-list-vertical__link">
-                        <div class="document-list-vertical__icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        </div>
-                        <div class="document-list-vertical__info">
-                            <span class="document-list-vertical__title">ประกาศรับสมัครพนักงานมหาวิทยาลัยสายสนับสนุนเพื่อประเมินตำแหน่งที่สูงขึ้น</span>
-                            <span class="document-list-vertical__meta">สายสนับสนุน</span>
-                        </div>
-                        <div class="document-list-vertical__action">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        </div>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="document-list-vertical__link">
-                        <div class="document-list-vertical__icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        </div>
-                        <div class="document-list-vertical__info">
-                            <span class="document-list-vertical__title">หลักเกณฑ์และวิธีการประเมินค่างานเพื่อกำหนดระดับตำแหน่งที่สูงขึ้น กรณีปฏิบัติหน้าที่หัวหน้าหน่วยงาน</span>
-                            <span class="document-list-vertical__meta">สายสนับสนุน (หัวหน้าหน่วยงาน)</span>
-                        </div>
-                        <div class="document-list-vertical__action">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        </div>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="document-list-vertical__link">
-                        <div class="document-list-vertical__icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        </div>
-                        <div class="document-list-vertical__info">
-                            <span class="document-list-vertical__title">กรอบระดับตำแหน่งพนักงานมหาวิทยาลัยสายสนับสนุน กรณีปฏิบัติหน้าที่หัวหน้าหน่วยงาน</span>
-                            <span class="document-list-vertical__meta">สายสนับสนุน (หัวหน้าหน่วยงาน)</span>
-                        </div>
-                        <div class="document-list-vertical__action">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        </div>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="document-list-vertical__link">
-                        <div class="document-list-vertical__icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        </div>
-                        <div class="document-list-vertical__info">
-                            <span class="document-list-vertical__title">ประกาศรับสมัครพนักงานมหาวิทยาลัยสายสนับสนุนเพื่อประเมินตำแหน่งที่สูงขึ้น กรณีปฏิบัติหน้าที่หัวหน้าหน่วยงาน</span>
-                            <span class="document-list-vertical__meta">สายสนับสนุน (หัวหน้าหน่วยงาน)</span>
-                        </div>
-                        <div class="document-list-vertical__action">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        </div>
-                    </a>
-                </li>
+                <?php endforeach; ?>
             </ul>
         </div>
+        <?php endforeach; ?>
+        <?php endif; ?>
     </div>
 </section>
 
@@ -120,7 +74,33 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     padding: 2rem;
     max-width: 900px;
-    margin: 0 auto;
+    margin: 0 auto 1.5rem auto;
+}
+
+.content-box:last-of-type {
+    margin-bottom: 0;
+}
+
+.promotion-category-block:first-child .promotion-category-title {
+    margin-top: 0;
+}
+
+.promotion-category-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.document-empty-message {
+    margin: 0;
+    color: #64748b;
+}
+
+.document-empty-message a {
+    color: var(--color-primary);
 }
 
 .document-list-vertical {
@@ -181,7 +161,7 @@
 
 .document-list-vertical__info {
     flex: 1;
-    min-width: 0; /* Fix flex text overflow */
+    min-width: 0;
 }
 
 .document-list-vertical__title {
@@ -216,23 +196,23 @@
     .content-box {
         padding: 1rem;
     }
-    
+
     .document-list-vertical__link {
         padding: 0.75rem;
         flex-direction: column;
         align-items: flex-start;
         gap: 0.75rem;
     }
-    
+
     .document-list-vertical__action {
         display: none;
     }
-    
+
     .document-list-vertical__icon {
         width: 40px;
         height: 40px;
     }
-    
+
     .document-list-vertical__icon svg {
         width: 20px;
         height: 20px;
