@@ -261,8 +261,8 @@
                                 <td>
                                     <?php if ($recipient['student_data_available']): ?>
                                         <small>
-                                            Name: <?= esc($recipient['student_data_available']['th_name']) ?><br>
-                                            Last: <?= esc($recipient['student_data_available']['thai_lastname']) ?><br>
+                                            Name: <?= esc($recipient['student_data_available']['tf_name']) ?><br>
+                                            Last: <?= esc($recipient['student_data_available']['tl_name']) ?><br>
                                             Program: <?= esc($recipient['student_data_available']['program_name']) ?>
                                         </small>
                                     <?php else: ?>

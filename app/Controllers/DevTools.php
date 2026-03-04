@@ -47,7 +47,7 @@ class DevTools extends BaseController
             'student_id'        => $student['id'],
             'student_email'     => $student['email'] ?? 'test@student.com',
             'student_uid'       => $student['login_uid'] ?? 'TEST001',
-            'student_name'      => ($student['th_name'] ?? 'ทดสอบ') . ' ' . ($student['thai_lastname'] ?? 'นักศึกษา'),
+            'student_name'      => ($student['tf_name'] ?? 'ทดสอบ') . ' ' . ($student['tl_name'] ?? 'นักศึกษา'),
             'student_role'      => $student['role'] ?? 'student',
             'student_program_id' => $student['program_id'] ?? 1,
         ]);
@@ -73,7 +73,7 @@ class DevTools extends BaseController
             'admin_id'        => $user['uid'] ?? $userId,
             'admin_email'     => $user['email'] ?? 'staff@science.uru.ac.th',
             'admin_uid'       => $user['login_uid'] ?? 'STAFF001',
-            'admin_name'      => ($user['thai_name'] ?? $user['gf_name'] ?? 'ทดสอบ') . ' ' . ($user['thai_lastname'] ?? $user['gl_name'] ?? 'เจ้าหน้าที่'),
+            'admin_name'      => ($user['tf_name'] ?? $user['gf_name'] ?? 'ทดสอบ') . ' ' . ($user['tl_name'] ?? $user['gl_name'] ?? 'เจ้าหน้าที่'),
             'admin_role'      => $user['role'] ?? 'admin',
             'admin_program_id' => $user['program_id'] ?? null,
         ]);
@@ -103,7 +103,7 @@ class DevTools extends BaseController
             'admin_id'        => $user['uid'] ?? $userId,
             'admin_email'     => $user['email'] ?? "{$type}@science.uru.ac.th",
             'admin_uid'       => $user['login_uid'] ?? strtoupper($type) . '001',
-            'admin_name'      => ($user['thai_name'] ?? $user['gf_name'] ?? 'ทดสอบ') . ' ' . ($user['thai_lastname'] ?? $user['gl_name'] ?? $nameSuffix),
+            'admin_name'      => ($user['tf_name'] ?? $user['gf_name'] ?? 'ทดสอบ') . ' ' . ($user['tl_name'] ?? $user['gl_name'] ?? $nameSuffix),
             'admin_role'      => $user['role'] ?? $role,
             'admin_program_id' => $user['program_id'] ?? 1,
         ]);
@@ -132,8 +132,8 @@ class DevTools extends BaseController
         $data = [
             'login_uid'    => 'TEST' . time(),
             'email'        => 'test' . time() . '@student.com',
-            'th_name'      => 'ทดสอบ',
-            'thai_lastname' => 'นักศึกษา',
+            'tf_name'      => 'ทดสอบ',
+            'tl_name'      => 'นักศึกษา',
             'en_name'      => 'Test',
             'eng_lastname' => 'Student',
             'program_id'   => 1,
@@ -155,8 +155,8 @@ class DevTools extends BaseController
         $data = [
             'login_uid'    => 'STAFF' . time(),
             'email'        => 'staff' . time() . '@science.uru.ac.th',
-            'thai_name'    => 'ทดสอบ',
-            'thai_lastname' => 'เจ้าหน้าที่',
+            'tf_name'      => 'ทดสอบ',
+            'tl_name'      => 'เจ้าหน้าที่',
             'role'         => 'super_admin',
             'active'       => 1,
             'password'     => password_hash('test123', PASSWORD_DEFAULT),
@@ -179,8 +179,8 @@ class DevTools extends BaseController
         $data = [
             'login_uid'    => strtoupper($type) . time(),
             'email'        => $type . time() . '@science.uru.ac.th',
-            'thai_name'    => 'ทดสอบ',
-            'thai_lastname' => $nameSuffix,
+            'tf_name'      => 'ทดสอบ',
+            'tl_name'      => $nameSuffix,
             'role'         => $role,
             'active'       => 1,
             'password'     => password_hash('test123', PASSWORD_DEFAULT),

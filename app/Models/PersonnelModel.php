@@ -46,52 +46,37 @@ class PersonnelModel extends Model
     protected function selectWithUser(): string
     {
         $db = $this->db;
-        $hasTitle = $db->fieldExists('title', 'user');
-        $hasTfName = $db->fieldExists('tf_name', 'user');
-        $hasTlName = $db->fieldExists('tl_name', 'user');
-        $hasThName = $db->fieldExists('th_name', 'user');
-        $hasThaiName = $db->fieldExists('thai_name', 'user');
-        $hasThaiLastname = $db->fieldExists('thai_lastname', 'user');
-        $hasGfName = $db->fieldExists('gf_name', 'user');
-        $hasGlName = $db->fieldExists('gl_name', 'user');
-        $hasProfileImage = $db->fieldExists('profile_image', 'user');
+        $hasTitle          = $db->fieldExists('title', 'user');
+        $hasTfName         = $db->fieldExists('tf_name', 'user');
+        $hasTlName         = $db->fieldExists('tl_name', 'user');
+        $hasGfName         = $db->fieldExists('gf_name', 'user');
+        $hasGlName         = $db->fieldExists('gl_name', 'user');
+        $hasProfileImage   = $db->fieldExists('profile_image', 'user');
         $hasProfilePicture = $db->fieldExists('profile_picture', 'user');
-        $hasEmail = $db->fieldExists('email', 'user');
+        $hasEmail          = $db->fieldExists('email', 'user');
 
-        $uTitle = $hasTitle ? 'user.title' : 'NULL';
-        $uTf = $hasTfName ? 'user.tf_name' : 'NULL';
-        $uTl = $hasTlName ? 'user.tl_name' : 'NULL';
-        $uThName = $hasThName ? 'user.th_name' : ($hasThaiName ? 'user.thai_name' : 'NULL');
-        $uThaiLastname = $hasThaiLastname ? 'user.thai_lastname' : 'NULL';
-        $uGf = $hasGfName ? 'user.gf_name' : 'NULL';
-        $uGl = $hasGlName ? 'user.gl_name' : 'NULL';
-        $uImg = $hasProfileImage ? 'user.profile_image' : ($hasProfilePicture ? 'user.profile_picture' : 'NULL');
-        $uEmail = $hasEmail ? 'user.email' : 'NULL';
+        $uTitle = $hasTitle  ? 'user.title'   : 'NULL';
+        $uTf    = $hasTfName ? 'user.tf_name' : 'NULL';
+        $uTl    = $hasTlName ? 'user.tl_name' : 'NULL';
+        $uGf    = $hasGfName ? 'user.gf_name' : 'NULL';
+        $uGl    = $hasGlName ? 'user.gl_name' : 'NULL';
+        $uImg   = $hasProfileImage ? 'user.profile_image' : ($hasProfilePicture ? 'user.profile_picture' : 'NULL');
+        $uEmail = $hasEmail  ? 'user.email'   : 'NULL';
 
-        if (($hasThName || $hasThaiName) && $hasThaiLastname) {
-            $nameExpr = "COALESCE(
-                NULLIF(TRIM(CONCAT(COALESCE({$uThName}, ''), ' ', COALESCE({$uThaiLastname}, ''))), ''),
+        $nameExpr = "COALESCE(
+                NULLIF(TRIM(CONCAT(COALESCE({$uTf}, ''), ' ', COALESCE({$uTl}, ''))), ''),
                 NULLIF(TRIM(CONCAT(COALESCE({$uTitle}, ''), ' ', COALESCE({$uTf}, ''), ' ', COALESCE({$uTl}, ''))), ''),
                 personnel.name
             )";
-        } else {
-            $nameExpr = "COALESCE(
-                NULLIF(TRIM(CONCAT(COALESCE({$uTitle}, ''), ' ', COALESCE({$uTf}, ''), ' ', COALESCE({$uTl}, ''))), ''),
-                personnel.name
-            )";
-        }
         $nameEnExpr = "COALESCE(
                 NULLIF(TRIM(CONCAT(COALESCE({$uGf}, ''), ' ', COALESCE({$uGl}, ''))), ''),
                 personnel.name_en
             )";
 
         $extra = "user.email as user_email";
-        if ($hasTitle) $extra .= ", user.title as user_title";
+        if ($hasTitle)  $extra .= ", user.title as user_title";
         if ($hasTfName) $extra .= ", user.tf_name as user_tf_name";
         if ($hasTlName) $extra .= ", user.tl_name as user_tl_name";
-        if ($hasThName) $extra .= ", user.th_name as user_th_name";
-        if ($hasThaiName) $extra .= ", user.thai_name as user_thai_name";
-        if ($hasThaiLastname) $extra .= ", user.thai_lastname as user_thai_lastname";
         if ($hasGfName) $extra .= ", user.gf_name as user_gf_name";
         if ($hasGlName) $extra .= ", user.gl_name as user_gl_name";
         if ($hasProfileImage) {
@@ -100,8 +85,6 @@ class PersonnelModel extends Model
             $extra .= ", user.profile_picture as user_profile_image";
         }
 
-        // รูปโปรไฟล์ใช้เฉพาะจาก user (profile_image/profile_picture) เพื่อให้ข้อมูลเดียวกันเมื่อ user อัปโหลดรูป — ไม่ใช้ personnel.image
-        // CHANGE: Fallback to personnel.image if user has no image or no user linked
         return "personnel.*,
             {$nameExpr} as name,
             {$nameEnExpr} as name_en,
@@ -110,25 +93,13 @@ class PersonnelModel extends Model
             {$extra}";
     }
 
-    /**
-     * Get full name (Thai) — ใช้ ชื่อ + นามสกุล จาก user (th_name/thai_name + thai_lastname)
-     */
     public function getFullName($person)
     {
-        $first = trim($person['user_th_name'] ?? $person['user_thai_name'] ?? '');
-        $last  = trim($person['user_thai_lastname'] ?? '');
-        $thName = trim($first . ' ' . $last);
-        if ($thName !== '') {
-            return $thName;
-        }
-        if (!empty($person['user_title']) || !empty($person['user_tf_name'])) {
-            $title = trim($person['user_title'] ?? '');
-            $fname = trim($person['user_tf_name'] ?? '');
-            $lname = trim($person['user_tl_name'] ?? '');
-            $fullName = trim("{$title} {$fname} {$lname}");
-            if ($fullName !== '') {
-                return $fullName;
-            }
+        $first = trim($person['user_tf_name'] ?? '');
+        $last  = trim($person['user_tl_name'] ?? '');
+        $full  = trim($first . ' ' . $last);
+        if ($full !== '') {
+            return $full;
         }
         return trim($person['name'] ?? '');
     }
@@ -323,7 +294,7 @@ class PersonnelModel extends Model
     }
 
     /**
-     * โหลด personnel ตาม IDs พร้อม join user (ชื่อจาก thai_name + thai_lastname)
+     * โหลด personnel ตาม IDs พร้อม join user (ชื่อจาก tf_name + tl_name)
      * ใช้สำหรับหน้าผู้บริหาร — ประธานหลักสูตร
      */
     public function getActiveByIdsWithUser(array $ids): array

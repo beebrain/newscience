@@ -74,7 +74,7 @@
                         <span style="font-size: 0.85rem;"><?= esc($email) ?></span>
                         <?php if ($userLink): ?>
                             <?php
-                            $linkedUserName = trim(($userLink['th_name'] ?? $userLink['thai_name'] ?? '') . ' ' . ($userLink['thai_lastname'] ?? ''));
+                            $linkedUserName = trim(($userLink['tf_name'] ?? '') . ' ' . ($userLink['tl_name'] ?? ''));
                             if ($linkedUserName === '') {
                                 $linkedUserName = trim(($userLink['gf_name'] ?? '') . ' ' . ($userLink['gl_name'] ?? ''));
                             }

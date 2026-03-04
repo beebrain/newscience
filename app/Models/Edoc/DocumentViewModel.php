@@ -58,7 +58,7 @@ class DocumentViewModel extends Model
 
     public function getRecentViewers($documentId, $limit = 5)
     {
-        return $this->select('document_views.*, user.thai_name, user.thai_lastname')
+        return $this->select('document_views.*, user.tf_name, user.tl_name')
             ->join('user', 'user.uid = document_views.user_id', 'left')
             ->where('document_id', $documentId)
             ->orderBy('viewed_at', 'DESC')

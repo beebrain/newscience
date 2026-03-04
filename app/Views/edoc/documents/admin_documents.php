@@ -2638,8 +2638,8 @@
 
                         if (allViewers && allViewers.length > 0) {
                             allViewers.forEach((viewer, index) => {
-                                const viewerName = viewer.thai_name && viewer.thai_lastname ?
-                                    `${viewer.thai_name} ${viewer.thai_lastname}` :
+                                const viewerName = viewer.tf_name && viewer.tl_name ?
+                                    `${viewer.tf_name} ${viewer.tl_name}` :
                                     'ผู้ใช้ไม่ระบุชื่อ';
 
                                 const viewDate = new Date(viewer.viewed_at);
@@ -2712,8 +2712,8 @@
 
             // Create detailed list of viewers
             recentViewers.forEach((viewer, index) => {
-                const viewerName = viewer.thai_name && viewer.thai_lastname ?
-                    `${viewer.thai_name} ${viewer.thai_lastname}` :
+                const viewerName = viewer.tf_name && viewer.tl_name ?
+                    `${viewer.tf_name} ${viewer.tl_name}` :
                     'ผู้ใช้ไม่ระบุชื่อ';
 
                 const viewDate = new Date(viewer.viewed_at);

@@ -36,8 +36,8 @@ class EdocBaseController extends BaseController
                 // Keep backward compatibility - also store the access levels
                 $this->edocUser['edoc']       = AccessControl::hasAccess($this->edocUser['uid'], 'edoc') ? 1 : 0;
                 $this->edocUser['admin_edoc'] = $this->isEdocAdmin ? 1 : 0;
-                $this->edocUser['thai_name']     = $user['thai_name'] ?? '';
-                $this->edocUser['thai_lastname'] = $user['thai_lastname'] ?? '';
+                $this->edocUser['tf_name']  = $user['tf_name'] ?? '';
+                $this->edocUser['tl_name']  = $user['tl_name'] ?? '';
             }
         }
     }

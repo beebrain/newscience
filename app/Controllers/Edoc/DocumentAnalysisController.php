@@ -486,7 +486,7 @@ class DocumentAnalysisController extends EdocBaseController
         if ($user) {
             return [
                 'id' => $user['uid'],
-                'name' => trim(($user['thai_name'] ?? '') . ' ' . ($user['thai_lastname'] ?? '')),
+                'name' => trim(($user['tf_name'] ?? '') . ' ' . ($user['tl_name'] ?? '')),
                 'email' => $user['email'],
                 'title' => $user['title'] ?? ''
             ];
@@ -501,8 +501,8 @@ class DocumentAnalysisController extends EdocBaseController
     private function findUserByName($name)
     {
         $users = $this->db->table('user')
-            ->select('uid, thai_name, thai_lastname, email, title')
-            ->like('CONCAT(thai_name, " ", thai_lastname)', $name)
+            ->select('uid, tf_name, tl_name, email, title')
+            ->like('CONCAT(tf_name, " ", tl_name)', $name)
             ->get()
             ->getResultArray();
 
@@ -510,7 +510,7 @@ class DocumentAnalysisController extends EdocBaseController
             $user = $users[0];
             return [
                 'id' => $user['uid'],
-                'name' => trim($user['thai_name'] . ' ' . $user['thai_lastname']),
+                'name' => trim($user['tf_name'] . ' ' . $user['tl_name']),
                 'email' => $user['email'],
                 'title' => $user['title'] ?? ''
             ];

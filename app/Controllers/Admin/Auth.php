@@ -470,11 +470,8 @@ class Auth extends BaseController
             'title'         => $userInfo['title'] ?? '',
             'gf_name'       => $userInfo['gf_name'] ?? $userInfo['first_name_en'] ?? $userInfo['firstname_en'] ?? '',
             'gl_name'       => $userInfo['gl_name'] ?? $userInfo['last_name_en'] ?? $userInfo['lastname_en'] ?? '',
-            'tf_name'       => $userInfo['tf_name'] ?? $userInfo['first_name_th'] ?? $userInfo['firstname_th'] ?? '',
-            'tl_name'       => $userInfo['tl_name'] ?? $userInfo['last_name_th'] ?? $userInfo['lastname_th'] ?? '',
-            'th_name'       => $userInfo['th_name'] ?? $userInfo['thai_name'] ?? $userInfo['first_name_th'] ?? '',
-            'thai_name'     => $userInfo['thai_name'] ?? $userInfo['first_name_th'] ?? $userInfo['firstname_th'] ?? '',
-            'thai_lastname' => $userInfo['thai_lastname'] ?? $userInfo['last_name_th'] ?? $userInfo['lastname_th'] ?? '',
+            'tf_name'       => $userInfo['tf_name'] ?? $userInfo['thai_name'] ?? $userInfo['th_name'] ?? $userInfo['first_name_th'] ?? $userInfo['firstname_th'] ?? '',
+            'tl_name'       => $userInfo['tl_name'] ?? $userInfo['thai_lastname'] ?? $userInfo['last_name_th'] ?? $userInfo['lastname_th'] ?? '',
             'first_name_th' => $userInfo['first_name_th'] ?? $userInfo['firstname_th'] ?? '',
             'last_name_th'  => $userInfo['last_name_th'] ?? $userInfo['lastname_th'] ?? '',
             'first_name_en' => $userInfo['first_name_en'] ?? $userInfo['firstname_en'] ?? '',
@@ -536,7 +533,7 @@ class Auth extends BaseController
     {
         $email = $user['email'] ?? '';
         // Use Thai Name if available for friendlier display, else first name
-        $name  = $user['th_name'] ?? $user['first_name_th'] ?? $user['thai_name'] ?? $user['first_name_en'] ?? 'User';
+        $name  = $user['tf_name'] ?? $user['first_name_th'] ?? $user['first_name_en'] ?? 'User';
 
         $exp = time() + 120; // 2 minutes expiry
         $payload = [

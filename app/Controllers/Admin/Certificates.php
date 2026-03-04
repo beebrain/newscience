@@ -30,7 +30,7 @@ class Certificates extends BaseController
     {
         $status = $this->request->getGet('status');
         $builder = $this->requestModel
-            ->select('cert_requests.*, cert_templates.name_th as template_name, student_user.th_name as student_name, student_user.thai_lastname as student_lastname')
+            ->select('cert_requests.*, cert_templates.name_th as template_name, student_user.tf_name as student_name, student_user.tl_name as student_lastname')
             ->join('cert_templates', 'cert_templates.id = cert_requests.template_id', 'left')
             ->join('student_user', 'student_user.id = cert_requests.student_id', 'left')
             ->orderBy('cert_requests.id', 'DESC');
@@ -49,7 +49,7 @@ class Certificates extends BaseController
     public function pending()
     {
         $requests = $this->requestModel
-            ->select('cert_requests.*, cert_templates.name_th as template_name, student_user.th_name as student_name, student_user.thai_lastname as student_lastname')
+            ->select('cert_requests.*, cert_templates.name_th as template_name, student_user.tf_name as student_name, student_user.tl_name as student_lastname')
             ->join('cert_templates', 'cert_templates.id = cert_requests.template_id', 'left')
             ->join('student_user', 'student_user.id = cert_requests.student_id', 'left')
             ->whereIn('cert_requests.status', [CertRequestModel::STATUS_PENDING, CertRequestModel::STATUS_VERIFIED])
@@ -65,7 +65,7 @@ class Certificates extends BaseController
     public function show(int $id)
     {
         $request = $this->requestModel
-            ->select('cert_requests.*, cert_templates.name_th as template_name, cert_templates.level as template_level, student_user.th_name as student_name, student_user.thai_lastname as student_lastname, student_user.email as student_email, student_user.program_id')
+            ->select('cert_requests.*, cert_templates.name_th as template_name, cert_templates.level as template_level, student_user.tf_name as student_name, student_user.tl_name as student_lastname, student_user.email as student_email, student_user.program_id')
             ->join('cert_templates', 'cert_templates.id = cert_requests.template_id', 'left')
             ->join('student_user', 'student_user.id = cert_requests.student_id', 'left')
             ->where('cert_requests.id', $id)

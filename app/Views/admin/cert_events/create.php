@@ -67,7 +67,7 @@
                     <option value="">-- ไม่ระบุ (ไม่มีลายเซ็น) --</option>
                     <?php foreach ($signers as $signer): ?>
                         <option value="<?= $signer['uid'] ?>" <?= old('signer_id') == $signer['uid'] ? 'selected' : '' ?>>
-                            <?= esc(($signer['thai_name'] ?? $signer['gf_name']) . ' ' . ($signer['thai_lastname'] ?? $signer['gl_name'])) ?> (<?= $signer['role'] ?>)
+                            <?= esc(($signer['tf_name'] ?? $signer['gf_name']) . ' ' . ($signer['tl_name'] ?? $signer['gl_name'])) ?> (<?= $signer['role'] ?>)
                         </option>
                     <?php endforeach; ?>
                 </select>

@@ -36,7 +36,7 @@ class EdocController extends EdocBaseController
             $userModel = new \App\Models\UserModel();
             $user = $userModel->find($this->edocUser['uid']);
 
-            if (empty($user['thai_name']) || empty($user['thai_lastname'])) {
+            if (empty($user['tf_name']) || empty($user['tl_name'])) {
                 return redirect()->to(base_url('dashboard'))
                     ->with('error', 'กรุณากรอกข้อมูลชื่อ-นามสกุลก่อนใช้งาน E-Document');
             }
@@ -137,7 +137,7 @@ class EdocController extends EdocBaseController
                 return $this->response->setStatusCode(400)->setJSON(['error' => 'Document ID is required']);
             }
 
-            $viewers = $this->documentViews->select('document_views.*, user.thai_name, user.thai_lastname')
+            $viewers = $this->documentViews->select('document_views.*, user.tf_name, user.tl_name')
                 ->join('user', 'user.uid = document_views.user_id', 'left')
                 ->where('document_id', $iddoc)
                 ->orderBy('viewed_at', 'DESC')
@@ -160,7 +160,7 @@ class EdocController extends EdocBaseController
         $request = $this->request->getVar();
 
         $userEmail = strtolower(trim($user['email'] ?? ''));
-        $owner = trim($user["thai_name"] ?? '') . " " . trim($user["thai_lastname"] ?? '');
+        $owner = trim($user["tf_name"] ?? '') . " " . trim($user["tl_name"] ?? '');
 
         $columnsOrder = [
             0 => 'iddoc',

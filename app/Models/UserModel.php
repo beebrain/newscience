@@ -20,9 +20,6 @@ class UserModel extends Model
         'gl_name',
         'tf_name',
         'tl_name',
-        'th_name',
-        'thai_name',
-        'thai_lastname',
         'role',
         'program_id',
         'profile_image',
@@ -112,7 +109,7 @@ class UserModel extends Model
     public function getListForPersonnel(bool $excludeExisting = true): array
     {
         $columns = ['uid', 'email'];
-        $optional = ['title', 'th_name', 'thai_name', 'thai_lastname', 'tf_name', 'tl_name', 'gf_name', 'gl_name'];
+        $optional = ['title', 'tf_name', 'tl_name', 'gf_name', 'gl_name'];
         foreach ($optional as $column) {
             if ($this->db->fieldExists($column, $this->table)) {
                 $columns[] = $column;
@@ -137,7 +134,7 @@ class UserModel extends Model
         }
 
         $orderColumns = [];
-        foreach (['th_name', 'thai_name', 'tf_name', 'gf_name'] as $column) {
+        foreach (['tf_name', 'gf_name'] as $column) {
             if ($this->db->fieldExists($column, $this->table)) {
                 $orderColumns[] = $column;
             }
@@ -152,7 +149,7 @@ class UserModel extends Model
         $users = $builder->findAll();
 
         return array_map(function (array $user) use ($linkedUids) {
-            $nameTh = trim($this->getFullName($user));
+            $nameTh = trim(self::firstNameTh($user) . ' ' . self::lastNameTh($user));
             $nameEn = trim(($user['gf_name'] ?? '') . ' ' . ($user['gl_name'] ?? ''));
             $uid = (int) ($user['uid'] ?? 0);
 
@@ -206,11 +203,8 @@ class UserModel extends Model
             'title'         => trim($portalUser['title'] ?? ''),
             'gf_name'       => trim($portalUser['gf_name'] ?? $portalUser['first_name_en'] ?? $portalUser['firstname_en'] ?? ''),
             'gl_name'       => trim($portalUser['gl_name'] ?? $portalUser['last_name_en'] ?? $portalUser['lastname_en'] ?? ''),
-            'tf_name'       => trim($portalUser['tf_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? ''),
-            'tl_name'       => trim($portalUser['tl_name'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? ''),
-            'th_name'       => trim($portalUser['th_name'] ?? $portalUser['thai_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? ''),
-            'thai_name'     => trim($portalUser['thai_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? ''),
-            'thai_lastname' => trim($portalUser['thai_lastname'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? ''),
+            'tf_name'       => trim($portalUser['tf_name'] ?? $portalUser['thai_name'] ?? $portalUser['th_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? ''),
+            'tl_name'       => trim($portalUser['tl_name'] ?? $portalUser['thai_lastname'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? ''),
         ];
 
         // อัปเดต login_uid เสมอถ้า Portal ส่งมา (รวมถึงกรณี login ครั้งแรกที่ login_uid ยังว่าง)
@@ -249,7 +243,7 @@ class UserModel extends Model
     /**
      * หาหรือสร้าง user จากข้อมูล API (Portal/Edoc SSO) — เมื่อได้รับ JSON จาก Edoc จะ update ลง table user
      * คืน array user หรือ null ถ้าไม่พบและสร้างไม่ได้
-     * @param array $apiUser ต้องมี key: email; ควรมี login_uid/code, ชื่อ-นามสกุล (gf_name, gl_name, thai_name, thai_lastname หรือ first_name_th, last_name_th ฯลฯ)
+     * @param array $apiUser ต้องมี key: email; ควรมี login_uid/code, ชื่อ-นามสกุล (gf_name, gl_name, tf_name, tl_name หรือ first_name_th, last_name_th ฯลฯ)
      */
     public function findOrCreateFromApiUser(array $apiUser): ?array
     {
@@ -269,11 +263,8 @@ class UserModel extends Model
             'title'         => trim($apiUser['title'] ?? ''),
             'gf_name'       => trim($apiUser['gf_name'] ?? $apiUser['first_name_en'] ?? ''),
             'gl_name'       => trim($apiUser['gl_name'] ?? $apiUser['last_name_en'] ?? ''),
-            'tf_name'       => trim($apiUser['tf_name'] ?? $apiUser['first_name_th'] ?? ''),
-            'tl_name'       => trim($apiUser['tl_name'] ?? $apiUser['last_name_th'] ?? ''),
-            'th_name'       => trim($apiUser['th_name'] ?? $apiUser['thai_name'] ?? $apiUser['first_name_th'] ?? ''),
-            'thai_name'     => trim($apiUser['thai_name'] ?? $apiUser['first_name_th'] ?? ''),
-            'thai_lastname' => trim($apiUser['thai_lastname'] ?? $apiUser['last_name_th'] ?? ''),
+            'tf_name'       => trim($apiUser['tf_name'] ?? $apiUser['thai_name'] ?? $apiUser['th_name'] ?? $apiUser['first_name_th'] ?? ''),
+            'tl_name'       => trim($apiUser['tl_name'] ?? $apiUser['thai_lastname'] ?? $apiUser['last_name_th'] ?? ''),
         ];
         $profileImage = trim($apiUser['profile_image'] ?? '');
         if ($profileImage !== '') {
@@ -293,24 +284,18 @@ class UserModel extends Model
         return $uid ? $this->find($uid) : null;
     }
 
-    /**
-     * ชื่อ (ไทย) จาก field — รองรับทั้ง th_name และ thai_name (ตารางโคลนจาก researchrecord)
-     */
     private static function firstNameTh(array $user): string
     {
-        return trim($user['th_name'] ?? $user['thai_name'] ?? $user['tf_name'] ?? '');
+        return trim($user['tf_name'] ?? '');
     }
 
-    /**
-     * นามสกุล (ไทย) จาก field — thai_lastname
-     */
     private static function lastNameTh(array $user): string
     {
-        return trim($user['thai_lastname'] ?? $user['tl_name'] ?? '');
+        return trim($user['tl_name'] ?? '');
     }
 
     /**
-     * Get full name (Thai) — ใช้ ชื่อ + นามสกุล จาก th_name/thai_name + thai_lastname
+     * Get full name (Thai) — ใช้ ชื่อ + นามสกุล จาก tf_name + tl_name
      */
     public function getFullName(array $user): string
     {
@@ -319,13 +304,13 @@ class UserModel extends Model
         $full  = trim($first . ' ' . $last);
         if ($full !== '') return $full;
         $title = $user['title'] ?? '';
-        $firstName = $user['tf_name'] ?? $user['gf_name'] ?? '';
-        $lastName = $user['tl_name'] ?? $user['gl_name'] ?? '';
+        $firstName = $user['gf_name'] ?? '';
+        $lastName = $user['gl_name'] ?? '';
         return trim("{$title} {$firstName} {$lastName}");
     }
 
     /**
-     * ชื่อไทยเต็ม (ชื่อ + นามสกุล) สำหรับแสดงใน dropdown — จาก thai_name + thai_lastname
+     * ชื่อไทยเต็ม (ชื่อ + นามสกุล) สำหรับแสดงใน dropdown — จาก tf_name + tl_name
      */
     public function getFullNameThaiForDisplay(array $user): string
     {
@@ -435,8 +420,8 @@ class UserModel extends Model
         $builder = $this->like('email', $query)
             ->orLike('gf_name', $query)
             ->orLike('gl_name', $query)
-            ->orLike('thai_name', $query)
-            ->orLike('thai_lastname', $query);
+            ->orLike('tf_name', $query)
+            ->orLike('tl_name', $query);
 
         if ($programId) {
             $builder->where('program_id', $programId);

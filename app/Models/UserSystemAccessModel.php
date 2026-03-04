@@ -190,7 +190,7 @@ class UserSystemAccessModel extends Model
         if (!$system) {
             return [];
         }
-        $builder = $this->select('user_system_access.*, user.email, user.gf_name AS thai_name, user.gl_name AS thai_lastname, user.role')
+        $builder = $this->select('user_system_access.*, user.email, user.tf_name, user.tl_name, user.role')
             ->where('user_system_access.system_id', $system['id']);
         if ($this->db->fieldExists('user_email', 'user_system_access')) {
             $builder->join('user', 'user.email = user_system_access.user_email');

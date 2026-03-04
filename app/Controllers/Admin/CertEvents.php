@@ -570,8 +570,8 @@ class CertEvents extends BaseController
         $extraData = json_decode($recipient['extra_data'] ?? '{}', true);
 
         return [
-            'th_name'        => $recipient['recipient_name'],
-            'thai_lastname'  => '', // ชื่อเต็มอยู่ใน th_name แล้ว
+            'tf_name'        => $recipient['recipient_name'],
+            'tl_name'        => '',
             'login_uid'      => $recipient['recipient_id_no'] ?? '',
             'email'          => $recipient['recipient_email'] ?? '',
             'program_name'   => $extraData['program'] ?? '',

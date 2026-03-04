@@ -97,15 +97,15 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="th_name" class="form-label">ชื่อ (ไทย)</label>
-                        <input type="text" id="th_name" name="th_name" class="form-control"
-                            value="<?= old('th_name', $user['th_name'] ?? '') ?>">
+                        <label for="tf_name" class="form-label">ชื่อ (ไทย)</label>
+                        <input type="text" id="tf_name" name="tf_name" class="form-control"
+                            value="<?= old('tf_name', $user['tf_name'] ?? '') ?>">
                     </div>
                     
                     <div class="form-group">
-                        <label for="thai_lastname" class="form-label">นามสกุล (ไทย)</label>
-                        <input type="text" id="thai_lastname" name="thai_lastname" class="form-control"
-                            value="<?= old('thai_lastname', $user['thai_lastname'] ?? '') ?>">
+                        <label for="tl_name" class="form-label">นามสกุล (ไทย)</label>
+                        <input type="text" id="tl_name" name="tl_name" class="form-control"
+                            value="<?= old('tl_name', $user['tl_name'] ?? '') ?>">
                     </div>
                 </div>
 

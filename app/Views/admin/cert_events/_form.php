@@ -86,7 +86,7 @@ $isEdit = isset($event) && $event;
             <?php foreach ($signers as $signer): ?>
                 <option value="<?= $signer['uid'] ?>" 
                         <?= ($event['signer_id'] ?? old('signer_id')) == $signer['uid'] ? 'selected' : '' ?>>
-                    <?= esc($signer['th_name'] ?? $signer['name']) ?> 
+                    <?= esc($signer['tf_name'] ?? $signer['name']) ?> 
                     (<?= $signer['position'] ?? 'ไม่ระบุตำแหน่ง' ?>)
                 </option>
             <?php endforeach; ?>

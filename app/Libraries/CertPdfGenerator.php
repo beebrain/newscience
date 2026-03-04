@@ -103,7 +103,7 @@ class CertPdfGenerator
     protected function getFieldValue(string $field, array $student, array $request): ?string
     {
         $map = [
-            'student_name'    => ($student['th_name'] ?? '') . ' ' . ($student['thai_lastname'] ?? ''),
+            'student_name'    => ($student['tf_name'] ?? '') . ' ' . ($student['tl_name'] ?? ''),
             'student_id'      => $student['login_uid'] ?? '',
             'program_name'    => $this->resolveProgramName($student),
             'request_number'  => $request['request_number'] ?? '',

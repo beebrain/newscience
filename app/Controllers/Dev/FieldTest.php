@@ -61,8 +61,8 @@ class FieldTest extends BaseController
         $reflection->setAccessible(true);
 
         $testStudent = [
-            'th_name' => 'สมชาย',
-            'thai_lastname' => 'ใจดี',
+            'tf_name' => 'สมชาย',
+            'tl_name' => 'ใจดี',
             'login_uid' => '123456789',
             'program_name' => 'วิทยาการคอมพิวเตอร์',
         ];
@@ -211,7 +211,7 @@ class FieldTest extends BaseController
         $fieldNames = array_map(fn($f) => $f->name, $fields);
 
         // ฟิลด์ที่ CertPdfGenerator ใช้
-        $requiredFields = ['th_name', 'thai_lastname', 'login_uid', 'program_id']; // program_id ใช้สำหรับ resolve program_name
+        $requiredFields = ['tf_name', 'tl_name', 'login_uid', 'program_id']; // program_id ใช้สำหรับ resolve program_name
 
         $fieldStatus = [];
         foreach ($requiredFields as $field) {
@@ -266,8 +266,8 @@ class FieldTest extends BaseController
                 'student_id_in_recipient' => $recipient['student_id'] ?? null,
                 'student_found' => !empty($studentData),
                 'student_data_available' => $studentData ? [
-                    'th_name' => $studentData['th_name'] ?? 'NOT FOUND',
-                    'thai_lastname' => $studentData['thai_lastname'] ?? 'NOT FOUND',
+                    'tf_name' => $studentData['tf_name'] ?? 'NOT FOUND',
+                    'tl_name' => $studentData['tl_name'] ?? 'NOT FOUND',
                     'program_name' => $studentData['program_name'] ?? 'NOT FOUND',
                 ] : null,
             ];
@@ -314,8 +314,8 @@ class FieldTest extends BaseController
 
         // ข้อมูลจำลอง
         $student = [
-            'th_name' => 'ทดสอบ',
-            'thai_lastname' => 'ระบบ',
+            'tf_name' => 'ทดสอบ',
+            'tl_name' => 'ระบบ',
             'login_uid' => 'TEST001',
             'program_name' => 'วิทยาการคอมพิวเตอร์',
         ];

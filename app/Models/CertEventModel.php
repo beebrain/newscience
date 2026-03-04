@@ -30,7 +30,7 @@ class CertEventModel extends Model
      */
     public function getWithDetails(int $id): ?array
     {
-        return $this->select('cert_events.*, cert_templates.name_th as template_name, cert_templates.name_en as template_name_en, cert_templates.template_file, cert_templates.field_mapping, cert_templates.signature_x, cert_templates.signature_y, cert_templates.qr_x, cert_templates.qr_y, cert_templates.qr_size, user.thai_name as signer_name, user.thai_lastname as signer_lastname')
+        return $this->select('cert_events.*, cert_templates.name_th as template_name, cert_templates.name_en as template_name_en, cert_templates.template_file, cert_templates.field_mapping, cert_templates.signature_x, cert_templates.signature_y, cert_templates.qr_x, cert_templates.qr_y, cert_templates.qr_size, user.tf_name as signer_name, user.tl_name as signer_lastname')
             ->join('cert_templates', 'cert_templates.id = cert_events.template_id', 'left')
             ->join('user', 'user.uid = cert_events.signer_id', 'left')
             ->where('cert_events.id', $id)

@@ -33,8 +33,8 @@ class CertEventRecipientModel extends Model
     public function getByEvent(int $eventId): array
     {
         return $this->select('cert_event_recipients.*, 
-            student_user.th_name as student_firstname, 
-            student_user.thai_lastname as student_lastname,
+            student_user.tf_name as student_firstname, 
+            student_user.tl_name as student_lastname,
             student_user.email as student_email,
             student_user.login_uid as student_id_no,
             certificates.certificate_no,

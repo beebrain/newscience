@@ -70,7 +70,7 @@
                 <div class="cert-info-row"><span class="cert-info-label">ประเภท</span><span class="cert-info-value"><?= esc($template['name_th'] ?? '-') ?></span></div>
                 <div class="cert-info-row"><span class="cert-info-label">วันที่ออก</span><span class="cert-info-value"><?= esc(date('d/m/Y', strtotime($certificate['issued_date']))) ?></span></div>
                 <?php if ($signer): ?>
-                    <div class="cert-info-row"><span class="cert-info-label">ผู้ลงนาม</span><span class="cert-info-value"><?= esc(($signer['th_name'] ?? '') . ' ' . ($signer['thai_lastname'] ?? '')) ?></span></div>
+                    <div class="cert-info-row"><span class="cert-info-label">ผู้ลงนาม</span><span class="cert-info-value"><?= esc(($signer['tf_name'] ?? '') . ' ' . ($signer['tl_name'] ?? '')) ?></span></div>
                 <?php endif; ?>
             </div>
         <?php else: ?>

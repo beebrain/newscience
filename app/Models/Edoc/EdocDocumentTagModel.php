@@ -170,11 +170,11 @@ class EdocDocumentTagModel extends Model
 
         // Search in user table
         $users = $this->db->table('user')
-            ->select('email, thai_name, thai_lastname, gf_name, gl_name')
+            ->select('email, tf_name, tl_name, gf_name, gl_name')
             ->groupStart()
                 ->like('email', $query)
-                ->orLike('thai_name', $query)
-                ->orLike('thai_lastname', $query)
+                ->orLike('tf_name', $query)
+                ->orLike('tl_name', $query)
                 ->orLike('gf_name', $query)
                 ->orLike('gl_name', $query)
             ->groupEnd()
@@ -185,7 +185,7 @@ class EdocDocumentTagModel extends Model
             ->getResultArray();
 
         foreach ($users as $u) {
-            $name = trim(($u['thai_name'] ?? '') . ' ' . ($u['thai_lastname'] ?? ''));
+            $name = trim(($u['tf_name'] ?? '') . ' ' . ($u['tl_name'] ?? ''));
             if (empty($name)) {
                 $name = trim(($u['gf_name'] ?? '') . ' ' . ($u['gl_name'] ?? ''));
             }
@@ -198,11 +198,11 @@ class EdocDocumentTagModel extends Model
 
         // Search in student_user table
         $students = $this->db->table('student_user')
-            ->select('email, th_name, thai_lastname, gf_name, gl_name')
+            ->select('email, tf_name, tl_name, gf_name, gl_name')
             ->groupStart()
                 ->like('email', $query)
-                ->orLike('th_name', $query)
-                ->orLike('thai_lastname', $query)
+                ->orLike('tf_name', $query)
+                ->orLike('tl_name', $query)
                 ->orLike('gf_name', $query)
                 ->orLike('gl_name', $query)
             ->groupEnd()
@@ -213,7 +213,7 @@ class EdocDocumentTagModel extends Model
             ->getResultArray();
 
         foreach ($students as $s) {
-            $name = trim(($s['th_name'] ?? '') . ' ' . ($s['thai_lastname'] ?? ''));
+            $name = trim(($s['tf_name'] ?? '') . ' ' . ($s['tl_name'] ?? ''));
             if (empty($name)) {
                 $name = trim(($s['gf_name'] ?? '') . ' ' . ($s['gl_name'] ?? ''));
             }

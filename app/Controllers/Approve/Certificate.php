@@ -51,7 +51,7 @@ class Certificate extends BaseController
         $userRole = session()->get('admin_role');
 
         $request = $this->requestModel
-            ->select('cert_requests.*, cert_templates.name_th as template_name, cert_templates.level as template_level, student_user.th_name as student_name, student_user.thai_lastname as student_lastname')
+            ->select('cert_requests.*, cert_templates.name_th as template_name, cert_templates.level as template_level, student_user.tf_name as student_name, student_user.tl_name as student_lastname')
             ->join('cert_templates', 'cert_templates.id = cert_requests.template_id', 'left')
             ->join('student_user', 'student_user.id = cert_requests.student_id', 'left')
             ->where('cert_requests.id', $id)
@@ -139,7 +139,7 @@ class Certificate extends BaseController
         $userUid = (int) session()->get('admin_id');
 
         $approved = $this->requestModel
-            ->select('cert_requests.*, cert_templates.name_th as template_name, student_user.th_name as student_name, student_user.thai_lastname as student_lastname')
+            ->select('cert_requests.*, cert_templates.name_th as template_name, student_user.tf_name as student_name, student_user.tl_name as student_lastname')
             ->join('cert_templates', 'cert_templates.id = cert_requests.template_id', 'left')
             ->join('student_user', 'student_user.id = cert_requests.student_id', 'left')
             ->where('cert_requests.approved_by', $userUid)
@@ -155,7 +155,7 @@ class Certificate extends BaseController
     protected function getPendingForApprover(int $userUid, string $userRole): array
     {
         $builder = $this->requestModel
-            ->select('cert_requests.*, cert_templates.name_th as template_name, student_user.th_name as student_name, student_user.thai_lastname as student_lastname')
+            ->select('cert_requests.*, cert_templates.name_th as template_name, student_user.tf_name as student_name, student_user.tl_name as student_lastname')
             ->join('cert_templates', 'cert_templates.id = cert_requests.template_id', 'left')
             ->join('student_user', 'student_user.id = cert_requests.student_id', 'left')
             ->where('cert_requests.status', CertRequestModel::STATUS_VERIFIED);

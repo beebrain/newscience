@@ -123,7 +123,7 @@
                             <option value="">-- หรือเลือกจากรายชื่อ --</option>
                             <?php foreach ($students as $student): ?>
                                 <option value="<?= $student['id'] ?>">
-                                    <?= esc(($student['th_name'] ?? '') . ' ' . ($student['thai_lastname'] ?? '')) ?> (<?= $student['login_uid'] ?>)
+                                    <?= esc(($student['tf_name'] ?? '') . ' ' . ($student['tl_name'] ?? '')) ?> (<?= $student['login_uid'] ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>

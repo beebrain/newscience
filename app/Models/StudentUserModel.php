@@ -20,8 +20,6 @@ class StudentUserModel extends Model
         'gl_name',
         'tf_name',
         'tl_name',
-        'th_name',
-        'thai_lastname',
         'program_id',
         'profile_image',
         'role',
@@ -74,10 +72,8 @@ class StudentUserModel extends Model
             'title'         => trim($portalUser['title'] ?? ''),
             'gf_name'       => trim($portalUser['gf_name'] ?? $portalUser['first_name_en'] ?? $portalUser['firstname_en'] ?? ''),
             'gl_name'       => trim($portalUser['gl_name'] ?? $portalUser['last_name_en'] ?? $portalUser['lastname_en'] ?? ''),
-            'tf_name'       => trim($portalUser['tf_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? ''),
-            'tl_name'       => trim($portalUser['tl_name'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? ''),
-            'th_name'       => trim($portalUser['th_name'] ?? $portalUser['thai_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? ''),
-            'thai_lastname' => trim($portalUser['thai_lastname'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? ''),
+            'tf_name'       => trim($portalUser['tf_name'] ?? $portalUser['th_name'] ?? $portalUser['thai_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? ''),
+            'tl_name'       => trim($portalUser['tl_name'] ?? $portalUser['thai_lastname'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? ''),
         ];
 
         // อัปเดต login_uid เสมอถ้า Portal ส่งมา (รวมถึงกรณี login ครั้งแรกที่ login_uid ยังว่าง)
@@ -154,8 +150,8 @@ class StudentUserModel extends Model
      */
     public function getFullName(array $row): string
     {
-        $first = trim($row['th_name'] ?? $row['tf_name'] ?? '');
-        $last  = trim($row['thai_lastname'] ?? $row['tl_name'] ?? '');
+        $first = trim($row['tf_name'] ?? '');
+        $last  = trim($row['tl_name'] ?? '');
         $full  = trim($first . ' ' . $last);
         if ($full !== '') {
             return $full;
@@ -264,8 +260,8 @@ class StudentUserModel extends Model
         $builder = $this->like('email', $query)
             ->orLike('gf_name', $query)
             ->orLike('gl_name', $query)
-            ->orLike('th_name', $query)
-            ->orLike('thai_lastname', $query);
+            ->orLike('tf_name', $query)
+            ->orLike('tl_name', $query);
 
         if ($programId) {
             $builder->where('program_id', $programId);

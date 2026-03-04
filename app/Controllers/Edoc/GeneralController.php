@@ -72,7 +72,7 @@ class GeneralController extends EdocBaseController
         foreach ($users as $user) {
             $userEmail = strtolower(trim($user['email'] ?? ''));
             $user_id = $user['uid'];
-            $tagname = trim(($user['thai_name'] ?? '') . ' ' . ($user['thai_lastname'] ?? ''));
+            $tagname = trim(($user['tf_name'] ?? '') . ' ' . ($user['tl_name'] ?? ''));
 
             if (empty($userEmail)) {
                 continue;
@@ -173,7 +173,7 @@ class GeneralController extends EdocBaseController
         foreach ($users as $user) {
             $userEmail = strtolower(trim($user['email'] ?? ''));
             $user_id = $user['uid'];
-            $tagname = trim(($user['thai_name'] ?? '') . ' ' . ($user['thai_lastname'] ?? ''));
+            $tagname = trim(($user['tf_name'] ?? '') . ' ' . ($user['tl_name'] ?? ''));
 
             if (empty($userEmail)) {
                 continue;
@@ -366,7 +366,7 @@ class GeneralController extends EdocBaseController
             return $this->response->setStatusCode(404)->setBody('User not found');
         }
 
-        $tagname = trim(($user['thai_name'] ?? '') . ' ' . ($user['thai_lastname'] ?? ''));
+        $tagname = trim(($user['tf_name'] ?? '') . ' ' . ($user['tl_name'] ?? ''));
         $userEmail = strtolower(trim($user['email'] ?? ''));
         $hasAccess = false;
 
