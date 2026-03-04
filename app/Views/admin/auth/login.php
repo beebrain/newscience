@@ -4,29 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0f172a">
-    <title>Admin Login | คณะวิทยาศาสตร์และเทคโนโลยี</title>
+    <meta name="theme-color" content="#b8860b">
+    <title>Teacher and Staff Login | คณะวิทยาศาสตร์และเทคโนโลยี</title>
     <?php helper('site'); ?>
     <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
-
     <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>">
-
     <style>
         :root {
-            --primary: #f59e0b;
-            /* Amber 500 */
-            --primary-hover: #d97706;
-            /* Amber 600 */
-            --bg-dark: #0f172a;
-            /* Slate 900 */
-            --bg-card: rgba(30, 41, 59, 0.7);
-            /* Slate 800/70 */
-            --text-main: #f8fafc;
-            /* Slate 50 */
-            --text-muted: #94a3b8;
-            /* Slate 400 */
-            --border: rgba(255, 255, 255, 0.1);
-            --border-focus: rgba(245, 158, 11, 0.5);
+            --primary: #b8860b;
+            --primary-hover: #996500;
+            --gold: #d4af37;
+            --gold-light: #f5ecd8;
+            --bg: #faf6ef;
+            --card: #fffef9;
+            --text: #4a3c20;
+            --border: #e5d4a1;
+            --shadow: 0 4px 6px -1px rgba(184, 134, 11, 0.1), 0 10px 24px -5px rgba(184, 134, 11, 0.08);
+            --shadow-lg: 0 20px 40px -10px rgba(184, 134, 11, 0.15);
         }
 
         * {
@@ -37,330 +31,314 @@
 
         body {
             font-family: 'Sarabun', sans-serif;
-            background-color: var(--bg-dark);
-            background-image:
-                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
-                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
-                radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 1.5rem;
-            color: var(--text-main);
+            color: var(--text);
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 175, 55, 0.22), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(184, 134, 11, 0.12), transparent),
+                radial-gradient(ellipse 50% 30% at 0% 80%, rgba(212, 175, 55, 0.15), transparent);
         }
 
-        .login-container {
+        .page-wrap {
             width: 100%;
-            max-width: 420px;
-            perspective: 1000px;
+            max-width: 440px;
         }
 
-        .glass-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 2.25rem 2rem;
+            box-shadow: var(--shadow), 0 0 0 1px rgba(212, 175, 55, 0.06);
             border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 2.5rem 2rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.6s ease-out;
+            animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(24px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        .logo-area {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 2rem;
+        .brand {
+            text-align: center;
+            margin-bottom: 1.75rem;
         }
 
-        .logo-box {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+        .brand-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 1rem;
+            background: linear-gradient(145deg, var(--gold), var(--primary), var(--primary-hover));
             border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3);
+            box-shadow: 0 8px 24px -4px rgba(184, 134, 11, 0.4), 0 0 0 1px rgba(212, 175, 55, 0.2) inset;
+            animation: iconIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
         }
 
-        .logo-box svg {
-            width: 36px;
-            height: 36px;
-            color: white;
+        .brand-icon svg {
+            width: 28px;
+            height: 28px;
+            color: #1a1510;
+            filter: drop-shadow(0 1px 0 rgba(255,255,255,0.4));
+            animation: iconPulse 2.5s ease-in-out infinite;
         }
 
-        .header-text {
-            text-align: center;
-            margin-bottom: 2.5rem;
+        @keyframes iconIn {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
         }
 
-        .header-text h1 {
-            font-size: 1.75rem;
+        @keyframes iconPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.05); }
+        }
+
+        .brand h1 {
+            font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(to right, #fff, #cbd5e1);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.02em;
+            animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
         }
 
-        .header-text p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
+        .brand p {
+            font-size: 0.9rem;
+            color: #6b5b45;
+            animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
         }
 
-        .form-group {
-            margin-bottom: 1.5rem;
-            position: relative;
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .form-label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            color: #cbd5e1;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .input-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            pointer-events: none;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 0.875rem 1rem 0.875rem 2.75rem;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-            transition: all 0.2s;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--border-focus);
-            background: rgba(15, 23, 42, 0.8);
-            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
-        }
-
-        .form-control::placeholder {
-            color: #475569;
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(to right, var(--primary), var(--primary-hover));
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.2);
-            margin-top: 0.5rem;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3);
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 2rem 0 1.5rem;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .divider span {
-            padding: 0 1rem;
-        }
-
-        .sso-grid {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .btn-sso {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            padding: 0.875rem;
-            border-radius: 12px;
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .btn-sso:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .alert {
-            padding: 1rem;
+            padding: 0.875rem 1rem;
             border-radius: 12px;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.875rem;
             display: flex;
-            gap: 0.75rem;
-            align-items: start;
+            gap: 0.625rem;
+            align-items: flex-start;
             line-height: 1.5;
         }
 
         .alert-error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
         }
 
         .alert-success {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.2);
-            color: #86efac;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #15803d;
         }
 
-        .back-link {
-            text-align: center;
-            margin-top: 2rem;
+        .alert svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
         }
 
-        .back-link a {
-            color: var(--text-muted);
+        .btn-portal {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.625rem;
+            padding: 1rem 1.25rem;
+            background: linear-gradient(145deg, var(--gold), var(--primary), var(--primary-hover));
+            border: none;
+            border-radius: 14px;
+            color: #1a1510;
+            font-weight: 600;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.25);
+            font-size: 1rem;
             text-decoration: none;
-            font-size: 0.9rem;
-            transition: color 0.2s;
+            cursor: pointer;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+            box-shadow: 0 4px 16px -2px rgba(184, 134, 11, 0.4), 0 0 0 1px rgba(212, 175, 55, 0.25) inset;
+            animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
         }
 
-        .back-link a:hover {
-            color: white;
+        .btn-portal:hover {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 10px 28px -4px rgba(184, 134, 11, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.3) inset;
+        }
+
+        .btn-portal:active {
+            transform: translateY(0) scale(0.99);
+            transition-duration: 0.1s;
+        }
+
+        .btn-portal svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .back {
+            text-align: center;
+            margin-top: 1.75rem;
+            animation: fadeIn 0.5s ease-out 0.55s both;
+        }
+
+        .back a {
+            color: #6b5b45;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+
+        .back a:hover {
+            color: var(--primary);
+            transform: translateX(-2px);
+        }
+
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            animation: fadeIn 0.5s ease-out 0.65s both;
+        }
+
+        .features span {
+            font-size: 0.75rem;
+            color: #8b7355;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .features span:hover {
+            color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .features span::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+
+        .alert {
+            animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+        }
+
+        .logout-iframes {
+            width: 0;
+            height: 0;
+            overflow: hidden;
+            position: absolute;
+            visibility: hidden;
         }
     </style>
 </head>
 
 <body>
-    <div class="login-container">
-        <div class="glass-card">
-            <div class="logo-area">
-                <div class="logo-box">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <div class="page-wrap">
+        <div class="card">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 2L2 7l10 5 10-5-10-5z" />
                         <path d="M2 17l10 5 10-5" />
                         <path d="M2 12l10 5 10-5" />
                     </svg>
                 </div>
+                <h1>Teacher and Staff Login</h1>
+                <p>เข้าสู่ระบบอาจารย์และบุคลากร คณะวิทยาศาสตร์และเทคโนโลยี</p>
             </div>
 
-            <div class="header-text">
-                <h1>Admin Login</h1>
-                <p>Access your university management dashboard</p>
-            </div>
-
-            <!-- Alerts -->
             <?php if (session()->getFlashdata('error')): ?>
                 <div class="alert alert-error">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="8" x2="12" y2="12"></line>
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                     </svg>
-                    <span><?= session()->getFlashdata('error') ?></span>
+                    <span><?= esc(session()->getFlashdata('error')) ?></span>
                 </div>
             <?php endif; ?>
 
             <?php if (session()->getFlashdata('success')): ?>
                 <div class="alert alert-success">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                     </svg>
-                    <span><?= session()->getFlashdata('success') ?></span>
+                    <span><?= esc(session()->getFlashdata('success')) ?></span>
                 </div>
             <?php endif; ?>
 
-            <!-- Silent Logout Logic -->
             <?php if (isset($_GET['logout']) && $_GET['logout'] === '1'): ?>
                 <div class="alert alert-success">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                     </svg>
                     <span>ออกจากระบบแล้ว</span>
                 </div>
-                <?php
-                $edocSso = config(\Config\EdocSso::class);
-                if ($edocSso->enabled && $edocSso->logoutUrl !== '') {
-                    echo '<iframe src="' . esc($edocSso->logoutUrl) . '" style="width:0;height:0;border:0;position:absolute;visibility:hidden;"></iframe>';
-                }
-                $researchSso = config(\Config\ResearchRecordSso::class);
-                if ($researchSso->enabled && $researchSso->logoutUrl !== '') {
-                    echo '<iframe src="' . esc($researchSso->logoutUrl) . '" style="width:0;height:0;border:0;position:absolute;visibility:hidden;"></iframe>';
-                }
-                ?>
+                <div class="logout-iframes" aria-hidden="true">
+                    <?php
+                    $edocSso = config(\Config\EdocSso::class);
+                    if ($edocSso->enabled && $edocSso->logoutUrl !== '') {
+                        echo '<iframe src="' . esc($edocSso->logoutUrl) . '" title="Edoc logout"></iframe>';
+                    }
+                    $researchSso = config(\Config\ResearchRecordSso::class);
+                    if ($researchSso->enabled && $researchSso->logoutUrl !== '') {
+                        echo '<iframe src="' . esc($researchSso->logoutUrl) . '" title="Research logout"></iframe>';
+                    }
+                    ?>
+                </div>
             <?php endif; ?>
 
-            <div style="margin-top: 1.5rem;">
-                <?php
-                $uruOAuth = config(\Config\UruPortalOAuth::class);
-                if ($uruOAuth->enabled):
-                ?>
-                    <a href="<?= base_url('oauth/login') ?>" class="btn-primary" style="text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 0.75rem;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                            <polyline points="10 17 15 12 10 7"></polyline>
-                            <line x1="15" y1="12" x2="3" y2="12"></line>
-                        </svg>
-                        เข้าสู่ระบบด้วย URU Portal
-                    </a>
-                <?php else: ?>
-                    <div class="alert alert-error">
-                        <span>การเข้าสู่ระบบผ่าน URU Portal ยังไม่เปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ</span>
-                    </div>
-                <?php endif; ?>
+            <?php
+            $uruOAuth = config(\Config\UruPortalOAuth::class);
+            if ($uruOAuth->enabled):
+            ?>
+                <a href="<?= base_url('oauth/login') ?>" class="btn-portal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                    </svg>
+                    เข้าสู่ระบบด้วย URU Portal
+                </a>
+            <?php else: ?>
+                <div class="alert alert-error">
+                    <span>การเข้าสู่ระบบผ่าน URU Portal ยังไม่เปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ</span>
+                </div>
+            <?php endif; ?>
+
+            <div class="back">
+                <a href="<?= base_url() ?>">← กลับหน้าแรก</a>
             </div>
 
-            <div class="back-link">
-                <a href="<?= base_url() ?>">← Back to Website</a>
+            <div class="features">
+                <span>Dashboard</span>
+                <span>E-Document</span>
+                <span>E-Certificate</span>
             </div>
         </div>
     </div>

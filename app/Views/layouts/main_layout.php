@@ -281,8 +281,12 @@
                         <a href="<?= base_url('admin/logout') ?>" class="nav__link nav__link--logout">ออกจากระบบ</a>
                     </li>
                     <?php else: ?>
-                    <li>
-                        <a href="<?= base_url('admin/login') ?>" class="nav__link nav__link--login">เข้าสู่ระบบ</a>
+                    <li class="nav__item--has-dropdown">
+                        <a href="#" class="nav__link nav__link--login">เข้าสู่ระบบ <?= $navSvg ?></a>
+                        <ul class="nav__dropdown">
+                            <li><a href="<?= base_url('admin/login') ?>" class="nav__dropdown-link">สำหรับอาจารย์/บุคลากร</a></li>
+                            <li><a href="<?= base_url('student/login') ?>" class="nav__dropdown-link">สำหรับนักศึกษา</a></li>
+                        </ul>
                     </li>
                     <?php endif; ?>
                 </ul>
@@ -345,7 +349,9 @@
                 <li><a href="<?= base_url('dashboard') ?>" class="mobile-nav__link" style="padding-left: 2rem;"><?= esc(session()->get('admin_name') ?: session()->get('admin_email')) ?> (Dashboard)</a></li>
                 <li><a href="<?= base_url('admin/logout') ?>" class="mobile-nav__link" style="padding-left: 2rem;">ออกจากระบบ</a></li>
             <?php else: ?>
-                <li><a href="<?= base_url('admin/login') ?>" class="mobile-nav__link">เข้าสู่ระบบ</a></li>
+                <li class="mobile-nav__header-item">เข้าสู่ระบบ</li>
+                <li><a href="<?= base_url('admin/login') ?>" class="mobile-nav__link" style="padding-left: 2rem;">สำหรับอาจารย์/บุคลากร</a></li>
+                <li><a href="<?= base_url('student/login') ?>" class="mobile-nav__link" style="padding-left: 2rem;">สำหรับนักศึกษา</a></li>
             <?php endif; ?>
         </ul>
     </div>

@@ -58,50 +58,55 @@
             <span class="section-header__subtitle">พันธกิจ</span>
             <h2 class="section-header__title">ภารกิจหลักของคณะ</h2>
         </div>
-
-        <div class="grid grid-2">
-            <div class="card animate-on-scroll">
-                <div class="card__content">
-                    <div class="mission-number">1</div>
-                    <h3 class="card__title">ผลิตบัณฑิต</h3>
-                    <p class="card__excerpt">
-                        ผลิตบัณฑิตที่มีคุณภาพตามมาตรฐานวิชาชีพ มีความรู้ความสามารถด้านวิทยาศาสตร์และเทคโนโลยี
-                    </p>
-                </div>
-            </div>
-
-            <div class="card animate-on-scroll">
-                <div class="card__content">
-                    <div class="mission-number">2</div>
-                    <h3 class="card__title">วิจัยและพัฒนา</h3>
-                    <p class="card__excerpt">
-                        วิจัยและพัฒนาองค์ความรู้ด้านวิทยาศาสตร์และเทคโนโลยี เพื่อตอบสนองความต้องการของท้องถิ่นและประเทศชาติ
-                    </p>
-                </div>
-            </div>
-
-            <div class="card animate-on-scroll">
-                <div class="card__content">
-                    <div class="mission-number">3</div>
-                    <h3 class="card__title">บริการวิชาการ</h3>
-                    <p class="card__excerpt">
-                        บริการวิชาการแก่สังคมและชุมชน เพื่อยกระดับคุณภาพชีวิตของประชาชนในท้องถิ่น
-                    </p>
-                </div>
-            </div>
-
-            <div class="card animate-on-scroll">
-                <div class="card__content">
-                    <div class="mission-number">4</div>
-                    <h3 class="card__title">ทำนุบำรุงศิลปวัฒนธรรม</h3>
-                    <p class="card__excerpt">
-                        ส่งเสริมและทำนุบำรุงศิลปวัฒนธรรมท้องถิ่นและของชาติ
-                    </p>
-                </div>
-            </div>
-        </div>
+        <?php
+        $missionItems = !empty($mission) ? array_filter(array_map('trim', explode("\n", $mission))) : [];
+        ?>
+        <?php if (!empty($missionItems)): ?>
+            <ol class="about-list about-list--mission animate-on-scroll">
+                <?php foreach ($missionItems as $item): ?>
+                    <li class="about-list__item"><?= esc($item) ?></li>
+                <?php endforeach; ?>
+            </ol>
+        <?php else: ?>
+            <p class="section-description">ผลิตบัณฑิต วิจัยและบริการวิชาการ ทำนุบำรุงศิลปวัฒนธรรม</p>
+        <?php endif; ?>
     </div>
 </section>
+
+<!-- Policy Section -->
+<?php if (!empty($policy)): ?>
+<section class="section section-light">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-header__subtitle">นโยบาย</span>
+            <h2 class="section-header__title">นโยบายคณะ</h2>
+        </div>
+        <?php $policyItems = array_filter(array_map('trim', explode("\n", $policy))); ?>
+        <ol class="about-list about-list--policy animate-on-scroll">
+            <?php foreach ($policyItems as $item): ?>
+                <li class="about-list__item"><?= esc($item) ?></li>
+            <?php endforeach; ?>
+        </ol>
+    </div>
+</section>
+<?php endif; ?>
+
+<!-- Strategy Section -->
+<?php if (!empty($strategy_title) || !empty($strategies)): ?>
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-header__subtitle">ยุทธศาสตร์</span>
+            <h2 class="section-header__title"><?= esc($strategy_title ?: 'ยุทธศาสตร์ในการบริหารคณะ') ?></h2>
+        </div>
+        <ul class="about-list about-list--strategy animate-on-scroll">
+            <?php foreach ($strategies ?? [] as $s): ?>
+                <li class="about-list__item"><?= esc($s) ?></li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+</section>
+<?php endif; ?>
 
 <!-- Stats Section -->
 <section class="section section-primary">
@@ -324,6 +329,23 @@
         color: var(--text-secondary);
         font-size: 0.9rem;
     }
+
+    .about-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1rem;
+        max-width: 800px;
+    }
+    .about-list--mission { list-style: decimal; padding-left: 1.5rem; }
+    .about-list--policy { list-style: decimal; padding-left: 1.5rem; }
+    .about-list--strategy { list-style: disc; padding-left: 1.5rem; }
+    .about-list__item {
+        padding: 0.5rem 0;
+        line-height: 1.6;
+        color: var(--text-primary, #1e293b);
+    }
+    .about-list--mission .about-list__item,
+    .about-list--policy .about-list__item { margin-bottom: 0.5rem; }
 
     /* Executives Section */
     .executives-section {

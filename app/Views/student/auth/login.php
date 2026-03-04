@@ -4,21 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#0d9488">
     <title>Student Portal - Login | คณะวิทยาศาสตร์และเทคโนโลยี</title>
     <?php helper('site'); ?>
     <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
     <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>">
     <style>
         :root {
-            --primary: #eab308;
-            --primary-hover: #ca8a04;
-            --bg-dark: #0f172a;
-            --bg-card: rgba(30, 41, 59, 0.85);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: rgba(255, 255, 255, 0.1);
-            --border-focus: rgba(234, 179, 8, 0.5);
+            --primary: #0d9488;
+            --primary-hover: #0f766e;
+            --primary-light: #ccfbf1;
+            --accent: #f59e0b;
+            --bg: #f0fdfa;
+            --card: #ffffff;
+            --text: #134e4a;
+            --text-muted: #5eead4;
+            --border: #99f6e4;
+            --shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.08), 0 10px 20px -5px rgba(13, 148, 136, 0.06);
+            --shadow-lg: 0 20px 40px -10px rgba(13, 148, 136, 0.15);
         }
 
         * {
@@ -29,208 +32,425 @@
 
         body {
             font-family: 'Sarabun', sans-serif;
-            background: var(--bg-dark);
-            background-image: radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 1.5rem;
-            color: var(--text-main);
+            color: var(--text);
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(13, 148, 136, 0.25), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(245, 158, 11, 0.12), transparent),
+                radial-gradient(ellipse 50% 30% at 0% 80%, rgba(13, 148, 136, 0.15), transparent);
         }
 
-        .login-container {
+        .page-wrap {
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
         }
 
-        .glass-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(16px);
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 2.25rem 2rem;
+            box-shadow: var(--shadow);
             border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 2.5rem 2rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .logo-area {
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(24px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .brand {
             text-align: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.75rem;
         }
 
-        .logo-box {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto;
-            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+        .brand-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 1rem;
+            background: linear-gradient(145deg, var(--primary), var(--primary-hover));
             border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 8px 20px -4px rgba(13, 148, 136, 0.35);
+            animation: iconIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
         }
 
-        .logo-box svg {
-            width: 36px;
-            height: 36px;
-            color: #1a1a1a;
+        .brand-icon svg {
+            width: 28px;
+            height: 28px;
+            color: white;
+            animation: iconPulse 2.5s ease-in-out infinite;
         }
 
-        .header-text {
-            text-align: center;
-            margin-bottom: 1.5rem;
+        @keyframes iconIn {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
         }
 
-        .header-text h1 {
+        @keyframes iconPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.05); }
+        }
+
+        .brand h1 {
             font-size: 1.5rem;
             font-weight: 700;
+            color: var(--text);
             margin-bottom: 0.25rem;
-            color: var(--text-main);
+            letter-spacing: -0.02em;
+            animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
         }
 
-        .header-text p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-            color: #cbd5e1;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.15);
-        }
-
-        .form-control::placeholder {
+        .brand p {
+            font-size: 0.9rem;
             color: #64748b;
+            animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
         }
 
-        .btn-primary {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(to right, var(--primary), var(--primary-hover));
-            border: none;
-            border-radius: 12px;
-            color: #1a1a1a;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 0.5rem;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 15px -3px rgba(234, 179, 8, 0.3);
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .alert {
-            padding: 1rem;
+            padding: 0.875rem 1rem;
             border-radius: 12px;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.875rem;
+            display: flex;
+            gap: 0.625rem;
+            align-items: flex-start;
+            line-height: 1.5;
         }
 
         .alert-error {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
         }
 
         .alert-success {
-            background: rgba(34, 197, 94, 0.15);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            color: #86efac;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #15803d;
         }
 
-        .back-link {
-            text-align: center;
-            margin-top: 1.5rem;
+        .alert svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
         }
 
-        .back-link a {
-            color: var(--text-muted);
-            text-decoration: none;
-        }
-
-        .back-link a:hover {
+        .btn-portal {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.625rem;
+            padding: 1rem 1.25rem;
+            background: linear-gradient(145deg, var(--primary), var(--primary-hover));
+            border: none;
+            border-radius: 14px;
             color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+            box-shadow: 0 4px 14px -2px rgba(13, 148, 136, 0.4);
+            animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
+        }
+
+        .btn-portal:hover {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 8px 24px -4px rgba(13, 148, 136, 0.45);
+        }
+
+        .btn-portal:active {
+            transform: translateY(0) scale(0.99);
+            transition-duration: 0.1s;
+        }
+
+        .btn-portal svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0 1rem;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            animation: fadeIn 0.5s ease-out 0.5s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
+        }
+
+        .divider span {
+            padding: 0 0.75rem;
+        }
+
+        .toggle-link {
+            display: block;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s, transform 0.2s;
+            animation: fadeIn 0.5s ease-out 0.55s both;
+        }
+
+        .toggle-link:hover {
+            transform: scale(1.02);
+        }
+
+        .toggle-link:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        .email-form {
+            margin-top: 0.5rem;
+            animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .email-form.hidden {
+            display: none;
+        }
+
+        .field {
+            margin-bottom: 1.125rem;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 0.375rem;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            color: var(--text);
+            background: #f8fafc;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .field input::placeholder {
+            color: #94a3b8;
+        }
+
+        .field input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: linear-gradient(145deg, var(--primary), var(--primary-hover));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 0.25rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 4px 14px -2px rgba(13, 148, 136, 0.4);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .back {
+            text-align: center;
+            margin-top: 1.75rem;
+            animation: fadeIn 0.5s ease-out 0.6s both;
+        }
+
+        .back a {
+            color: #64748b;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+
+        .back a:hover {
+            color: var(--primary);
+            transform: translateX(-2px);
+        }
+
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #f1f5f9;
+            animation: fadeIn 0.5s ease-out 0.7s both;
+        }
+
+        .features span {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .features span:hover {
+            color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .features span::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+
+        .alert {
+            animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
         }
     </style>
 </head>
 
 <body>
-    <div class="login-container">
-        <div class="glass-card">
-            <div class="logo-area">
-                <div class="logo-box">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <div class="page-wrap">
+        <div class="card">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                         <circle cx="12" cy="7" r="4" />
                     </svg>
                 </div>
-            </div>
-            <div class="header-text">
                 <h1>Student Portal</h1>
-                <p>เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน</p>
+                <p>เข้าสู่ระบบนักศึกษา คณะวิทยาศาสตร์และเทคโนโลยี</p>
             </div>
+
             <?php if (session()->getFlashdata('error')): ?>
-                <div class="alert alert-error"><?= esc(session()->getFlashdata('error')) ?></div>
+                <div class="alert alert-error">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span><?= esc(session()->getFlashdata('error')) ?></span>
+                </div>
             <?php endif; ?>
             <?php if (session()->getFlashdata('success')): ?>
-                <div class="alert alert-success"><?= esc(session()->getFlashdata('success')) ?></div>
+                <div class="alert alert-success">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span><?= esc(session()->getFlashdata('success')) ?></span>
+                </div>
             <?php endif; ?>
-            <form method="post" action="<?= base_url('student/login') ?>">
-                <?= csrf_field() ?>
-                <div class="form-group">
-                    <label class="form-label" for="login">อีเมล</label>
-                    <input type="text" id="login" name="login" class="form-control" value="<?= esc(old('login')) ?>" placeholder="อีเมล@example.com" required autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="password">รหัสผ่าน</label>
-                    <input type="password" id="password" name="password" class="form-control" required autocomplete="current-password" placeholder="••••••••">
-                </div>
-                <button type="submit" class="btn-primary">เข้าสู่ระบบ</button>
-            </form>
 
             <?php
             $uruOAuth = config(\Config\UruPortalOAuth::class);
             if ($uruOAuth->enabled):
             ?>
-                <div style="margin-top: 1.5rem; text-align: center;">
-                    <div style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.75rem;">หรือเข้าสู่ระบบด้วย</div>
-                    <a href="<?= base_url('oauth/login') ?>" class="btn-primary" style="text-decoration: none; display: inline-flex; justify-content: center; align-items: center; gap: 0.75rem; width: 100%;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                            <polyline points="10 17 15 12 10 7"></polyline>
-                            <line x1="15" y1="12" x2="3" y2="12"></line>
-                        </svg>
-                        เข้าสู่ระบบด้วย URU Portal
-                    </a>
+                <a href="<?= base_url('oauth/login') ?>" class="btn-portal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                    </svg>
+                    เข้าสู่ระบบด้วย URU Portal
+                </a>
+
+                <div class="divider"><span>หรือ</span></div>
+                <a href="#" class="toggle-link" id="toggleEmailForm" aria-expanded="false">เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน</a>
+            <?php endif; ?>
+
+            <div class="email-form <?= $uruOAuth->enabled ? 'hidden' : '' ?>" id="emailFormWrap">
+                <form method="post" action="<?= base_url('student/login') ?>">
+                    <?= csrf_field() ?>
+                    <div class="field">
+                        <label for="login">อีเมล</label>
+                        <input type="text" id="login" name="login" value="<?= esc(old('login')) ?>" placeholder="อีเมล@example.com" required autocomplete="username">
+                    </div>
+                    <div class="field">
+                        <label for="password">รหัสผ่าน</label>
+                        <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn-submit">เข้าสู่ระบบ</button>
+                </form>
+            </div>
+
+            <?php if (!$uruOAuth->enabled): ?>
+                <div class="alert alert-error" style="margin-top: 1rem;">
+                    <span>การเข้าสู่ระบบผ่าน URU Portal ยังไม่เปิดใช้งาน กรุณาใช้อีเมลและรหัสผ่านด้านบน หรือติดต่อผู้ดูแลระบบ</span>
                 </div>
             <?php endif; ?>
-            <div class="back-link">
+
+            <div class="back">
                 <a href="<?= base_url() ?>">← กลับหน้าแรก</a>
+            </div>
+
+            <div class="features">
+                <span>E-Certificate</span>
+                <span>E-Barcode</span>
             </div>
         </div>
     </div>
+
+    <script>
+        (function() {
+            var toggle = document.getElementById('toggleEmailForm');
+            var wrap = document.getElementById('emailFormWrap');
+            if (toggle && wrap) {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    wrap.classList.toggle('hidden');
+                    toggle.setAttribute('aria-expanded', wrap.classList.contains('hidden') ? 'false' : 'true');
+                    toggle.textContent = wrap.classList.contains('hidden') ? 'เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน' : 'ซ่อนแบบฟอร์มอีเมล';
+                });
+            }
+        })();
+    </script>
 </body>
 
 </html>

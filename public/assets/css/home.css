@@ -1087,3 +1087,155 @@
         transition: none;
     }
 }
+
+/* ================================
+   QR Code Generator Modal
+   ================================ */
+.qr-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.qr-modal[hidden] {
+    display: none;
+}
+
+.qr-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.qr-modal__box {
+    position: relative;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    max-width: 420px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.qr-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-gray-200);
+}
+
+.qr-modal__title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.qr-modal__close {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--color-gray-500);
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.qr-modal__close:hover {
+    background: var(--color-gray-100);
+    color: var(--color-dark);
+}
+
+.qr-modal__body {
+    padding: 1.25rem;
+}
+
+.qr-modal__field {
+    margin-bottom: 1rem;
+}
+
+.qr-modal__field label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-dark);
+    margin-bottom: 0.375rem;
+}
+
+.qr-modal__input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-gray-300);
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.qr-modal__input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.2);
+}
+
+#qr-generate-btn {
+    margin-bottom: 1.25rem;
+}
+
+.qr-output-wrap {
+    text-align: center;
+    padding: 1rem 0;
+    border-top: 1px solid var(--color-gray-200);
+}
+
+.qr-output-inner {
+    display: inline-block;
+}
+
+.qr-canvas-wrap {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 0.75rem;
+}
+
+.qr-canvas-wrap canvas {
+    display: block;
+    border-radius: 8px;
+}
+
+.qr-center-logo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30%;
+    height: 30%;
+    object-fit: contain;
+    background: transparent;
+    border-radius: 6px;
+    padding: 0;
+}
+
+.qr-center-logo--source-only {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.qr-output-name {
+    font-size: 0.875rem;
+    color: var(--color-gray-600);
+    margin: 0 0 0.75rem 0;
+}
+
+.qr-output-wrap .btn {
+    margin-top: 0.5rem;
+}

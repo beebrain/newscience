@@ -145,6 +145,9 @@ $routes->group('student-admin', ['filter' => 'studentadmin'], function ($routes)
 
 // Admin Routes (protected by adminauth + ตรวจสิทธิ์แต่ละส่วนจาก user_system_access)
 $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], function ($routes) {
+    // Executive Dashboard (คณบดี/รองคณบดี — ตรวจ role ใน controller)
+    $routes->get('executive-dashboard', 'Admin\ExecutiveDashboard::index');
+
     // จัดการผู้ใช้ (Super_admin และ Faculty_admin)
     $routes->get('users', 'Admin\UserManagement::index');
 
@@ -280,6 +283,19 @@ $routes->group('utility', ['filter' => ['adminauth', 'adminsystemaccess']], func
 
 // API Routes for AJAX
 $routes->group('api', function ($routes) {
+    // Executive Dashboard stats (admin/super_admin only — ตรวจใน controller)
+    $routes->group('executive', ['filter' => 'adminauth'], function ($routes) {
+        $routes->get('overview', 'Api\ExecutiveStats::overview');
+        $routes->get('personnel', 'Api\ExecutiveStats::personnel');
+        $routes->get('programs', 'Api\ExecutiveStats::programs');
+        $routes->get('news', 'Api\ExecutiveStats::news');
+        $routes->get('edoc', 'Api\ExecutiveStats::edoc');
+        $routes->get('certificates', 'Api\ExecutiveStats::certificates');
+        $routes->get('research', 'Api\ExecutiveStats::research');
+        $routes->get('pageviews', 'Api\ExecutiveStats::pageviews');
+        $routes->get('program-summary', 'Api\ExecutiveStats::programSummary');
+    });
+
     // News
     $routes->get('news', 'Api::news');
     $routes->get('news/featured', 'Api::newsFeatured');

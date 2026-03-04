@@ -68,6 +68,18 @@ class Pages extends BaseController
             'philosophy' => $siteInfo['philosophy_th'] ?? '',
             'identity' => $siteInfo['identity_th'] ?? '',
             'history' => $siteInfo['history_th'] ?? '',
+            'policy' => $siteInfo['policy_th'] ?? '',
+            'strategy_title' => $siteInfo['strategy_title_th'] ?? '',
+            'strategies' => array_filter([
+                $siteInfo['strategy_1_th'] ?? '',
+                $siteInfo['strategy_2_th'] ?? '',
+                $siteInfo['strategy_3_th'] ?? '',
+                $siteInfo['strategy_4_th'] ?? '',
+                $siteInfo['strategy_5_th'] ?? '',
+                $siteInfo['strategy_6_th'] ?? '',
+                $siteInfo['strategy_7_th'] ?? '',
+                $siteInfo['strategy_8_th'] ?? '',
+            ]),
             'departments' => $this->organizationUnitModel->getOrdered(),
         ]);
 

@@ -42,6 +42,7 @@ class Filters extends BaseFilters
         'programadmin'  => \App\Filters\ProgramAdminFilter::class,
         'certapprover'  => \App\Filters\CertApproverFilter::class,
         'edocauth'      => \App\Filters\EdocAuthFilter::class,
+        'pageview'      => \App\Filters\PageViewFilter::class,
     ];
 
     /**
@@ -66,6 +67,7 @@ class Filters extends BaseFilters
             'pagecache',   // Web Page Caching
             'performance', // Performance Metrics
             'toolbar',     // Debug Toolbar
+            'pageview',    // Page view tracking for Executive Dashboard (skips API/assets inside filter)
         ],
     ];
 

@@ -66,6 +66,7 @@
                     <option value="social" <?= old('category') === 'social' ? 'selected' : '' ?>>โซเชียลมีเดีย</option>
                     <option value="seo" <?= old('category') === 'seo' ? 'selected' : '' ?>>SEO</option>
                     <option value="appearance" <?= old('category') === 'appearance' ? 'selected' : '' ?>>การแสดงผล</option>
+                    <option value="about" <?= old('category') === 'about' ? 'selected' : '' ?>>เกี่ยวกับคณะ</option>
                     <option value="custom" <?= old('category') === 'custom' ? 'selected' : '' ?>>กำหนดเอง</option>
                 </select>
             </div>

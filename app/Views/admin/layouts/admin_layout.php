@@ -49,6 +49,13 @@ use App\Libraries\AccessControl; ?>
                     สลับไปหน้า Dashboard
                 </a>
 
+                <?php $sidebarRole = session()->get('admin_role'); if ($sidebarAdminId && ($sidebarRole === 'admin' || $sidebarRole === 'super_admin')): ?>
+                <a href="<?= base_url('admin/executive-dashboard') ?>" class="<?= (uri_string() == 'admin/executive-dashboard') ? 'active' : '' ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18" /><path d="M18 9v4" /><path d="M13 3v12" /><path d="M8 7v8" /></svg>
+                    Dashboard ผู้บริหาร
+                </a>
+                <?php endif; ?>
+
                 <!-- E-Document -->
                 <?php if ($sidebarAdminId && (AccessControl::hasAccess($sid, 'edoc') || AccessControl::hasAccess($sid, 'edoc_admin'))): ?>
                 <div class="sidebar-submenu" style="margin: 0.5rem 0;">

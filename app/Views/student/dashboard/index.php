@@ -106,7 +106,8 @@
 </style>
 
 <div class="portal-hub-title">Portal นักศึกษา</div>
-<p class="portal-hub-desc">เลือกเมนูด้านล่างเพื่อเข้าใช้งานแต่ละส่วน</p>
+<?php $studentName = session()->get('student_name') ?: session()->get('student_email'); ?>
+<p class="portal-hub-desc"><?= $studentName ? 'ยินดีต้อนรับ ' . esc($studentName) . ' — ' : '' ?>เลือกเมนูด้านล่างเพื่อเข้าใช้งานแต่ละส่วน</p>
 
 <p class="portal-hub-section-title">บริการ</p>
 <div class="portal-hub-grid">
@@ -117,8 +118,8 @@
                 <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
             </svg>
         </div>
-        <span class="portal-hub-card-title">บาร์โค้ด</span>
-        <span class="portal-hub-card-desc">บาร์โค้ดที่ได้รับจากกิจกรรม</span>
+        <span class="portal-hub-card-title">E-Barcode (บาร์โค้ด)</span>
+        <span class="portal-hub-card-desc">ดูบาร์โค้ดของตัวเอง</span>
     </a>
     <a href="<?= base_url('student/certificates') ?>" class="portal-hub-card" style="border-color:#c7d2fe;">
         <div class="portal-hub-card-icon" style="background:#e0e7ff; color:#3730a3;">
@@ -129,8 +130,8 @@
                 <path d="M8 16h8" />
             </svg>
         </div>
-        <span class="portal-hub-card-title">ขอใบรับรองออนไลน์</span>
-        <span class="portal-hub-card-desc">ติดตามสถานะและดาวน์โหลด E-Certificate</span>
+        <span class="portal-hub-card-title">E-Certificate (ใบเกียรติบัตร)</span>
+        <span class="portal-hub-card-desc">ดูใบเกียรติบัตรของตนเอง</span>
     </a>
     <a href="<?= base_url('student/events') ?>" class="portal-hub-card portal-hub-card--events">
         <div class="portal-hub-card-icon">
