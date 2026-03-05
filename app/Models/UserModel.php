@@ -222,17 +222,33 @@ class UserModel extends Model
             if ($existingLoginUid === '' && $loginUid !== '') {
                 log_message('info', 'UserModel::findOrCreateFromPortalUser first login, updating login_uid=' . $loginUid . ' for uid=' . $user['uid']);
             }
-            if ($foundByEmail) {
-                $this->where('email', $email)->update(null, $updateData);
-                return $this->findByEmail($email);
-            }
+            $onlyAllowed = array_intersect_key($updateData, array_flip($this->allowedFields));
             $uid = (int) ($user['uid'] ?? $user['id'] ?? 0);
-            if ($uid < 1) {
-                $this->where('email', $email)->update(null, $updateData);
-                return $this->findByEmail($email);
+            $updateBy = $foundByEmail ? 'email' : ($uid >= 1 ? 'uid' : 'email');
+            log_message('info', 'UserModel::findOrCreateFromPortalUser [update_user] before update | ' . json_encode([
+                'email' => $email,
+                'found_by_email' => $foundByEmail,
+                'uid' => $uid,
+                'update_by' => $updateBy,
+                'data' => $onlyAllowed,
+            ]));
+            $ok = false;
+            if ($foundByEmail) {
+                $ok = $this->db->table($this->table)->where('email', $email)->update($onlyAllowed);
+                $updated = $this->findByEmail($email);
+            } elseif ($uid >= 1) {
+                $ok = $this->update($uid, $onlyAllowed);
+                $updated = $this->find($uid);
+            } else {
+                $ok = $this->db->table($this->table)->where('email', $email)->update($onlyAllowed);
+                $updated = $this->findByEmail($email);
             }
-            $this->update($uid, $updateData);
-            return $this->find($uid);
+            log_message($ok ? 'info' : 'error', 'UserModel::findOrCreateFromPortalUser [update_user] after update | ' . json_encode([
+                'email' => $email,
+                'success' => $ok,
+                'updated_uid' => $updated['uid'] ?? null,
+            ]));
+            return $updated;
         }
 
         // ไม่มี user — สร้างใหม่
@@ -278,17 +294,30 @@ class UserModel extends Model
         ];
         // ไม่อัปเดต profile_image จาก API (ยกเว้นตามข้อกำหนด)
         if ($user) {
-            if ($foundByEmail) {
-                $this->where('email', $email)->update(null, $data);
-                return $this->findByEmail($email);
-            }
+            $onlyAllowed = array_intersect_key($data, array_flip($this->allowedFields));
             $uid = (int) ($user['uid'] ?? $user['id'] ?? 0);
-            if ($uid < 1) {
-                $this->where('email', $email)->update(null, $data);
-                return $this->findByEmail($email);
+            log_message('info', 'UserModel::findOrCreateFromApiUser [update_user] before update | ' . json_encode([
+                'email' => $email,
+                'found_by_email' => $foundByEmail,
+                'uid' => $uid,
+                'data' => $onlyAllowed,
+            ]));
+            $ok = false;
+            if ($foundByEmail) {
+                $ok = $this->db->table($this->table)->where('email', $email)->update($onlyAllowed);
+                $updated = $this->findByEmail($email);
+            } elseif ($uid >= 1) {
+                $ok = $this->update($uid, $onlyAllowed);
+                $updated = $this->find($uid);
+            } else {
+                $ok = $this->db->table($this->table)->where('email', $email)->update($onlyAllowed);
+                $updated = $this->findByEmail($email);
             }
-            $this->update($uid, $data);
-            return $this->find($uid);
+            log_message($ok ? 'info' : 'error', 'UserModel::findOrCreateFromApiUser [update_user] after update | ' . json_encode([
+                'email' => $email,
+                'success' => $ok,
+            ]));
+            return $updated;
         }
         $data['password'] = null;
         $data['role'] = 'user';

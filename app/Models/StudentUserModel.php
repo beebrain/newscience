@@ -91,17 +91,31 @@ class StudentUserModel extends Model
             if ($existingLoginUid === '' && $loginUid !== '') {
                 log_message('info', 'StudentUserModel::findOrCreateFromPortalUser first login, updating login_uid=' . $loginUid . ' for id=' . $student['id']);
             }
-            if ($foundByEmail) {
-                $this->where('email', $email)->update(null, $updateData);
-                return $this->findByEmail($email);
-            }
+            $onlyAllowed = array_intersect_key($updateData, array_flip($this->allowedFields));
             $id = (int) ($student['id'] ?? 0);
-            if ($id < 1) {
-                $this->where('email', $email)->update(null, $updateData);
-                return $this->findByEmail($email);
+            log_message('info', 'StudentUserModel::findOrCreateFromPortalUser [update_student_user] before update | ' . json_encode([
+                'email' => $email,
+                'found_by_email' => $foundByEmail,
+                'id' => $id,
+                'data' => $onlyAllowed,
+            ]));
+            $ok = false;
+            if ($foundByEmail) {
+                $ok = $this->db->table($this->table)->where('email', $email)->update($onlyAllowed);
+                $updated = $this->findByEmail($email);
+            } elseif ($id >= 1) {
+                $ok = $this->update($id, $onlyAllowed);
+                $updated = $this->find($id);
+            } else {
+                $ok = $this->db->table($this->table)->where('email', $email)->update($onlyAllowed);
+                $updated = $this->findByEmail($email);
             }
-            $this->update($id, $updateData);
-            return $this->find($id);
+            log_message($ok ? 'info' : 'error', 'StudentUserModel::findOrCreateFromPortalUser [update_student_user] after update | ' . json_encode([
+                'email' => $email,
+                'success' => $ok,
+                'updated_id' => $updated['id'] ?? null,
+            ]));
+            return $updated;
         }
 
         // ไม่มี student — สร้างใหม่
