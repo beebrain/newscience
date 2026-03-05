@@ -322,9 +322,6 @@
             });
 
             // Delete Tag
-
-
-
         });
 
         // Alert function using template's style

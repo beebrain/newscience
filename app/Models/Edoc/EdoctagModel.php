@@ -26,8 +26,12 @@ class EdoctagModel extends Model
     public function getAllData()
     {
         try {
+            $select = 'id, first_name, last_name, nickname';
+            if ($this->db->fieldExists('email', 'edoctag')) {
+                $select .= ', email';
+            }
             $query = $this->db->table($this->table)
-                ->select('id, first_name, last_name, nickname, email')
+                ->select($select)
                 ->orderBy('first_name', 'ASC')
                 ->get();
 
@@ -39,21 +43,24 @@ class EdoctagModel extends Model
     }
 
     /**
-     * Search for tags by name
-     * 
+     * Search for tags by name or email
+     *
      * @param string $searchTerm
      * @return array
      */
     public function searchTags($searchTerm)
     {
         try {
-            $query = $this->db->table($this->table)
-                ->select('first_name, last_name, nickname')
+            $builder = $this->db->table($this->table)
+                ->select('id, first_name, last_name, nickname, email')
                 ->groupStart()
                 ->like('first_name', $searchTerm)
                 ->orLike('last_name', $searchTerm)
-                ->orLike('nickname', $searchTerm)
-                ->groupEnd()
+                ->orLike('nickname', $searchTerm);
+            if ($this->db->fieldExists('email', 'edoctag')) {
+                $builder->orLike('email', $searchTerm);
+            }
+            $query = $builder->groupEnd()
                 ->orderBy('first_name', 'ASC')
                 ->get();
 
@@ -65,15 +72,17 @@ class EdoctagModel extends Model
     }
 
     /**
-     * Add new tag
-     * 
+     * Add new tag (identity by name or email)
+     *
      * @param array $data
      * @return bool|int
      */
     public function addTag($data)
     {
         try {
-            if (empty($data['first_name']) || empty($data['last_name'])) {
+            $hasName = !empty(trim((string) ($data['first_name'] ?? ''))) && !empty(trim((string) ($data['last_name'] ?? '')));
+            $hasEmail = !empty(trim((string) ($data['email'] ?? '')));
+            if (!$hasName && !$hasEmail) {
                 return false;
             }
 
@@ -85,8 +94,8 @@ class EdoctagModel extends Model
     }
 
     /**
-     * Update existing tag
-     * 
+     * Update existing tag (identity by name or email)
+     *
      * @param int $id
      * @param array $data
      * @return bool
@@ -94,7 +103,9 @@ class EdoctagModel extends Model
     public function updateTag($id, $data)
     {
         try {
-            if (empty($data['first_name']) || empty($data['last_name'])) {
+            $hasName = !empty(trim((string) ($data['first_name'] ?? ''))) && !empty(trim((string) ($data['last_name'] ?? '')));
+            $hasEmail = !empty(trim((string) ($data['email'] ?? '')));
+            if (!$hasName && !$hasEmail) {
                 return false;
             }
 
@@ -122,21 +133,26 @@ class EdoctagModel extends Model
     }
 
     /**
-     * Check if tag exists
-     * 
+     * Check if tag exists by name or by email
+     *
      * @param string $firstName
      * @param string $lastName
+     * @param string|null $email Optional; if provided, also check by email
      * @return bool
      */
-    public function tagExists($firstName, $lastName)
+    public function tagExists($firstName, $lastName, $email = null)
     {
         try {
-            $count = $this->db->table($this->table)
+            $builder = $this->db->table($this->table);
+            $builder->groupStart()
                 ->where('first_name', $firstName)
                 ->where('last_name', $lastName)
-                ->countAllResults();
+                ->groupEnd();
+            if ($email !== null && $email !== '' && $this->db->fieldExists('email', 'edoctag')) {
+                $builder->orWhere('email', $email);
+            }
 
-            return $count > 0;
+            return $builder->countAllResults() > 0;
         } catch (\Exception $e) {
             log_message('error', '[EdoctagModel::tagExists] Error: ' . $e->getMessage());
             return false;
@@ -152,6 +168,9 @@ class EdoctagModel extends Model
     public function getTagByEmail($email)
     {
         try {
+            if (!$this->db->fieldExists('email', 'edoctag')) {
+                return null;
+            }
             return $this->db->table($this->table)
                 ->where('email', $email)
                 ->get()
@@ -179,8 +198,8 @@ class EdoctagModel extends Model
     }
 
     /**
-     * Validate tag data
-     * 
+     * Validate tag data (identity by name or email)
+     *
      * @param array $data
      * @return bool|array Returns true if valid, array of errors if invalid
      */
@@ -191,24 +210,33 @@ class EdoctagModel extends Model
         $rules = [
             'first_name' => [
                 'label' => 'First Name',
-                'rules' => 'required|max_length[50]'
+                'rules' => 'permit_empty|max_length[100]',
             ],
             'last_name' => [
                 'label' => 'Last Name',
-                'rules' => 'required|max_length[50]'
+                'rules' => 'permit_empty|max_length[100]',
             ],
             'nickname' => [
                 'label' => 'Nickname',
-                'rules' => 'permit_empty|max_length[50]'
-            ]
+                'rules' => 'permit_empty|max_length[100]',
+            ],
+            'email' => [
+                'label' => 'Email',
+                'rules' => 'permit_empty|valid_email|max_length[255]',
+            ],
         ];
-
         $validation->setRules($rules);
 
-        if ($validation->run($data)) {
-            return true;
+        if (!$validation->run($data)) {
+            return $validation->getErrors();
         }
 
-        return $validation->getErrors();
+        $hasName = !empty(trim((string) ($data['first_name'] ?? ''))) && !empty(trim((string) ($data['last_name'] ?? '')));
+        $hasEmail = !empty(trim((string) ($data['email'] ?? '')));
+        if (!$hasName && !$hasEmail) {
+            return ['identity' => 'กรุณาระบุชื่อ-นามสกุล หรือ อีเมล เพื่อระบุตัวตน'];
+        }
+
+        return true;
     }
 }

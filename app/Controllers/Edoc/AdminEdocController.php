@@ -120,6 +120,30 @@ class AdminEdocController extends EdocBaseController
             $result['fileaddress_first'] = $parsed['first'];
             $result['fileaddress_list'] = $parsed['list'];
 
+            $participantRaw = $result['participant'] ?? '';
+            $result['participant_chips'] = [];
+            if ($participantRaw !== '' && $participantRaw !== null) {
+                $parts = array_map('trim', explode(',', $participantRaw));
+                $emails = array_filter($parts, function ($p) {
+                    return $p !== '' && $p !== 'ทุกคน';
+                });
+                $emailToName = $this->docTagModel->getDisplayNamesByEmails(array_map('strtolower', $emails));
+                foreach ($parts as $part) {
+                    if ($part === '') {
+                        continue;
+                    }
+                    if ($part === 'ทุกคน') {
+                        $result['participant_chips'][] = ['email' => 'ทุกคน', 'name' => 'ทุกคน'];
+                        continue;
+                    }
+                    $key = strtolower($part);
+                    $result['participant_chips'][] = [
+                        'email' => $part,
+                        'name'  => $emailToName[$key] ?? $part
+                    ];
+                }
+            }
+
             $this->documentViews->recordView($iddoc, $this->edocUser['uid']);
 
             $viewStats = $this->documentViews->getDocumentViewStats($iddoc);
@@ -241,9 +265,43 @@ class AdminEdocController extends EdocBaseController
 
         $results = $builder->get()->getResultArray();
 
-        $data = array_map(function ($row) {
+        $allEmails = [];
+        foreach ($results as $row) {
+            $p = $row['participant'] ?? '';
+            if ($p !== '' && $p !== null) {
+                $parts = array_map('trim', explode(',', $p));
+                foreach ($parts as $part) {
+                    if ($part !== '' && $part !== 'ทุกคน') {
+                        $allEmails[] = strtolower($part);
+                    }
+                }
+            }
+        }
+        $allEmails = array_unique($allEmails);
+        $emailToName = $this->docTagModel->getDisplayNamesByEmails(array_values($allEmails));
+
+        $data = array_map(function ($row) use ($emailToName) {
             $fileaddressRaw = isset($row['fileaddress']) ? $row['fileaddress'] : '';
             $parsed = $this->parseFileAddressForRead($fileaddressRaw);
+            $participantRaw = $row['participant'] ?? '';
+            $participantChips = [];
+            if ($participantRaw !== '' && $participantRaw !== null) {
+                $parts = array_map('trim', explode(',', $participantRaw));
+                foreach ($parts as $part) {
+                    if ($part === '') {
+                        continue;
+                    }
+                    if ($part === 'ทุกคน') {
+                        $participantChips[] = ['email' => 'ทุกคน', 'name' => 'ทุกคน'];
+                        continue;
+                    }
+                    $key = strtolower($part);
+                    $participantChips[] = [
+                        'email' => $part,
+                        'name'  => $emailToName[$key] ?? $part
+                    ];
+                }
+            }
             return [
                 'iddoc' => $row['iddoc'],
                 'officeiddoc' => esc($row['officeiddoc']),
@@ -251,6 +309,7 @@ class AdminEdocController extends EdocBaseController
                 'doctype' => esc($row['doctype']),
                 'owner' => esc($row['owner']),
                 'participant' => esc($row['participant']),
+                'participant_chips' => $participantChips,
                 'datedoc' => esc($row['datedoc']),
                 'pages' => (int)$row['pages'],
                 'view_count' => (int)$row['view_count'],

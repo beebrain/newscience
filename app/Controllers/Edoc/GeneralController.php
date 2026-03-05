@@ -408,6 +408,30 @@ class GeneralController extends EdocBaseController
 
         $document = $this->parseFileAddressForView($document);
 
+        $participantRaw = $document['participant'] ?? '';
+        $document['participant_chips'] = [];
+        if ($participantRaw !== '' && $participantRaw !== null) {
+            $parts = array_map('trim', explode(',', $participantRaw));
+            $emails = array_filter($parts, function ($p) {
+                return $p !== '' && $p !== 'ทุกคน';
+            });
+            $emailToName = $this->docTagModel->getDisplayNamesByEmails(array_map('strtolower', $emails));
+            foreach ($parts as $part) {
+                if ($part === '') {
+                    continue;
+                }
+                if ($part === 'ทุกคน') {
+                    $document['participant_chips'][] = ['email' => 'ทุกคน', 'name' => 'ทุกคน'];
+                    continue;
+                }
+                $key = strtolower($part);
+                $document['participant_chips'][] = [
+                    'email' => $part,
+                    'name'  => $emailToName[$key] ?? $part
+                ];
+            }
+        }
+
         $view_data = [
             'document' => $document,
             'user' => $user,

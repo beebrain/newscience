@@ -260,7 +260,19 @@
                                         <!-- Participants Tab -->
                                         <div class="tab-pane fade" id="navs-justified-participants" role="tabpanel">
                                             <div class="card-body">
-                                                <?php if (!empty($document['participant'])): ?>
+                                                <?php if (!empty($document['participant_chips'])): ?>
+                                                    <h6 class="mb-3">รายชื่อผู้เกี่ยวข้อง</h6>
+                                                    <div class="d-flex flex-wrap gap-2 mb-3 doc-participant-chips">
+                                                        <?php foreach ($document['participant_chips'] as $chip): ?>
+                                                            <?php
+                                                            $label = esc($chip['name'] ?? $chip['email'] ?? '');
+                                                            $title = (!empty($chip['email']) && ($chip['email'] !== ($chip['name'] ?? ''))) ? ' title="' . esc($chip['email']) . '"' : '';
+                                                            $cls = ($chip['email'] ?? '') === 'ทุกคน' ? 'badge bg-primary' : 'badge bg-label-info';
+                                                            ?>
+                                                            <span class="<?= $cls ?> doc-chip"<?= $title ?>><?= $label ?></span>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                <?php elseif (!empty($document['participant'])): ?>
                                                     <h6 class="mb-3">รายชื่อผู้เกี่ยวข้อง</h6>
                                                     <div class="d-flex flex-wrap gap-2 mb-3">
                                                         <?php
@@ -268,9 +280,9 @@
                                                         foreach ($participants as $participant):
                                                             if (trim($participant) === 'ทุกคน'):
                                                         ?>
-                                                                <span class="badge bg-primary"><?php echo $participant; ?></span>
+                                                                <span class="badge bg-primary"><?= esc($participant) ?></span>
                                                             <?php else: ?>
-                                                                <span class="badge bg-label-info"><?php echo $participant; ?></span>
+                                                                <span class="badge bg-label-info"><?= esc($participant) ?></span>
                                                         <?php endif;
                                                         endforeach; ?>
                                                     </div>

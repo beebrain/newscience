@@ -237,4 +237,92 @@ class EdocDocumentTagModel extends Model
 
         return array_slice($unique, 0, $limit);
     }
+
+    /**
+     * Resolve a single email to display name (Thai name preferred, else English, else email).
+     *
+     * @param string $email
+     * @return string
+     */
+    public function getDisplayNameByEmail(string $email): string
+    {
+        $map = $this->getDisplayNamesByEmails([$email]);
+        return $map[$email] ?? $email;
+    }
+
+    /**
+     * Resolve multiple emails to display names in one go (user + student_user).
+     * Returns array keyed by lowercase email => display name (Thai preferred).
+     *
+     * @param array $emails
+     * @return array<string, string> email (lowercase) => display name
+     */
+    public function getDisplayNamesByEmails(array $emails): array
+    {
+        $result = [];
+        $emails = array_unique(array_map(function ($e) {
+            return strtolower(trim((string) $e));
+        }, $emails));
+        $emails = array_filter($emails);
+
+        if (empty($emails)) {
+            return $result;
+        }
+
+        $cols = ['email', 'tf_name', 'tl_name', 'gf_name', 'gl_name'];
+        if ($this->db->fieldExists('thai_name', 'user') && $this->db->fieldExists('thai_lastname', 'user')) {
+            $cols = array_merge($cols, ['thai_name', 'thai_lastname']);
+        }
+
+        $users = $this->db->table('user')
+            ->select(implode(', ', array_unique($cols)))
+            ->whereIn('email', $emails)
+            ->get()
+            ->getResultArray();
+
+        foreach ($users as $u) {
+            $email = strtolower(trim($u['email'] ?? ''));
+            if ($email === '') {
+                continue;
+            }
+            $name = trim(($u['tf_name'] ?? '') . ' ' . ($u['tl_name'] ?? ''));
+            if ($name === '' && !empty($u['thai_name'] ?? $u['thai_lastname'] ?? null)) {
+                $name = trim(($u['thai_name'] ?? '') . ' ' . ($u['thai_lastname'] ?? ''));
+            }
+            if ($name === '') {
+                $name = trim(($u['gf_name'] ?? '') . ' ' . ($u['gl_name'] ?? ''));
+            }
+            $result[$email] = $name !== '' ? $name : $email;
+        }
+
+        $remaining = array_diff($emails, array_keys($result));
+        if (!empty($remaining) && $this->db->tableExists('student_user')) {
+            $sCols = ['email', 'tf_name', 'tl_name', 'gf_name', 'gl_name'];
+            $students = $this->db->table('student_user')
+                ->select(implode(', ', $sCols))
+                ->whereIn('email', $remaining)
+                ->get()
+                ->getResultArray();
+
+            foreach ($students as $s) {
+                $email = strtolower(trim($s['email'] ?? ''));
+                if ($email === '') {
+                    continue;
+                }
+                $name = trim(($s['tf_name'] ?? '') . ' ' . ($s['tl_name'] ?? ''));
+                if ($name === '') {
+                    $name = trim(($s['gf_name'] ?? '') . ' ' . ($s['gl_name'] ?? ''));
+                }
+                $result[$email] = $name !== '' ? $name : $email;
+            }
+        }
+
+        foreach ($emails as $e) {
+            if (!isset($result[$e])) {
+                $result[$e] = $e;
+            }
+        }
+
+        return $result;
+    }
 }

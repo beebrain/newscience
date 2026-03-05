@@ -123,6 +123,29 @@
             line-height: 1.25;
         }
 
+        .doc-participant-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            align-items: center;
+        }
+        .doc-chip {
+            white-space: nowrap;
+            max-width: 10em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .doc-chip-user {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        .doc-chip-everyone {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fcd34d;
+        }
+
         .status-report {
             background: #dbeafe;
             color: #1e40af;
@@ -796,8 +819,18 @@
                         "data": "participant",
                         "defaultContent": "",
                         "render": function(data, type, row) {
-                            return `<span class="status-badge ">${data}</span>`;
-
+                            if (type === 'display' && row.participant_chips && row.participant_chips.length) {
+                                var html = '<div class="doc-participant-chips flex flex-wrap gap-1">';
+                                row.participant_chips.forEach(function(chip) {
+                                    var label = (chip.name || chip.email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                    var title = (chip.email && chip.email !== chip.name) ? (' title="' + (chip.email || '').replace(/"/g, '&quot;') + '"') : '';
+                                    var cls = chip.email === 'ทุกคน' ? 'doc-chip doc-chip-everyone' : 'doc-chip doc-chip-user';
+                                    html += '<span class="status-badge ' + cls + '"' + title + '>' + label + '</span>';
+                                });
+                                html += '</div>';
+                                return html;
+                            }
+                            return '<span class="status-badge">' + (data || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>';
                         }
                     },
                     {
@@ -1097,7 +1130,19 @@
                         $('#msg_title').text(result_data.title || '-');
                         $('#msg_doctype').text(result_data.doctype || '-');
                         $('#msg_owner').text(result_data.owner || '-');
-                        $('#msg_participant').text(result_data.participant || '-');
+                        if (result_data.participant_chips && result_data.participant_chips.length) {
+                            var chipHtml = '<div class="doc-participant-chips flex flex-wrap gap-1">';
+                            result_data.participant_chips.forEach(function(chip) {
+                                var label = (chip.name || chip.email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                var title = (chip.email && chip.email !== chip.name) ? (' title="' + (chip.email || '').replace(/"/g, '&quot;') + '"') : '';
+                                var cls = chip.email === 'ทุกคน' ? 'doc-chip doc-chip-everyone' : 'doc-chip doc-chip-user';
+                                chipHtml += '<span class="status-badge ' + cls + '"' + title + '>' + label + '</span>';
+                            });
+                            chipHtml += '</div>';
+                            $('#msg_participant').html(chipHtml);
+                        } else {
+                            $('#msg_participant').text(result_data.participant || '-');
+                        }
                         $('#msg_order').text(result_data.order || '-');
                         $('#msg_docdate').text(result_data.datedoc || '-');
 

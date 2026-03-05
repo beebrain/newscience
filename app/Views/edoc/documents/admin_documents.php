@@ -361,13 +361,60 @@
             white-space: nowrap;
         }
 
-        /* ผู้รับ - ตัดทิ้งถ้าเกิน */
-        #documents-table thead th:nth-child(6),
-        #documents-table tbody td:nth-child(6) {
-            max-width: 12em;
+        /* ผู้รับ - chips แสดงชื่อ */
+        .doc-participant-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            align-items: center;
+        }
+        .doc-chip {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+            max-width: 10em;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
+        }
+        .doc-chip-user {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        .doc-chip-everyone {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fcd34d;
+        }
+        .doc-chip-owner {
+            background: #e0e7ff;
+            color: #3730a3;
+            border: 1px solid #a5b4fc;
+        }
+        #documents-table thead th:nth-child(6),
+        #documents-table tbody td:nth-child(6) {
+            max-width: 14em;
+            min-width: 8em;
+        }
+        #documents-table tbody td:nth-child(6) {
+            white-space: normal;
+        }
+
+        /* Tab ชนิดหนังสือ */
+        .doc-type-tabs .doc-type-tab {
+            color: #4b5563;
+        }
+        .doc-type-tabs .doc-type-tab:hover {
+            color: #1e40af;
+            background: rgba(255,255,255,0.6);
+        }
+        .doc-type-tabs .doc-type-tab.active {
+            background: #fff;
+            color: #1e40af;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
         /* วันที่ - ความกว้างพอดี */
@@ -628,6 +675,31 @@
                             <button type="button" id="adv-btn-clear" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-lg">ล้างตัวกรอง</button>
                         </div>
                         <div id="advanced-search-badges" class="mt-3 flex flex-wrap gap-2 hidden"></div>
+                    </div>
+
+                    <!-- Tab ชนิดหนังสือ + เลือกปี -->
+                    <div id="edoc-type-year-bar" class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-sm font-medium text-gray-600">ชนิดหนังสือ:</span>
+                            <div class="doc-type-tabs flex flex-wrap gap-1 rounded-lg bg-gray-100 p-1" role="tablist">
+                                <button type="button" class="doc-type-tab px-3 py-1.5 text-sm font-medium rounded-md transition-all active" data-doctype="" role="tab">ทั้งหมด</button>
+                                <button type="button" class="doc-type-tab px-3 py-1.5 text-sm font-medium rounded-md transition-all" data-doctype="หนังสือรับภายใน" role="tab">รับภายใน</button>
+                                <button type="button" class="doc-type-tab px-3 py-1.5 text-sm font-medium rounded-md transition-all" data-doctype="หนังสือรับภายนอก" role="tab">รับภายนอก</button>
+                                <button type="button" class="doc-type-tab px-3 py-1.5 text-sm font-medium rounded-md transition-all" data-doctype="หนังสือส่งภายใน" role="tab">ส่งภายใน</button>
+                                <button type="button" class="doc-type-tab px-3 py-1.5 text-sm font-medium rounded-md transition-all" data-doctype="ใบลา" role="tab">ใบลา</button>
+                                <button type="button" class="doc-type-tab px-3 py-1.5 text-sm font-medium rounded-md transition-all" data-doctype="คำสั่ง" role="tab">คำสั่ง</button>
+                                <button type="button" class="doc-type-tab px-3 py-1.5 text-sm font-medium rounded-md transition-all" data-doctype="ประกาศ" role="tab">ประกาศ</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium text-gray-600">ปี:</label>
+                            <select id="edoc-year-select" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white min-w-[5rem]">
+                                <option value="">ทุกปี</option>
+                                <?php foreach ($availableYears ?? [] as $y): ?>
+                                <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? date('Y'))) ? 'selected' : '' ?>><?= (int)$y ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                     </div>
 
                     <div id="doc-table-card" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden px-3 py-2 hidden">
@@ -1032,6 +1104,8 @@
 
         function initDocumentsTable() {
             if (documentsTable) return;
+            if ($('#edoc-year-select').length) $('#adv-year').val($('#edoc-year-select').val());
+            if ($('.doc-type-tab.active').length) $('#adv-doctype').val($('.doc-type-tab.active').data('doctype') || '');
             documentsTable = $('#documents-table').DataTable({
                 serverSide: true,
                 ajax: {
@@ -1072,10 +1146,31 @@
                         data: 'doctype'
                     },
                     {
-                        data: 'owner'
+                        data: 'owner',
+                        render: function(data, type) {
+                            if (type === 'display' && data) {
+                                var label = (data + '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                return '<span class="doc-chip doc-chip-owner" title="เจ้าของเอกสาร">' + label + '</span>';
+                            }
+                            return (data || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        }
                     },
                     {
-                        data: 'participant'
+                        data: 'participant',
+                        render: function(data, type, row) {
+                            if (type === 'display' && row.participant_chips && row.participant_chips.length) {
+                                var html = '<div class="doc-participant-chips flex flex-wrap gap-1">';
+                                row.participant_chips.forEach(function(chip) {
+                                    var label = (chip.name || chip.email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                    var title = (chip.email && chip.email !== chip.name) ? (' title="' + (chip.email || '').replace(/"/g, '&quot;') + '"') : '';
+                                    var cls = chip.email === 'ทุกคน' ? 'doc-chip doc-chip-everyone' : 'doc-chip doc-chip-user';
+                                    html += '<span class="' + cls + '"' + title + '>' + label + '</span>';
+                                });
+                                html += '</div>';
+                                return html;
+                            }
+                            return (data || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        }
                     },
                     {
                         data: 'datedoc'
@@ -1128,6 +1223,32 @@
                 }
             });
             window.documentsTable = documentsTable;
+
+            // Tab ชนิดหนังสือ + ปี: sync กับ adv filter แล้ว reload
+            function applyTypeYearAndReload() {
+                var doctype = $('.doc-type-tabs .doc-type-tab.active').data('doctype') || '';
+                var year = $('#edoc-year-select').val() || '';
+                $('#adv-doctype').val(doctype);
+                $('#adv-year').val(year);
+                if (window.documentsTable && window.documentsTable.ajax) {
+                    window.documentsTable.ajax.reload();
+                }
+            }
+            $('.doc-type-tab').on('click', function() {
+                $('.doc-type-tab').removeClass('active');
+                $(this).addClass('active');
+                applyTypeYearAndReload();
+            });
+            $('#edoc-year-select').on('change', function() {
+                $('#adv-year').val($(this).val());
+                applyTypeYearAndReload();
+            });
+            // เริ่มต้น: sync ปีจาก edoc-year-select ไป adv-year (ค่า default เป็นปีปัจจุบันจาก PHP)
+            $(function() {
+                if ($('#adv-year').val() !== $('#edoc-year-select').val()) {
+                    $('#adv-year').val($('#edoc-year-select').val());
+                }
+            });
         }
 
         // ---------- จัดการเล่ม (Volume) ----------
@@ -2141,8 +2262,25 @@
                             $('#msg_officeiddoc').text(result_data.officeiddoc || '');
                             $('#msg_title').text(result_data.title || '');
                             $('#msg_doctype').text(result_data.doctype || '');
-                            $('#msg_owner').text(result_data.owner || '');
-                            $('#msg_participant').text(result_data.participant || '');
+                            if (result_data.owner) {
+                                var ownerLabel = (result_data.owner + '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                $('#msg_owner').html('<span class="doc-chip doc-chip-owner" title="เจ้าของเอกสาร">' + ownerLabel + '</span>');
+                            } else {
+                                $('#msg_owner').text('');
+                            }
+                            if (result_data.participant_chips && result_data.participant_chips.length) {
+                                var chipHtml = '<div class="doc-participant-chips flex flex-wrap gap-1 mt-1">';
+                                result_data.participant_chips.forEach(function(chip) {
+                                    var label = (chip.name || chip.email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                    var title = (chip.email && chip.email !== chip.name) ? (' title="' + (chip.email || '').replace(/"/g, '&quot;') + '"') : '';
+                                    var cls = chip.email === 'ทุกคน' ? 'doc-chip doc-chip-everyone' : 'doc-chip doc-chip-user';
+                                    chipHtml += '<span class="' + cls + '"' + title + '>' + label + '</span>';
+                                });
+                                chipHtml += '</div>';
+                                $('#msg_participant').html(chipHtml);
+                            } else {
+                                $('#msg_participant').text(result_data.participant || '');
+                            }
                             $('#msg_order').text(result_data.order || '');
                             $('#msg_docdate').text(result_data.datedoc || '');
 

@@ -106,6 +106,30 @@ class EdocController extends EdocBaseController
             $result['fileaddress_first'] = $parsed['first'];
             $result['fileaddress_list'] = $parsed['list'];
 
+            $participantRaw = $result['participant'] ?? '';
+            $result['participant_chips'] = [];
+            if ($participantRaw !== '' && $participantRaw !== null) {
+                $parts = array_map('trim', explode(',', $participantRaw));
+                $emails = array_filter($parts, function ($p) {
+                    return $p !== '' && $p !== 'ทุกคน';
+                });
+                $emailToName = $this->docTagModel->getDisplayNamesByEmails(array_map('strtolower', $emails));
+                foreach ($parts as $part) {
+                    if ($part === '') {
+                        continue;
+                    }
+                    if ($part === 'ทุกคน') {
+                        $result['participant_chips'][] = ['email' => 'ทุกคน', 'name' => 'ทุกคน'];
+                        continue;
+                    }
+                    $key = strtolower($part);
+                    $result['participant_chips'][] = [
+                        'email' => $part,
+                        'name'  => $emailToName[$key] ?? $part
+                    ];
+                }
+            }
+
             $this->documentViews->recordView($iddoc, $userId);
 
             $viewStats = $this->documentViews->getDocumentViewStats($iddoc);
@@ -257,14 +281,49 @@ class EdocController extends EdocBaseController
 
         $results = $builder->get()->getResultArray();
 
-        $data = array_map(function ($row) {
+        $allEmails = [];
+        foreach ($results as $row) {
+            $p = $row['participant'] ?? '';
+            if ($p !== '' && $p !== null) {
+                $parts = array_map('trim', explode(',', (string) $p));
+                foreach ($parts as $part) {
+                    if ($part !== '' && $part !== 'ทุกคน') {
+                        $allEmails[] = strtolower($part);
+                    }
+                }
+            }
+        }
+        $allEmails = array_unique($allEmails);
+        $emailToName = $this->docTagModel->getDisplayNamesByEmails(array_values($allEmails));
+
+        $data = array_map(function ($row) use ($emailToName) {
             $idLink = "<a href='#' onclick=\"info('{$row['iddoc']}')\">";
+            $participantRaw = $row['participant'] ?? '';
+            $participantChips = [];
+            if ($participantRaw !== '' && $participantRaw !== null) {
+                $parts = array_map('trim', explode(',', (string) $participantRaw));
+                foreach ($parts as $part) {
+                    if ($part === '') {
+                        continue;
+                    }
+                    if ($part === 'ทุกคน') {
+                        $participantChips[] = ['email' => 'ทุกคน', 'name' => 'ทุกคน'];
+                        continue;
+                    }
+                    $key = strtolower($part);
+                    $participantChips[] = [
+                        'email' => $part,
+                        'name'  => $emailToName[$key] ?? $part
+                    ];
+                }
+            }
             return [
                 'iddoc' => $row['iddoc'],
                 'officeiddoc' => $idLink . $row['officeiddoc'] . '</a>',
                 'title' => $idLink . $row['title'] . '</a>',
                 'doctype' => $row['doctype'],
                 'participant' => (string)$row['participant'],
+                'participant_chips' => $participantChips,
                 'owner' => $row['owner'],
                 'order' => $row['order'],
                 'datedoc' => $row['datedoc']
