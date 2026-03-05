@@ -447,8 +447,9 @@ class AdminEdocController extends EdocBaseController
             $data['doc_year'] = (int) date('Y', strtotime($data['datedoc']));
         }
 
-        // ใช้ Email เป็นหลัก: เอกสารใหม่ตั้ง owner เป็น email ของผู้บันทึก
-        if (empty($data['iddoc']) && !empty($this->edocUser['email'])) {
+        // เอกสารใหม่: ถ้าฟอร์มไม่ได้ระบุเจ้าของ ให้ใช้ email ผู้บันทึกเป็น default (ถ้าผู้ใช้เลือกจาก user หรือระบุเองแล้วใช้ค่าจากฟอร์ม)
+        $ownerFromForm = trim($data['owner'] ?? '');
+        if (empty($data['iddoc']) && $ownerFromForm === '' && !empty($this->edocUser['email'])) {
             $data['owner'] = $this->edocUser['email'];
         }
 

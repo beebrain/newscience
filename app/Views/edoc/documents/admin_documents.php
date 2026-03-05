@@ -793,11 +793,12 @@
                             </div>
                             <div class="md:col-span-6">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">เจ้าของเอกสาร</label>
+                                <p class="text-xs text-gray-500 mb-1">ค้นหาจากรายชื่อในระบบ (ตาราง user) หรือระบุอีเมล/ชื่อเองได้หากไม่มีในรายการ</p>
                                 <div class="mb-2 relative">
-                                    <input type="text" id="owner-email-search" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="ค้นหาอีเมลหรือชื่อเพื่อตั้งเจ้าของ (พิมพ์อย่างน้อย 2 ตัวอักษร)" autocomplete="off">
+                                    <input type="text" id="owner-email-search" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="ค้นหาอีเมลหรือชื่อจาก user (พิมพ์อย่างน้อย 2 ตัวอักษร)" autocomplete="off">
                                     <div id="owner-email-dropdown" class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"></div>
                                 </div>
-                                <input type="text" name="owner" id="owner" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="อีเมลหรือชื่อเจ้าของ (พิมพ์หรือเลือกจากช่องค้นด้านบน)">
+                                <input type="text" name="owner" id="owner" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="อีเมลหรือชื่อเจ้าของ (เลือกจากช่องค้นด้านบน หรือพิมพ์ระบุเอง)">
                             </div>
                         </div>
                         <div>
@@ -1855,8 +1856,11 @@
                         data: { q: q },
                         dataType: 'json',
                         success: function(res) {
+                            var qEsc = (q || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                            var qAttr = (q || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                            var customLine = '<div class="owner-custom-item px-3 py-2 cursor-pointer hover:bg-amber-50 border-t border-gray-200 text-sm text-amber-700 bg-amber-50/50" data-owner-custom="' + qAttr + '" title="ใช้ข้อความที่พิมพ์เป็นเจ้าของเอกสาร"><i class="fas fa-edit me-1"></i>ระบุเอง: ใช้ &quot;' + qEsc + '&quot; เป็นเจ้าของ</div>';
                             if (res.status !== 'success' || !res.data || res.data.length === 0) {
-                                $dropdown.html('<div class="px-3 py-2 text-gray-500 text-sm">ไม่พบรายการ</div>').removeClass('hidden');
+                                $dropdown.html('<div class="px-3 py-2 text-gray-500 text-sm">ไม่พบในตาราง user</div>' + customLine).removeClass('hidden');
                                 return;
                             }
                             var html = '';
@@ -1866,6 +1870,7 @@
                                 var label = name ? (email + ' — ' + name) : email;
                                 html += '<div class="owner-email-item px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-0 text-sm" data-email="' + email + '" data-name="' + name + '" title="คลิกเพื่อตั้งเป็นเจ้าของ">' + label + '</div>';
                             });
+                            html += customLine;
                             $dropdown.html(html).removeClass('hidden');
                         },
                         error: function() {
@@ -1884,6 +1889,14 @@
                 if (!email) return;
                 $owner.val(email);
                 $search.val('');
+                $dropdown.addClass('hidden').empty();
+            });
+            $(document).on('click', '.owner-custom-item', function() {
+                var val = $(this).data('owner-custom') || $search.val();
+                if (val) {
+                    $owner.val($.trim(val));
+                    $search.val('');
+                }
                 $dropdown.addClass('hidden').empty();
             });
             $(document).on('click', function(e) {
