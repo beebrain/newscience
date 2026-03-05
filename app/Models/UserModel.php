@@ -222,11 +222,16 @@ class UserModel extends Model
                 log_message('info', 'UserModel::findOrCreateFromPortalUser first login, updating login_uid=' . $loginUid . ' for uid=' . $user['uid']);
             }
             if ($foundByEmail) {
-                $this->where('email', $email)->update($updateData);
+                $this->where('email', $email)->update(null, $updateData);
                 return $this->findByEmail($email);
             }
-            $this->update($user['uid'], $updateData);
-            return $this->find($user['uid']);
+            $uid = (int) ($user['uid'] ?? $user['id'] ?? 0);
+            if ($uid < 1) {
+                $this->where('email', $email)->update(null, $updateData);
+                return $this->findByEmail($email);
+            }
+            $this->update($uid, $updateData);
+            return $this->find($uid);
         }
 
         // ไม่มี user — สร้างใหม่
@@ -273,11 +278,16 @@ class UserModel extends Model
         // ไม่อัปเดต profile_image จาก API (ยกเว้นตามข้อกำหนด)
         if ($user) {
             if ($foundByEmail) {
-                $this->where('email', $email)->update($data);
+                $this->where('email', $email)->update(null, $data);
                 return $this->findByEmail($email);
             }
-            $this->update($user['uid'], $data);
-            return $this->find($user['uid']);
+            $uid = (int) ($user['uid'] ?? $user['id'] ?? 0);
+            if ($uid < 1) {
+                $this->where('email', $email)->update(null, $data);
+                return $this->findByEmail($email);
+            }
+            $this->update($uid, $data);
+            return $this->find($uid);
         }
         $data['password'] = null;
         $data['role'] = 'user';

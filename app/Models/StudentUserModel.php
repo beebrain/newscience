@@ -91,11 +91,16 @@ class StudentUserModel extends Model
                 log_message('info', 'StudentUserModel::findOrCreateFromPortalUser first login, updating login_uid=' . $loginUid . ' for id=' . $student['id']);
             }
             if ($foundByEmail) {
-                $this->where('email', $email)->update($updateData);
+                $this->where('email', $email)->update(null, $updateData);
                 return $this->findByEmail($email);
             }
-            $this->update($student['id'], $updateData);
-            return $this->find($student['id']);
+            $id = (int) ($student['id'] ?? 0);
+            if ($id < 1) {
+                $this->where('email', $email)->update(null, $updateData);
+                return $this->findByEmail($email);
+            }
+            $this->update($id, $updateData);
+            return $this->find($id);
         }
 
         // ไม่มี student — สร้างใหม่
