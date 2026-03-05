@@ -41,6 +41,7 @@ class StudentUserModel extends Model
      * ใช้ email เป็น key หลักในการ identify user เสมอ
      * — ถ้า student มีอยู่แล้ว (email ตรงกัน) แต่ยังไม่มี login_uid → update login_uid
      * — ถ้าไม่มีเลย → สร้าง student ใหม่ (role=student, status=active)
+     * — อัปเดตข้อมูลจาก Portal ทุกครั้งที่ login (ไม่ข้ามแม้ student มีอยู่แล้ว)
      *
      * @param array $portalUser ข้อมูลจาก /me endpoint ต้องมี email; ควรมี login_uid/username
      * @return array|null student array หรือ null ถ้าล้มเหลว
@@ -86,7 +87,7 @@ class StudentUserModel extends Model
         // ไม่อัปเดต profile_image จาก API (ยกเว้นตามข้อกำหนด — ใช้เฉพาะที่ user อัปโหลดหรือมีอยู่แล้ว)
 
         if ($student) {
-            // student มีอยู่แล้ว — อัปเดตโดยใช้ email เป็นเงื่อนไข (WHERE email = ?)
+            // student มีอยู่แล้ว — อัปเดตทุกครั้งที่ login (sync ข้อมูลจาก Portal)
             $existingLoginUid = trim($student['login_uid'] ?? '');
             if ($existingLoginUid === '' && $loginUid !== '') {
                 log_message('info', 'StudentUserModel::findOrCreateFromPortalUser first login, updating login_uid=' . $loginUid . ' for id=' . $student['id']);

@@ -176,6 +176,7 @@ class UserModel extends Model
      * ใช้ email เป็น key หลักในการ identify user เสมอ
      * — ถ้า user มีอยู่แล้วในฐานข้อมูล (email ตรงกัน) แต่ยังไม่มี login_uid → update login_uid
      * — ถ้าไม่มีเลย → สร้าง user ใหม่ (role=user, status=active)
+     * — อัปเดตข้อมูลจาก Portal ทุกครั้งที่ login (ไม่ข้ามแม้ user มีอยู่แล้ว) เพื่อ sync ชื่อ/ยศ/email ฯลฯ
      *
      * @param array $portalUser ข้อมูลจาก /me endpoint ต้องมี email; ควรมี login_uid/username
      * @return array|null user array หรือ null ถ้าล้มเหลว
@@ -217,7 +218,7 @@ class UserModel extends Model
         // ไม่อัปเดต profile_image จาก API (ยกเว้นตามข้อกำหนด — ใช้เฉพาะที่ user อัปโหลดหรือมีอยู่แล้ว)
 
         if ($user) {
-            // user มีอยู่แล้ว — อัปเดตโดยใช้ email เป็นเงื่อนไข (WHERE email = ?)
+            // user มีอยู่แล้ว — อัปเดตทุกครั้งที่ login (sync ข้อมูลจาก Portal)
             $existingLoginUid = trim($user['login_uid'] ?? '');
             if ($existingLoginUid === '' && $loginUid !== '') {
                 log_message('info', 'UserModel::findOrCreateFromPortalUser first login, updating login_uid=' . $loginUid . ' for uid=' . $user['uid']);
