@@ -109,7 +109,14 @@ class UruPortalOAuthService
             return null;
         }
 
+        $safe = $data;
+        foreach (['access_token', 'refresh_token', 'token', 'password'] as $key) {
+            if (isset($safe[$key])) {
+                $safe[$key] = '(redacted)';
+            }
+        }
         log_message('info', self::LOG_PREFIX . 'fetchUserInfo success email=' . ($data['email'] ?? '') . ' login_uid=' . ($data['login_uid'] ?? $data['username'] ?? ''));
+        log_message('info', self::LOG_PREFIX . 'fetchUserInfo user_details=' . json_encode($safe, JSON_UNESCAPED_UNICODE));
         return $data;
     }
 
@@ -210,7 +217,7 @@ class UruPortalOAuthService
         $opts = [
             'http' => [
                 'method'        => 'POST',
-                'header'        => "Content-Type: {$ctype}\r\nContent-Length: " . strlen($body) . "\r\nAccept: application/json\r\n",
+                'header'        => "Content-Type: {$ctype}\r\nContent-Length: " . strlen($body) . "\r\nAccept: application/json\r\nUser-Agent: SciOAuth/1.0 (PHP)\r\n",
                 'content'       => $body,
                 'timeout'       => $this->config->httpTimeout,
                 'ignore_errors' => true,
@@ -230,11 +237,16 @@ class UruPortalOAuthService
      */
     private function httpGet(string $url, string $bearerToken): ?array
     {
+        $timeout = $this->config->httpTimeout;
+        $userInfoTimeout = (int) ($this->config->userInfoTimeout ?? $timeout);
+        if ($userInfoTimeout < 5) {
+            $userInfoTimeout = 25;
+        }
         $opts = [
             'http' => [
                 'method'        => 'GET',
-                'header'        => "Authorization: Bearer {$bearerToken}\r\nAccept: application/json\r\n",
-                'timeout'       => $this->config->httpTimeout,
+                'header'        => "Authorization: Bearer {$bearerToken}\r\nAccept: application/json\r\nUser-Agent: SciOAuth/1.0 (PHP)\r\n",
+                'timeout'       => $userInfoTimeout,
                 'ignore_errors' => true,
             ],
             'ssl' => [
@@ -256,7 +268,12 @@ class UruPortalOAuthService
             $response = @file_get_contents($url, false, $context);
             if ($response === false) {
                 $err = error_get_last();
-                log_message('error', self::LOG_PREFIX . 'doRequest failed url=' . $url . ' err=' . ($err['message'] ?? 'unknown'));
+                $msg = $err['message'] ?? 'unknown';
+                if (strpos($msg, 'timeout') !== false || strpos($msg, 'timed out') !== false) {
+                    log_message('error', self::LOG_PREFIX . 'doRequest timeout url=' . $url . ' (increase httpTimeout or userInfoTimeout in config)');
+                } else {
+                    log_message('error', self::LOG_PREFIX . 'doRequest failed url=' . $url . ' err=' . $msg);
+                }
                 return null;
             }
 

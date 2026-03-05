@@ -164,10 +164,17 @@ class OAuthController extends BaseController
         $email    = strtolower(trim($portalUser['email'] ?? ''));
         $loginUid = trim($portalUser['login_uid'] ?? $portalUser['username'] ?? $portalUser['code'] ?? '');
 
+        $logUser = $portalUser;
+        foreach (['access_token', 'refresh_token', 'token', 'password'] as $key) {
+            if (isset($logUser[$key])) {
+                $logUser[$key] = '(redacted)';
+            }
+        }
         $this->writeLog('callback_user', 'User info received from Portal', [
-            'email'     => $email,
-            'login_uid' => $loginUid,
-            'ip'        => $ip,
+            'email'       => $email,
+            'login_uid'   => $loginUid,
+            'ip'          => $ip,
+            'user_detail' => $logUser,
         ]);
 
         // ---- Step 4: แยกประเภทผู้ใช้ ----

@@ -40,6 +40,9 @@ class UruPortalOAuth extends BaseConfig
     /** Timeout (วินาที) สำหรับ HTTP request ไป URU Portal */
     public int $httpTimeout = 15;
 
+    /** Timeout (วินาที) เฉพาะการเรียก GET /me (ถ้าไม่ตั้ง จะใช้ 25 — endpoint /me อาจช้ากว่า /oauth/token) */
+    public ?int $userInfoTimeout = 25;
+
     /** Domain email ของ URU (ใช้ตรวจสอบว่าเป็น user ของ URU) */
     public string $emailDomain = '@live.uru.ac.th';
 
@@ -56,6 +59,11 @@ class UruPortalOAuth extends BaseConfig
         $this->loginUrl       = env('uruoauth.loginUrl', $this->loginUrl) ?: $this->loginUrl;
         $this->tokenUrl       = env('uruoauth.tokenUrl', $this->tokenUrl) ?: $this->tokenUrl;
         $this->userInfoUrl    = env('uruoauth.userInfoUrl', $this->userInfoUrl) ?: $this->userInfoUrl;
+
+        $uiTimeout = env('uruoauth.userInfoTimeout', '');
+        if ($uiTimeout !== '' && $uiTimeout !== null) {
+            $this->userInfoTimeout = (int) $uiTimeout;
+        }
 
         $enabled = env('uruoauth.enabled', 'true');
         $this->enabled = ($enabled === 'true' || $enabled === '1' || $enabled === true);
