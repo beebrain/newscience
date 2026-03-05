@@ -793,7 +793,11 @@
                             </div>
                             <div class="md:col-span-6">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">เจ้าของเอกสาร</label>
-                                <input type="text" name="owner" id="owner" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                <div class="mb-2 relative">
+                                    <input type="text" id="owner-email-search" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="ค้นหาอีเมลหรือชื่อเพื่อตั้งเจ้าของ (พิมพ์อย่างน้อย 2 ตัวอักษร)" autocomplete="off">
+                                    <div id="owner-email-dropdown" class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"></div>
+                                </div>
+                                <input type="text" name="owner" id="owner" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="อีเมลหรือชื่อเจ้าของ (พิมพ์หรือเลือกจากช่องค้นด้านบน)">
                             </div>
                         </div>
                         <div>
@@ -1683,6 +1687,7 @@
             initDocumentsTable();
             loadVolumes(<?= (int)($currentYear ?? date('Y')) ?>);
             initEmailAutocomplete();
+            initOwnerAutocomplete();
 
             $('#add-btn, #empty-add-btn').on('click', function() {
                 if (typeof openFormModal === 'function') openFormModal();
@@ -1829,6 +1834,60 @@
 
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('#participant-email-search, #participant-email-dropdown').length) $dropdown.addClass('hidden');
+            });
+        }
+
+        // --- Owner Autocomplete (ค้นหาชื่อหรืออีเมลเพื่อตั้งเจ้าของเอกสาร) ---
+        function initOwnerAutocomplete() {
+            var $search = $('#owner-email-search');
+            var $dropdown = $('#owner-email-dropdown');
+            var $owner = $('#owner');
+            var ownerSuggestTimeout = null;
+            $search.off('input focus').on('input focus', function() {
+                var q = $.trim($search.val());
+                $dropdown.addClass('hidden').empty();
+                if (ownerSuggestTimeout) clearTimeout(ownerSuggestTimeout);
+                if (q.length < 2) return;
+                ownerSuggestTimeout = setTimeout(function() {
+                    $.ajax({
+                        url: '<?= base_url("index.php/edoc/admin/suggest-emails") ?>',
+                        type: 'GET',
+                        data: { q: q },
+                        dataType: 'json',
+                        success: function(res) {
+                            if (res.status !== 'success' || !res.data || res.data.length === 0) {
+                                $dropdown.html('<div class="px-3 py-2 text-gray-500 text-sm">ไม่พบรายการ</div>').removeClass('hidden');
+                                return;
+                            }
+                            var html = '';
+                            res.data.forEach(function(item) {
+                                var email = (item.email || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+                                var name = (item.name || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+                                var label = name ? (email + ' — ' + name) : email;
+                                html += '<div class="owner-email-item px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-0 text-sm" data-email="' + email + '" data-name="' + name + '" title="คลิกเพื่อตั้งเป็นเจ้าของ">' + label + '</div>';
+                            });
+                            $dropdown.html(html).removeClass('hidden');
+                        },
+                        error: function() {
+                            $dropdown.html('<div class="px-3 py-2 text-gray-500 text-sm">โหลดไม่สำเร็จ</div>').removeClass('hidden');
+                        }
+                    });
+                }, 300);
+            });
+            $search.on('blur', function() {
+                setTimeout(function() {
+                    if (!$(document.activeElement).closest('#owner-email-dropdown').length) $dropdown.addClass('hidden');
+                }, 200);
+            });
+            $(document).on('click', '.owner-email-item', function() {
+                var email = $(this).data('email');
+                if (!email) return;
+                $owner.val(email);
+                $search.val('');
+                $dropdown.addClass('hidden').empty();
+            });
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#owner-email-search, #owner-email-dropdown').length) $dropdown.addClass('hidden');
             });
         }
 

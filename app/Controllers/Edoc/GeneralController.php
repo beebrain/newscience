@@ -87,23 +87,28 @@ class GeneralController extends EdocBaseController
 
                 $isTagged = false;
 
-                // New: check edoc_document_tags by email
+                // ใช้ Email เป็นหลัก: check edoc_document_tags by email
                 if (!empty($document['iddoc'])) {
                     $isTagged = $this->docTagModel->isTagged((int) $document['iddoc'], $userEmail);
                 }
-
-                // Legacy fallback: check participant string by name
+                if (!$isTagged && !empty($document['owner']) && strtolower(trim($document['owner'])) === $userEmail) {
+                    $isTagged = true;
+                }
+                if (!$isTagged && !empty($document['participant'])) {
+                    $participants = array_map('trim', explode(',', $document['participant']));
+                    if (in_array($userEmail, array_map('strtolower', $participants))) {
+                        $isTagged = true;
+                    }
+                }
+                // Legacy: check by name
                 if (!$isTagged && !empty($document['participant']) && !empty($tagname)) {
                     $participants = array_map('trim', explode(',', $document['participant']));
                     if (in_array($tagname, $participants)) {
                         $isTagged = true;
                     }
                 }
-
-                if (!$isTagged && !empty($document['owner']) && !empty($tagname)) {
-                    if (trim($document['owner']) === $tagname) {
-                        $isTagged = true;
-                    }
+                if (!$isTagged && !empty($document['owner']) && !empty($tagname) && trim($document['owner']) === $tagname) {
+                    $isTagged = true;
                 }
 
                 if ($isTagged) {
@@ -188,23 +193,28 @@ class GeneralController extends EdocBaseController
 
                 $isTagged = false;
 
-                // New: check edoc_document_tags by email
+                // ใช้ Email เป็นหลัก: check edoc_document_tags by email
                 if (!empty($document['iddoc'])) {
                     $isTagged = $this->docTagModel->isTagged((int) $document['iddoc'], $userEmail);
                 }
-
-                // Legacy fallback: check participant string by name
+                if (!$isTagged && !empty($document['owner']) && strtolower(trim($document['owner'])) === $userEmail) {
+                    $isTagged = true;
+                }
+                if (!$isTagged && !empty($document['participant'])) {
+                    $participants = array_map('trim', explode(',', $document['participant']));
+                    if (in_array($userEmail, array_map('strtolower', $participants))) {
+                        $isTagged = true;
+                    }
+                }
+                // Legacy: check by name
                 if (!$isTagged && !empty($document['participant']) && !empty($tagname)) {
                     $participants = array_map('trim', explode(',', $document['participant']));
                     if (in_array($tagname, $participants)) {
                         $isTagged = true;
                     }
                 }
-
-                if (!$isTagged && !empty($document['owner']) && !empty($tagname)) {
-                    if (trim($document['owner']) === $tagname) {
-                        $isTagged = true;
-                    }
+                if (!$isTagged && !empty($document['owner']) && !empty($tagname) && trim($document['owner']) === $tagname) {
+                    $isTagged = true;
                 }
 
                 if ($isTagged) {
@@ -370,12 +380,20 @@ class GeneralController extends EdocBaseController
         $userEmail = strtolower(trim($user['email'] ?? ''));
         $hasAccess = false;
 
-        // New: check edoc_document_tags by email
+        // ใช้ Email เป็นหลัก: check edoc_document_tags by email
         if (!empty($userEmail) && $this->docTagModel->isTagged((int) $document['iddoc'], $userEmail)) {
             $hasAccess = true;
         }
-
-        // Legacy: check participant string
+        if (!$hasAccess && !empty($document['owner']) && strtolower(trim($document['owner'])) === $userEmail) {
+            $hasAccess = true;
+        }
+        if (!$hasAccess && !empty($document['participant'])) {
+            $participants = array_map('trim', explode(',', $document['participant']));
+            if (in_array($userEmail, array_map('strtolower', $participants))) {
+                $hasAccess = true;
+            }
+        }
+        // Legacy: participant "ทุกคน"
         if (!$hasAccess && !empty($document['participant'])) {
             if (
                 strpos($document['participant'], 'ทุกคน') !== false ||
@@ -384,11 +402,9 @@ class GeneralController extends EdocBaseController
                 $hasAccess = true;
             }
         }
-
         if (!$hasAccess && !empty($document['owner']) && !empty($tagname) && trim($document['owner']) === $tagname) {
             $hasAccess = true;
         }
-
         if (!$hasAccess && !empty($document['participant']) && !empty($tagname)) {
             $participants = array_map('trim', explode(',', $document['participant']));
             if (in_array($tagname, $participants)) {

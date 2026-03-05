@@ -93,6 +93,9 @@ class PersonnelModel extends Model
             {$extra}";
     }
 
+    /**
+     * ชื่อสำหรับแสดง — ชื่อภาษาไทย ก่อนเสมอ (user_tf_name + user_tl_name จาก user)
+     */
     public function getFullName($person)
     {
         $first = trim($person['user_tf_name'] ?? '');

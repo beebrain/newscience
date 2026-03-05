@@ -272,6 +272,7 @@ class OAuthController extends BaseController
             'ip'        => $ip,
         ]);
 
+        // ชื่อสำหรับแสดง: ชื่อภาษาไทย ก่อนเสมอ (getFullName ใช้ tf_name + tl_name ก่อน)
         session()->set([
             'student_logged_in'      => true,
             'student_id'             => $student['id'],
@@ -334,6 +335,7 @@ class OAuthController extends BaseController
             'ip'        => $ip,
         ]);
 
+        // ชื่อสำหรับแสดง: ชื่อภาษาไทย ก่อนเสมอ (getFullName ใช้ tf_name + tl_name ก่อน)
         session()->set([
             'admin_logged_in'      => true,
             'admin_id'             => $user['uid'],

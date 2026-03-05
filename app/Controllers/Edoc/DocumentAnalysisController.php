@@ -3,6 +3,7 @@
 namespace App\Controllers\Edoc;
 
 use App\Models\Edoc\EdoctitleModel;
+use App\Models\Edoc\EdocDocumentTagModel;
 use CodeIgniter\API\ResponseTrait;
 
 /**
@@ -11,12 +12,14 @@ use CodeIgniter\API\ResponseTrait;
  * This controller manages document analytics with differentiated access levels.
  * Administrators can view comprehensive repository metrics across all documents,
  * while standard users see analytics confined to documents they're tagged in.
+ * ใช้ Email เป็นหลักในการกรองเอกสารของ user (ไม่ใช้ชื่อหรือ userId ใน participant)
  */
 class DocumentAnalysisController extends EdocBaseController
 {
     use ResponseTrait;
 
     protected $edoctitleModel;
+    protected $docTagModel;
     protected $db;
 
     /**
@@ -25,7 +28,28 @@ class DocumentAnalysisController extends EdocBaseController
     public function __construct()
     {
         $this->edoctitleModel = new EdoctitleModel();
+        $this->docTagModel = new EdocDocumentTagModel();
         $this->db = \Config\Database::connect();
+    }
+
+    /**
+     * กรองเอกสารของ user (non-admin) โดยใช้ email เป็นหลัก: tag_email, owner, participant
+     */
+    private function applyUserDocumentFilter($builder): void
+    {
+        $userEmail = strtolower(trim($this->edocUser['email'] ?? ''));
+        if ($userEmail === '') {
+            $builder->where('e.iddoc', 0);
+            return;
+        }
+        $taggedIds = $this->docTagModel->getDocumentIdsByEmail($userEmail);
+        $builder->groupStart();
+        if (!empty($taggedIds)) {
+            $builder->whereIn('e.iddoc', $taggedIds);
+        }
+        $builder->orWhere('e.owner', $userEmail);
+        $builder->orLike('e.participant', $userEmail);
+        $builder->groupEnd();
     }
 
     /**
@@ -63,7 +87,7 @@ class DocumentAnalysisController extends EdocBaseController
         $this->applyPeriodFilter($builder, $period);
 
         if (!$this->isEdocAdmin) {
-            $builder->where("FIND_IN_SET('$userId', e.participant) > 0");
+            $this->applyUserDocumentFilter($builder);
         }
 
         $totalDocuments = $builder->countAllResults();
@@ -123,7 +147,7 @@ class DocumentAnalysisController extends EdocBaseController
         $this->applyPeriodFilter($builder, $period);
 
         if (!$this->isEdocAdmin) {
-            $builder->where("FIND_IN_SET('$userId', e.participant) > 0");
+            $this->applyUserDocumentFilter($builder);
         }
 
         $data = $builder->select('doctype, COUNT(*) as count, SUM(pages) as total_pages')
@@ -157,7 +181,7 @@ class DocumentAnalysisController extends EdocBaseController
         }
 
         if (!$this->isEdocAdmin) {
-            $sql .= " AND FIND_IN_SET('$userId', e.participant) > 0";
+            $sql .= $this->getUserDocumentFilterSql('e');
         }
 
         $sql .= " GROUP BY period ORDER BY ";
@@ -195,7 +219,7 @@ class DocumentAnalysisController extends EdocBaseController
         $this->applyPeriodFilter($builder, $period);
 
         if (!$this->isEdocAdmin) {
-            $builder->where("FIND_IN_SET('$userId', e.participant) > 0");
+            $this->applyUserDocumentFilter($builder);
         }
 
         $data = $builder->select('owner, COUNT(*) as count, SUM(pages) as total_pages')
@@ -207,7 +231,7 @@ class DocumentAnalysisController extends EdocBaseController
 
         foreach ($data as &$item) {
             if (!empty($item['owner'])) {
-                $ownerDetails = $this->findUserByName($item['owner']);
+                $ownerDetails = $this->findUserByEmailOrName($item['owner']);
                 if ($ownerDetails) {
                     $item['owner_details'] = $ownerDetails;
                 }
@@ -231,7 +255,7 @@ class DocumentAnalysisController extends EdocBaseController
         $this->applyPeriodFilter($builder, $period);
 
         if (!$this->isEdocAdmin) {
-            $builder->where("FIND_IN_SET('$userId', e.participant) > 0");
+            $this->applyUserDocumentFilter($builder);
         }
 
         $builder->select("
@@ -270,7 +294,7 @@ class DocumentAnalysisController extends EdocBaseController
         $this->applyPeriodFilter($builder, $period);
 
         if (!$this->isEdocAdmin) {
-            $builder->where("FIND_IN_SET('$userId', e.participant) > 0");
+            $this->applyUserDocumentFilter($builder);
         }
 
         if ($dimension === 'doctype') {
@@ -382,7 +406,7 @@ class DocumentAnalysisController extends EdocBaseController
             $item['total_paper'] = (int)$item['total_paper'];
             $item['doc_count'] = (int)$item['doc_count'];
 
-            $userDetails = $this->getUserDetails($item['dimension']);
+            $userDetails = $this->findUserByEmailOrName($item['dimension']);
             if ($userDetails) {
                 $item['user_details'] = $userDetails;
             }
@@ -405,7 +429,7 @@ class DocumentAnalysisController extends EdocBaseController
         $this->applyPeriodFilter($builder, $period);
 
         if (!$this->isEdocAdmin) {
-            $builder->where("FIND_IN_SET('$userId', e.participant) > 0");
+            $this->applyUserDocumentFilter($builder);
         }
 
         $totalDocuments = $builder->countAllResults();
@@ -440,7 +464,7 @@ class DocumentAnalysisController extends EdocBaseController
         }
 
         if (!$this->isEdocAdmin) {
-            $sqlTrend .= " AND FIND_IN_SET('$userId', e.participant) > 0";
+            $sqlTrend .= $this->getUserDocumentFilterSql('e');
         }
 
         $sqlTrend .= " GROUP BY month ORDER BY month ASC";
@@ -493,6 +517,56 @@ class DocumentAnalysisController extends EdocBaseController
         }
 
         return null;
+    }
+
+    /**
+     * Returns SQL fragment for user document filter (email-based) for raw queries. Table alias e.g. "e".
+     */
+    private function getUserDocumentFilterSql(string $alias): string
+    {
+        $userEmail = strtolower(trim($this->edocUser['email'] ?? ''));
+        if ($userEmail === '') {
+            return " AND 1=0";
+        }
+        $taggedIds = $this->docTagModel->getDocumentIdsByEmail($userEmail);
+        $esc = $this->db->escape($userEmail);
+        $likeVal = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $userEmail);
+        $likeEsc = $this->db->escape('%' . $likeVal . '%');
+        $parts = [];
+        if (!empty($taggedIds)) {
+            $ids = implode(',', array_map('intval', $taggedIds));
+            $parts[] = "{$alias}.iddoc IN ({$ids})";
+        }
+        $parts[] = "{$alias}.owner = {$esc}";
+        $parts[] = "{$alias}.participant LIKE {$likeEsc}";
+        return ' AND (' . implode(' OR ', $parts) . ')';
+    }
+
+    /**
+     * Find user by email (primary) or by name (legacy). Owner field may store email or name.
+     */
+    private function findUserByEmailOrName($ownerValue)
+    {
+        $ownerValue = trim($ownerValue);
+        if ($ownerValue === '') {
+            return null;
+        }
+        if (strpos($ownerValue, '@') !== false) {
+            $row = $this->db->table('user')
+                ->select('uid, tf_name, tl_name, email, title')
+                ->where('email', $ownerValue)
+                ->get()
+                ->getRowArray();
+            if ($row) {
+                return [
+                    'id' => $row['uid'],
+                    'name' => trim(($row['tf_name'] ?? '') . ' ' . ($row['tl_name'] ?? '')),
+                    'email' => $row['email'],
+                    'title' => $row['title'] ?? '',
+                ];
+            }
+        }
+        return $this->findUserByName($ownerValue);
     }
 
     /**

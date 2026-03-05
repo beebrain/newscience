@@ -153,8 +153,8 @@ class EdocDocumentTagModel extends Model
     }
 
     /**
-     * Search for taggable users/students by email or name
-     * Combines results from both `user` and `student_user` tables
+     * Search for taggable users/students by email or name.
+     * ยึด table user และชื่อใน user (tf_name, tl_name, gf_name, gl_name) เป็นหลัก แล้วจึง student_user
      *
      * @param string $query Search term
      * @param int $limit
@@ -168,74 +168,121 @@ class EdocDocumentTagModel extends Model
             return $results;
         }
 
-        // Search in user table
-        $users = $this->db->table('user')
+        $words = preg_split('/\s+/u', $query, -1, PREG_SPLIT_NO_EMPTY);
+        $hasMultipleWords = count($words) >= 2;
+
+        // Search in user table (อีเมล, ชื่อ-นามสกุลไทย/อังกฤษ, และชื่อเต็ม "ชื่อ นามสกุล")
+        $userBuilder = $this->db->table('user')
             ->select('email, tf_name, tl_name, gf_name, gl_name')
             ->groupStart()
                 ->like('email', $query)
                 ->orLike('tf_name', $query)
                 ->orLike('tl_name', $query)
                 ->orLike('gf_name', $query)
-                ->orLike('gl_name', $query)
-            ->groupEnd()
+                ->orLike('gl_name', $query);
+        if ($hasMultipleWords) {
+            $userBuilder->orGroupStart()
+                ->like('tf_name', $words[0])
+                ->like('tl_name', $words[1])
+                ->groupEnd()
+                ->orGroupStart()
+                ->like('gf_name', $words[0])
+                ->like('gl_name', $words[1])
+                ->groupEnd();
+            if (count($words) >= 2 && ($words[0] !== $words[1])) {
+                $userBuilder->orGroupStart()
+                    ->like('tf_name', $words[1])
+                    ->like('tl_name', $words[0])
+                    ->groupEnd()
+                    ->orGroupStart()
+                    ->like('gf_name', $words[1])
+                    ->like('gl_name', $words[0])
+                    ->groupEnd();
+            }
+        }
+        $users = $userBuilder->groupEnd()
             ->where('email IS NOT NULL')
             ->where('email !=', '')
             ->limit($limit)
             ->get()
             ->getResultArray();
 
+        $seenEmails = [];
         foreach ($users as $u) {
+            $email = trim($u['email'] ?? '');
+            if ($email === '') {
+                continue;
+            }
+            $seenEmails[mb_strtolower($email)] = true;
+            // ชื่อใน user table เป็นหลัก: tf_name + tl_name (ไทย) ก่อน แล้ว fallback gf_name + gl_name
             $name = trim(($u['tf_name'] ?? '') . ' ' . ($u['tl_name'] ?? ''));
-            if (empty($name)) {
+            if ($name === '') {
                 $name = trim(($u['gf_name'] ?? '') . ' ' . ($u['gl_name'] ?? ''));
             }
             $results[] = [
-                'email'  => $u['email'],
+                'email'  => $email,
                 'name'   => $name,
                 'source' => 'user',
             ];
         }
 
-        // Search in student_user table
-        $students = $this->db->table('student_user')
+        // รองลงมา: student_user (ไม่ซ้ำ email ที่มีจาก user แล้ว)
+        $studentBuilder = $this->db->table('student_user')
             ->select('email, tf_name, tl_name, gf_name, gl_name')
             ->groupStart()
                 ->like('email', $query)
                 ->orLike('tf_name', $query)
                 ->orLike('tl_name', $query)
                 ->orLike('gf_name', $query)
-                ->orLike('gl_name', $query)
-            ->groupEnd()
-            ->where('email IS NOT NULL')
-            ->where('email !=', '')
-            ->limit($limit)
-            ->get()
-            ->getResultArray();
+                ->orLike('gl_name', $query);
+        if ($hasMultipleWords) {
+            $studentBuilder->orGroupStart()
+                ->like('tf_name', $words[0])
+                ->like('tl_name', $words[1])
+                ->groupEnd()
+                ->orGroupStart()
+                ->like('gf_name', $words[0])
+                ->like('gl_name', $words[1])
+                ->groupEnd();
+            if ($words[0] !== $words[1]) {
+                $studentBuilder->orGroupStart()
+                    ->like('tf_name', $words[1])
+                    ->like('tl_name', $words[0])
+                    ->groupEnd()
+                    ->orGroupStart()
+                    ->like('gf_name', $words[1])
+                    ->like('gl_name', $words[0])
+                    ->groupEnd();
+            }
+        }
+        $remaining = $limit - count($results);
+        $students = $remaining > 0
+            ? $studentBuilder->groupEnd()
+                ->where('email IS NOT NULL')
+                ->where('email !=', '')
+                ->limit($remaining)
+                ->get()
+                ->getResultArray()
+            : [];
 
         foreach ($students as $s) {
+            $email = trim($s['email'] ?? '');
+            if ($email === '' || isset($seenEmails[mb_strtolower($email)])) {
+                continue;
+            }
+            $seenEmails[mb_strtolower($email)] = true;
             $name = trim(($s['tf_name'] ?? '') . ' ' . ($s['tl_name'] ?? ''));
-            if (empty($name)) {
+            if ($name === '') {
                 $name = trim(($s['gf_name'] ?? '') . ' ' . ($s['gl_name'] ?? ''));
             }
             $results[] = [
-                'email'  => $s['email'],
+                'email'  => $email,
                 'name'   => $name,
                 'source' => 'student_user',
             ];
         }
 
-        // Remove duplicates by email
-        $unique = [];
-        $seen = [];
-        foreach ($results as $r) {
-            $key = strtolower($r['email']);
-            if (!isset($seen[$key])) {
-                $seen[$key] = true;
-                $unique[] = $r;
-            }
-        }
-
-        return array_slice($unique, 0, $limit);
+        return array_slice($results, 0, $limit);
     }
 
     /**

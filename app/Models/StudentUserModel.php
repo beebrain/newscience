@@ -55,8 +55,9 @@ class StudentUserModel extends Model
             return null;
         }
 
-        // ค้นหาด้วย email ก่อนเสมอ (email คือ key หลัก)
+        // ค้นหาด้วย email ก่อนเสมอ (email เป็นเงื่อนไขหลักสำหรับการอัปเดต)
         $student = $this->findByEmail($email);
+        $foundByEmail = $student !== null;
 
         // ถ้าไม่พบด้วย email ลองหาด้วย login_uid
         if (!$student && $loginUid !== '') {
@@ -81,16 +82,17 @@ class StudentUserModel extends Model
             $updateData['login_uid'] = $loginUid;
         }
 
-        $profileImage = trim($portalUser['profile_image'] ?? $portalUser['avatar'] ?? $portalUser['picture'] ?? '');
-        if ($profileImage !== '') {
-            $updateData['profile_image'] = $profileImage;
-        }
+        // ไม่อัปเดต profile_image จาก API (ยกเว้นตามข้อกำหนด — ใช้เฉพาะที่ user อัปโหลดหรือมีอยู่แล้ว)
 
         if ($student) {
-            // student มีอยู่แล้ว — update ข้อมูลและ login_uid (ถ้ายังว่าง)
+            // student มีอยู่แล้ว — อัปเดตโดยใช้ email เป็นเงื่อนไข (WHERE email = ?)
             $existingLoginUid = trim($student['login_uid'] ?? '');
             if ($existingLoginUid === '' && $loginUid !== '') {
                 log_message('info', 'StudentUserModel::findOrCreateFromPortalUser first login, updating login_uid=' . $loginUid . ' for id=' . $student['id']);
+            }
+            if ($foundByEmail) {
+                $this->where('email', $email)->update($updateData);
+                return $this->findByEmail($email);
             }
             $this->update($student['id'], $updateData);
             return $this->find($student['id']);
@@ -146,7 +148,8 @@ class StudentUserModel extends Model
     }
 
     /**
-     * Get full name (Thai preferred)
+     * ชื่อสำหรับแสดงในระบบ — ถ้ามีชื่อภาษาไทย (tf_name, tl_name) ให้แสดงชื่อไทยก่อนเสมอ
+     * Fallback: ชื่ออังกฤษ (gf_name, gl_name) หรือ email
      */
     public function getFullName(array $row): string
     {

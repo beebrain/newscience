@@ -48,11 +48,88 @@ class AdminEdocController extends EdocBaseController
                 return redirect()->to(base_url('admin/login'))->with('error', 'User not found.');
             }
 
-            $suggestNames = $this->edoctagModel->getAllData();
+            // รายการ autocomplete ยึด table user และชื่อใน user เป็นหลัก ตามด้วย edoctag แล้ว student_user
             $dataSuggest = [];
+            $seen = [];
+            $db = \Config\Database::connect();
+
+            // 1) user table เป็นหลัก — ชื่อ (tf_name, tl_name / gf_name, gl_name) และอีเมล
+            $userRows = $db->table('user')
+                ->select('email, tf_name, tl_name, gf_name, gl_name')
+                ->where('email IS NOT NULL')
+                ->where('email !=', '')
+                ->orderBy('tf_name', 'ASC')
+                ->limit(500)
+                ->get()
+                ->getResultArray();
+            foreach ($userRows as $r) {
+                $email = trim($r['email'] ?? '');
+                if ($email !== '') {
+                    $key = mb_strtolower($email);
+                    if (!isset($seen[$key])) {
+                        $dataSuggest[] = $email;
+                        $seen[$key] = true;
+                    }
+                }
+                $nameTh = trim(($r['tf_name'] ?? '') . ' ' . ($r['tl_name'] ?? ''));
+                $nameEn = trim(($r['gf_name'] ?? '') . ' ' . ($r['gl_name'] ?? ''));
+                $name = $nameTh !== '' ? $nameTh : $nameEn;
+                if ($name !== '') {
+                    $key = mb_strtolower($name);
+                    if (!isset($seen[$key])) {
+                        $dataSuggest[] = $name;
+                        $seen[$key] = true;
+                    }
+                }
+            }
+
+            // 2) edoctag
+            $suggestNames = $this->edoctagModel->getAllData();
             foreach ($suggestNames as $row) {
                 if (isset($row['first_name']) && isset($row['last_name'])) {
-                    $dataSuggest[] = $row['first_name'] . " " . $row['last_name'];
+                    $v = $row['first_name'] . ' ' . $row['last_name'];
+                    $key = mb_strtolower(trim($v));
+                    if ($key !== '' && !isset($seen[$key])) {
+                        $dataSuggest[] = $v;
+                        $seen[$key] = true;
+                    }
+                }
+                if (!empty($row['email'])) {
+                    $key = mb_strtolower(trim($row['email']));
+                    if (!isset($seen[$key])) {
+                        $dataSuggest[] = $row['email'];
+                        $seen[$key] = true;
+                    }
+                }
+            }
+
+            // 3) student_user (รองลงมา)
+            $studentRows = $db->table('student_user')
+                ->select('email, tf_name, tl_name, gf_name, gl_name')
+                ->where('email IS NOT NULL')
+                ->where('email !=', '')
+                ->orderBy('tf_name', 'ASC')
+                ->limit(200)
+                ->get()
+                ->getResultArray();
+            foreach ($studentRows as $r) {
+                $email = trim($r['email'] ?? '');
+                if ($email !== '') {
+                    $key = mb_strtolower($email);
+                    if (!isset($seen[$key])) {
+                        $dataSuggest[] = $email;
+                        $seen[$key] = true;
+                    }
+                }
+                $nameTh = trim(($r['tf_name'] ?? '') . ' ' . ($r['tl_name'] ?? ''));
+                $nameEn = trim(($r['gf_name'] ?? '') . ' ' . ($r['gl_name'] ?? ''));
+                $name = $nameTh !== '' ? $nameTh : $nameEn;
+                if ($name !== '') {
+                    $key = mb_strtolower($name);
+                    if (!isset($seen[$key])) {
+                        $dataSuggest[] = $name;
+                        $seen[$key] = true;
+                    }
                 }
             }
 
@@ -213,7 +290,12 @@ class AdminEdocController extends EdocBaseController
             $builder->where('edoctitle.volume_id', (int) $request['volume_id']);
         }
         if (!empty($request['filter_owner'])) {
-            $builder->like('edoctitle.owner', $request['filter_owner']);
+            $filterOwner = trim($request['filter_owner']);
+            if (strpos($filterOwner, '@') !== false) {
+                $builder->where('edoctitle.owner', $filterOwner);
+            } else {
+                $builder->like('edoctitle.owner', $filterOwner);
+            }
         }
         if (!empty($request['filter_participant'])) {
             $builder->like('edoctitle.participant', $request['filter_participant']);
@@ -276,6 +358,10 @@ class AdminEdocController extends EdocBaseController
                     }
                 }
             }
+            $owner = trim($row['owner'] ?? '');
+            if ($owner !== '' && strpos($owner, '@') !== false) {
+                $allEmails[] = strtolower($owner);
+            }
         }
         $allEmails = array_unique($allEmails);
         $emailToName = $this->docTagModel->getDisplayNamesByEmails(array_values($allEmails));
@@ -302,12 +388,16 @@ class AdminEdocController extends EdocBaseController
                     ];
                 }
             }
+            $ownerRaw = $row['owner'] ?? '';
+            $ownerDisplay = ($ownerRaw !== '' && strpos($ownerRaw, '@') !== false)
+                ? ($emailToName[strtolower($ownerRaw)] ?? $ownerRaw)
+                : $ownerRaw;
             return [
                 'iddoc' => $row['iddoc'],
                 'officeiddoc' => esc($row['officeiddoc']),
                 'title' => esc($row['title']),
                 'doctype' => esc($row['doctype']),
-                'owner' => esc($row['owner']),
+                'owner' => esc($ownerDisplay),
                 'participant' => esc($row['participant']),
                 'participant_chips' => $participantChips,
                 'datedoc' => esc($row['datedoc']),
@@ -355,6 +445,11 @@ class AdminEdocController extends EdocBaseController
         // Set doc_year from datedoc if available
         if (!empty($data['datedoc'])) {
             $data['doc_year'] = (int) date('Y', strtotime($data['datedoc']));
+        }
+
+        // ใช้ Email เป็นหลัก: เอกสารใหม่ตั้ง owner เป็น email ของผู้บันทึก
+        if (empty($data['iddoc']) && !empty($this->edocUser['email'])) {
+            $data['owner'] = $this->edocUser['email'];
         }
 
         $iddoc = null;

@@ -190,8 +190,9 @@ class UserModel extends Model
             return null;
         }
 
-        // ค้นหาด้วย email ก่อนเสมอ (email คือ key หลัก)
+        // ค้นหาด้วย email ก่อนเสมอ (email เป็นเงื่อนไขหลักสำหรับการอัปเดต)
         $user = $this->findByEmail($email);
+        $foundByEmail = $user !== null;
 
         // ถ้าไม่พบด้วย email ลองหาด้วย login_uid (กรณีข้อมูลเก่าที่ email อาจต่างกัน)
         if (!$user && $loginUid !== '') {
@@ -212,16 +213,17 @@ class UserModel extends Model
             $updateData['login_uid'] = $loginUid;
         }
 
-        $profileImage = trim($portalUser['profile_image'] ?? $portalUser['avatar'] ?? $portalUser['picture'] ?? '');
-        if ($profileImage !== '') {
-            $updateData['profile_image'] = $profileImage;
-        }
+        // ไม่อัปเดต profile_image จาก API (ยกเว้นตามข้อกำหนด — ใช้เฉพาะที่ user อัปโหลดหรือมีอยู่แล้ว)
 
         if ($user) {
-            // user มีอยู่แล้ว — update ข้อมูลและ login_uid (ถ้ายังว่าง)
+            // user มีอยู่แล้ว — อัปเดตโดยใช้ email เป็นเงื่อนไข (WHERE email = ?)
             $existingLoginUid = trim($user['login_uid'] ?? '');
             if ($existingLoginUid === '' && $loginUid !== '') {
                 log_message('info', 'UserModel::findOrCreateFromPortalUser first login, updating login_uid=' . $loginUid . ' for uid=' . $user['uid']);
+            }
+            if ($foundByEmail) {
+                $this->where('email', $email)->update($updateData);
+                return $this->findByEmail($email);
             }
             $this->update($user['uid'], $updateData);
             return $this->find($user['uid']);
@@ -252,9 +254,11 @@ class UserModel extends Model
         if ($email === '') {
             return null;
         }
-        $user = $this->findByLoginUid($loginUid);
-        if (!$user) {
-            $user = $this->findByEmail($email);
+        // ค้นหาด้วย email เป็นเงื่อนไขหลักสำหรับการอัปเดต
+        $user = $this->findByEmail($email);
+        $foundByEmail = $user !== null;
+        if (!$user && $loginUid !== '') {
+            $user = $this->findByLoginUid($loginUid);
         }
         // อัปเดตฟิลด์จาก Edoc JSON ลง table user (รองรับ key หลายแบบตามแบบอย่างใน Edoc)
         $data = [
@@ -266,20 +270,18 @@ class UserModel extends Model
             'tf_name'       => trim($apiUser['tf_name'] ?? $apiUser['thai_name'] ?? $apiUser['th_name'] ?? $apiUser['first_name_th'] ?? ''),
             'tl_name'       => trim($apiUser['tl_name'] ?? $apiUser['thai_lastname'] ?? $apiUser['last_name_th'] ?? ''),
         ];
-        $profileImage = trim($apiUser['profile_image'] ?? '');
-        if ($profileImage !== '') {
-            $data['profile_image'] = $profileImage;
-        }
+        // ไม่อัปเดต profile_image จาก API (ยกเว้นตามข้อกำหนด)
         if ($user) {
+            if ($foundByEmail) {
+                $this->where('email', $email)->update($data);
+                return $this->findByEmail($email);
+            }
             $this->update($user['uid'], $data);
             return $this->find($user['uid']);
         }
         $data['password'] = null;
         $data['role'] = 'user';
         $data['status'] = 'active';
-        if ($profileImage !== '') {
-            $data['profile_image'] = $profileImage;
-        }
         $uid = $this->insert($data);
         return $uid ? $this->find($uid) : null;
     }
@@ -295,14 +297,17 @@ class UserModel extends Model
     }
 
     /**
-     * Get full name (Thai) — ใช้ ชื่อ + นามสกุล จาก tf_name + tl_name
+     * ชื่อสำหรับแสดงในระบบ — ถ้ามีชื่อภาษาไทย (tf_name, tl_name) ให้แสดงชื่อไทยก่อนเสมอ
+     * Fallback: title + ชื่อ-นามสกุลอังกฤษ (gf_name, gl_name)
      */
     public function getFullName(array $user): string
     {
         $first = self::firstNameTh($user);
         $last  = self::lastNameTh($user);
         $full  = trim($first . ' ' . $last);
-        if ($full !== '') return $full;
+        if ($full !== '') {
+            return $full;
+        }
         $title = $user['title'] ?? '';
         $firstName = $user['gf_name'] ?? '';
         $lastName = $user['gl_name'] ?? '';
@@ -310,14 +315,16 @@ class UserModel extends Model
     }
 
     /**
-     * ชื่อไทยเต็ม (ชื่อ + นามสกุล) สำหรับแสดงใน dropdown — จาก tf_name + tl_name
+     * ชื่อไทยเต็มสำหรับแสดง (dropdown/รายการ) — ชื่อภาษาไทย ก่อนเสมอ (tf_name + tl_name)
      */
     public function getFullNameThaiForDisplay(array $user): string
     {
         $first = self::firstNameTh($user);
         $last  = self::lastNameTh($user);
         $full  = trim($first . ' ' . $last);
-        if ($full !== '') return $full;
+        if ($full !== '') {
+            return $full;
+        }
         $title = trim($user['title'] ?? '');
         return trim($title . ' ' . $first . ' ' . $last) ?: $this->getFullName($user);
     }

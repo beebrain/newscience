@@ -184,7 +184,7 @@ class EdocController extends EdocBaseController
         $request = $this->request->getVar();
 
         $userEmail = strtolower(trim($user['email'] ?? ''));
-        $owner = trim($user["tf_name"] ?? '') . " " . trim($user["tl_name"] ?? '');
+        $ownerName = trim($user['tf_name'] ?? '') . ' ' . trim($user['tl_name'] ?? '');
 
         $columnsOrder = [
             0 => 'iddoc',
@@ -200,19 +200,23 @@ class EdocController extends EdocBaseController
         $builder = $this->edoctitleModel->builder();
         $builder->select(['edoctitle.iddoc', 'edoctitle.officeiddoc', 'edoctitle.datedoc', 'edoctitle.title', 'edoctitle.doctype', 'edoctitle.owner', 'edoctitle.participant', 'edoctitle.fileaddress', 'edoctitle.pages', 'edoctitle.order']);
 
-        // Filter: show docs where user is tagged by email OR is owner OR tagged as "ทุกคน" (legacy)
+        // ใช้ Email เป็นหลักในการค้นหาเอกสาร: tagged by email, owner = email, participant มี email
+        // Legacy: owner/participant ที่เก็บเป็นชื่อ ยังรองรับไว้
         $taggedDocIds = $this->docTagModel->getDocumentIdsByEmail($userEmail);
 
         $builder->groupStart();
         if (!empty($taggedDocIds)) {
             $builder->whereIn('edoctitle.iddoc', $taggedDocIds);
-            $builder->orWhere('owner', $owner);
-        } else {
-            $builder->where('owner', $owner);
         }
-        // Legacy fallback: also match by name in participant field
-        $builder->orLike('participant', $owner);
-        $builder->orLike('participant', 'ทุกคน');
+        if ($userEmail !== '') {
+            $builder->orWhere('edoctitle.owner', $userEmail);
+            $builder->orLike('edoctitle.participant', $userEmail);
+        }
+        if ($ownerName !== '') {
+            $builder->orWhere('edoctitle.owner', $ownerName);
+            $builder->orLike('edoctitle.participant', $ownerName);
+        }
+        $builder->orLike('edoctitle.participant', 'ทุกคน');
         $builder->groupEnd();
 
         // Volume/year filter
@@ -240,7 +244,12 @@ class EdocController extends EdocBaseController
             $builder->where('edoctitle.datedoc <=', $request['date_to']);
         }
         if (!empty($request['filter_owner'])) {
-            $builder->like('edoctitle.owner', $request['filter_owner']);
+            $filterOwner = trim($request['filter_owner']);
+            if (strpos($filterOwner, '@') !== false) {
+                $builder->where('edoctitle.owner', $filterOwner);
+            } else {
+                $builder->like('edoctitle.owner', $filterOwner);
+            }
         }
         if (!empty($request['filter_officeiddoc'])) {
             $builder->like('edoctitle.officeiddoc', $request['filter_officeiddoc']);
