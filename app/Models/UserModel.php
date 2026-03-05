@@ -199,13 +199,14 @@ class UserModel extends Model
             $user = $this->findByLoginUid($loginUid);
         }
 
+        // Mapping จาก URU Portal /me API (id, code, type, degree, prefix_*, first_name_en/th, last_name_en/th, email, ...)
         $updateData = [
-            'email'         => $email,
-            'title'         => trim($portalUser['title'] ?? ''),
-            'gf_name'       => trim($portalUser['gf_name'] ?? $portalUser['first_name_en'] ?? $portalUser['firstname_en'] ?? ''),
-            'gl_name'       => trim($portalUser['gl_name'] ?? $portalUser['last_name_en'] ?? $portalUser['lastname_en'] ?? ''),
-            'tf_name'       => trim($portalUser['tf_name'] ?? $portalUser['thai_name'] ?? $portalUser['th_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? ''),
-            'tl_name'       => trim($portalUser['tl_name'] ?? $portalUser['thai_lastname'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? ''),
+            'email'   => $email,
+            'title'   => trim($portalUser['title'] ?? $portalUser['prefix_th'] ?? $portalUser['prefix_en'] ?? ''),
+            'gf_name' => trim($portalUser['gf_name'] ?? $portalUser['first_name_en'] ?? $portalUser['firstname_en'] ?? ''),
+            'gl_name' => trim($portalUser['gl_name'] ?? $portalUser['last_name_en'] ?? $portalUser['lastname_en'] ?? ''),
+            'tf_name' => trim($portalUser['tf_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? $portalUser['thai_name'] ?? $portalUser['th_name'] ?? ''),
+            'tl_name' => trim($portalUser['tl_name'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? $portalUser['thai_lastname'] ?? ''),
         ];
 
         // อัปเดต login_uid เสมอถ้า Portal ส่งมา (รวมถึงกรณี login ครั้งแรกที่ login_uid ยังว่าง)
@@ -265,15 +266,15 @@ class UserModel extends Model
         if (!$user && $loginUid !== '') {
             $user = $this->findByLoginUid($loginUid);
         }
-        // อัปเดตฟิลด์จาก Edoc JSON ลง table user (รองรับ key หลายแบบตามแบบอย่างใน Edoc)
+        // อัปเดตฟิลด์จาก API ลง table user (รองรับ URU Portal /me และ Edoc: code, prefix_*, first_name_en/th, last_name_en/th)
         $data = [
-            'login_uid'     => $loginUid ?: null,
-            'email'         => $email,
-            'title'         => trim($apiUser['title'] ?? ''),
-            'gf_name'       => trim($apiUser['gf_name'] ?? $apiUser['first_name_en'] ?? ''),
-            'gl_name'       => trim($apiUser['gl_name'] ?? $apiUser['last_name_en'] ?? ''),
-            'tf_name'       => trim($apiUser['tf_name'] ?? $apiUser['thai_name'] ?? $apiUser['th_name'] ?? $apiUser['first_name_th'] ?? ''),
-            'tl_name'       => trim($apiUser['tl_name'] ?? $apiUser['thai_lastname'] ?? $apiUser['last_name_th'] ?? ''),
+            'login_uid' => $loginUid ?: null,
+            'email'     => $email,
+            'title'     => trim($apiUser['title'] ?? $apiUser['prefix_th'] ?? $apiUser['prefix_en'] ?? ''),
+            'gf_name'   => trim($apiUser['gf_name'] ?? $apiUser['first_name_en'] ?? $apiUser['firstname_en'] ?? ''),
+            'gl_name'   => trim($apiUser['gl_name'] ?? $apiUser['last_name_en'] ?? $apiUser['lastname_en'] ?? ''),
+            'tf_name'   => trim($apiUser['tf_name'] ?? $apiUser['first_name_th'] ?? $apiUser['firstname_th'] ?? $apiUser['thai_name'] ?? $apiUser['th_name'] ?? ''),
+            'tl_name'   => trim($apiUser['tl_name'] ?? $apiUser['last_name_th'] ?? $apiUser['lastname_th'] ?? $apiUser['thai_lastname'] ?? ''),
         ];
         // ไม่อัปเดต profile_image จาก API (ยกเว้นตามข้อกำหนด)
         if ($user) {

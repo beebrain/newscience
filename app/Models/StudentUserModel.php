@@ -68,13 +68,14 @@ class StudentUserModel extends Model
                 ->getRowArray() ?: null;
         }
 
+        // Mapping จาก URU Portal /me API (code, prefix_*, first_name_en/th, last_name_en/th, email, ...)
         $updateData = [
-            'email'         => $email,
-            'title'         => trim($portalUser['title'] ?? ''),
-            'gf_name'       => trim($portalUser['gf_name'] ?? $portalUser['first_name_en'] ?? $portalUser['firstname_en'] ?? ''),
-            'gl_name'       => trim($portalUser['gl_name'] ?? $portalUser['last_name_en'] ?? $portalUser['lastname_en'] ?? ''),
-            'tf_name'       => trim($portalUser['tf_name'] ?? $portalUser['th_name'] ?? $portalUser['thai_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? ''),
-            'tl_name'       => trim($portalUser['tl_name'] ?? $portalUser['thai_lastname'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? ''),
+            'email'   => $email,
+            'title'   => trim($portalUser['title'] ?? $portalUser['prefix_th'] ?? $portalUser['prefix_en'] ?? ''),
+            'gf_name' => trim($portalUser['gf_name'] ?? $portalUser['first_name_en'] ?? $portalUser['firstname_en'] ?? ''),
+            'gl_name' => trim($portalUser['gl_name'] ?? $portalUser['last_name_en'] ?? $portalUser['lastname_en'] ?? ''),
+            'tf_name' => trim($portalUser['tf_name'] ?? $portalUser['first_name_th'] ?? $portalUser['firstname_th'] ?? $portalUser['th_name'] ?? $portalUser['thai_name'] ?? ''),
+            'tl_name' => trim($portalUser['tl_name'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? $portalUser['thai_lastname'] ?? ''),
         ];
 
         // อัปเดต login_uid เสมอถ้า Portal ส่งมา (รวมถึงกรณี login ครั้งแรกที่ login_uid ยังว่าง)
