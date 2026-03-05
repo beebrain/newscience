@@ -33,7 +33,7 @@
 
         /* Custom DataTables Styling */
         .dataTables_wrapper {
-            padding: 0;
+            padding: 0 1rem 1rem;
         }
 
         .dataTables_filter {
@@ -41,14 +41,15 @@
         }
 
         .dataTables_length {
-            margin-bottom: 1rem;
+            margin: 0.75rem 0 0.5rem;
+            padding: 0 0.25rem;
         }
-
         .dataTables_length select {
-            padding: 0.375rem 0.75rem;
-            border: 1px solid #d1d5db;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid #e5e7eb;
             border-radius: 0.5rem;
-            background-color: white;
+            background: #fff;
+            font-size: 0.875rem;
         }
 
         table.dataTable {
@@ -57,23 +58,27 @@
         }
 
         table.dataTable thead th {
-            background: #f9fafb;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 0.75rem;
-            font-weight: 500;
-            font-size: 0.875rem;
-            color: #6b7280;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            color: #475569;
         }
 
         table.dataTable tbody td {
-            padding: 1rem 0.75rem;
-            border-bottom: 1px solid #e5e7eb;
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
         }
 
         table.dataTable tbody tr:hover {
-            background-color: #f9fafb;
+            background: #f8fafc;
             cursor: pointer;
+        }
+
+        table.dataTable tbody tr:last-child td {
+            border-bottom-color: #e2e8f0;
         }
 
         .dataTables_paginate {
@@ -105,11 +110,10 @@
             border-color: #4f46e5;
             color: white;
         }
-
         .dataTables_info {
-            color: #6b7280;
-            font-size: 0.875rem;
-            margin-top: 1rem;
+            color: #64748b;
+            font-size: 0.8125rem;
+            margin-top: 0.75rem;
         }
 
         /* Status badges */
@@ -144,6 +148,61 @@
             background: #fef3c7;
             color: #b45309;
             border: 1px solid #fcd34d;
+        }
+        .doc-chip-owner {
+            background: #e0e7ff;
+            color: #3730a3;
+            border: 1px solid #a5b4fc;
+        }
+
+        /* Toolbar controls */
+        .edoc-input {
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .edoc-btn-secondary {
+            background: #4f46e5;
+            color: #fff;
+            border: 1px solid #4f46e5;
+        }
+        .edoc-btn-secondary:hover {
+            background: #4338ca;
+            border-color: #4338ca;
+            color: #fff;
+        }
+        .edoc-btn-ghost {
+            background: transparent;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+        }
+        .edoc-btn-ghost:hover {
+            background: #f9fafb;
+            color: #374151;
+            border-color: #d1d5db;
+        }
+        .edoc-table-card {
+            background: #fff;
+        }
+        #fetch_users thead th {
+            font-weight: 600;
+            font-size: 0.8125rem;
+            text-transform: none;
+            letter-spacing: 0.01em;
+        }
+        #fetch_users tbody td {
+            font-size: 0.875rem;
+        }
+        /* Tab ชนิดหนังสือ */
+        .doc-type-tabs .doc-type-tab {
+            color: #4b5563;
+        }
+        .doc-type-tabs .doc-type-tab:hover {
+            color: #4f46e5;
+            background: rgba(255,255,255,0.8);
+        }
+        .doc-type-tabs .doc-type-tab.active {
+            background: #fff;
+            color: #4f46e5;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         }
 
         .status-report {
@@ -271,19 +330,28 @@
             color: #374151;
         }
 
-        /* Footer input styling */
-        tfoot input {
-            width: 100%;
-            padding: 0.375rem 0.5rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
+        /* Footer: แถบกรองคอลัมน์ */
+        #fetch_users tfoot th {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 0.5rem 1rem;
+            vertical-align: middle;
         }
-
-        tfoot input:focus {
+        #fetch_users tfoot input {
+            width: 100%;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 0.8125rem;
+            background: #fff;
+        }
+        #fetch_users tfoot input::placeholder {
+            color: #94a3b8;
+        }
+        #fetch_users tfoot input:focus {
             outline: none;
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
         }
 
         /* Loading animation */
@@ -414,54 +482,72 @@
         <!-- Main Content -->
         <div class="content-page">
             <div class="container-fluid p-4 md:p-6">
-                <!-- Header Card -->
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-                    <div class="bg-indigo-600 p-4 md:p-6">
-                        <h1 class="text-xl md:text-2xl font-bold text-white">ระบบจัดการเอกสาร</h1>
-                        <p class="text-indigo-100 mt-1">ติดตามและจัดการเอกสารทั้งหมด</p>
-                    </div>
+                <!-- Header: ชื่อหน้า + คำอธิบายสั้น -->
+                <div class="mb-6">
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">ระบบจัดการเอกสาร</h1>
+                    <p class="text-gray-500 mt-1 text-sm md:text-base">ติดตามและจัดการเอกสารทั้งหมดของคุณ</p>
+                </div>
 
-                    <!-- Controls Section -->
-                    <div class="p-4 md:p-6">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                            <!-- Search Bar -->
-                            <div class="relative w-full md:w-80">
-                                <input type="text" id="globalSearch" placeholder="ค้นหาเอกสาร..."
-                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3 top-2.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
+                <!-- Card หลัก: Toolbar + ตาราง -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
+                    <!-- Toolbar: ค้นหา + ชนิดหนังสือ + ปี + ปุ่ม -->
+                    <div class="p-4 md:p-5 border-b border-gray-100 bg-gray-50/50">
+                        <div class="flex flex-col gap-4">
+                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 min-w-0">
+                                    <div class="relative flex-1 sm:max-w-xs">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                                            <i class="fas fa-search text-sm"></i>
+                                        </span>
+                                        <input type="text" id="globalSearch" placeholder="ค้นหาเอกสาร..."
+                                            class="edoc-input w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                                    </div>
+                                    <button type="button" id="btn-advanced-search" class="edoc-btn-secondary inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl whitespace-nowrap">
+                                        <i class="fas fa-sliders-h"></i>
+                                        <span id="btn-advanced-search-text">ค้นหาละเอียด</span>
+                                    </button>
+                                    <button id="clearFiltersBtn" class="edoc-btn-ghost inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl whitespace-nowrap">
+                                        <i class="fas fa-redo-alt"></i>
+                                        เคลียร์ตัวกรอง
+                                    </button>
+                                </div>
                             </div>
-
-                            <!-- Year Filter -->
-                            <div class="flex items-center gap-2">
-                                <label class="text-sm font-medium text-gray-600 whitespace-nowrap">ปี:</label>
-                                <select id="yearFilter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                    <option value="">ทุกปี</option>
-                                    <?php if (!empty($availableYears)): ?>
-                                        <?php foreach ($availableYears as $year): ?>
-                                            <option value="<?= $year ?>" <?= (isset($currentYear) && $currentYear == $year) ? 'selected' : '' ?>><?= $year ?></option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
-
-                            <button type="button" id="btn-advanced-search" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition flex items-center text-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-                                <span id="btn-advanced-search-text">ค้นหาละเอียด</span>
-                            </button>
-
-                            <!-- Action Buttons -->
-                            <div class="flex gap-2 w-full md:w-auto">
-                                <button id="clearFiltersBtn" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                    </svg>
-                                    เคลียร์ตัวกรอง
-                                </button>
-
+                            <!-- แถบชนิดหนังสือ + ปี -->
+                            <div id="edoc-type-year-bar" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t border-gray-200/80">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="text-sm font-medium text-gray-500">ชนิดหนังสือ</span>
+                                    <div class="doc-type-tabs flex flex-wrap gap-1 rounded-xl bg-gray-100 p-1.5" role="tablist">
+                                        <button type="button" class="doc-type-tab px-3 py-2 text-sm font-medium rounded-lg transition-all active" data-doctype="" role="tab">ทั้งหมด</button>
+                                        <button type="button" class="doc-type-tab px-3 py-2 text-sm font-medium rounded-lg transition-all" data-doctype="หนังสือรับภายใน" role="tab">รับภายใน</button>
+                                        <button type="button" class="doc-type-tab px-3 py-2 text-sm font-medium rounded-lg transition-all" data-doctype="หนังสือรับภายนอก" role="tab">รับภายนอก</button>
+                                        <button type="button" class="doc-type-tab px-3 py-2 text-sm font-medium rounded-lg transition-all" data-doctype="หนังสือส่งภายใน" role="tab">ส่งภายใน</button>
+                                        <button type="button" class="doc-type-tab px-3 py-2 text-sm font-medium rounded-lg transition-all" data-doctype="ใบลา" role="tab">ใบลา</button>
+                                        <button type="button" class="doc-type-tab px-3 py-2 text-sm font-medium rounded-lg transition-all" data-doctype="คำสั่ง" role="tab">คำสั่ง</button>
+                                        <button type="button" class="doc-type-tab px-3 py-2 text-sm font-medium rounded-lg transition-all" data-doctype="ประกาศ" role="tab">ประกาศ</button>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 sm:pl-2">
+                                    <label class="text-sm font-medium text-gray-500">ปี</label>
+                                    <select id="edoc-year-select" class="edoc-input rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white min-w-[5.5rem] focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                                        <option value="">ทุกปี</option>
+                                        <?php if (!empty($availableYears)): ?>
+                                            <?php foreach ($availableYears as $y): ?>
+                                                <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? date('Y'))) ? 'selected' : '' ?>><?= (int)$y ?></option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                    <select id="yearFilter" class="hidden">
+                                        <option value="">ทุกปี</option>
+                                        <?php if (!empty($availableYears)): ?>
+                                            <?php foreach ($availableYears as $year): ?>
+                                                <option value="<?= $year ?>" <?= (isset($currentYear) && $currentYear == $year) ? 'selected' : '' ?>><?= $year ?></option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
                         <!-- Advanced Search Panel -->
                         <div id="advanced-search-panel" class="hidden mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
@@ -491,7 +577,7 @@
                                         <option value="">ทุกปี</option>
                                         <?php if (!empty($availableYears)): ?>
                                             <?php foreach ($availableYears as $y): ?>
-                                            <option value="<?= (int)$y ?>"><?= (int)$y ?></option>
+                                            <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? date('Y'))) ? 'selected' : '' ?>><?= (int)$y ?></option>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
                                     </select>
@@ -531,7 +617,7 @@
                         </div>
 
                         <!-- DataTable Container -->
-                        <div class="bg-white rounded-lg border overflow-hidden">
+                        <div class="edoc-table-card overflow-hidden">
                             <div class="overflow-x-auto custom-scrollbar">
                                 <table id="fetch_users" class="w-full">
                                     <thead>
@@ -549,19 +635,18 @@
                                     <tfoot>
                                         <tr>
                                             <th></th>
-                                            <th><input type="text" class="form-control form-control-sm" placeholder="Search เลขที่หนังสือ"></th>
-                                            <th><input type="text" class="form-control form-control-sm" placeholder="Search ชื่อเรื่อง"></th>
-                                            <th><input type="text" class="form-control form-control-sm" placeholder="Search ชนิดเอกสาร"></th>
-                                            <th><input type="text" class="form-control form-control-sm" placeholder="Search เจ้าของเอกสาร"></th>
-                                            <th><input type="text" class="form-control form-control-sm" placeholder="Search ผู้มีส่วนร่วม"></th>
-                                            <th><input type="text" class="form-control form-control-sm" placeholder="Search วันที่ลงหนังสือ"></th>
-                                            <th><input type="text" class="form-control form-control-sm" placeholder="Search หน้า"></th>
+                                            <th><input type="text" placeholder="กรอง เลขที่"></th>
+                                            <th><input type="text" placeholder="กรอง ชื่อเรื่อง"></th>
+                                            <th><input type="text" placeholder="กรอง ชนิด"></th>
+                                            <th><input type="text" placeholder="กรอง เจ้าของ"></th>
+                                            <th><input type="text" placeholder="กรอง ผู้มีส่วนร่วม"></th>
+                                            <th><input type="text" placeholder="กรอง วันที่"></th>
+                                            <th><input type="text" placeholder="กรอง คำสั่ง"></th>
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
                         </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -702,6 +787,15 @@
         let table;
 
         $(document).ready(function() {
+            // Sync แถบชนิดหนังสือ + ปี กับตัวกรอง (เหมือน Admin) — ใช้ค่าตอนโหลดครั้งแรก
+            if ($('#edoc-year-select').length) {
+                var y = $('#edoc-year-select').val();
+                $('#adv-year').val(y);
+                $('#yearFilter').val(y);
+            }
+            if ($('.doc-type-tab.active').length) {
+                $('#adv-doctype').val($('.doc-type-tab.active').data('doctype') || '');
+            }
             var table = $('#fetch_users').DataTable({
                 "processing": true,
                 "serverSide": true,
@@ -743,13 +837,15 @@
                                 });
                             }
                         });
-                        // Year filter (from main year dropdown)
-                        var yearVal = $('#yearFilter').val();
-                        if (yearVal) {
-                            d.doc_year = yearVal;
+                        // ชนิดหนังสือ + ปี จากแถบ (หรือจาก advanced)
+                        if ($('#edoc-year-select').length) {
+                            var barYear = $('#edoc-year-select').val();
+                            if (barYear) d.doc_year = barYear;
+                        } else {
+                            var yearVal = $('#yearFilter').val();
+                            if (yearVal) d.doc_year = yearVal;
                         }
-                        // Advanced filters
-                        d.doctype = $('#adv-doctype').val() || '';
+                        d.doctype = ($('.doc-type-tabs .doc-type-tab.active').length ? ($('.doc-type-tabs .doc-type-tab.active').data('doctype') || '') : ($('#adv-doctype').val() || ''));
                         if ($('#adv-year').val()) d.doc_year = $('#adv-year').val();
                         d.volume_id = $('#adv-volume').val() || '';
                         d.date_from = $('#adv-date-from').val() || '';
@@ -768,51 +864,41 @@
                 "columns": [{
                         "data": "iddoc",
                         "defaultContent": "",
-                        "render": function(data, type, row) {
-                            return `<span class="status-badge ">${data}</span>`;
-
-                        }
+                        "render": function(data) { return data != null ? data : ''; }
                     },
                     {
                         "data": "officeiddoc",
                         "defaultContent": "",
-                        "render": function(data, type, row) {
-                            if (type === 'display' && data) {
-                                let badgeClass = getBadgeClass(data);
-                                return `<span class="status-badge ${badgeClass}">${data}</span>`;
-                            }
-                            return data;
+                        "render": function(data, type) {
+                            if (type !== 'display' || data == null) return data;
+                            var text = (typeof data === 'string' && data.indexOf('<') !== -1) ? $('<div>').html(data).text().trim() : data;
+                            return (text + '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                         }
                     },
                     {
                         "data": "title",
                         "defaultContent": "-",
-                        "render": function(data, type, row) {
-                            if (type === 'display' && data) {
-                                let badgeClass = getBadgeClass(data);
-                                return `<span class="status-badge ${badgeClass}">${data}</span>`;
-                            }
-                            return data;
+                        "render": function(data, type) {
+                            if (type !== 'display') return data;
+                            if (data == null) return '-';
+                            var text = (typeof data === 'string' && data.indexOf('<') !== -1) ? $('<div>').html(data).text().trim() : data;
+                            return (text + '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                         }
                     },
                     {
                         "data": "doctype",
                         "defaultContent": "",
-                        "render": function(data, type, row) {
-                            if (type === 'display' && data) {
-                                let badgeClass = getBadgeClass(data);
-                                return `<span class="status-badge ${badgeClass}">${data}</span>`;
-                            }
-                            return data;
-                        }
-
+                        "render": function(data) { return data != null ? (data + '').replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''; }
                     },
                     {
                         "data": "owner",
                         "defaultContent": "",
                         "render": function(data, type, row) {
-                            return `<span class="status-badge ">${data}</span>`;
-
+                            if (type === 'display' && data) {
+                                var label = (data + '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                return '<span class="doc-chip doc-chip-owner status-badge" title="เจ้าของเอกสาร">' + label + '</span>';
+                            }
+                            return data || '';
                         }
                     },
                     {
@@ -830,25 +916,18 @@
                                 html += '</div>';
                                 return html;
                             }
-                            return '<span class="status-badge">' + (data || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>';
+                            return (data || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                         }
                     },
                     {
                         "data": "datedoc",
                         "defaultContent": "",
-                        "render": function(data, type, row) {
-                            return `<span class="status-badge ">${formatDateToThai(data)}</span>`;
-
-                        }
-
+                        "render": function(data) { return data != null ? formatDateToThai(data) : ''; }
                     },
                     {
                         "data": "order",
                         "defaultContent": "",
-                        "render": function(data, type, row) {
-                            return `<span class="status-badge ">${data}</span>`;
-
-                        }
+                        "render": function(data) { return data != null ? data : ''; }
                     }
                 ],
                 "columnDefs": [{
@@ -893,6 +972,12 @@
                 }
             });
 
+            // คลิกแถวเพื่อเปิดรายละเอียดเอกสาร
+            $('#fetch_users').on('click', 'tbody tr', function() {
+                var row = table.row(this).data();
+                if (row && row.iddoc) info(row.iddoc);
+            });
+
             // Add the following code to handle the column search
             $('#fetch_users tfoot th').each(function(i) {
                 var title = $(this).text();
@@ -902,22 +987,59 @@
             // Add a button to clear all column filters
             // $('#fetch_users_wrapper').prepend('<button id="clear-filters" class="btn btn-secondary mb-3">Clear All Filters</button>');
 
-            // Clear all filters when the button is clicked
+            // Clear all filters when the button is clicked (รวมแถบชนิดหนังสือ + ปี)
             $('#clearFiltersBtn').on('click', function() {
                 $('tfoot input').val('');
                 $('#globalSearch').val('');
                 $('#yearFilter').val('');
+                if ($('#edoc-year-select').length) {
+                    var currentY = '<?= (int)($currentYear ?? date("Y")) ?>';
+                    $('#edoc-year-select').val(currentY);
+                    $('#adv-year').val(currentY);
+                    $('#yearFilter').val(currentY);
+                }
+                $('.doc-type-tab').removeClass('active').first().addClass('active');
+                $('#adv-doctype').val('');
                 table.columns().search('').draw();
                 table.search('').draw();
+                if (table.ajax) table.ajax.reload();
+                if (typeof updateAdvFilterBadgesUser === 'function') updateAdvFilterBadgesUser();
+                if (typeof updateAdvSearchButtonTextUser === 'function') updateAdvSearchButtonTextUser();
             });
 
             $('#globalSearch').on('keyup change', function() {
                 table.search(this.value).draw();
             });
 
-            // Year filter change - reload table
+            // Year filter change - reload table และ sync กับแถบปี
             $('#yearFilter').on('change', function() {
+                var v = $(this).val();
+                if ($('#edoc-year-select').length) $('#edoc-year-select').val(v);
+                $('#adv-year').val(v);
                 table.ajax.reload();
+            });
+
+            // Tab ชนิดหนังสือ + ปี: sync กับ adv filter แล้ว reload (เหมือน Admin)
+            function applyTypeYearAndReloadUser() {
+                var doctype = $('.doc-type-tabs .doc-type-tab.active').data('doctype') || '';
+                var year = $('#edoc-year-select').length ? $('#edoc-year-select').val() : $('#adv-year').val();
+                $('#adv-doctype').val(doctype);
+                $('#adv-year').val(year);
+                $('#yearFilter').val(year);
+                if (table && table.ajax) table.ajax.reload();
+                if (typeof updateAdvFilterBadgesUser === 'function') updateAdvFilterBadgesUser();
+                if (typeof updateAdvSearchButtonTextUser === 'function') updateAdvSearchButtonTextUser();
+            }
+            $('.doc-type-tab').on('click', function() {
+                $('.doc-type-tab').removeClass('active');
+                $(this).addClass('active');
+                applyTypeYearAndReloadUser();
+            });
+            $('#edoc-year-select').on('change', function() {
+                var v = $(this).val();
+                $('#adv-year').val(v);
+                $('#yearFilter').val(v);
+                applyTypeYearAndReloadUser();
             });
 
             // Advanced Search Panel
@@ -1129,7 +1251,12 @@
                         $('#msg_officeiddoc').text(result_data.officeiddoc || '-');
                         $('#msg_title').text(result_data.title || '-');
                         $('#msg_doctype').text(result_data.doctype || '-');
-                        $('#msg_owner').text(result_data.owner || '-');
+                        if (result_data.owner) {
+                            var ownerLabel = (result_data.owner + '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            $('#msg_owner').html('<span class="doc-chip doc-chip-owner status-badge" title="เจ้าของเอกสาร">' + ownerLabel + '</span>');
+                        } else {
+                            $('#msg_owner').text('-');
+                        }
                         if (result_data.participant_chips && result_data.participant_chips.length) {
                             var chipHtml = '<div class="doc-participant-chips flex flex-wrap gap-1">';
                             result_data.participant_chips.forEach(function(chip) {
