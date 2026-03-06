@@ -68,6 +68,14 @@ class UrgentPopups extends BaseController
         $imageFile = $this->request->getFile('image');
         if ($imageFile && $imageFile->isValid() && !$imageFile->hasMoved()) {
             $data['image'] = $this->uploadPopupImage($imageFile);
+        } else {
+            $base64 = $this->request->getPost('image_base64');
+            if (!empty($base64) && is_string($base64)) {
+                $saved = $this->savePopupImageFromBase64($base64);
+                if ($saved !== null) {
+                    $data['image'] = $saved;
+                }
+            }
         }
 
         $this->popupModel->insert($data);
@@ -116,6 +124,15 @@ class UrgentPopups extends BaseController
         if ($imageFile && $imageFile->isValid() && !$imageFile->hasMoved()) {
             $this->deletePopupImage($popup['image'] ?? '');
             $data['image'] = $this->uploadPopupImage($imageFile);
+        } else {
+            $base64 = $this->request->getPost('image_base64');
+            if (!empty($base64) && is_string($base64)) {
+                $this->deletePopupImage($popup['image'] ?? '');
+                $saved = $this->savePopupImageFromBase64($base64);
+                if ($saved !== null) {
+                    $data['image'] = $saved;
+                }
+            }
         }
 
         $this->popupModel->update($id, $data);
@@ -183,6 +200,34 @@ class UrgentPopups extends BaseController
         $newName = $file->getRandomName();
         $file->move($dir, $newName);
         return 'uploads/urgent_popups/' . $newName;
+    }
+
+    /**
+     * บันทึกรูปจาก base64 (หลัง crop ในฟอร์ม) ลง uploads/urgent_popups/
+     */
+    private function savePopupImageFromBase64(string $base64): ?string
+    {
+        $raw = $base64;
+        if (strpos($raw, 'base64,') !== false) {
+            $raw = substr($raw, strpos($raw, 'base64,') + 7);
+        }
+        $bin = base64_decode($raw, true);
+        if ($bin === false || strlen($bin) === 0) {
+            return null;
+        }
+        $dir = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'urgent_popups';
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        if (!is_writable($dir)) {
+            return null;
+        }
+        $fileName = 'popup_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.jpg';
+        $fullPath = $dir . DIRECTORY_SEPARATOR . $fileName;
+        if (file_put_contents($fullPath, $bin) === false) {
+            return null;
+        }
+        return 'uploads/urgent_popups/' . $fileName;
     }
 
     private function deletePopupImage($path): void

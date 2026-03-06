@@ -94,15 +94,21 @@ $urgentPopups = $urgent_popups ?? [];
 $urgentPopupsWithImage = array_values(array_filter($urgentPopups, function ($p) { return !empty($p['image_url']); }));
 ?>
 <?php if (!empty($urgentPopupsWithImage)): ?>
-<!-- Urgent Popup: แบบรูปอย่างเดียว, เลื่อนซ้าย-ขวาได้ -->
+<!-- Urgent Popup: แบบรูปอย่างเดียว, สไตล์ Modern -->
 <div id="urgent-popup-overlay" class="urgent-popup-overlay" role="dialog" aria-label="ประกาศด่วน" aria-modal="true" hidden>
     <div class="urgent-popup-backdrop"></div>
     <div class="urgent-popup-wrap">
         <div class="urgent-popup-box urgent-popup-box--image-only">
-            <button type="button" class="urgent-popup-close" id="urgent-popup-close" aria-label="ปิด">×</button>
+            <button type="button" class="urgent-popup-close" id="urgent-popup-close" aria-label="ปิด">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
             <?php if (count($urgentPopupsWithImage) > 1): ?>
-            <button type="button" class="urgent-popup-arrow urgent-popup-prev" aria-label="ข่าวก่อนหน้า">‹</button>
-            <button type="button" class="urgent-popup-arrow urgent-popup-next" aria-label="ข่าวถัดไป">›</button>
+            <button type="button" class="urgent-popup-arrow urgent-popup-prev" aria-label="ข่าวก่อนหน้า">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button type="button" class="urgent-popup-arrow urgent-popup-next" aria-label="ข่าวถัดไป">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
             <?php endif; ?>
             <div class="urgent-popup-carousel">
                 <?php foreach ($urgentPopupsWithImage as $idx => $p): ?>
@@ -137,29 +143,162 @@ $urgentPopupsWithImage = array_values(array_filter($urgentPopups, function ($p) 
 </div>
 
 <style>
-.urgent-popup-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s; }
-.urgent-popup-overlay[data-open="true"] { opacity: 1; visibility: visible; }
-.urgent-popup-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.65); }
-.urgent-popup-wrap { position: relative; width: 100%; max-width: 560px; max-height: 90vh; }
-.urgent-popup-box--image-only { position: relative; background: #fff; border-radius: 12px; box-shadow: 0 24px 48px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; }
-.urgent-popup-close { position: absolute; top: 0.75rem; right: 0.75rem; z-index: 3; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(0,0,0,0.5); color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.urgent-popup-close:hover { background: rgba(0,0,0,0.7); }
-.urgent-popup-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(0,0,0,0.4); color: #fff; font-size: 1.75rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.urgent-popup-arrow:hover { background: rgba(0,0,0,0.6); }
-.urgent-popup-prev { left: 0.75rem; }
-.urgent-popup-next { right: 0.75rem; }
-.urgent-popup-carousel { position: relative; width: 100%; aspect-ratio: 4/3; min-height: 200px; overflow: hidden; }
+/* ===== Urgent Popup — Modern style ===== */
+.urgent-popup-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.25rem;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+}
+.urgent-popup-overlay[data-open="true"] {
+    opacity: 1; visibility: visible;
+}
+.urgent-popup-overlay[data-open="true"] .urgent-popup-wrap {
+    animation: urgentPopupIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes urgentPopupIn {
+    from { opacity: 0; transform: scale(0.92) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.urgent-popup-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+.urgent-popup-wrap {
+    position: relative;
+    width: 100%; max-width: 580px; max-height: 90vh;
+    opacity: 0;
+}
+.urgent-popup-box--image-only {
+    position: relative;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    max-height: 90vh;
+}
+.urgent-popup-close {
+    position: absolute; top: 1rem; right: 1rem; z-index: 3;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.95);
+    color: #475569;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.urgent-popup-close:hover {
+    background: #fff;
+    color: #1e293b;
+    transform: scale(1.08);
+}
+.urgent-popup-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    z-index: 2;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.95);
+    color: #1e293b;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.urgent-popup-arrow:hover {
+    background: #fff;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+    transform: translateY(-50%) scale(1.08);
+}
+.urgent-popup-prev { left: 1rem; }
+.urgent-popup-next { right: 1rem; }
+.urgent-popup-carousel {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    min-height: 220px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+}
 .urgent-popup-slide { display: none; position: absolute; inset: 0; }
 .urgent-popup-slide.active { display: block; position: relative; }
-.urgent-popup-image-link, .urgent-popup-image-wrap { display: block; width: 100%; height: 100%; }
-.urgent-popup-image-link img, .urgent-popup-image-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; background: #f1f5f9; }
-.urgent-popup-dots { display: flex; justify-content: center; gap: 0.5rem; padding: 0.75rem; flex-shrink: 0; }
-.urgent-popup-dot { width: 8px; height: 8px; border-radius: 50%; border: none; background: #cbd5e1; cursor: pointer; padding: 0; }
-.urgent-popup-dot.active { background: #1e3a5f; }
-.urgent-popup-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem 1rem; border-top: 1px solid #e2e8f0; flex-shrink: 0; }
-.urgent-popup-dismiss-label { font-size: 0.8125rem; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin: 0; }
-.urgent-popup-btn-close { padding: 0.35rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; cursor: pointer; }
-.urgent-popup-btn-close:hover { background: #f1f5f9; }
+.urgent-popup-image-link, .urgent-popup-image-wrap {
+    display: block; width: 100%; height: 100%;
+}
+.urgent-popup-image-link img, .urgent-popup-image-wrap img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: block;
+}
+.urgent-popup-image-link:hover img { opacity: 0.96; }
+.urgent-popup-dots {
+    display: flex; justify-content: center; align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+    flex-shrink: 0;
+}
+.urgent-popup-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: none;
+    background: #e2e8f0;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.25s ease, transform 0.2s ease;
+}
+.urgent-popup-dot:hover { background: #cbd5e1; }
+.urgent-popup-dot.active {
+    background: var(--primary, #eab308);
+    transform: scale(1.2);
+    box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.3);
+}
+.urgent-popup-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 0.75rem;
+    padding: 1rem 1.25rem 1.25rem;
+    background: #fafafa;
+    border-top: 1px solid #f1f5f9;
+    flex-shrink: 0;
+}
+.urgent-popup-dismiss-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 0.5rem;
+    margin: 0;
+    user-select: none;
+}
+.urgent-popup-dismiss-label input { accent-color: var(--primary, #eab308); }
+.urgent-popup-btn-close {
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 10px;
+    background: var(--primary, #eab308);
+    color: #1e293b;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.05s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 8px rgba(234, 179, 8, 0.35);
+}
+.urgent-popup-btn-close:hover {
+    background: var(--primary-dark, #ca8a04);
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.4);
+}
+.urgent-popup-btn-close:active { transform: scale(0.98); }
+@media (max-width: 640px) {
+    .urgent-popup-box--image-only { border-radius: 16px; }
+    .urgent-popup-close { top: 0.75rem; right: 0.75rem; width: 40px; height: 40px; }
+    .urgent-popup-arrow { width: 42px; height: 42px; }
+    .urgent-popup-prev { left: 0.5rem; }
+    .urgent-popup-next { right: 0.5rem; }
+}
 </style>
 
 <script>
