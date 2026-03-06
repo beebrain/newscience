@@ -11,6 +11,12 @@ use App\Libraries\AccessControl;
  * ตรวจสอบสิทธิ์การเข้าถึงแต่ละส่วนของ Admin ตาม user_system_access (และ role)
  * ต้องรันหลัง adminauth (ผู้ใช้ล็อกอินและมี role admin/editor/faculty_admin/super_admin แล้ว)
  *
+ * Faculty Admin (role = faculty_admin): มีสิทธิ์ admin_core โดยอัตโนมัติ (ดู AccessControl)
+ * จึงเข้าได้ทุก Feature ที่อนุญาตผ่าน admin_core ได้แก่
+ * - จัดการดาวน์โหลดคณะ (admin/downloads)
+ * - ประกาศด่วน ป๊อปอัป (admin/urgent-popups)
+ * - ประกาศข่าว (admin/news), องค์กร, หลักสูตร, Hero Slides, Events
+ *
  * แมป URI -> system slug:
  * - admin/news -> admin_news (หรือ admin_core)
  * - admin/organization, programs, hero-slides, events -> admin_core

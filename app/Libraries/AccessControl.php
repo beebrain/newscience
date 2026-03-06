@@ -38,7 +38,8 @@ class AccessControl
             return true;
         }
 
-        // admin_core: faculty_admin, admin, editor เข้าได้โดยอัตโนมัติ
+        // admin_core: faculty_admin, admin, editor เข้าได้โดยอัตโนมัติ (สิทธิ์เทียบเท่า Admin ด้านเนื้อหา)
+        // ทำให้เข้าได้: ประกาศข่าว, องค์กร, หลักสูตร, Hero Slides, Events, จัดการดาวน์โหลดคณะ, ประกาศด่วนป๊อปอัป
         if ($systemSlug === 'admin_core' && in_array($user['role'], ['faculty_admin', 'admin', 'editor'], true)) {
             return true;
         }
