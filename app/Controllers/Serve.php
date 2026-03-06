@@ -15,7 +15,7 @@ use CodeIgniter\HTTP\ResponseInterface;
  */
 class Serve extends BaseController
 {
-    private const ALLOWED_TYPES = ['news', 'events', 'hero', 'staff', 'programs', 'personnel'];
+    private const ALLOWED_TYPES = ['news', 'events', 'hero', 'staff', 'programs', 'personnel', 'faculty-downloads'];
 
     /**
      * Serve a file by type and filename.
@@ -61,8 +61,9 @@ class Serve extends BaseController
         }
 
         $mime = $this->mimeFromFilename($filename);
+        $disposition = $this->dispositionForFilename($filename);
         $this->response->setHeader('Content-Type', $mime);
-        $this->response->setHeader('Content-Disposition', 'inline; filename="' . str_replace('"', '\\"', $filename) . '"');
+        $this->response->setHeader('Content-Disposition', $disposition . '; filename="' . str_replace('"', '\\"', $filename) . '"');
         return $this->response->setBody(file_get_contents($path));
     }
 
@@ -222,8 +223,9 @@ class Serve extends BaseController
         }
         $filename = basename($fullPath);
         $mime = $this->mimeFromFilename($filename);
+        $disposition = $this->dispositionForFilename($filename);
         $this->response->setHeader('Content-Type', $mime);
-        $this->response->setHeader('Content-Disposition', 'inline; filename="' . str_replace('"', '\\"', $filename) . '"');
+        $this->response->setHeader('Content-Disposition', $disposition . '; filename="' . str_replace('"', '\\"', $filename) . '"');
         return $this->response->setBody(file_get_contents($fullPath));
     }
 
@@ -238,7 +240,22 @@ class Serve extends BaseController
             'webp' => 'image/webp',
             'svg' => 'image/svg+xml',
             'pdf' => 'application/pdf',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls' => 'application/vnd.ms-excel',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'ppt' => 'application/vnd.ms-powerpoint',
+            'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'zip' => 'application/zip',
         ];
         return $map[$ext] ?? 'application/octet-stream';
+    }
+
+    /** ใช้ attachment สำหรับเอกสารเพื่อให้เบราว์เซอร์ดาวน์โหลด ไม่เปิดในแท็บ */
+    private function dispositionForFilename(string $filename): string
+    {
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $inline = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+        return in_array($ext, $inline, true) ? 'inline' : 'attachment';
     }
 }
