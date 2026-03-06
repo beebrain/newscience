@@ -9,6 +9,7 @@ use App\Models\SiteSettingModel;
 use App\Models\PersonnelModel;
 use App\Models\HeroSlideModel;
 use App\Models\EventModel;
+use App\Models\UrgentPopupModel;
 use App\Libraries\OrganizationRoles;
 
 class Home extends BaseController
@@ -94,6 +95,22 @@ class Home extends BaseController
             $heroSlides = [];
         }
 
+        // ประกาศด่วน (ป๊อปอัปหน้าแรก สูงสุด 3 รายการ)
+        $urgentPopups = [];
+        try {
+            $popupModel = new UrgentPopupModel();
+            $urgentPopups = $popupModel->getActivePopups();
+            foreach ($urgentPopups as &$p) {
+                $p['image_url'] = '';
+                if (!empty($p['image'])) {
+                    $p['image_url'] = base_url('serve/uploads/urgent_popups/' . basename($p['image']));
+                }
+            }
+            unset($p);
+        } catch (\Exception $e) {
+            $urgentPopups = [];
+        }
+
         // Format hero slides for view
         $formattedSlides = [];
         foreach ($heroSlides as $slide) {
@@ -128,6 +145,7 @@ class Home extends BaseController
             'vice_deans' => $viceDeans,
             'hero_slides' => $formattedSlides,
             'upcoming_events' => $upcomingEvents,
+            'urgent_popups' => $urgentPopups,
         ];
 
         return view('pages/home', $data);

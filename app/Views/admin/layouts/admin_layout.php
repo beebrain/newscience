@@ -104,6 +104,10 @@ use App\Libraries\AccessControl; ?>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
                         Hero Slides
                     </a>
+                    <a href="<?= base_url('admin/urgent-popups') ?>" class="<?= (uri_string() == 'admin/urgent-popups' || strpos(uri_string(), 'admin/urgent-popups') === 0) ? 'active' : '' ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                        ประกาศด่วน (ป๊อปอัป)
+                    </a>
                     <a href="<?= base_url('admin/events') ?>" class="<?= (uri_string() == 'admin/events' || strpos(uri_string(), 'admin/events') === 0) ? 'active' : '' ?>">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
                         Events Coming Up

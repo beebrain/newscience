@@ -85,6 +85,143 @@ function getProgramCarouselImageUrl(array $program): string
 <?= $this->section('content') ?>
 
 <?php
+// ประกาศด่วน (ป๊อปอัป) — แสดงเฉพาะเมื่อมีข้อมูลและอยู่หน้าแรก
+$urgentPopups = $urgent_popups ?? [];
+?>
+
+<?php if (!empty($urgentPopups)): ?>
+<!-- Urgent Announcement Popup (Feature Rich, สูงสุด 3 รายการ) -->
+<div id="urgent-popup-overlay" class="urgent-popup-overlay" role="dialog" aria-labelledby="urgent-popup-title" aria-modal="true" hidden>
+    <div class="urgent-popup-backdrop"></div>
+    <div class="urgent-popup-wrap">
+        <div class="urgent-popup-box">
+            <div class="urgent-popup-header">
+                <span class="urgent-popup-badge">ประกาศด่วน</span>
+                <button type="button" class="urgent-popup-close" id="urgent-popup-close" aria-label="ปิดประกาศ">×</button>
+            </div>
+            <div class="urgent-popup-body">
+                <div class="urgent-popup-carousel" id="urgent-popup-carousel">
+                    <?php foreach ($urgentPopups as $idx => $p): ?>
+                    <div class="urgent-popup-slide <?= $idx === 0 ? 'active' : '' ?>" data-popup-id="<?= (int)($p['id'] ?? 0) ?>">
+                        <?php if (!empty($p['image_url'])): ?>
+                        <div class="urgent-popup-image">
+                            <img src="<?= esc($p['image_url']) ?>" alt="">
+                        </div>
+                        <?php endif; ?>
+                        <h2 id="urgent-popup-title" class="urgent-popup-title"><?= esc($p['title'] ?? '') ?></h2>
+                        <?php if (!empty($p['content'])): ?>
+                        <div class="urgent-popup-content"><?= $p['content'] ?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($p['link_url'])): ?>
+                        <a href="<?= esc($p['link_url']) ?>" class="btn btn-primary urgent-popup-link" target="_blank" rel="noopener noreferrer"><?= esc($p['link_text'] ?? 'ดูรายละเอียด') ?></a>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php if (count($urgentPopups) > 1): ?>
+                <div class="urgent-popup-nav">
+                    <button type="button" class="urgent-popup-prev" aria-label="ประกาศก่อนหน้า">‹</button>
+                    <div class="urgent-popup-dots">
+                        <?php foreach ($urgentPopups as $idx => $p): ?>
+                        <button type="button" class="urgent-popup-dot <?= $idx === 0 ? 'active' : '' ?>" data-index="<?= $idx ?>" aria-label="ประกาศที่ <?= $idx + 1 ?>"></button>
+                        <?php endforeach; ?>
+                    </div>
+                    <button type="button" class="urgent-popup-next" aria-label="ประกาศถัดไป">›</button>
+                </div>
+                <?php endif; ?>
+            </div>
+            <div class="urgent-popup-footer">
+                <label class="urgent-popup-dismiss-label">
+                    <input type="checkbox" id="urgent-popup-dismiss-checkbox" value="1"> ไม่แสดงประกาศนี้อีก
+                </label>
+                <button type="button" class="btn btn-outline btn-sm" id="urgent-popup-ok">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.urgent-popup-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s; }
+.urgent-popup-overlay[data-open="true"] { opacity: 1; visibility: visible; }
+.urgent-popup-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
+.urgent-popup-wrap { position: relative; width: 100%; max-width: 520px; max-height: 90vh; display: flex; flex-direction: column; }
+.urgent-popup-box { background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; }
+.urgent-popup-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); color: #fff; }
+.urgent-popup-badge { font-weight: 700; font-size: 0.95rem; letter-spacing: 0.02em; }
+.urgent-popup-close { background: none; border: none; color: inherit; font-size: 1.75rem; line-height: 1; cursor: pointer; padding: 0 0.25rem; opacity: 0.9; }
+.urgent-popup-close:hover { opacity: 1; }
+.urgent-popup-body { padding: 1.25rem 1.5rem; overflow-y: auto; flex: 1; min-height: 0; }
+.urgent-popup-slide { display: none; }
+.urgent-popup-slide.active { display: block; }
+.urgent-popup-image { margin-bottom: 1rem; border-radius: 8px; overflow: hidden; max-height: 200px; }
+.urgent-popup-image img { width: 100%; height: auto; display: block; object-fit: cover; }
+.urgent-popup-title { margin: 0 0 0.75rem; font-size: 1.35rem; color: #1e293b; line-height: 1.35; }
+.urgent-popup-content { margin-bottom: 1rem; color: #475569; line-height: 1.6; font-size: 0.95rem; }
+.urgent-popup-content a { color: var(--primary, #1e3a5f); text-decoration: underline; }
+.urgent-popup-link { margin-top: 0.5rem; }
+.urgent-popup-nav { display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+.urgent-popup-prev, .urgent-popup-next { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #cbd5e1; background: #fff; font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.urgent-popup-prev:hover, .urgent-popup-next:hover { background: #f1f5f9; }
+.urgent-popup-dots { display: flex; gap: 0.5rem; }
+.urgent-popup-dot { width: 10px; height: 10px; border-radius: 50%; border: none; background: #cbd5e1; cursor: pointer; padding: 0; }
+.urgent-popup-dot.active { background: #1e3a5f; }
+.urgent-popup-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; }
+.urgent-popup-dismiss-label { font-size: 0.875rem; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+</style>
+
+<script>
+(function() {
+    var overlay = document.getElementById('urgent-popup-overlay');
+    if (!overlay) return;
+    var slides = overlay.querySelectorAll('.urgent-popup-slide');
+    var popupIds = [];
+    slides.forEach(function(s) { var id = s.dataset.popupId; if (id) popupIds.push(id); });
+    var dismissedKey = 'urgent_popup_dismissed';
+    function getDismissed() { try { var j = localStorage.getItem(dismissedKey); return j ? JSON.parse(j) : []; } catch (e) { return []; } }
+    function setDismissed(id) { var a = getDismissed(); if (a.indexOf(id) === -1) a.push(id); localStorage.setItem(dismissedKey, JSON.stringify(a)); }
+    var visibleIds = popupIds.filter(function(id) { return getDismissed().indexOf(id) === -1; });
+    if (visibleIds.length === 0) return;
+
+    var currentIndex = 0;
+    var currentSlide = function() { return slides[currentIndex]; };
+    function showSlide(i) {
+        if (i < 0) i = slides.length - 1;
+        if (i >= slides.length) i = 0;
+        currentIndex = i;
+        slides.forEach(function(s, idx) { s.classList.toggle('active', idx === currentIndex); });
+        overlay.querySelectorAll('.urgent-popup-dot').forEach(function(d, idx) { d.classList.toggle('active', idx === currentIndex); });
+    }
+
+    overlay.querySelector('.urgent-popup-backdrop').addEventListener('click', closePopup);
+    overlay.querySelector('#urgent-popup-close').addEventListener('click', closePopup);
+    overlay.querySelector('#urgent-popup-ok').addEventListener('click', closePopup);
+    function closePopup() {
+        var cb = overlay.querySelector('#urgent-popup-dismiss-checkbox');
+        if (cb && cb.checked && currentSlide()) {
+            var id = currentSlide().dataset.popupId;
+            if (id) setDismissed(id);
+        }
+        overlay.setAttribute('data-open', 'false');
+        overlay.setAttribute('hidden', '');
+        document.body.style.overflow = '';
+    }
+
+    var nextBtn = overlay.querySelector('.urgent-popup-next');
+    var prevBtn = overlay.querySelector('.urgent-popup-prev');
+    if (nextBtn) nextBtn.addEventListener('click', function() { showSlide(currentIndex + 1); });
+    if (prevBtn) prevBtn.addEventListener('click', function() { showSlide(currentIndex - 1); });
+    overlay.querySelectorAll('.urgent-popup-dot').forEach(function(dot) {
+        dot.addEventListener('click', function() { showSlide(parseInt(this.dataset.index, 10)); });
+    });
+
+    overlay.removeAttribute('hidden');
+    overlay.setAttribute('data-open', 'true');
+    document.body.style.overflow = 'hidden';
+})();
+</script>
+<?php endif; ?>
+
+<?php
 // Get settings with defaults
 $siteName = $settings['site_name_th'] ?? 'คณะวิทยาศาสตร์และเทคโนโลยี';
 $siteNameEn = $settings['site_name_en'] ?? 'Faculty of Science and Technology';

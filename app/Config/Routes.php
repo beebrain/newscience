@@ -201,6 +201,15 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->post('hero-slides/toggle-active/(:num)', 'Admin\HeroSlides::toggleActive/$1');
     $routes->post('hero-slides/update-order', 'Admin\HeroSlides::updateOrder');
 
+    // Urgent Popups (ประกาศด่วน ป๊อปอัปหน้าแรก สูงสุด 3 รายการ)
+    $routes->get('urgent-popups', 'Admin\UrgentPopups::index');
+    $routes->get('urgent-popups/create', 'Admin\UrgentPopups::create');
+    $routes->post('urgent-popups/store', 'Admin\UrgentPopups::store');
+    $routes->get('urgent-popups/edit/(:num)', 'Admin\UrgentPopups::edit/$1');
+    $routes->post('urgent-popups/update/(:num)', 'Admin\UrgentPopups::update/$1');
+    $routes->get('urgent-popups/delete/(:num)', 'Admin\UrgentPopups::delete/$1');
+    $routes->post('urgent-popups/toggle-active/(:num)', 'Admin\UrgentPopups::toggleActive/$1');
+
     // Certificate Templates Management
     $routes->get('cert-templates', 'Admin\CertTemplates::index');
     $routes->get('cert-templates/create', 'Admin\CertTemplates::create');
