@@ -316,18 +316,35 @@ $urgentPopupsWithImage = array_values(array_filter($urgentPopups, function ($p) 
 
     var currentIndex = 0;
     var currentSlide = function() { return slides[currentIndex]; };
-    function showSlide(i) {
+    var autoplayMs = 3000;
+    var autoplayTimer = null;
+    function stopAutoplay() {
+        if (autoplayTimer) {
+            clearInterval(autoplayTimer);
+            autoplayTimer = null;
+        }
+    }
+    function startAutoplay() {
+        if (slides.length <= 1) return;
+        stopAutoplay();
+        autoplayTimer = setInterval(function() {
+            showSlide(currentIndex + 1, true);
+        }, autoplayMs);
+    }
+    function showSlide(i, fromAutoplay) {
         if (i < 0) i = slides.length - 1;
         if (i >= slides.length) i = 0;
         currentIndex = i;
         slides.forEach(function(s, idx) { s.classList.toggle('active', idx === currentIndex); });
         overlay.querySelectorAll('.urgent-popup-dot').forEach(function(d, idx) { d.classList.toggle('active', idx === currentIndex); });
+        if (!fromAutoplay) startAutoplay();
     }
 
     overlay.querySelector('.urgent-popup-backdrop').addEventListener('click', closePopup);
     overlay.querySelector('#urgent-popup-close').addEventListener('click', closePopup);
     overlay.querySelector('#urgent-popup-ok').addEventListener('click', closePopup);
     function closePopup() {
+        stopAutoplay();
         var cb = overlay.querySelector('#urgent-popup-dismiss-checkbox');
         if (cb && cb.checked && currentSlide()) {
             var id = currentSlide().dataset.popupId;
@@ -359,6 +376,7 @@ $urgentPopupsWithImage = array_values(array_filter($urgentPopups, function ($p) 
     overlay.removeAttribute('hidden');
     overlay.setAttribute('data-open', 'true');
     document.body.style.overflow = 'hidden';
+    startAutoplay();
 })();
 </script>
 <?php endif; ?>
