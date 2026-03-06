@@ -12,7 +12,10 @@ use App\Libraries\AccessControl;
  * ต้องรันหลัง adminauth (ผู้ใช้ล็อกอินและมี role admin/editor/faculty_admin/super_admin แล้ว)
  *
  * แมป URI -> system slug:
- * - admin/news, organization, programs, hero-slides, events -> admin_core
+ * - admin/news -> admin_news (หรือ admin_core)
+ * - admin/organization, programs, hero-slides, events -> admin_core
+ * - admin/urgent-popups -> admin_urgent_popup (หรือ admin_core)
+ * - admin/downloads -> admin_downloads (หรือ admin_core)
  * - admin/users -> user_management
  * - admin/settings -> site_settings
  * - admin/cert-templates, cert-events, certificates -> ecert
@@ -26,7 +29,8 @@ class AdminSystemAccessFilter implements FilterInterface
         'programs'       => 'admin_core',
         'hero-slides'    => 'admin_core',
         'events'         => 'admin_core',
-        'downloads'      => 'admin_downloads',
+        'urgent-popups'  => 'admin_urgent_popup',  // จัดการป๊อปอัปประกาศด่วน (หรือ admin_core)
+        'downloads'      => 'admin_downloads',     // จัดการไฟล์ดาวน์โหลดคณะ (หรือ admin_core)
         'users'          => 'user_management',
         'settings'       => 'site_settings',
         'cert-templates' => 'ecert',
@@ -68,8 +72,12 @@ class AdminSystemAccessFilter implements FilterInterface
             // หน้าประกาศข่าว: เข้าได้ถ้ามี admin_news หรือ admin_core
             $allowed = AccessControl::hasAccess((int) $adminId, 'admin_news')
                 || AccessControl::hasAccess((int) $adminId, 'admin_core');
+        } elseif ($slug === 'admin_urgent_popup') {
+            // จัดการป๊อปอัปประกาศด่วน: เข้าได้ถ้ามี admin_urgent_popup หรือ admin_core
+            $allowed = AccessControl::hasAccess((int) $adminId, 'admin_urgent_popup')
+                || AccessControl::hasAccess((int) $adminId, 'admin_core');
         } elseif ($slug === 'admin_downloads') {
-            // จัดการดาวน์โหลดคณะ: เข้าได้ถ้ามี admin_downloads หรือ admin_core
+            // จัดการไฟล์ดาวน์โหลดคณะ: เข้าได้ถ้ามี admin_downloads หรือ admin_core
             $allowed = AccessControl::hasAccess((int) $adminId, 'admin_downloads')
                 || AccessControl::hasAccess((int) $adminId, 'admin_core');
         } else {

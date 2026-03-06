@@ -89,52 +89,48 @@ function getProgramCarouselImageUrl(array $program): string
 $urgentPopups = $urgent_popups ?? [];
 ?>
 
-<?php if (!empty($urgentPopups)): ?>
-<!-- Urgent Announcement Popup (Feature Rich, สูงสุด 3 รายการ) -->
-<div id="urgent-popup-overlay" class="urgent-popup-overlay" role="dialog" aria-labelledby="urgent-popup-title" aria-modal="true" hidden>
+<?php
+// แสดงเฉพาะประกาศที่มีรูป (แบบรูปอย่างเดียว)
+$urgentPopupsWithImage = array_values(array_filter($urgentPopups, function ($p) { return !empty($p['image_url']); }));
+?>
+<?php if (!empty($urgentPopupsWithImage)): ?>
+<!-- Urgent Popup: แบบรูปอย่างเดียว, เลื่อนซ้าย-ขวาได้ -->
+<div id="urgent-popup-overlay" class="urgent-popup-overlay" role="dialog" aria-label="ประกาศด่วน" aria-modal="true" hidden>
     <div class="urgent-popup-backdrop"></div>
     <div class="urgent-popup-wrap">
-        <div class="urgent-popup-box">
-            <div class="urgent-popup-header">
-                <span class="urgent-popup-badge">ประกาศด่วน</span>
-                <button type="button" class="urgent-popup-close" id="urgent-popup-close" aria-label="ปิดประกาศ">×</button>
-            </div>
-            <div class="urgent-popup-body">
-                <div class="urgent-popup-carousel" id="urgent-popup-carousel">
-                    <?php foreach ($urgentPopups as $idx => $p): ?>
-                    <div class="urgent-popup-slide <?= $idx === 0 ? 'active' : '' ?>" data-popup-id="<?= (int)($p['id'] ?? 0) ?>">
-                        <?php if (!empty($p['image_url'])): ?>
-                        <div class="urgent-popup-image">
-                            <img src="<?= esc($p['image_url']) ?>" alt="">
-                        </div>
-                        <?php endif; ?>
-                        <h2 id="urgent-popup-title" class="urgent-popup-title"><?= esc($p['title'] ?? '') ?></h2>
-                        <?php if (!empty($p['content'])): ?>
-                        <div class="urgent-popup-content"><?= $p['content'] ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($p['link_url'])): ?>
-                        <a href="<?= esc($p['link_url']) ?>" class="btn btn-primary urgent-popup-link" target="_blank" rel="noopener noreferrer"><?= esc($p['link_text'] ?? 'ดูรายละเอียด') ?></a>
-                        <?php endif; ?>
+        <div class="urgent-popup-box urgent-popup-box--image-only">
+            <button type="button" class="urgent-popup-close" id="urgent-popup-close" aria-label="ปิด">×</button>
+            <?php if (count($urgentPopupsWithImage) > 1): ?>
+            <button type="button" class="urgent-popup-arrow urgent-popup-prev" aria-label="ข่าวก่อนหน้า">‹</button>
+            <button type="button" class="urgent-popup-arrow urgent-popup-next" aria-label="ข่าวถัดไป">›</button>
+            <?php endif; ?>
+            <div class="urgent-popup-carousel">
+                <?php foreach ($urgentPopupsWithImage as $idx => $p): ?>
+                <div class="urgent-popup-slide <?= $idx === 0 ? 'active' : '' ?>" data-popup-id="<?= (int)($p['id'] ?? 0) ?>">
+                    <?php if (!empty($p['link_url'])): ?>
+                    <a href="<?= esc($p['link_url']) ?>" class="urgent-popup-image-link" target="_blank" rel="noopener noreferrer">
+                        <img src="<?= esc($p['image_url']) ?>" alt="<?= esc($p['title'] ?? '') ?>">
+                    </a>
+                    <?php else: ?>
+                    <div class="urgent-popup-image-wrap">
+                        <img src="<?= esc($p['image_url']) ?>" alt="<?= esc($p['title'] ?? '') ?>">
                     </div>
-                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
-                <?php if (count($urgentPopups) > 1): ?>
-                <div class="urgent-popup-nav">
-                    <button type="button" class="urgent-popup-prev" aria-label="ประกาศก่อนหน้า">‹</button>
-                    <div class="urgent-popup-dots">
-                        <?php foreach ($urgentPopups as $idx => $p): ?>
-                        <button type="button" class="urgent-popup-dot <?= $idx === 0 ? 'active' : '' ?>" data-index="<?= $idx ?>" aria-label="ประกาศที่ <?= $idx + 1 ?>"></button>
-                        <?php endforeach; ?>
-                    </div>
-                    <button type="button" class="urgent-popup-next" aria-label="ประกาศถัดไป">›</button>
-                </div>
-                <?php endif; ?>
+                <?php endforeach; ?>
             </div>
+            <?php if (count($urgentPopupsWithImage) > 1): ?>
+            <div class="urgent-popup-dots">
+                <?php foreach ($urgentPopupsWithImage as $idx => $p): ?>
+                <button type="button" class="urgent-popup-dot <?= $idx === 0 ? 'active' : '' ?>" data-index="<?= $idx ?>" aria-label="ข่าวที่ <?= $idx + 1 ?>"></button>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
             <div class="urgent-popup-footer">
                 <label class="urgent-popup-dismiss-label">
-                    <input type="checkbox" id="urgent-popup-dismiss-checkbox" value="1"> ไม่แสดงประกาศนี้อีก
+                    <input type="checkbox" id="urgent-popup-dismiss-checkbox" value="1"> ไม่แสดงอีก
                 </label>
-                <button type="button" class="btn btn-outline btn-sm" id="urgent-popup-ok">ปิด</button>
+                <button type="button" class="urgent-popup-btn-close" id="urgent-popup-ok">ปิด</button>
             </div>
         </div>
     </div>
@@ -143,30 +139,27 @@ $urgentPopups = $urgent_popups ?? [];
 <style>
 .urgent-popup-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s; }
 .urgent-popup-overlay[data-open="true"] { opacity: 1; visibility: visible; }
-.urgent-popup-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
-.urgent-popup-wrap { position: relative; width: 100%; max-width: 520px; max-height: 90vh; display: flex; flex-direction: column; }
-.urgent-popup-box { background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; }
-.urgent-popup-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%); color: #fff; }
-.urgent-popup-badge { font-weight: 700; font-size: 0.95rem; letter-spacing: 0.02em; }
-.urgent-popup-close { background: none; border: none; color: inherit; font-size: 1.75rem; line-height: 1; cursor: pointer; padding: 0 0.25rem; opacity: 0.9; }
-.urgent-popup-close:hover { opacity: 1; }
-.urgent-popup-body { padding: 1.25rem 1.5rem; overflow-y: auto; flex: 1; min-height: 0; }
-.urgent-popup-slide { display: none; }
-.urgent-popup-slide.active { display: block; }
-.urgent-popup-image { margin-bottom: 1rem; border-radius: 8px; overflow: hidden; max-height: 200px; }
-.urgent-popup-image img { width: 100%; height: auto; display: block; object-fit: cover; }
-.urgent-popup-title { margin: 0 0 0.75rem; font-size: 1.35rem; color: #1e293b; line-height: 1.35; }
-.urgent-popup-content { margin-bottom: 1rem; color: #475569; line-height: 1.6; font-size: 0.95rem; }
-.urgent-popup-content a { color: var(--primary, #1e3a5f); text-decoration: underline; }
-.urgent-popup-link { margin-top: 0.5rem; }
-.urgent-popup-nav { display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
-.urgent-popup-prev, .urgent-popup-next { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #cbd5e1; background: #fff; font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.urgent-popup-prev:hover, .urgent-popup-next:hover { background: #f1f5f9; }
-.urgent-popup-dots { display: flex; gap: 0.5rem; }
-.urgent-popup-dot { width: 10px; height: 10px; border-radius: 50%; border: none; background: #cbd5e1; cursor: pointer; padding: 0; }
+.urgent-popup-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.65); }
+.urgent-popup-wrap { position: relative; width: 100%; max-width: 560px; max-height: 90vh; }
+.urgent-popup-box--image-only { position: relative; background: #fff; border-radius: 12px; box-shadow: 0 24px 48px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; }
+.urgent-popup-close { position: absolute; top: 0.75rem; right: 0.75rem; z-index: 3; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(0,0,0,0.5); color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.urgent-popup-close:hover { background: rgba(0,0,0,0.7); }
+.urgent-popup-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(0,0,0,0.4); color: #fff; font-size: 1.75rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.urgent-popup-arrow:hover { background: rgba(0,0,0,0.6); }
+.urgent-popup-prev { left: 0.75rem; }
+.urgent-popup-next { right: 0.75rem; }
+.urgent-popup-carousel { position: relative; width: 100%; aspect-ratio: 4/3; min-height: 200px; overflow: hidden; }
+.urgent-popup-slide { display: none; position: absolute; inset: 0; }
+.urgent-popup-slide.active { display: block; position: relative; }
+.urgent-popup-image-link, .urgent-popup-image-wrap { display: block; width: 100%; height: 100%; }
+.urgent-popup-image-link img, .urgent-popup-image-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; background: #f1f5f9; }
+.urgent-popup-dots { display: flex; justify-content: center; gap: 0.5rem; padding: 0.75rem; flex-shrink: 0; }
+.urgent-popup-dot { width: 8px; height: 8px; border-radius: 50%; border: none; background: #cbd5e1; cursor: pointer; padding: 0; }
 .urgent-popup-dot.active { background: #1e3a5f; }
-.urgent-popup-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; }
-.urgent-popup-dismiss-label { font-size: 0.875rem; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+.urgent-popup-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem 1rem; border-top: 1px solid #e2e8f0; flex-shrink: 0; }
+.urgent-popup-dismiss-label { font-size: 0.8125rem; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin: 0; }
+.urgent-popup-btn-close { padding: 0.35rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; cursor: pointer; }
+.urgent-popup-btn-close:hover { background: #f1f5f9; }
 </style>
 
 <script>
@@ -208,11 +201,21 @@ $urgentPopups = $urgent_popups ?? [];
 
     var nextBtn = overlay.querySelector('.urgent-popup-next');
     var prevBtn = overlay.querySelector('.urgent-popup-prev');
-    if (nextBtn) nextBtn.addEventListener('click', function() { showSlide(currentIndex + 1); });
-    if (prevBtn) prevBtn.addEventListener('click', function() { showSlide(currentIndex - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function(e) { e.preventDefault(); showSlide(currentIndex + 1); });
+    if (prevBtn) prevBtn.addEventListener('click', function(e) { e.preventDefault(); showSlide(currentIndex - 1); });
     overlay.querySelectorAll('.urgent-popup-dot').forEach(function(dot) {
         dot.addEventListener('click', function() { showSlide(parseInt(this.dataset.index, 10)); });
     });
+    var carousel = overlay.querySelector('.urgent-popup-carousel');
+    if (carousel && slides.length > 1) {
+        var touchStartX = 0, touchEndX = 0;
+        carousel.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        carousel.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            var d = touchStartX - touchEndX;
+            if (Math.abs(d) > 50) { showSlide(d > 0 ? currentIndex + 1 : currentIndex - 1); }
+        }, { passive: true });
+    }
 
     overlay.removeAttribute('hidden');
     overlay.setAttribute('data-open', 'true');
