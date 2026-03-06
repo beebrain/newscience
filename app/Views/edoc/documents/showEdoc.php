@@ -55,6 +55,7 @@
         table.dataTable {
             border-collapse: separate;
             border-spacing: 0;
+            table-layout: fixed;
         }
 
         table.dataTable thead th {
@@ -70,6 +71,14 @@
             padding: 0.875rem 1rem;
             border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        table.dataTable tbody td .doc-participant-chips {
+            flex-wrap: nowrap;
+            overflow: hidden;
+            min-width: 0;
         }
 
         table.dataTable tbody tr:hover {
@@ -154,6 +163,12 @@
             color: #3730a3;
             border: 1px solid #a5b4fc;
         }
+        .doc-chip-more {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px dashed #94a3b8;
+            cursor: help;
+        }
 
         /* Toolbar controls */
         .edoc-input {
@@ -191,6 +206,17 @@
         #fetch_users tbody td {
             font-size: 0.875rem;
         }
+        #fetch_users tbody tr {
+            display: table-row;
+        }
+        #fetch_users tbody td:nth-child(1) { max-width: 4rem; }
+        #fetch_users tbody td:nth-child(2) { max-width: 8rem; }
+        #fetch_users tbody td:nth-child(3) { max-width: 14rem; }
+        #fetch_users tbody td:nth-child(4) { max-width: 10rem; }
+        #fetch_users tbody td:nth-child(5) { max-width: 8rem; }
+        #fetch_users tbody td:nth-child(6) { max-width: 12rem; }
+        #fetch_users tbody td:nth-child(7) { max-width: 7rem; }
+        #fetch_users tbody td:nth-child(8) { max-width: 4rem; }
         /* Tab ชนิดหนังสือ */
         .doc-type-tabs .doc-type-tab {
             color: #4b5563;
@@ -906,13 +932,21 @@
                         "defaultContent": "",
                         "render": function(data, type, row) {
                             if (type === 'display' && row.participant_chips && row.participant_chips.length) {
+                                var chips = row.participant_chips;
+                                var maxChips = 3;
+                                var show = chips.slice(0, maxChips);
+                                var rest = chips.length - maxChips;
                                 var html = '<div class="doc-participant-chips flex flex-wrap gap-1">';
-                                row.participant_chips.forEach(function(chip) {
+                                show.forEach(function(chip) {
                                     var label = (chip.name || chip.email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                                     var title = (chip.email && chip.email !== chip.name) ? (' title="' + (chip.email || '').replace(/"/g, '&quot;') + '"') : '';
                                     var cls = chip.email === 'ทุกคน' ? 'doc-chip doc-chip-everyone' : 'doc-chip doc-chip-user';
                                     html += '<span class="status-badge ' + cls + '"' + title + '>' + label + '</span>';
                                 });
+                                if (rest > 0) {
+                                    var fullList = chips.map(function(c) { return (c.name || c.email || ''); }).join('\n');
+                                    html += '<span class="status-badge doc-chip doc-chip-more" title="' + (fullList.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')) + '">+' + rest + ' คน</span>';
+                                }
                                 html += '</div>';
                                 return html;
                             }
@@ -1258,13 +1292,21 @@
                             $('#msg_owner').text('-');
                         }
                         if (result_data.participant_chips && result_data.participant_chips.length) {
+                            var chips = result_data.participant_chips;
+                            var maxChips = 3;
+                            var show = chips.slice(0, maxChips);
+                            var rest = chips.length - maxChips;
                             var chipHtml = '<div class="doc-participant-chips flex flex-wrap gap-1">';
-                            result_data.participant_chips.forEach(function(chip) {
+                            show.forEach(function(chip) {
                                 var label = (chip.name || chip.email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                                 var title = (chip.email && chip.email !== chip.name) ? (' title="' + (chip.email || '').replace(/"/g, '&quot;') + '"') : '';
                                 var cls = chip.email === 'ทุกคน' ? 'doc-chip doc-chip-everyone' : 'doc-chip doc-chip-user';
                                 chipHtml += '<span class="status-badge ' + cls + '"' + title + '>' + label + '</span>';
                             });
+                            if (rest > 0) {
+                                var fullList = chips.map(function(c) { return (c.name || c.email || ''); }).join('\n');
+                                chipHtml += '<span class="status-badge doc-chip doc-chip-more" title="' + (fullList.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')) + '">+' + rest + ' คน</span>';
+                            }
                             chipHtml += '</div>';
                             $('#msg_participant').html(chipHtml);
                         } else {

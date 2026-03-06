@@ -338,10 +338,21 @@
             color: #1e40af;
         }
 
+        #documents-table {
+            table-layout: fixed;
+        }
         #documents-table tbody td {
             padding: 0.5rem 0.75rem;
             border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #documents-table tbody td .doc-participant-chips {
+            flex-wrap: nowrap;
+            overflow: hidden;
+            min-width: 0;
         }
 
         #documents-table tbody tr:hover {
@@ -394,13 +405,21 @@
             color: #3730a3;
             border: 1px solid #a5b4fc;
         }
+        .doc-chip-more {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px dashed #94a3b8;
+            cursor: help;
+        }
         #documents-table thead th:nth-child(6),
         #documents-table tbody td:nth-child(6) {
             max-width: 14em;
             min-width: 8em;
         }
         #documents-table tbody td:nth-child(6) {
-            white-space: normal;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* Tab ชนิดหนังสือ */
@@ -1164,13 +1183,21 @@
                         data: 'participant',
                         render: function(data, type, row) {
                             if (type === 'display' && row.participant_chips && row.participant_chips.length) {
+                                var chips = row.participant_chips;
+                                var maxChips = 3;
+                                var show = chips.slice(0, maxChips);
+                                var rest = chips.length - maxChips;
                                 var html = '<div class="doc-participant-chips flex flex-wrap gap-1">';
-                                row.participant_chips.forEach(function(chip) {
+                                show.forEach(function(chip) {
                                     var label = (chip.name || chip.email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                                     var title = (chip.email && chip.email !== chip.name) ? (' title="' + (chip.email || '').replace(/"/g, '&quot;') + '"') : '';
                                     var cls = chip.email === 'ทุกคน' ? 'doc-chip doc-chip-everyone' : 'doc-chip doc-chip-user';
                                     html += '<span class="' + cls + '"' + title + '>' + label + '</span>';
                                 });
+                                if (rest > 0) {
+                                    var fullList = chips.map(function(c) { return (c.name || c.email || ''); }).join('\n');
+                                    html += '<span class="doc-chip doc-chip-more" title="' + (fullList.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')) + '">+' + rest + ' คน</span>';
+                                }
                                 html += '</div>';
                                 return html;
                             }
@@ -2341,13 +2368,21 @@
                                 $('#msg_owner').text('');
                             }
                             if (result_data.participant_chips && result_data.participant_chips.length) {
+                                var chips = result_data.participant_chips;
+                                var maxChips = 3;
+                                var show = chips.slice(0, maxChips);
+                                var rest = chips.length - maxChips;
                                 var chipHtml = '<div class="doc-participant-chips flex flex-wrap gap-1 mt-1">';
-                                result_data.participant_chips.forEach(function(chip) {
+                                show.forEach(function(chip) {
                                     var label = (chip.name || chip.email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                                     var title = (chip.email && chip.email !== chip.name) ? (' title="' + (chip.email || '').replace(/"/g, '&quot;') + '"') : '';
                                     var cls = chip.email === 'ทุกคน' ? 'doc-chip doc-chip-everyone' : 'doc-chip doc-chip-user';
                                     chipHtml += '<span class="' + cls + '"' + title + '>' + label + '</span>';
                                 });
+                                if (rest > 0) {
+                                    var fullList = chips.map(function(c) { return (c.name || c.email || ''); }).join('\n');
+                                    chipHtml += '<span class="doc-chip doc-chip-more" title="' + (fullList.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')) + '">+' + rest + ' คน</span>';
+                                }
                                 chipHtml += '</div>';
                                 $('#msg_participant').html(chipHtml);
                             } else {

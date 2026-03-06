@@ -2,13 +2,13 @@
 
 <?= $this->section('content') ?>
 
-<!-- Page Header -->
-<section class="page-header">
+<!-- Page Header — Documents page modern style -->
+<section class="page-header page-header--documents">
     <div class="container">
         <h1 class="page-header__title"><?= esc($page_title) ?></h1>
         <div class="page-header__breadcrumb">
             <a href="<?= base_url() ?>">หน้าแรก</a>
-            <span>/</span>
+            <span class="page-header__sep">/</span>
             <span>บริการด้านเอกสาร</span>
         </div>
     </div>
@@ -73,13 +73,13 @@ $doc_tabs = [
 ?>
 <section class="section documents-page-section doc-tab-panel <?= $is_first ? 'is-active' : '' ?>" id="section-<?= esc($section_key) ?>" role="tabpanel" aria-labelledby="tab-<?= esc($section_key) ?>" <?= $is_first ? '' : 'hidden' ?>>
     <div class="container">
-        <div class="section-header">
-            <h2 class="section-header__title"><?= esc($section['title'] ?? $section_labels[$section_key] ?? $section_key) ?></h2>
-            <p class="section-header__description"><?= esc($section['description'] ?? '') ?></p>
+        <div class="doc-section-header">
+            <h2 class="doc-section-header__title"><?= esc($section['title'] ?? $section_labels[$section_key] ?? $section_key) ?></h2>
+            <p class="doc-section-header__description"><?= esc($section['description'] ?? '') ?></p>
         </div>
 
         <?php if (!$has_any): ?>
-        <div class="documents-empty">ยังไม่มีเอกสารในหมวดนี้</div>
+        <div class="documents-empty" role="status">ยังไม่มีเอกสารในหมวดนี้</div>
         <?php else: ?>
         <div class="documents-grid">
             <?php foreach ($categories as $category): ?>
@@ -168,48 +168,80 @@ $doc_tabs = [
 <?php endforeach; ?>
 
 <style>
-/* Tab bar — sticky สำหรับสลับหมวดได้ตลอด */
+/* --- Documents page: modern header --- */
+.page-header--documents {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #0c1222 100%);
+    position: relative;
+    overflow: hidden;
+}
+.page-header--documents::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(251, 191, 36, 0.12), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 0%, rgba(148, 163, 184, 0.08), transparent);
+    pointer-events: none;
+}
+.page-header--documents .page-header__title {
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.page-header--documents .page-header__breadcrumb {
+    color: rgba(255,255,255,0.75);
+}
+.page-header--documents .page-header__breadcrumb a {
+    color: rgba(255,255,255,0.9);
+}
+.page-header--documents .page-header__breadcrumb a:hover {
+    color: #fbbf24;
+}
+.page-header--documents .page-header__sep {
+    opacity: 0.6;
+    margin: 0 0.25rem;
+}
+
+/* --- Tab bar — sticky, modern pill style --- */
 .doc-tabs-wrap {
     position: sticky;
     top: 0;
     z-index: 30;
     background: #fff;
-    border-bottom: 2px solid #e2e8f0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
 }
 
 .doc-tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.25rem;
+    gap: 0.5rem;
     list-style: none;
     margin: 0;
-    padding: 0.75rem 0;
+    padding: 1rem 0;
     justify-content: center;
 }
 
-.doc-tabs__item {
-    margin: 0;
-}
+.doc-tabs__item { margin: 0; }
 
 .doc-tab {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1rem;
-    border-radius: 10px;
-    border: 2px solid transparent;
+    gap: 0.6rem;
+    padding: 0.65rem 1.25rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
     background: transparent;
     color: #64748b;
-    font-weight: 500;
-    font-size: 0.9rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
     font-family: inherit;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .doc-tab:focus-visible {
-    outline: 2px solid #2563eb;
+    outline: 2px solid var(--color-primary, #f59e0b);
     outline-offset: 2px;
 }
 
@@ -218,16 +250,16 @@ $doc_tabs = [
     color: #334155;
 }
 
-.doc-tab--active,
-.doc-tab:focus-visible {
-    background: rgba(37, 99, 235, 0.08);
-    color: #1d4ed8;
-    border-color: #2563eb;
+.doc-tab--active {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.1));
+    color: #b45309;
+    border-color: rgba(251, 191, 36, 0.4);
+    box-shadow: 0 2px 12px rgba(251, 191, 36, 0.15);
 }
 
 .doc-tab__icon {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -235,13 +267,15 @@ $doc_tabs = [
 }
 
 .doc-tab__icon svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
 }
 
-.doc-tab__label {
-    white-space: nowrap;
+.doc-tab--active .doc-tab__icon {
+    color: var(--color-primary, #f59e0b);
 }
+
+.doc-tab__label { white-space: nowrap; }
 
 @media (max-width: 768px) {
     .doc-tabs {
@@ -250,95 +284,126 @@ $doc_tabs = [
         padding-bottom: 0.5rem;
         -webkit-overflow-scrolling: touch;
     }
-    .doc-tab__label {
-        font-size: 0.85rem;
-    }
+    .doc-tab__label { font-size: 0.875rem; }
 }
 
-/* แท็บซ่อน: แสดงเฉพาะ panel ที่เลือก */
+/* --- Tab panels --- */
 .doc-tab-panel {
     display: none;
-    padding-top: 1.5rem;
-    padding-bottom: 2rem;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
 }
 
 .doc-tab-panel.is-active {
     display: block;
+    animation: docPanelFade 0.3s ease;
 }
 
-.documents-page-section {
-    padding-top: 0;
-    padding-bottom: 0;
+@keyframes docPanelFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
-.documents-page-section:first-of-type {
-    padding-top: 0;
+.documents-page-section { padding-top: 0; padding-bottom: 0; }
+.documents-page-section:first-of-type { padding-top: 0; }
+
+/* --- Section header --- */
+.doc-section-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.doc-section-header__title {
+    margin: 0 0 0.5rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+.doc-section-header__description {
+    margin: 0;
+    font-size: 1rem;
+    color: #64748b;
+    line-height: 1.5;
+    max-width: 42rem;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .documents-empty {
     color: #64748b;
-    padding: 1.5rem;
+    padding: 2rem 1.5rem;
     text-align: center;
-    background: #f8fafc;
-    border-radius: 12px;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    border: 1px dashed #cbd5e1;
+    font-size: 0.9375rem;
 }
 
+/* --- Cards grid --- */
 .documents-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 1.75rem;
 }
 
 .card {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
     overflow: hidden;
     height: 100%;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: transform 0.3s ease, box-shadow 0.35s ease, border-color 0.3s ease;
 }
 
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1), 0 8px 16px rgba(251, 191, 36, 0.08);
+    border-color: rgba(251, 191, 36, 0.25);
 }
 
 .card__header {
-    padding: 1.5rem;
-    background: linear-gradient(135deg, #f8fafc, #edf2f7);
-    border-bottom: 1px solid #e2e8f0;
+    padding: 1.5rem 1.5rem 1.25rem;
+    background: linear-gradient(160deg, #fefce8 0%, #fef9c3 30%, #fef3c7 100%);
+    border-bottom: 1px solid rgba(251, 191, 36, 0.2);
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
 .card__icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    background: white;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.9);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-primary);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    color: var(--color-primary, #d97706);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+    flex-shrink: 0;
 }
 
 .card__icon svg {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
 }
 
 .card__title {
     margin: 0;
-    font-size: 1.25rem;
-    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1e293b;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
 }
 
 .document-list {
-    padding: 1rem;
+    padding: 1rem 1.25rem 1.25rem;
     flex: 1;
 }
 
@@ -346,25 +411,25 @@ $doc_tabs = [
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0.75rem;
-    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
     text-decoration: none;
-    color: var(--text-primary);
-    transition: all 0.2s ease;
+    color: #1e293b;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     border: 1px solid transparent;
     margin-bottom: 0.5rem;
 }
 
 .document-item:hover {
     background: #f8fafc;
-    border-color: #e2e8f0;
-    transform: translateX(4px);
+    transform: translateX(6px);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
 }
 
 .document-item__icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -377,29 +442,30 @@ $doc_tabs = [
 }
 
 .document-item__icon.type-pdf {
-    background: #fee2e2;
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
     color: #dc2626;
 }
 
 .document-item__icon.type-doc,
 .document-item__icon.type-docx {
-    background: #dbeafe;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
     color: #2563eb;
 }
 
 .document-item__icon.type-link {
-    background: #f3f4f6;
-    color: #4b5563;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    color: #475569;
 }
 
 .document-item__content {
     flex: 1;
-    overflow: hidden;
+    min-width: 0;
 }
 
 .document-item__name {
     display: block;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 0.9375rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -408,18 +474,19 @@ $doc_tabs = [
 .document-item__type {
     display: block;
     font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-top: 0.125rem;
+    color: #64748b;
+    margin-top: 0.2rem;
 }
 
 .document-item__action {
-    color: var(--text-secondary);
+    color: var(--color-primary, #f59e0b);
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .document-item:hover .document-item__action {
     opacity: 1;
+    transform: translateY(-2px);
 }
 
 .document-item__action svg {
@@ -430,10 +497,10 @@ $doc_tabs = [
 @media (max-width: 640px) {
     .documents-grid {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
-    .card__header {
-        padding: 1.25rem;
-    }
+    .card__header { padding: 1.25rem; }
+    .doc-section-header__title { font-size: 1.5rem; }
 }
 </style>
 
