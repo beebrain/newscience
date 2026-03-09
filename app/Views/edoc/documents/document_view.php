@@ -261,16 +261,10 @@
                                         <div class="tab-pane fade" id="navs-justified-participants" role="tabpanel">
                                             <div class="card-body">
                                                 <?php if (!empty($document['participant_chips'])): ?>
-                                                    <?php
-                                                    $participant_chips = $document['participant_chips'];
-                                                    $max_chips = 3;
-                                                    $show_chips = array_slice($participant_chips, 0, $max_chips);
-                                                    $rest_count = count($participant_chips) - $max_chips;
-                                                    $tooltip_names = implode("\n", array_map(function ($c) { return $c['name'] ?? $c['email'] ?? ''; }, $participant_chips));
-                                                    ?>
+                                                    <?php $participant_chips = $document['participant_chips']; ?>
                                                     <h6 class="mb-3">รายชื่อผู้เกี่ยวข้อง</h6>
                                                     <div class="d-flex flex-wrap gap-2 mb-3 doc-participant-chips">
-                                                        <?php foreach ($show_chips as $chip): ?>
+                                                        <?php foreach ($participant_chips as $chip): ?>
                                                             <?php
                                                             $label = esc($chip['name'] ?? $chip['email'] ?? '');
                                                             $title = (!empty($chip['email']) && ($chip['email'] !== ($chip['name'] ?? ''))) ? ' title="' . esc($chip['email']) . '"' : '';
@@ -278,9 +272,6 @@
                                                             ?>
                                                             <span class="<?= $cls ?> doc-chip"<?= $title ?>><?= $label ?></span>
                                                         <?php endforeach; ?>
-                                                        <?php if ($rest_count > 0): ?>
-                                                            <span class="badge bg-secondary doc-chip doc-chip-more" title="<?= esc($tooltip_names) ?>">+<?= $rest_count ?> คน</span>
-                                                        <?php endif; ?>
                                                     </div>
                                                 <?php elseif (!empty($document['participant'])): ?>
                                                     <h6 class="mb-3">รายชื่อผู้เกี่ยวข้อง</h6>

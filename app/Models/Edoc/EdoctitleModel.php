@@ -137,8 +137,60 @@ class EdoctitleModel extends Model
     }
 
     /**
+     * คืนรายการ iddoc ที่ user (อีเมลหรือชื่อ) เข้าถึงได้จาก owner/participant โดยตรง
+     * ไม่ใช้ edoc_document_tags — ใช้ชื่อและแมปจาก user เพื่อเช็ค
+     *
+     * @param string $email อีเมลผู้ใช้
+     * @param string $name ชื่อ-นามสกุลจาก user (tf_name + tl_name หรือ gf_name + gl_name)
+     * @return array<int> รายการ iddoc
+     */
+    public function getDocumentIdsAccessibleByUser(string $email, string $name): array
+    {
+        $email = trim($email);
+        $name = trim($name);
+        $builder = $this->builder();
+        $builder->select('edoctitle.iddoc');
+        $builder->groupStart();
+        if ($email !== '') {
+            $builder->orWhere('edoctitle.owner', $email);
+            $builder->orLike('edoctitle.participant', $email, 'both');
+        }
+        if ($name !== '') {
+            $builder->orWhere('edoctitle.owner', $name);
+            $builder->orLike('edoctitle.participant', $name, 'both');
+        }
+        $builder->orLike('edoctitle.participant', 'ทุกคน', 'both');
+        $builder->groupEnd();
+        $rows = $builder->get()->getResultArray();
+        return array_values(array_unique(array_column($rows, 'iddoc')));
+    }
+
+    /**
+     * ตรวจว่า user (email หรือ name) มีสิทธิ์ดูเอกสารนี้หรือไม่ (จาก owner/participant เท่านั้น)
+     */
+    public function canUserAccessDocument(int $iddoc, string $email, string $name): bool
+    {
+        $doc = $this->find($iddoc);
+        if (!$doc) {
+            return false;
+        }
+        $owner = trim((string) ($doc['owner'] ?? ''));
+        $participant = trim((string) ($doc['participant'] ?? ''));
+        if ($email !== '' && (strtolower($owner) === strtolower($email) || stripos($participant, $email) !== false)) {
+            return true;
+        }
+        if ($name !== '' && ($owner === $name || strpos($participant, $name) !== false)) {
+            return true;
+        }
+        if (strpos($participant, 'ทุกคน') !== false || in_array('ทุกคน', array_map('trim', explode(',', $participant)), true)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Get average pages per document type
-     * 
+     *
      * @return array
      */
     public function getAveragePagesPerDocType()

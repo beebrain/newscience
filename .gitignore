@@ -54,6 +54,8 @@ writable/cache/*
 
 writable/logs/*
 !writable/logs/index.html
+writable/database_dump_*.sql
+writable/database_dump_import_*.sql
 
 writable/session/*
 !writable/session/index.html

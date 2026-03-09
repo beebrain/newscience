@@ -43,9 +43,9 @@ class EdocController extends EdocBaseController
 
             $papers = $this->edoctitleModel->getsummaryPaper();
 
-            // Get available years for volume filter
+            // Get available years for volume filter (มาตรฐานปี พ.ศ.)
             $availableYears = $this->volumeModel->getAvailableYears();
-            $currentYear = (int) date('Y');
+            $currentYear = (int) date('Y') + 543; // ค.ศ. → พ.ศ.
             if (!in_array($currentYear, $availableYears)) {
                 array_unshift($availableYears, $currentYear);
             }
@@ -184,7 +184,11 @@ class EdocController extends EdocBaseController
         $request = $this->request->getVar();
 
         $userEmail = strtolower(trim($user['email'] ?? ''));
-        $ownerName = trim($user['tf_name'] ?? '') . ' ' . trim($user['tl_name'] ?? '');
+        $ownerName = trim(($user['tf_name'] ?? '') . ' ' . ($user['tl_name'] ?? ''));
+        if ($ownerName === ' ') {
+            $ownerName = trim(($user['gf_name'] ?? '') . ' ' . ($user['gl_name'] ?? ''));
+        }
+        $ownerName = trim($ownerName);
 
         $columnsOrder = [
             0 => 'iddoc',
@@ -200,23 +204,17 @@ class EdocController extends EdocBaseController
         $builder = $this->edoctitleModel->builder();
         $builder->select(['edoctitle.iddoc', 'edoctitle.officeiddoc', 'edoctitle.datedoc', 'edoctitle.title', 'edoctitle.doctype', 'edoctitle.owner', 'edoctitle.participant', 'edoctitle.fileaddress', 'edoctitle.pages', 'edoctitle.order']);
 
-        // ใช้ Email เป็นหลักในการค้นหาเอกสาร: tagged by email, owner = email, participant มี email
-        // Legacy: owner/participant ที่เก็บเป็นชื่อ ยังรองรับไว้
-        $taggedDocIds = $this->docTagModel->getDocumentIdsByEmail($userEmail);
-
+        // ใช้ชื่อและอีเมลจาก user โดยตรง: owner/participant ใน edoctitle (ไม่ใช้ edoc_document_tags)
         $builder->groupStart();
-        if (!empty($taggedDocIds)) {
-            $builder->whereIn('edoctitle.iddoc', $taggedDocIds);
-        }
         if ($userEmail !== '') {
             $builder->orWhere('edoctitle.owner', $userEmail);
-            $builder->orLike('edoctitle.participant', $userEmail);
+            $builder->orLike('edoctitle.participant', $userEmail, 'both');
         }
         if ($ownerName !== '') {
             $builder->orWhere('edoctitle.owner', $ownerName);
-            $builder->orLike('edoctitle.participant', $ownerName);
+            $builder->orLike('edoctitle.participant', $ownerName, 'both');
         }
-        $builder->orLike('edoctitle.participant', 'ทุกคน');
+        $builder->orLike('edoctitle.participant', 'ทุกคน', 'both');
         $builder->groupEnd();
 
         // Volume/year filter

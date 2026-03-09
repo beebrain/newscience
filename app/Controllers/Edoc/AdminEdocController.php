@@ -133,9 +133,9 @@ class AdminEdocController extends EdocBaseController
                 }
             }
 
-            // Get available years and volumes
+            // Get available years and volumes (มาตรฐานปี พ.ศ.)
             $availableYears = $this->volumeModel->getAvailableYears();
-            $currentYear = (int) date('Y');
+            $currentYear = (int) date('Y') + 543; // ค.ศ. → พ.ศ.
             if (!in_array($currentYear, $availableYears)) {
                 array_unshift($availableYears, $currentYear);
             }
@@ -442,9 +442,10 @@ class AdminEdocController extends EdocBaseController
             $data['fileaddress'] = $this->normalizeFileAddress($data['fileaddress']);
         }
 
-        // Set doc_year from datedoc if available
+        // Set doc_year from datedoc if available (มาตรฐานเป็นปี พ.ศ.)
         if (!empty($data['datedoc'])) {
-            $data['doc_year'] = (int) date('Y', strtotime($data['datedoc']));
+            $ceYear = (int) date('Y', strtotime($data['datedoc']));
+            $data['doc_year'] = $ceYear + 543; // ค.ศ. → พ.ศ.
         }
 
         // เอกสารใหม่: ถ้าฟอร์มไม่ได้ระบุเจ้าของ ให้ใช้ email ผู้บันทึกเป็น default (ถ้าผู้ใช้เลือกจาก user หรือระบุเองแล้วใช้ค่าจากฟอร์ม)
@@ -461,20 +462,10 @@ class AdminEdocController extends EdocBaseController
             $this->edoctitleModel->updatedoc($data['iddoc'], $data);
         }
 
-        // Save email tags to edoc_document_tags
+        // ใช้ owner/participant ใน edoctitle โดยตรง (ไม่ใช้ edoc_document_tags)
         if ($iddoc && !empty($tagEmails)) {
-            $emailData = [];
-            foreach ($tagEmails as $email) {
-                $source = $this->detectEmailSource($email);
-                $emailData[] = ['email' => $email, 'source' => $source];
-            }
-            $this->docTagModel->setDocumentTags((int) $iddoc, $emailData);
-
-            // Also update participant field for backward compatibility
             $data['participant'] = implode(',', $tagEmails);
-            if ($iddoc) {
-                $this->edoctitleModel->updatedoc($iddoc, ['participant' => $data['participant']]);
-            }
+            $this->edoctitleModel->updatedoc($iddoc, ['participant' => $data['participant']]);
         }
 
         $data['mailList'] = [];
@@ -683,7 +674,7 @@ class AdminEdocController extends EdocBaseController
     }
 
     /**
-     * Get tags for a specific document (AJAX)
+     * Get tags for a specific document (AJAX) — จาก owner/participant ใน edoctitle โดยตรง
      */
     public function getDocumentTags()
     {
@@ -693,7 +684,22 @@ class AdminEdocController extends EdocBaseController
                 return $this->response->setJSON(['status' => 'error', 'message' => 'Document ID required']);
             }
 
-            $tags = $this->docTagModel->getDocumentTags($iddoc);
+            $doc = $this->edoctitleModel->find($iddoc);
+            $tags = [];
+            if ($doc) {
+                $owner = trim((string) ($doc['owner'] ?? ''));
+                if ($owner !== '') {
+                    $tags[] = ['tag_email' => $owner, 'document_id' => $iddoc];
+                }
+                $participant = trim((string) ($doc['participant'] ?? ''));
+                if ($participant !== '') {
+                    foreach (array_map('trim', explode(',', $participant)) as $part) {
+                        if ($part !== '') {
+                            $tags[] = ['tag_email' => $part, 'document_id' => $iddoc];
+                        }
+                    }
+                }
+            }
 
             return $this->response->setJSON([
                 'status' => 'success',

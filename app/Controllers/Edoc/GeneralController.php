@@ -87,11 +87,8 @@ class GeneralController extends EdocBaseController
 
                 $isTagged = false;
 
-                // ใช้ Email เป็นหลัก: check edoc_document_tags by email
-                if (!empty($document['iddoc'])) {
-                    $isTagged = $this->docTagModel->isTagged((int) $document['iddoc'], $userEmail);
-                }
-                if (!$isTagged && !empty($document['owner']) && strtolower(trim($document['owner'])) === $userEmail) {
+                // ใช้ owner/participant โดยตรง (ไม่ใช้ edoc_document_tags)
+                if (!empty($document['owner']) && strtolower(trim($document['owner'])) === $userEmail) {
                     $isTagged = true;
                 }
                 if (!$isTagged && !empty($document['participant'])) {
@@ -193,11 +190,8 @@ class GeneralController extends EdocBaseController
 
                 $isTagged = false;
 
-                // ใช้ Email เป็นหลัก: check edoc_document_tags by email
-                if (!empty($document['iddoc'])) {
-                    $isTagged = $this->docTagModel->isTagged((int) $document['iddoc'], $userEmail);
-                }
-                if (!$isTagged && !empty($document['owner']) && strtolower(trim($document['owner'])) === $userEmail) {
+                // ใช้ owner/participant โดยตรง (ไม่ใช้ edoc_document_tags)
+                if (!empty($document['owner']) && strtolower(trim($document['owner'])) === $userEmail) {
                     $isTagged = true;
                 }
                 if (!$isTagged && !empty($document['participant'])) {
@@ -378,39 +372,7 @@ class GeneralController extends EdocBaseController
 
         $tagname = trim(($user['tf_name'] ?? '') . ' ' . ($user['tl_name'] ?? ''));
         $userEmail = strtolower(trim($user['email'] ?? ''));
-        $hasAccess = false;
-
-        // ใช้ Email เป็นหลัก: check edoc_document_tags by email
-        if (!empty($userEmail) && $this->docTagModel->isTagged((int) $document['iddoc'], $userEmail)) {
-            $hasAccess = true;
-        }
-        if (!$hasAccess && !empty($document['owner']) && strtolower(trim($document['owner'])) === $userEmail) {
-            $hasAccess = true;
-        }
-        if (!$hasAccess && !empty($document['participant'])) {
-            $participants = array_map('trim', explode(',', $document['participant']));
-            if (in_array($userEmail, array_map('strtolower', $participants))) {
-                $hasAccess = true;
-            }
-        }
-        // Legacy: participant "ทุกคน"
-        if (!$hasAccess && !empty($document['participant'])) {
-            if (
-                strpos($document['participant'], 'ทุกคน') !== false ||
-                in_array('ทุกคน', array_map('trim', explode(',', $document['participant'])))
-            ) {
-                $hasAccess = true;
-            }
-        }
-        if (!$hasAccess && !empty($document['owner']) && !empty($tagname) && trim($document['owner']) === $tagname) {
-            $hasAccess = true;
-        }
-        if (!$hasAccess && !empty($document['participant']) && !empty($tagname)) {
-            $participants = array_map('trim', explode(',', $document['participant']));
-            if (in_array($tagname, $participants)) {
-                $hasAccess = true;
-            }
-        }
+        $hasAccess = $this->edoctitleModel->canUserAccessDocument((int) $document['iddoc'], $userEmail, $tagname);
 
         if (!$hasAccess) {
             return $this->response->setStatusCode(403)->setBody('Access denied');

@@ -34,8 +34,9 @@ class EdocVolumeModel extends Model
 
     /**
      * Create all 5 volumes for a given calendar year
+     * มาตรฐาน: ใช้ปี พ.ศ. เท่านั้น (e.g. 2569)
      *
-     * @param int $year Calendar year (e.g. 2569)
+     * @param int $year ปี พ.ศ. (e.g. 2569)
      * @param int|null $createdBy Admin user ID
      * @return array Created volumes
      */
@@ -85,9 +86,9 @@ class EdocVolumeModel extends Model
     }
 
     /**
-     * Get all distinct years that have volumes
+     * Get all distinct years that have volumes (ปี พ.ศ.)
      *
-     * @return array
+     * @return array<int>
      */
     public function getAvailableYears(): array
     {
@@ -100,9 +101,9 @@ class EdocVolumeModel extends Model
     }
 
     /**
-     * Get active volumes for a year
+     * Get active volumes for a year (ปี พ.ศ.)
      *
-     * @param int $year
+     * @param int $year ปี พ.ศ.
      * @return array
      */
     public function getActiveByYear(int $year): array

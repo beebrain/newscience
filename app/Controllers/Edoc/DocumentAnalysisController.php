@@ -3,23 +3,19 @@
 namespace App\Controllers\Edoc;
 
 use App\Models\Edoc\EdoctitleModel;
-use App\Models\Edoc\EdocDocumentTagModel;
 use CodeIgniter\API\ResponseTrait;
 
 /**
  * Document Analysis Controller with Role-Based Access Control
  *
- * This controller manages document analytics with differentiated access levels.
- * Administrators can view comprehensive repository metrics across all documents,
- * while standard users see analytics confined to documents they're tagged in.
- * ใช้ Email เป็นหลักในการกรองเอกสารของ user (ไม่ใช้ชื่อหรือ userId ใน participant)
+ * Administrators see all documents; standard users see only documents they can access
+ * via owner/participant (ชื่อและอีเมลจาก user โดยตรง ไม่ใช้ edoc_document_tags)
  */
 class DocumentAnalysisController extends EdocBaseController
 {
     use ResponseTrait;
 
     protected $edoctitleModel;
-    protected $docTagModel;
     protected $db;
 
     /**
@@ -28,28 +24,42 @@ class DocumentAnalysisController extends EdocBaseController
     public function __construct()
     {
         $this->edoctitleModel = new EdoctitleModel();
-        $this->docTagModel = new EdocDocumentTagModel();
         $this->db = \Config\Database::connect();
     }
 
     /**
-     * กรองเอกสารของ user (non-admin) โดยใช้ email เป็นหลัก: tag_email, owner, participant
+     * คืนชื่อผู้ใช้จาก user table (สำหรับใช้ร่วมกับ email ในการกรองเอกสาร)
+     */
+    private function getCurrentUserName(): string
+    {
+        $uid = $this->edocUser['uid'] ?? null;
+        if (!$uid) {
+            return '';
+        }
+        $user = (new \App\Models\UserModel())->find($uid);
+        if (!$user) {
+            return '';
+        }
+        $name = trim(($user['tf_name'] ?? '') . ' ' . ($user['tl_name'] ?? ''));
+        if ($name === ' ') {
+            $name = trim(($user['gf_name'] ?? '') . ' ' . ($user['gl_name'] ?? ''));
+        }
+        return trim($name);
+    }
+
+    /**
+     * กรองเอกสารของ user (non-admin) จาก owner/participant โดยตรง (ชื่อ + อีเมลจาก user)
      */
     private function applyUserDocumentFilter($builder): void
     {
         $userEmail = strtolower(trim($this->edocUser['email'] ?? ''));
-        if ($userEmail === '') {
+        $userName = $this->getCurrentUserName();
+        $ids = $this->edoctitleModel->getDocumentIdsAccessibleByUser($userEmail, $userName);
+        if (empty($ids)) {
             $builder->where('e.iddoc', 0);
             return;
         }
-        $taggedIds = $this->docTagModel->getDocumentIdsByEmail($userEmail);
-        $builder->groupStart();
-        if (!empty($taggedIds)) {
-            $builder->whereIn('e.iddoc', $taggedIds);
-        }
-        $builder->orWhere('e.owner', $userEmail);
-        $builder->orLike('e.participant', $userEmail);
-        $builder->groupEnd();
+        $builder->whereIn('e.iddoc', $ids);
     }
 
     /**
@@ -520,26 +530,18 @@ class DocumentAnalysisController extends EdocBaseController
     }
 
     /**
-     * Returns SQL fragment for user document filter (email-based) for raw queries. Table alias e.g. "e".
+     * Returns SQL fragment for user document filter (owner/participant by email+name) for raw queries.
      */
     private function getUserDocumentFilterSql(string $alias): string
     {
         $userEmail = strtolower(trim($this->edocUser['email'] ?? ''));
-        if ($userEmail === '') {
-            return " AND 1=0";
+        $userName = $this->getCurrentUserName();
+        $ids = $this->edoctitleModel->getDocumentIdsAccessibleByUser($userEmail, $userName);
+        if (empty($ids)) {
+            return ' AND 1=0';
         }
-        $taggedIds = $this->docTagModel->getDocumentIdsByEmail($userEmail);
-        $esc = $this->db->escape($userEmail);
-        $likeVal = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $userEmail);
-        $likeEsc = $this->db->escape('%' . $likeVal . '%');
-        $parts = [];
-        if (!empty($taggedIds)) {
-            $ids = implode(',', array_map('intval', $taggedIds));
-            $parts[] = "{$alias}.iddoc IN ({$ids})";
-        }
-        $parts[] = "{$alias}.owner = {$esc}";
-        $parts[] = "{$alias}.participant LIKE {$likeEsc}";
-        return ' AND (' . implode(' OR ', $parts) . ')';
+        $idList = implode(',', array_map('intval', $ids));
+        return " AND {$alias}.iddoc IN ({$idList})";
     }
 
     /**

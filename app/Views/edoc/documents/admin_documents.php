@@ -558,11 +558,11 @@
                                 <label class="text-sm text-gray-600">ปี:</label>
                                 <select id="volume-year-select" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                                     <?php foreach ($availableYears ?? [] as $y): ?>
-                                    <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? date('Y'))) ? 'selected' : '' ?>><?= (int)$y ?></option>
+                                    <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? (date('Y') + 543))) ? 'selected' : '' ?>><?= (int)$y ?></option>
                                     <?php endforeach; ?>
                                 </select>
                                 <button type="button" id="btn-create-year-volumes" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-all">
-                                    <i class="fas fa-plus me-1"></i>สร้างเล่มปี <span id="volume-year-label"><?= (int)($currentYear ?? date('Y')) ?></span>
+                                    <i class="fas fa-plus me-1"></i>สร้างเล่มปี <span id="volume-year-label"><?= (int)($currentYear ?? (date('Y') + 543)) ?></span>
                                 </button>
                                 <button type="button" id="btn-close-volumes-panel" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm">ปิด</button>
                             </div>
@@ -715,7 +715,7 @@
                             <select id="edoc-year-select" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white min-w-[5rem]">
                                 <option value="">ทุกปี</option>
                                 <?php foreach ($availableYears ?? [] as $y): ?>
-                                <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? date('Y'))) ? 'selected' : '' ?>><?= (int)$y ?></option>
+                                <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? (date('Y') + 543))) ? 'selected' : '' ?>><?= (int)$y ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -1285,7 +1285,7 @@
 
         // ---------- จัดการเล่ม (Volume) ----------
         function loadVolumes(year) {
-            year = year || $('#volume-year-select').val() || <?= (int)($currentYear ?? date('Y')) ?>;
+            year = year || $('#volume-year-select').val() || <?= (int)($currentYear ?? (date('Y') + 543)) ?>;
             $.ajax({
                 url: '<?= base_url("index.php/edoc/admin/volumes") ?>',
                 type: 'GET',
@@ -1376,7 +1376,7 @@
 
         // ---------- Advanced Search Panel ----------
         function loadAdvVolumes(year) {
-            year = year || $('#adv-year').val() || <?= (int)($currentYear ?? date('Y')) ?>;
+            year = year || $('#adv-year').val() || <?= (int)($currentYear ?? (date('Y') + 543)) ?>;
             $.ajax({
                 url: '<?= base_url("index.php/edoc/admin/volumes") ?>',
                 type: 'GET',
@@ -1713,7 +1713,7 @@
             $("#msgfile").hide();
             initsuggest();
             initDocumentsTable();
-            loadVolumes(<?= (int)($currentYear ?? date('Y')) ?>);
+            loadVolumes(<?= (int)($currentYear ?? (date('Y') + 543)) ?>);
             initEmailAutocomplete();
             initOwnerAutocomplete();
 
@@ -2369,20 +2369,13 @@
                             }
                             if (result_data.participant_chips && result_data.participant_chips.length) {
                                 var chips = result_data.participant_chips;
-                                var maxChips = 3;
-                                var show = chips.slice(0, maxChips);
-                                var rest = chips.length - maxChips;
                                 var chipHtml = '<div class="doc-participant-chips flex flex-wrap gap-1 mt-1">';
-                                show.forEach(function(chip) {
+                                chips.forEach(function(chip) {
                                     var label = (chip.name || chip.email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                                     var title = (chip.email && chip.email !== chip.name) ? (' title="' + (chip.email || '').replace(/"/g, '&quot;') + '"') : '';
                                     var cls = chip.email === 'ทุกคน' ? 'doc-chip doc-chip-everyone' : 'doc-chip doc-chip-user';
                                     chipHtml += '<span class="' + cls + '"' + title + '>' + label + '</span>';
                                 });
-                                if (rest > 0) {
-                                    var fullList = chips.map(function(c) { return (c.name || c.email || ''); }).join('\n');
-                                    chipHtml += '<span class="doc-chip doc-chip-more" title="' + (fullList.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')) + '">+' + rest + ' คน</span>';
-                                }
                                 chipHtml += '</div>';
                                 $('#msg_participant').html(chipHtml);
                             } else {

@@ -347,22 +347,28 @@ class MigrateEdocToNewStructure extends BaseCommand
                 continue;
             }
 
-            $year = $year > 0 ? $year : $this->extractYear($doc['regisdate'] ?? $doc['datedoc'] ?? null);
-            if ($year === null || $year < 2400) {
-                continue;
-            }
-
-            if (!isset($volumesByYear[$year])) {
-                $vols = $volumeModel->getByYear($year);
-                if (empty($vols) && !$this->dryRun) {
-                    $volumeModel->createYearVolumes($year);
+            $year = $year > 0 ? $this->normalizeToYearBE($year) : $this->extractYearBE($doc['regisdate'] ?? $doc['datedoc'] ?? null);
+            $volId = null;
+            if ($year !== null && $year > 0) {
+                if (!isset($volumesByYear[$year])) {
                     $vols = $volumeModel->getByYear($year);
+                    if (empty($vols) && !$this->dryRun) {
+                        $volumeModel->createYearVolumes($year);
+                        $vols = $volumeModel->getByYear($year);
+                    }
+                    $volumesByYear[$year] = $vols;
                 }
-                $volumesByYear[$year] = $vols;
+                $vols = $volumesByYear[$year];
+                $volId = $vols[0]['id'] ?? null;
+            } else {
+                // เก่ากว่า 5 ปี → ใส่เล่ม "ปีรวม"
+                $raw = $this->extractYearRaw($doc['regisdate'] ?? $doc['datedoc'] ?? null);
+                if ($raw !== null && $raw >= 2000) {
+                    $year = $raw >= 2400 ? $raw : $raw + self::CE_TO_BE;
+                    $volId = $this->getOrCreateCombinedVolumeId($db);
+                }
             }
-            $vols = $volumesByYear[$year];
-            $volId = $vols[0]['id'] ?? null;
-            if ($volId === null) {
+            if ($volId === null || $year === null) {
                 continue;
             }
 
@@ -376,7 +382,70 @@ class MigrateEdocToNewStructure extends BaseCommand
         }
     }
 
-    private function extractYear($value): ?int
+    private const YEARS_BACK = 5;
+    private const CE_TO_BE = 543;
+    private const COMBINED_VOLUME_YEAR = 0;
+    private const COMBINED_VOLUME_LABEL = 'ปีรวม (เก่ากว่า 5 ปี)';
+
+    private $combinedVolumeId = null;
+
+    /** หา volume_id ของเล่ม "ปีรวม" สำหรับเอกสารที่เก่ากว่า 5 ปี */
+    private function getOrCreateCombinedVolumeId($db): ?int
+    {
+        if ($this->combinedVolumeId !== null) {
+            return $this->combinedVolumeId;
+        }
+        if (!$this->tableExists($db, 'edoc_volumes')) {
+            return null;
+        }
+        $row = $db->table('edoc_volumes')
+            ->where('year', self::COMBINED_VOLUME_YEAR)
+            ->where('volume_type', 'announcement')
+            ->limit(1)
+            ->get()
+            ->getRowArray();
+        if (!empty($row['id'])) {
+            $this->combinedVolumeId = (int) $row['id'];
+            return $this->combinedVolumeId;
+        }
+        if (!$this->dryRun) {
+            $db->table('edoc_volumes')->insert([
+                'year'          => self::COMBINED_VOLUME_YEAR,
+                'volume_type'   => 'announcement',
+                'volume_label'  => self::COMBINED_VOLUME_LABEL,
+                'is_active'     => 1,
+                'created_by'    => null,
+                'created_at'    => date('Y-m-d H:i:s'),
+                'updated_at'    => date('Y-m-d H:i:s'),
+            ]);
+            $this->combinedVolumeId = (int) $db->insertID();
+        }
+        return $this->combinedVolumeId;
+    }
+
+    /** คืนปี พ.ศ. ที่อยู่ในช่วง 5 ปีย้อนหลังเท่านั้น (เก่ากว่า = convert ไม่ถูกต้อง) */
+    private function normalizeToYearBE(int $raw): ?int
+    {
+        $yearBE = $raw >= 2400 ? $raw : $raw + self::CE_TO_BE;
+        $currentBE = (int) date('Y') + self::CE_TO_BE;
+        $yearMin = $currentBE - self::YEARS_BACK;
+        if ($yearBE >= $yearMin && $yearBE <= $currentBE) {
+            return $yearBE;
+        }
+        return null;
+    }
+
+    /** ดึงปีจากค่าที่ให้ แล้วคืนเฉพาะปี พ.ศ. ในช่วง 5 ปีย้อนหลัง */
+    private function extractYearBE($value): ?int
+    {
+        $raw = $this->extractYearRaw($value);
+        if ($raw === null || $raw < 2000) {
+            return null;
+        }
+        return $this->normalizeToYearBE($raw);
+    }
+
+    private function extractYearRaw($value): ?int
     {
         if ($value === null || $value === '') {
             return null;
@@ -396,6 +465,12 @@ class MigrateEdocToNewStructure extends BaseCommand
             return (int) $m[1];
         }
         return null;
+    }
+
+    /** @deprecated ใช้ extractYearBE แทน (คืนค่า พ.ศ. ในช่วง 5 ปี) */
+    private function extractYear($value): ?int
+    {
+        return $this->extractYearBE($value);
     }
 
     private function migrateParticipantsToDocumentTags($db): void

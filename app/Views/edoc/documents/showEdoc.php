@@ -558,7 +558,7 @@
                                         <option value="">ทุกปี</option>
                                         <?php if (!empty($availableYears)): ?>
                                             <?php foreach ($availableYears as $y): ?>
-                                                <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? date('Y'))) ? 'selected' : '' ?>><?= (int)$y ?></option>
+                                                <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? (date('Y') + 543))) ? 'selected' : '' ?>><?= (int)$y ?></option>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
                                     </select>
@@ -603,7 +603,7 @@
                                         <option value="">ทุกปี</option>
                                         <?php if (!empty($availableYears)): ?>
                                             <?php foreach ($availableYears as $y): ?>
-                                            <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? date('Y'))) ? 'selected' : '' ?>><?= (int)$y ?></option>
+                                            <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? (date('Y') + 543))) ? 'selected' : '' ?>><?= (int)$y ?></option>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
                                     </select>
@@ -1027,7 +1027,7 @@
                 $('#globalSearch').val('');
                 $('#yearFilter').val('');
                 if ($('#edoc-year-select').length) {
-                    var currentY = '<?= (int)($currentYear ?? date("Y")) ?>';
+                    var currentY = '<?= (int)($currentYear ?? (date("Y") + 543)) ?>';
                     $('#edoc-year-select').val(currentY);
                     $('#adv-year').val(currentY);
                     $('#yearFilter').val(currentY);
@@ -1078,7 +1078,7 @@
 
             // Advanced Search Panel
             function loadAdvVolumesUser(year) {
-                year = year || $('#adv-year').val() || new Date().getFullYear();
+                year = year || $('#adv-year').val() || (new Date().getFullYear() + 543); // default ปี พ.ศ.
                 $.ajax({
                     url: "<?php echo base_url('index.php/edoc/volumes'); ?>",
                     type: 'GET',
@@ -1293,20 +1293,13 @@
                         }
                         if (result_data.participant_chips && result_data.participant_chips.length) {
                             var chips = result_data.participant_chips;
-                            var maxChips = 3;
-                            var show = chips.slice(0, maxChips);
-                            var rest = chips.length - maxChips;
                             var chipHtml = '<div class="doc-participant-chips flex flex-wrap gap-1">';
-                            show.forEach(function(chip) {
+                            chips.forEach(function(chip) {
                                 var label = (chip.name || chip.email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                                 var title = (chip.email && chip.email !== chip.name) ? (' title="' + (chip.email || '').replace(/"/g, '&quot;') + '"') : '';
                                 var cls = chip.email === 'ทุกคน' ? 'doc-chip doc-chip-everyone' : 'doc-chip doc-chip-user';
                                 chipHtml += '<span class="status-badge ' + cls + '"' + title + '>' + label + '</span>';
                             });
-                            if (rest > 0) {
-                                var fullList = chips.map(function(c) { return (c.name || c.email || ''); }).join('\n');
-                                chipHtml += '<span class="status-badge doc-chip doc-chip-more" title="' + (fullList.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')) + '">+' + rest + ' คน</span>';
-                            }
                             chipHtml += '</div>';
                             $('#msg_participant').html(chipHtml);
                         } else {
