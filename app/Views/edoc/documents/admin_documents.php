@@ -411,6 +411,14 @@
             border: 1px dashed #94a3b8;
             cursor: help;
         }
+
+        /* Autocomplete keyboard active highlight (ไม่พึ่ง Tailwind) */
+        .autocomplete-active {
+            background: #dbeafe !important; /* blue-100 */
+        }
+        .autocomplete-active-amber {
+            background: #fef3c7 !important; /* amber-100 */
+        }
         #documents-table thead th:nth-child(6),
         #documents-table tbody td:nth-child(6) {
             max-width: 14em;
@@ -1879,9 +1887,9 @@
                 if (idx < 0) idx = 0;
                 if (idx >= $items.length) idx = $items.length - 1;
                 activeIndex = idx;
-                $items.removeClass('bg-blue-100').attr('aria-selected', 'false');
+                $items.removeClass('autocomplete-active').attr('aria-selected', 'false');
                 var $active = $items.eq(activeIndex);
-                $active.addClass('bg-blue-100').attr('aria-selected', 'true');
+                $active.addClass('autocomplete-active').attr('aria-selected', 'true');
                 try {
                     if ($active[0] && $active[0].scrollIntoView) $active[0].scrollIntoView({ block: 'nearest' });
                 } catch (e) {}
@@ -1945,28 +1953,28 @@
             });
 
             $search.off('keydown.participantNav').on('keydown.participantNav', function(e) {
-                var key = e.key || e.which;
+                var code = e.which || e.keyCode;
                 var $items = getItems();
                 if (!$items.length || $dropdown.hasClass('hidden')) {
-                    if (key === 'ArrowDown' || key === 40) {
+                    if (code === 40) {
                         // กระตุ้นให้โหลดรายการถ้ามีข้อความพอ
                         if ($.trim($search.val()).length >= 2) $search.trigger('input');
                         e.preventDefault();
                     }
                     return;
                 }
-                if (key === 'ArrowDown' || key === 40) {
+                if (code === 40) {
                     e.preventDefault();
                     setActive(activeIndex + 1);
-                } else if (key === 'ArrowUp' || key === 38) {
+                } else if (code === 38) {
                     e.preventDefault();
                     setActive(activeIndex - 1);
-                } else if (key === 'Enter' || key === 13) {
+                } else if (code === 13) {
                     if (activeIndex >= 0) {
                         e.preventDefault();
                         $items.eq(activeIndex).trigger('click');
                     }
-                } else if (key === 'Escape' || key === 'Esc' || key === 27) {
+                } else if (code === 27) {
                     e.preventDefault();
                     closeDropdown();
                 }
@@ -1999,11 +2007,11 @@
                 if (idx < 0) idx = 0;
                 if (idx >= $items.length) idx = $items.length - 1;
                 activeIndex = idx;
-                $items.removeClass('bg-blue-100 bg-amber-100').attr('aria-selected', 'false');
+                $items.removeClass('autocomplete-active autocomplete-active-amber').attr('aria-selected', 'false');
                 var $active = $items.eq(activeIndex);
                 // owner-custom-item ใช้สี amber, รายการปกติใช้ blue
-                if ($active.hasClass('owner-custom-item')) $active.addClass('bg-amber-100');
-                else $active.addClass('bg-blue-100');
+                if ($active.hasClass('owner-custom-item')) $active.addClass('autocomplete-active-amber');
+                else $active.addClass('autocomplete-active');
                 $active.attr('aria-selected', 'true');
                 try {
                     if ($active[0] && $active[0].scrollIntoView) $active[0].scrollIntoView({ block: 'nearest' });
@@ -2075,27 +2083,27 @@
             });
 
             $search.off('keydown.ownerNav').on('keydown.ownerNav', function(e) {
-                var key = e.key || e.which;
+                var code = e.which || e.keyCode;
                 var $items = getItems();
                 if (!$items.length || $dropdown.hasClass('hidden')) {
-                    if (key === 'ArrowDown' || key === 40) {
+                    if (code === 40) {
                         if ($.trim($search.val()).length >= 2) $search.trigger('input');
                         e.preventDefault();
                     }
                     return;
                 }
-                if (key === 'ArrowDown' || key === 40) {
+                if (code === 40) {
                     e.preventDefault();
                     setActive(activeIndex + 1);
-                } else if (key === 'ArrowUp' || key === 38) {
+                } else if (code === 38) {
                     e.preventDefault();
                     setActive(activeIndex - 1);
-                } else if (key === 'Enter' || key === 13) {
+                } else if (code === 13) {
                     if (activeIndex >= 0) {
                         e.preventDefault();
                         $items.eq(activeIndex).trigger('click');
                     }
-                } else if (key === 'Escape' || key === 'Esc' || key === 27) {
+                } else if (code === 27) {
                     e.preventDefault();
                     closeDropdown();
                 }
