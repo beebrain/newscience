@@ -9,13 +9,50 @@ import argparse
 import gzip
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from zipfile import ZipFile
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+
+# เดือนภาษาไทย (มกราคม–ธันวาคม)
+THAI_MONTHS = (
+    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
+)
+
+
+def format_date_thai(backup_name_or_iso: str) -> str:
+    """
+    แปลงชื่อ backup (เช่น 2026-03-10_020000) หรือ timestamp ISO เป็นข้อความภาษาไทย:
+    วันที่ เดือนไทย พ.ศ.
+    """
+    dt = None
+    if not backup_name_or_iso:
+        return ""
+    # ลองจาก backup name แบบ YYYY-MM-DD_HHMMSS
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})", backup_name_or_iso)
+    if m:
+        try:
+            y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+            if 1 <= mo <= 12 and 1 <= d <= 31:
+                dt = datetime(y, mo, d)
+        except ValueError:
+            pass
+    if dt is None:
+        try:
+            # ลอง parse เป็น ISO (ใช้แค่ส่วนวันที่)
+            dt = datetime.fromisoformat(backup_name_or_iso.replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            return backup_name_or_iso
+    day = dt.day
+    month_thai = THAI_MONTHS[dt.month - 1]
+    year_be = dt.year + 543  # พ.ศ. = ค.ศ. + 543
+    return f"{day} {month_thai} {year_be}"
 
 
 def find_mysql_binaries(config_mysql: dict):
@@ -230,12 +267,15 @@ def main():
             print("No backups found.")
             return 0
         print(f"Backups in {backup_base}:")
+        print(f"  {'ชื่อ backup':<24}  |  {'วันที่ (พ.ศ.)':<28}  |  {'DB':<20}  |  .env")
+        print("  " + "-" * 80)
         for b in backups:
             m = b["manifest"]
-            ts = m.get("timestamp", "")
+            ts = m.get("timestamp", b["name"])
+            date_thai = format_date_thai(ts)
             db = m.get("database", "")
             env_ok = "yes" if m.get("env_backed_up") else "no"
-            print(f"  {b['name']}  |  {ts}  |  DB: {db}  |  .env: {env_ok}")
+            print(f"  {b['name']:<24}  |  {date_thai:<28}  |  {db:<20}  |  {env_ok}")
         return 0
 
     backup_name = args.backup_name
@@ -246,9 +286,10 @@ def main():
         print("Available backups:")
         for i, b in enumerate(backups, 1):
             m = b["manifest"]
-            ts = m.get("timestamp", "")
+            ts = m.get("timestamp", b["name"])
+            date_thai = format_date_thai(ts)
             db = m.get("database", "")
-            print(f"  {i}. {b['name']}  ({ts})  DB: {db}")
+            print(f"  {i}. {b['name']}  ({date_thai})  DB: {db}")
         try:
             choice = input("\nEnter number or backup name to restore (or Enter to quit): ").strip()
         except EOFError:

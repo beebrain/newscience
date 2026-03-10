@@ -1306,7 +1306,7 @@
                             $('#msg_participant').text(result_data.participant || '-');
                         }
                         $('#msg_order').text(result_data.order || '-');
-                        $('#msg_docdate').text(result_data.datedoc || '-');
+                        $('#msg_docdate').text(result_data.datedoc ? formatDateToThai(result_data.datedoc) : '-');
 
                         // Add LINE sharing button to existing buttons section
                         addLineShareButton(result_data);
@@ -1635,9 +1635,8 @@
                 if (isNaN(date.getTime())) return dateString; // Return original if invalid
 
                 const thaiMonths = [
-                    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน',
-                    'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม',
-                    'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+                    'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+                    'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
                 ];
 
                 const day = date.getDate();

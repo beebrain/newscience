@@ -199,7 +199,13 @@
                                                     <?php endif; ?>
 
                                                     <dt class="col-sm-4">วันที่ลงทะเบียน</dt>
-                                                    <dd class="col-sm-8"><?php echo date('d/m/Y', strtotime($document['regisdate'])); ?></dd>
+                                                    <dd class="col-sm-8"><?php
+                                                        $t = strtotime($document['regisdate']);
+                                                        if (!$t) { echo '-'; } else {
+                                                            $thaiShort = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+                                                            echo date('j', $t) . ' ' . $thaiShort[(int)date('n', $t) - 1] . ' ' . (date('Y', $t) + 543);
+                                                        }
+                                                    ?></dd>
 
                                                     <dt class="col-sm-4">ประเภทเอกสาร</dt>
                                                     <dd class="col-sm-8"><?php echo $document['doctype']; ?></dd>

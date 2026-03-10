@@ -1129,6 +1129,21 @@
         var getdocUrl = "<?= base_url('index.php/edoc/admin/getdoc') ?>";
         var documentsTable = null;
 
+        function formatDateToThai(dateString) {
+            if (!dateString) return '';
+            try {
+                var date = new Date(dateString);
+                if (isNaN(date.getTime())) return dateString;
+                var thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+                var day = date.getDate();
+                var month = thaiMonths[date.getMonth()];
+                var year = date.getFullYear() + 543;
+                return day + ' ' + month + ' ' + year;
+            } catch (e) {
+                return dateString;
+            }
+        }
+
         function initDocumentsTable() {
             if (documentsTable) return;
             if ($('#edoc-year-select').length) $('#adv-year').val($('#edoc-year-select').val());
@@ -1208,7 +1223,10 @@
                         }
                     },
                     {
-                        data: 'datedoc'
+                        data: 'datedoc',
+                        render: function(data) {
+                            return data ? formatDateToThai(data) : '';
+                        }
                     },
                     {
                         data: 'pages'
@@ -2394,7 +2412,7 @@
                                 $('#msg_participant').text(result_data.participant || '');
                             }
                             $('#msg_order').text(result_data.order || '');
-                            $('#msg_docdate').text(result_data.datedoc || '');
+                            $('#msg_docdate').text(result_data.datedoc ? formatDateToThai(result_data.datedoc) : '');
 
                             // Add view statistics if available
                             if (result_data.view_statistics && typeof addViewStatistics === 'function') {
