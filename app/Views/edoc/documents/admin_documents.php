@@ -1865,10 +1865,35 @@
             var $dropdown = $('#participant-email-dropdown');
             var $participant = $('#participant');
             var suggestTimeout = null;
+            var activeIndex = -1;
+
+            function getItems() {
+                return $dropdown.find('.participant-email-item');
+            }
+            function setActive(idx) {
+                var $items = getItems();
+                if (!$items.length) {
+                    activeIndex = -1;
+                    return;
+                }
+                if (idx < 0) idx = 0;
+                if (idx >= $items.length) idx = $items.length - 1;
+                activeIndex = idx;
+                $items.removeClass('bg-blue-100').attr('aria-selected', 'false');
+                var $active = $items.eq(activeIndex);
+                $active.addClass('bg-blue-100').attr('aria-selected', 'true');
+                try {
+                    if ($active[0] && $active[0].scrollIntoView) $active[0].scrollIntoView({ block: 'nearest' });
+                } catch (e) {}
+            }
+            function closeDropdown() {
+                activeIndex = -1;
+                $dropdown.addClass('hidden').empty();
+            }
 
             $search.off('input focus').on('input focus', function() {
                 var q = $.trim($search.val());
-                $dropdown.addClass('hidden').empty();
+                closeDropdown();
                 if (suggestTimeout) clearTimeout(suggestTimeout);
                 if (q.length < 2) return;
                 suggestTimeout = setTimeout(function() {
@@ -1890,6 +1915,7 @@
                                 html += '<div class="participant-email-item px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-0 text-sm" data-email="' + email + '" data-name="' + name + '" title="คลิกเพื่อเพิ่ม">' + label + '</div>';
                             });
                             $dropdown.html(html).removeClass('hidden');
+                            setActive(0);
                         },
                         error: function() {
                             $dropdown.html('<div class="px-3 py-2 text-gray-500 text-sm">โหลดไม่สำเร็จ</div>').removeClass('hidden');
@@ -1901,7 +1927,7 @@
             $search.on('blur', function() {
                 setTimeout(function() {
                     var $focused = $(document.activeElement);
-                    if (!$focused.closest('#participant-email-dropdown').length) $dropdown.addClass('hidden');
+                    if (!$focused.closest('#participant-email-dropdown').length) closeDropdown();
                 }, 200);
             });
 
@@ -1911,11 +1937,45 @@
                 if (!email) return;
                 addParticipantChip(name, email);
                 $search.val('');
-                $dropdown.addClass('hidden').empty();
+                closeDropdown();
             });
 
             $(document).on('click', function(e) {
-                if (!$(e.target).closest('#participant-email-search, #participant-email-dropdown').length) $dropdown.addClass('hidden');
+                if (!$(e.target).closest('#participant-email-search, #participant-email-dropdown').length) closeDropdown();
+            });
+
+            $search.off('keydown.participantNav').on('keydown.participantNav', function(e) {
+                var key = e.key || e.which;
+                var $items = getItems();
+                if (!$items.length || $dropdown.hasClass('hidden')) {
+                    if (key === 'ArrowDown' || key === 40) {
+                        // กระตุ้นให้โหลดรายการถ้ามีข้อความพอ
+                        if ($.trim($search.val()).length >= 2) $search.trigger('input');
+                        e.preventDefault();
+                    }
+                    return;
+                }
+                if (key === 'ArrowDown' || key === 40) {
+                    e.preventDefault();
+                    setActive(activeIndex + 1);
+                } else if (key === 'ArrowUp' || key === 38) {
+                    e.preventDefault();
+                    setActive(activeIndex - 1);
+                } else if (key === 'Enter' || key === 13) {
+                    if (activeIndex >= 0) {
+                        e.preventDefault();
+                        $items.eq(activeIndex).trigger('click');
+                    }
+                } else if (key === 'Escape' || key === 'Esc' || key === 27) {
+                    e.preventDefault();
+                    closeDropdown();
+                }
+            });
+
+            $(document).on('mouseenter', '.participant-email-item', function() {
+                var $items = getItems();
+                var idx = $items.index(this);
+                if (idx >= 0) setActive(idx);
             });
         }
 
@@ -1925,9 +1985,38 @@
             var $dropdown = $('#owner-email-dropdown');
             var $owner = $('#owner');
             var ownerSuggestTimeout = null;
+            var activeIndex = -1;
+
+            function getItems() {
+                return $dropdown.find('.owner-email-item, .owner-custom-item');
+            }
+            function setActive(idx) {
+                var $items = getItems();
+                if (!$items.length) {
+                    activeIndex = -1;
+                    return;
+                }
+                if (idx < 0) idx = 0;
+                if (idx >= $items.length) idx = $items.length - 1;
+                activeIndex = idx;
+                $items.removeClass('bg-blue-100 bg-amber-100').attr('aria-selected', 'false');
+                var $active = $items.eq(activeIndex);
+                // owner-custom-item ใช้สี amber, รายการปกติใช้ blue
+                if ($active.hasClass('owner-custom-item')) $active.addClass('bg-amber-100');
+                else $active.addClass('bg-blue-100');
+                $active.attr('aria-selected', 'true');
+                try {
+                    if ($active[0] && $active[0].scrollIntoView) $active[0].scrollIntoView({ block: 'nearest' });
+                } catch (e) {}
+            }
+            function closeDropdown() {
+                activeIndex = -1;
+                $dropdown.addClass('hidden').empty();
+            }
+
             $search.off('input focus').on('input focus', function() {
                 var q = $.trim($search.val());
-                $dropdown.addClass('hidden').empty();
+                closeDropdown();
                 if (ownerSuggestTimeout) clearTimeout(ownerSuggestTimeout);
                 if (q.length < 2) return;
                 ownerSuggestTimeout = setTimeout(function() {
@@ -1953,6 +2042,7 @@
                             });
                             html += customLine;
                             $dropdown.html(html).removeClass('hidden');
+                            setActive(0);
                         },
                         error: function() {
                             $dropdown.html('<div class="px-3 py-2 text-gray-500 text-sm">โหลดไม่สำเร็จ</div>').removeClass('hidden');
@@ -1962,7 +2052,7 @@
             });
             $search.on('blur', function() {
                 setTimeout(function() {
-                    if (!$(document.activeElement).closest('#owner-email-dropdown').length) $dropdown.addClass('hidden');
+                    if (!$(document.activeElement).closest('#owner-email-dropdown').length) closeDropdown();
                 }, 200);
             });
             $(document).on('click', '.owner-email-item', function() {
@@ -1970,7 +2060,7 @@
                 if (!email) return;
                 $owner.val(email);
                 $search.val('');
-                $dropdown.addClass('hidden').empty();
+                closeDropdown();
             });
             $(document).on('click', '.owner-custom-item', function() {
                 var val = $(this).data('owner-custom') || $search.val();
@@ -1978,10 +2068,43 @@
                     $owner.val($.trim(val));
                     $search.val('');
                 }
-                $dropdown.addClass('hidden').empty();
+                closeDropdown();
             });
             $(document).on('click', function(e) {
-                if (!$(e.target).closest('#owner-email-search, #owner-email-dropdown').length) $dropdown.addClass('hidden');
+                if (!$(e.target).closest('#owner-email-search, #owner-email-dropdown').length) closeDropdown();
+            });
+
+            $search.off('keydown.ownerNav').on('keydown.ownerNav', function(e) {
+                var key = e.key || e.which;
+                var $items = getItems();
+                if (!$items.length || $dropdown.hasClass('hidden')) {
+                    if (key === 'ArrowDown' || key === 40) {
+                        if ($.trim($search.val()).length >= 2) $search.trigger('input');
+                        e.preventDefault();
+                    }
+                    return;
+                }
+                if (key === 'ArrowDown' || key === 40) {
+                    e.preventDefault();
+                    setActive(activeIndex + 1);
+                } else if (key === 'ArrowUp' || key === 38) {
+                    e.preventDefault();
+                    setActive(activeIndex - 1);
+                } else if (key === 'Enter' || key === 13) {
+                    if (activeIndex >= 0) {
+                        e.preventDefault();
+                        $items.eq(activeIndex).trigger('click');
+                    }
+                } else if (key === 'Escape' || key === 'Esc' || key === 27) {
+                    e.preventDefault();
+                    closeDropdown();
+                }
+            });
+
+            $(document).on('mouseenter', '.owner-email-item, .owner-custom-item', function() {
+                var $items = getItems();
+                var idx = $items.index(this);
+                if (idx >= 0) setActive(idx);
             });
         }
 
