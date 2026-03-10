@@ -1,0 +1,4 @@
+# newScience Backup Tool - Python dependencies
+# This project uses only the Python standard library.
+# No pip install required for backup.py or restore.py.
+# Python 3.7+ recommended.

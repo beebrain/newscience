@@ -243,29 +243,31 @@
     </div>
 
     <div class="system-grid">
-        <!-- Edoc System -->
+        <!-- Edoc System (ลิงก์ไป edoc ในไซต์, ด้านล่างมีลิงก์เข้า edoc เดิม) -->
         <?php
         $edocSso = config(\Config\EdocSso::class);
-        if ($edocSso->enabled && $edocSso->baseUrl !== ''):
+        $edocLegacyUrl = ($edocSso->baseUrl !== '') ? rtrim($edocSso->baseUrl, '/') : 'https://edoc.sci.uru.ac.th';
         ?>
-        <a href="<?= esc(rtrim($edocSso->baseUrl, '/')) ?>" target="_blank" class="system-card card-edoc">
-            <div class="system-card-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
+        <div class="system-card-wrap" style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <a href="<?= esc(base_url('edoc')) ?>" class="system-card card-edoc">
+                <div class="system-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <div class="system-card-title">งานสารบรรณ (e-Doc)</div>
+                <div class="system-card-desc">ระบบรับ-ส่งหนังสือราชการและเอกสารอิเล็กทรอนิกส์</div>
+                <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
                 </svg>
-            </div>
-            <div class="system-card-title">งานสารบรรณ (e-Doc)</div>
-            <div class="system-card-desc">ระบบรับ-ส่งหนังสือราชการและเอกสารอิเล็กทรอนิกส์</div>
-            <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-        </a>
-        <?php endif; ?>
+            </a>
+            <a href="<?= esc($edocLegacyUrl) ?>" target="_blank" rel="noopener" style="font-size: 0.8rem; color: #555; text-decoration: none;">เข้าสู่ edoc เดิม</a>
+        </div>
 
         <!-- Research Record System -->
         <?php

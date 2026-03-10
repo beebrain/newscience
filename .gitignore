@@ -157,3 +157,9 @@ public/thumbnails/
 public/uploads/
 # Uploads stored in writable (served via /serve/uploads/)
 writable/uploads/
+
+#-------------------------
+# Python Backup Tool
+#-------------------------
+newscience-backup/backups/
+newscience-backup/*.log
