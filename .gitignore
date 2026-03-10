@@ -161,5 +161,4 @@ writable/uploads/
 #-------------------------
 # Python Backup Tool
 #-------------------------
-newscience-backup/backups/
-newscience-backup/*.log
+newscience-backup/
