@@ -975,6 +975,7 @@
     <script src="<?= base_url('assets/js/customizer.js') ?>"></script>
     <script src="<?= base_url('assets/js/app.js') ?>"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/locales/bootstrap-datepicker.th.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.min.js"></script>
     <script type="text/javascript" src="<?= base_url('assets/js/jquery.amsify.suggestags.js') ?>"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
@@ -1731,7 +1732,13 @@
         });
 
         $(document).ready(function() {
-            $("#datedoc").datepicker();
+            $("#datedoc").datepicker({
+                format: 'yyyy-mm-dd',
+                language: 'th',
+                autoclose: true,
+                todayHighlight: true,
+                endDate: new Date()
+            });
             $("#msgfile").hide();
             initsuggest();
             initDocumentsTable();
