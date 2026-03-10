@@ -164,6 +164,12 @@
     }
     .card-edoc:hover .system-card-title { color: #2563eb; }
 
+    .card-edoc-legacy .system-card-icon {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+    .card-edoc-legacy:hover .system-card-title { color: #4b5563; }
+
     .card-research .system-card-icon {
         background: #ecfdf5;
         color: #059669;
@@ -231,7 +237,7 @@
         </div>
     </div>
 
-    <!-- 2. User Systems (Main Services) -->
+    <!-- 2a. ระบบในเว็บไซต์ -->
     <div class="section-header">
         <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="7" height="7"></rect>
@@ -239,42 +245,66 @@
             <rect x="14" y="14" width="7" height="7"></rect>
             <rect x="3" y="14" width="7" height="7"></rect>
         </svg>
-        <h2 class="section-title">ระบบสารสนเทศ (Systems & Services)</h2>
+        <h2 class="section-title">ระบบในเว็บไซต์</h2>
     </div>
 
     <div class="system-grid">
-        <!-- Edoc System (ลิงก์ไป edoc ในไซต์, ด้านล่างมีลิงก์เข้า edoc เดิม) -->
-        <?php
-        $edocSso = config(\Config\EdocSso::class);
+        <a href="<?= esc(base_url('edoc')) ?>" class="system-card card-edoc">
+            <div class="system-card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+            </div>
+            <div class="system-card-title">งานสารบรรณ (e-Doc)</div>
+            <div class="system-card-desc">ระบบรับ-ส่งหนังสือราชการและเอกสารอิเล็กทรอนิกส์</div>
+            <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+        </a>
+    </div>
+
+    <!-- 2b. ระบบภายนอก (เว็บไซต์อื่น) -->
+    <div class="section-header" style="margin-top: 1.5rem;">
+        <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <h2 class="section-title">ระบบภายนอกเว็บไซต์</h2>
+    </div>
+
+    <div class="system-grid">
+        <?php $edocSso = config(\Config\EdocSso::class);
         $edocLegacyUrl = ($edocSso->baseUrl !== '') ? rtrim($edocSso->baseUrl, '/') : 'https://edoc.sci.uru.ac.th';
         ?>
-        <div class="system-card-wrap" style="display: flex; flex-direction: column; gap: 0.35rem;">
-            <a href="<?= esc(base_url('edoc')) ?>" class="system-card card-edoc">
-                <div class="system-card-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                </div>
-                <div class="system-card-title">งานสารบรรณ (e-Doc)</div>
-                <div class="system-card-desc">ระบบรับ-ส่งหนังสือราชการและเอกสารอิเล็กทรอนิกส์</div>
-                <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
+        <a href="<?= esc($edocLegacyUrl) ?>" target="_blank" rel="noopener" class="system-card card-edoc-legacy">
+            <div class="system-card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
-            </a>
-            <a href="<?= esc($edocLegacyUrl) ?>" target="_blank" rel="noopener" style="font-size: 0.8rem; color: #555; text-decoration: none;">เข้าสู่ edoc เดิม</a>
-        </div>
+            </div>
+            <div class="system-card-title">e-Doc เดิม</div>
+            <div class="system-card-desc">ระบบ e-Doc เวอร์ชันเดิม (edoc.sci.uru.ac.th)</div>
+            <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+        </a>
 
-        <!-- Research Record System -->
         <?php
         $researchSso = config(\Config\ResearchRecordSso::class);
         if ($researchSso->enabled && $researchSso->baseUrl !== ''):
         ?>
-        <a href="<?= esc(rtrim($researchSso->baseUrl, '/') . '/index.php/dashboard') ?>" target="_blank" class="system-card card-research">
+        <a href="<?= esc(rtrim($researchSso->baseUrl, '/') . '/index.php/dashboard') ?>" target="_blank" rel="noopener" class="system-card card-research">
             <div class="system-card-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" opacity="0.1"></path>
