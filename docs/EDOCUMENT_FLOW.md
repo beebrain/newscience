@@ -149,6 +149,34 @@ POST /edoc/upload/edoc (multipart: file)
 
 ---
 
+### 2.3.1 ที่อยู่ไฟล์เอกสาร (Document file location)
+
+**โฟลเดอร์มาตรฐานที่ควรใช้:**
+
+| สถานที่ | Path (จาก root โปรเจกต์) | ใช้เมื่อ |
+|---------|---------------------------|----------|
+| **โฟลเดอร์หลัก (แนะนำ)** | `writable/edoc_documents/` | ไฟล์ที่อัปโหลดผ่านระบบ และไฟล์ที่ viewPDF หาอ่าน |
+
+- อัปโหลดใหม่: `EdocUploadController::uploadFileEdoc` บันทึกไฟล์ที่ **`WRITEPATH . 'edoc_documents/'`** = `writable/edoc_documents/`
+- ชื่อไฟล์รูปแบบ: `YYYYmmdd_HHmmss_<random16hex>.<ext>` (เช่น `20260305_111702_08985e17e9c63f64.pdf`)
+- ฟิลด์ `fileaddress` ในตาราง `edoctitle` เก็บเฉพาะ **ชื่อไฟล์** (หรือหลายไฟล์เป็น JSON array เช่น `["file1.pdf","file2.pdf"]`)
+
+**ลำดับการค้นหาไฟล์เมื่อเปิดดู (viewPDF):**
+
+`EdocController::viewPDF` จะค้นหาไฟล์ตาม base path ต่อไปนี้ **ตามลำดับ** (ใช้ชื่อไฟล์จาก `fileaddress`):
+
+1. **`writable/edoc_documents/`** — ตำแหน่งมาตรฐาน ควรวางไฟล์ที่นี่
+2. `writable/uploads/`
+3. `writable/uploads/documents/`
+4. `EdocDocument/` (ที่ root โปรเจกต์)
+5. `public/EdocDocument/`
+
+ถ้าไฟล์ไม่อยู่ในตำแหน่งใดเลย จะได้ "ไฟล์นี้ไม่มีอยู่" และมี log บรรทัด `[viewPDF] File not found: ... Tried: ...`
+
+**สรุป:** ไฟล์เอกสารแต่ละ document ควรอยู่ที่ **`writable/edoc_documents/`** และใน DB เก็บเฉพาะชื่อไฟล์ใน `fileaddress` (JSON array). ไฟล์ที่ย้าย/import จากระบบเก่า (sci-edoc) ควร copy ไปที่ `writable/edoc_documents/` ด้วย จึงจะเปิดดูได้ใน newScience.
+
+---
+
 ### 2.4 การแจ้งเตือนเอกสาร (อีเมล)
 
 **ดึงข้อมูลการแจ้งเตือน (สำหรับวันใดวันหนึ่ง):**

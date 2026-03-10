@@ -38,6 +38,8 @@ class EdoctitleModel extends Model
     {
         return $this->select([
             'iddoc',
+            'volume_id',
+            'doc_year',
             'officeiddoc',
             'datedoc',
             'title',

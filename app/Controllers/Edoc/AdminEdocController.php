@@ -442,17 +442,36 @@ class AdminEdocController extends EdocBaseController
             $data['fileaddress'] = $this->normalizeFileAddress($data['fileaddress']);
         }
 
+        if (array_key_exists('volume_id', $data) && $data['volume_id'] === '') {
+            $data['volume_id'] = null;
+        }
+
         // Set doc_year from datedoc if available (มาตรฐานเป็นปี พ.ศ.)
         if (!empty($data['datedoc'])) {
             $ceYear = (int) date('Y', strtotime($data['datedoc']));
             $data['doc_year'] = $ceYear + 543; // ค.ศ. → พ.ศ.
         }
 
-        // เอกสารใหม่: ถ้าฟอร์มไม่ได้ระบุเจ้าของ ให้ใช้ email ผู้บันทึกเป็น default (ถ้าผู้ใช้เลือกจาก user หรือระบุเองแล้วใช้ค่าจากฟอร์ม)
+        // บันทึก owner/participant เป็นชื่อผู้ใช้ (ไม่ใช้ email ใน edoctitle)
         $ownerFromForm = trim($data['owner'] ?? '');
         if (empty($data['iddoc']) && $ownerFromForm === '' && !empty($this->edocUser['email'])) {
-            $data['owner'] = $this->edocUser['email'];
+            $ownerFromForm = $this->edocUser['email'];
         }
+        $data['owner'] = $this->resolveToDisplayName($ownerFromForm);
+
+        $participantNames = [];
+        foreach ($tagEmails as $part) {
+            $part = trim($part);
+            if ($part === '') {
+                continue;
+            }
+            if ($part === 'ทุกคน') {
+                $participantNames[] = 'ทุกคน';
+                continue;
+            }
+            $participantNames[] = $this->resolveToDisplayName($part);
+        }
+        $data['participant'] = implode(',', $participantNames);
 
         $iddoc = null;
         if (empty($data['iddoc'])) {
@@ -462,14 +481,24 @@ class AdminEdocController extends EdocBaseController
             $this->edoctitleModel->updatedoc($data['iddoc'], $data);
         }
 
-        // ใช้ owner/participant ใน edoctitle โดยตรง (ไม่ใช้ edoc_document_tags)
-        if ($iddoc && !empty($tagEmails)) {
-            $data['participant'] = implode(',', $tagEmails);
-            $this->edoctitleModel->updatedoc($iddoc, ['participant' => $data['participant']]);
-        }
-
         $data['mailList'] = [];
         return $this->response->setJSON($data);
+    }
+
+    /**
+     * แปลง email เป็นชื่อผู้ใช้ (จาก user/student_user) ถ้าเป็น email ไม่พบชื่อให้คืนค่าเดิม
+     * ถ้าไม่ใช่ email (เป็นชื่ออยู่แล้ว) คืนค่าเดิม
+     */
+    private function resolveToDisplayName(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+        if (strpos($value, '@') === false) {
+            return $value;
+        }
+        return $this->docTagModel->getDisplayNameByEmail($value);
     }
 
     /**

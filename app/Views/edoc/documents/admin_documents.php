@@ -841,7 +841,8 @@
                                     <input type="text" id="participant-email-search" class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="ค้นหาอีเมลหรือชื่อเพื่อเพิ่มผู้มีส่วนร่วม (พิมพ์อย่างน้อย 2 ตัวอักษร)" autocomplete="off">
                                     <div id="participant-email-dropdown" class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"></div>
                                 </div>
-                                <input type="text" name="participant" id="participant" required class="form-control w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="อีเมลหรือชื่อ (เลือกจากช่องค้นด้านบน หรือเลือกกลุ่ม Tag)">
+                                <div id="participant-chips-container" class="doc-participant-chips flex flex-wrap gap-1.5 min-h-[2.25rem] p-2 border border-gray-300 rounded-lg bg-gray-50/50"></div>
+                                <input type="hidden" name="participant" id="participant" required>
                                 <input type="hidden" name="copynum" id="copynum">
                                 <input type="hidden" name="allname" id="allname" value="<?= "'" . implode("','", $suggestname) . "'" ?>">
                             </div>
@@ -995,6 +996,8 @@
     </script>
     <script>
         let uploadedFiles = [];
+        var pendingVolumeId = null;
+        var pendingVolumeYear = null;
 
         function displaySelectedFiles(files) {
             let filesHtml = '';
@@ -1284,7 +1287,7 @@
         }
 
         // ---------- จัดการเล่ม (Volume) ----------
-        function loadVolumes(year) {
+        function loadVolumes(year, onDone) {
             year = year || $('#volume-year-select').val() || <?= (int)($currentYear ?? (date('Y') + 543)) ?>;
             $.ajax({
                 url: '<?= base_url("index.php/edoc/admin/volumes") ?>',
@@ -1302,6 +1305,7 @@
                         $('#volume_id').html(options);
                         renderVolumesTable(res.data);
                     }
+                    if (typeof onDone === 'function') onDone();
                 }
             });
         }
@@ -1738,14 +1742,23 @@
                 clearEmailTags();
                 $('#tagGroupSearch').val('');
                 $('#tagGroupDropdown').addClass('hidden').empty();
+                pendingVolumeId = null;
+                pendingVolumeYear = null;
             });
             $('#formModal').on('shown.bs.modal', function() {
+                var year = pendingVolumeYear || $('#edoc-year-select').val() || <?= (int)($currentYear ?? (date('Y') + 543)) ?>;
+                loadVolumes(year, function() {
+                    if (pendingVolumeId) {
+                        $('#volume_id').val(pendingVolumeId);
+                        pendingVolumeId = null;
+                    }
+                    pendingVolumeYear = null;
+                });
                 if ($.fn.selectpicker && $('#doctype').hasClass('selectpicker')) $('#doctype').selectpicker('refresh');
             });
         });
 
         function initsuggest() {
-            var copynumber = 1;
             $('#owner').amsifySuggestags({
                 suggestions: [<?= "'" . implode("','", $suggestname) . "'"; ?>],
                 defaultTagClass: 'badge',
@@ -1755,50 +1768,70 @@
                 keepLastOnHoverTag: false,
                 delimiters: [';']
             });
-
-            $('#participant').amsifySuggestags({
-                suggestions: [<?= "'" . implode("','", $suggestname) . "'"; ?>],
-                defaultTagClass: 'badge',
-                whiteList: false,
-                type: 'amsify',
-                tagLimit: 100,
-                showAllSuggestions: true,
-                afterAdd: function(value) {
-                    copynumber = copynumber + 1;
-                    $('#copynum').val(copynumber);
-                },
-                afterRemove: function(value) {
-                    copynumber = copynumber - 1;
-                    $('#copynum').val(copynumber);
-                },
-            });
         }
 
         function addtag(flag) {
             if (flag) {
-                $('#participant').val("<?php echo "ทุกคน"; ?>");
+                $('#participant-chips-container').empty();
+                addParticipantChip('ทุกคน', 'ทุกคน');
             } else {
-                $('#participant').val("");
+                clearEmailTags();
             }
-            initsuggest();
         }
 
         function addEmailTag(email) {
             if (!email) return;
-            var $p = $('#participant');
-            var current = $.trim($p.val());
-            var parts = current ? current.split(',').map(function(s) { return $.trim(s); }).filter(Boolean) : [];
-            if (parts.indexOf(email) !== -1) return;
-            parts.push(email);
-            $p.val(parts.join(', '));
-            initsuggest();
+            addParticipantChip(email, email);
         }
 
         function clearEmailTags() {
+            $('#participant-chips-container').empty();
             $('#participant').val('');
             $('#participant-email-search').val('');
             $('#participant-email-dropdown').addClass('hidden').empty();
-            initsuggest();
+        }
+
+        function syncParticipantFromChips() {
+            var values = [];
+            $('#participant-chips-container .participant-chip').each(function() {
+                var v = $(this).data('value');
+                if (v) values.push(v);
+            });
+            $('#participant').val(values.join(', '));
+        }
+
+        function addParticipantChip(displayLabel, value) {
+            value = (value || '').trim();
+            displayLabel = (displayLabel || value || '').trim();
+            if (!value) return;
+            var $container = $('#participant-chips-container');
+            var exists = false;
+            $container.find('.participant-chip').each(function() {
+                if ($(this).data('value') === value) { exists = true; return false; }
+            });
+            if (exists) return;
+            var $chip = $('<span class="participant-chip doc-chip doc-chip-user inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm"><span class="participant-chip-label"></span><button type="button" class="participant-chip-remove ml-0.5 text-gray-500 hover:text-red-600 focus:outline-none" aria-label="ลบ">&times;</button></span>');
+            $chip.data('value', value);
+            $chip.find('.participant-chip-label').text(displayLabel);
+            $chip.find('.participant-chip-remove').on('click', function(e) {
+                e.preventDefault();
+                $chip.remove();
+                syncParticipantFromChips();
+            });
+            $container.append($chip);
+            syncParticipantFromChips();
+        }
+
+        function setParticipantFromString(participantStr) {
+            $('#participant-chips-container').empty();
+            if (!participantStr || !$.trim(participantStr)) {
+                $('#participant').val('');
+                return;
+            }
+            var parts = participantStr.split(',').map(function(s) { return $.trim(s); }).filter(Boolean);
+            parts.forEach(function(part) {
+                addParticipantChip(part, part);
+            });
         }
 
         // --- Email Autocomplete (ผู้มีส่วนร่วม จากอีเมล user) ---
@@ -1829,7 +1862,7 @@
                                 var email = (item.email || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
                                 var name = (item.name || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
                                 var label = name ? (email + ' — ' + name) : email;
-                                html += '<div class="participant-email-item px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-0 text-sm" data-email="' + email + '" title="คลิกเพื่อเพิ่ม">' + label + '</div>';
+                                html += '<div class="participant-email-item px-3 py-2 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-0 text-sm" data-email="' + email + '" data-name="' + name + '" title="คลิกเพื่อเพิ่ม">' + label + '</div>';
                             });
                             $dropdown.html(html).removeClass('hidden');
                         },
@@ -1849,15 +1882,11 @@
 
             $(document).on('click', '.participant-email-item', function() {
                 var email = $(this).data('email');
+                var name = $(this).data('name') || email;
                 if (!email) return;
-                var current = $.trim($participant.val());
-                var parts = current ? current.split(',').map(function(s) { return $.trim(s); }).filter(Boolean) : [];
-                if (parts.indexOf(email) !== -1) return;
-                parts.push(email);
-                $participant.val(parts.join(', '));
+                addParticipantChip(name, email);
                 $search.val('');
                 $dropdown.addClass('hidden').empty();
-                initsuggest();
             });
 
             $(document).on('click', function(e) {
@@ -2200,29 +2229,12 @@
                     $('#title').val(result_data.title);
                     $('#doctype').val(result_data.doctype);
                     $('#owner').val(result_data.owner);
-                    $('#participant').val(result_data.participant);
+                    setParticipantFromString(result_data.participant || '');
                     $('#datedoc').val(result_data.datedoc);
                     $('#pages').val(result_data.pages);
                     $("#iddoc").val(result_data.iddoc);
-                    if (result_data.volume_id) {
-                        $('#volume_id').val(result_data.volume_id);
-                    }
-                    clearEmailTags();
-                    $.ajax({
-                        url: '<?= base_url("index.php/edoc/admin/document-tags") ?>',
-                        type: 'GET',
-                        data: {
-                            iddoc: result_data.iddoc
-                        },
-                        dataType: 'json',
-                        success: function(tagResponse) {
-                            if (tagResponse.status === 'success' && tagResponse.data && tagResponse.data.length > 0) {
-                                tagResponse.data.forEach(function(tag) {
-                                    addEmailTag(tag.tag_email);
-                                });
-                            }
-                        }
-                    });
+                    pendingVolumeId = result_data.volume_id || null;
+                    pendingVolumeYear = result_data.doc_year || null;
                     uploadedFiles = [];
                     if (result_data.fileaddress || (result_data.fileaddress_list && result_data.fileaddress_list.length)) {
                         var fileList = Array.isArray(result_data.fileaddress_list) && result_data.fileaddress_list.length ?
