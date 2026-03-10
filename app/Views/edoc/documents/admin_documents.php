@@ -2309,6 +2309,11 @@
             var datastring = $("#frmdata").serialize();
             var participantVal = $('#participant').val() || '';
             if (participantVal) datastring += '&tag_emails=' + encodeURIComponent(participantVal);
+
+            if (window.console && console.log) {
+                console.log('[Edoc Admin] Saving document payload:', datastring);
+            }
+
             $('#saveForm').prop('disabled', true);
             $.ajax({
                 type: "POST",
@@ -2316,6 +2321,9 @@
                 data: datastring,
                 dataType: "json",
                 success: function(data) {
+                    if (window.console && console.log) {
+                        console.log('[Edoc Admin] Save success:', data);
+                    }
                     showToast('บันทึกข้อมูลเรียบร้อย');
                     if (window.documentsTable) documentsTable.ajax.reload();
                     $("#frmdata").trigger('reset');
@@ -2328,7 +2336,14 @@
                     $('#saveForm').prop('disabled', false);
                     $('#formModal').modal('hide');
                 },
-                error: function() {
+                error: function(jqXHR, textStatus, errorThrown) {
+                    if (window.console && console.error) {
+                        console.error('[Edoc Admin] Save error:', {
+                            status: textStatus,
+                            error: errorThrown,
+                            response: jqXHR && jqXHR.responseText
+                        });
+                    }
                     swalAlert('พบข้อผิดพลาดกรุณาติดต่อผู้พัฒนา', 'error');
                     $('#saveForm').prop('disabled', false);
                 },
