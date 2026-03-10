@@ -1298,9 +1298,9 @@
                     if (res.status === 'success' && res.data) {
                         let options = '<option value="">-- ไม่ระบุ --</option>';
                         res.data.forEach(function(v) {
-                            if (v.is_active == 1) {
-                                options += '<option value="' + v.id + '">' + (v.volume_label || v.volume_type) + ' (' + (v.doc_count || 0) + ' เอกสาร)</option>';
-                            }
+                            var label = (v.volume_label || v.volume_type) + ' (' + (v.doc_count || 0) + ' เอกสาร)';
+                            if (v.is_active != 1) label += ' [ปิดใช้]';
+                            options += '<option value="' + v.id + '">' + label + '</option>';
                         });
                         $('#volume_id').html(options);
                         renderVolumesTable(res.data);
