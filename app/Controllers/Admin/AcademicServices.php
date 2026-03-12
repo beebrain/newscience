@@ -113,63 +113,189 @@ class AcademicServices extends BaseController
     }
 
     /**
-     * แบบรายงานสรุป (สรุปตามปี / ประเภท / จำนวนผู้ร่วมงาน)
+     * ป้ายชื่อสำหรับแต่ละมิติ (ใช้ในกราฟและตาราง)
+     */
+    private function getDimensionLabels(): array
+    {
+        return [
+            'service_type' => [
+                'training_seminar' => 'อบรม/สัมมนา',
+                'workshop'         => 'ฝึกปฏิบัติการ/Workshop',
+                'consultant'       => 'ที่ปรึกษาทางวิชาการ',
+                'lab_testing'      => 'วิเคราะห์ทดสอบ/ห้องปฏิบัติการ',
+                'expert_evaluator' => 'ผู้ทรงคุณวุฒิประเมินผล',
+                'lecturer'         => 'วิทยากร',
+                'other'            => 'อื่นๆ',
+            ],
+            'responsible_type' => [
+                'faculty' => 'ระดับคณะ',
+                'program' => 'ระดับหลักสูตร',
+                'person'  => 'ระดับบุคคล',
+            ],
+            'target_group_type' => [
+                'internal' => 'ภายในมหาวิทยาลัย',
+                'external' => 'ภายนอกมหาวิทยาลัย',
+            ],
+        ];
+    }
+
+    /**
+     * ดึงข้อมูลสรุปตามมิติและปี (สำหรับกราฟ/ตาราง)
+     * @return array{labels: string[], data: int[], rows: array}
+     */
+    private function getReportDataByDimension(string $dimension, ?string $year): array
+    {
+        $db = \Config\Database::connect();
+        $labelsMap = $this->getDimensionLabels();
+        $labelsMap['year'] = [];
+
+        $builder = $db->table('academic_services');
+        if ($year !== null && $year !== '') {
+            $builder->where('academic_year', $year);
+        }
+
+        $groupColumn = $dimension === 'year' ? 'academic_year' : $dimension;
+        $builder->select($groupColumn . ', COUNT(*) as count')
+            ->groupBy($groupColumn)
+            ->orderBy('count', 'DESC');
+
+        $rows = $builder->get()->getResultArray();
+        $labels = [];
+        $data = [];
+        $labelMap = $labelsMap[$dimension] ?? [];
+
+        foreach ($rows as $row) {
+            $key = $row[$groupColumn] ?? '';
+            if ($key === null || $key === '') {
+                $key = '_empty';
+            }
+            $label = $dimension === 'year' ? (string) $key : ($labelMap[$key] ?? $key);
+            if ($label === '_empty' || $label === '') {
+                $label = '(ไม่ระบุ)';
+            }
+            $labels[] = $label;
+            $data[] = (int) $row['count'];
+        }
+
+        $rowsForTable = [];
+        foreach ($rows as $row) {
+            $key = $row[$groupColumn] ?? '';
+            if ($key === null || $key === '') {
+                $key = '_empty';
+            }
+            $label = $dimension === 'year' ? (string) $key : ($labelMap[$key] ?? $key);
+            if ($label === '_empty' || $label === '') {
+                $label = '(ไม่ระบุ)';
+            }
+            $rowsForTable[] = ['label' => $label, 'count' => (int) $row['count']];
+        }
+
+        return ['labels' => $labels, 'data' => $data, 'rows' => $rowsForTable];
+    }
+
+    /**
+     * หน้ารายงานแบบอินเทอร์แอคทีฟ — เลือกมิติแล้วแสดงกราฟ + ตาราง, ออกรายงาน Excel ได้
      */
     public function report()
     {
         $db = \Config\Database::connect();
         $total = 0;
-        $byYear = [];
-        $byServiceType = [];
         $distinctParticipants = 0;
+        $years = [];
 
         if ($db->tableExists('academic_services')) {
             $total = (int) $this->serviceModel->countAllResults();
-
             $years = $this->serviceModel->getDistinctYears();
-            foreach ($years as $y) {
-                $count = $this->serviceModel->where('academic_year', $y)->countAllResults();
-                $byYear[] = ['year' => $y, 'count' => $count];
-            }
-
-            $builder = $db->table('academic_services')
-                ->select('service_type, COUNT(*) as count')
-                ->groupBy('service_type')
-                ->orderBy('count', 'DESC');
-            $rows = $builder->get()->getResultArray();
-            foreach ($rows as $row) {
-                $byServiceType[] = [
-                    'service_type' => $row['service_type'] ?? '',
-                    'count'        => (int) $row['count'],
-                ];
-            }
         }
-
         if ($db->tableExists('academic_service_participants')) {
             $row = $db->query('SELECT COUNT(DISTINCT user_uid) AS c FROM academic_service_participants WHERE user_uid IS NOT NULL')->getRow();
             $distinctParticipants = (int) ($row->c ?? 0);
         }
 
-        $serviceTypeLabels = [
-            'training_seminar' => 'อบรม/สัมมนา',
-            'workshop'         => 'ฝึกปฏิบัติการ/Workshop',
-            'consultant'       => 'ที่ปรึกษาทางวิชาการ',
-            'lab_testing'      => 'วิเคราะห์ทดสอบ/ห้องปฏิบัติการ',
-            'expert_evaluator' => 'ผู้ทรงคุณวุฒิประเมินผล',
-            'lecturer'         => 'วิทยากร',
-            'other'            => 'อื่นๆ',
+        $dimension = $this->request->getGet('dimension') ?: 'service_type';
+        $year = $this->request->getGet('year');
+        $allowedDimensions = ['service_type', 'responsible_type', 'target_group_type', 'year'];
+        if (! in_array($dimension, $allowedDimensions, true)) {
+            $dimension = 'service_type';
+        }
+
+        $reportData = $this->getReportDataByDimension($dimension, $year);
+
+        $dimensionLabels = [
+            'service_type'      => 'ลักษณะการบริการวิชาการ',
+            'responsible_type'  => 'ผู้รับผิดชอบ',
+            'target_group_type' => 'บริการให้ใคร',
+            'year'              => 'ปีการศึกษา',
         ];
 
         $data = [
-            'page_title'            => 'แบบรายงานสรุป บริการวิชาการ',
-            'total'                 => $total,
-            'by_year'               => $byYear,
-            'by_service_type'       => $byServiceType,
-            'service_type_labels'   => $serviceTypeLabels,
+            'page_title'       => 'แบบรายงานสรุป บริการวิชาการ',
+            'total'            => $total,
             'distinct_participants' => $distinctParticipants,
+            'years'            => $years,
+            'dimension'        => $dimension,
+            'dimension_label'  => $dimensionLabels[$dimension] ?? $dimension,
+            'year_filter'      => $year,
+            'chart_labels'     => $reportData['labels'],
+            'chart_data'       => $reportData['data'],
+            'table_rows'       => $reportData['rows'],
+            'dimension_options' => $dimensionLabels,
         ];
 
         return view('admin/academic_services/report', $data);
+    }
+
+    /**
+     * API คืนข้อมูลรายงานเป็น JSON (สำหรับอัปเดตกราฟ/ตารางแบบ AJAX)
+     */
+    public function reportData()
+    {
+        $dimension = $this->request->getGet('dimension') ?: 'service_type';
+        $year = $this->request->getGet('year');
+        $allowed = ['service_type', 'responsible_type', 'target_group_type', 'year'];
+        if (! in_array($dimension, $allowed, true)) {
+            $dimension = 'service_type';
+        }
+        $result = $this->getReportDataByDimension($dimension, $year);
+        return $this->response->setJSON($result);
+    }
+
+    /**
+     * ออกรายงานเป็นไฟล์ Excel (CSV) ตามมิติและปีที่เลือก
+     */
+    public function reportExport()
+    {
+        $dimension = $this->request->getGet('dimension') ?: 'service_type';
+        $year = $this->request->getGet('year');
+        $allowed = ['service_type', 'responsible_type', 'target_group_type', 'year'];
+        if (! in_array($dimension, $allowed, true)) {
+            $dimension = 'service_type';
+        }
+
+        $result = $this->getReportDataByDimension($dimension, $year);
+        $dimensionLabels = [
+            'service_type'      => 'ลักษณะการบริการวิชาการ',
+            'responsible_type'  => 'ผู้รับผิดชอบ',
+            'target_group_type' => 'บริการให้ใคร',
+            'year'              => 'ปีการศึกษา',
+        ];
+        $headerLabel = $dimensionLabels[$dimension] ?? $dimension;
+
+        $filename = 'academic-service-report-' . $dimension . ($year ? '-' . $year : '') . '.csv';
+        $buf = "\xEF\xBB\xBF"; // UTF-8 BOM for Excel
+        $out = fopen('php://temp', 'r+');
+        fputcsv($out, [$headerLabel, 'จำนวนรายการ']);
+        foreach ($result['rows'] as $row) {
+            fputcsv($out, [$row['label'], $row['count']]);
+        }
+        rewind($out);
+        $buf .= stream_get_contents($out);
+        fclose($out);
+
+        return $this->response
+            ->setHeader('Content-Type', 'text/csv; charset=UTF-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->setBody($buf);
     }
 
     /**

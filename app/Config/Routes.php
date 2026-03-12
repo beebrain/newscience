@@ -83,6 +83,7 @@ $routes->get('/oauth/logout', 'OAuthController::logout');
 
 // หน้า Dashboard ผู้ใช้งาน — หลัง login มาที่หน้านี้ (ทุก role); หน้าตาเหมือน Admin, เมนู Edoc + หน้าการจัดการงานวิจัย; หน้าแรก = ข้อมูลผู้ใช้คนนั้น
 $routes->get('/dashboard', 'User\Dashboard::index', ['filter' => 'loggedin']);
+$routes->get('/dashboard/calendar', 'User\CalendarController::index', ['filter' => 'loggedin']);
 $routes->get('/go-research-record', 'Admin\Auth::goResearchRecord', ['filter' => 'loggedin']);
 
 // Teaching evaluation (ประเมินผลการสอน) — lecture submit + admin ต้อง login; แบบฟอร์มผู้ประเมินเข้าจาก link
@@ -166,6 +167,9 @@ $routes->group('student-admin', ['filter' => 'studentadmin'], function ($routes)
 $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], function ($routes) {
     // Executive Dashboard (คณบดี/รองคณบดี — ตรวจ role ใน controller)
     $routes->get('executive-dashboard', 'Admin\ExecutiveDashboard::index');
+
+    // ปฏิทินนัดหมายกิจกรรมผู้บริหาร
+    $routes->get('calendar', 'Admin\Calendar::index');
 
     // จัดการผู้ใช้ (Super_admin และ Faculty_admin)
     $routes->get('users', 'Admin\UserManagement::index');
@@ -296,6 +300,8 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->get('academic-services/delete/(:num)', 'Admin\AcademicServices::delete/$1');
     $routes->get('academic-services/search-users', 'Admin\AcademicServices::searchUsers');
     $routes->get('academic-services/report', 'Admin\AcademicServices::report');
+    $routes->get('academic-services/report-data', 'Admin\AcademicServices::reportData');
+    $routes->get('academic-services/report/export', 'Admin\AcademicServices::reportExport');
 
     // Site Settings Management
     $routes->get('settings', 'Admin\Settings::index');
@@ -336,6 +342,16 @@ $routes->group('utility', ['filter' => ['adminauth', 'adminsystemaccess']], func
 
 // API Routes for AJAX
 $routes->group('api', function ($routes) {
+    // Calendar (ปฏิทินนัดหมาย — ต้องล็อกอิน)
+    $routes->group('calendar', ['filter' => 'loggedin'], function ($routes) {
+        $routes->get('events', 'Api\CalendarApi::events');
+        $routes->get('users', 'Api\CalendarApi::users');
+        $routes->get('event/(:num)', 'Api\CalendarApi::getEvent/$1');
+        $routes->post('store', 'Api\CalendarApi::store');
+        $routes->post('update/(:num)', 'Api\CalendarApi::update/$1');
+        $routes->post('delete/(:num)', 'Api\CalendarApi::delete/$1');
+    });
+
     // Executive Dashboard stats (admin/super_admin only — ตรวจใน controller)
     $routes->group('executive', ['filter' => 'adminauth'], function ($routes) {
         $routes->get('overview', 'Api\ExecutiveStats::overview');
