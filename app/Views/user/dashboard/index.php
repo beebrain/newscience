@@ -176,6 +176,29 @@
     }
     .card-research:hover .system-card-title { color: #059669; }
 
+    .card-evaluate .system-card-icon {
+        background: #f0fdf4;
+        color: #16a34a;
+    }
+    .card-evaluate:hover .system-card-title { color: #16a34a; }
+
+    .evaluate-admin-entry {
+        margin-top: 0.75rem;
+        padding-left: 0.25rem;
+    }
+    .evaluate-admin-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.875rem;
+        color: #16a34a;
+        text-decoration: none;
+    }
+    .evaluate-admin-link:hover {
+        color: #15803d;
+        text-decoration: underline;
+    }
+
     /* Admin Card (Small) */
     .admin-card {
         background: white;
@@ -266,7 +289,31 @@
                 <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
         </a>
+
+        <a href="<?= esc(base_url('evaluate')) ?>" class="system-card card-evaluate">
+            <div class="system-card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 11l3 3L22 4"></path>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+            </div>
+            <div class="system-card-title">ระบบประเมินผลการสอน</div>
+            <div class="system-card-desc">ส่งคำร้องขอประเมิน แบบประเมินของตนเอง และจัดการผู้ประเมิน</div>
+            <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+        </a>
     </div>
+
+    <?php if (!empty($can_manage_evaluate)): ?>
+    <div class="evaluate-admin-entry">
+        <a href="<?= esc(base_url('evaluate/admin')) ?>" class="evaluate-admin-link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            จัดการระบบประเมินผลการสอน (Admin)
+        </a>
+    </div>
+    <?php endif; ?>
 
     <!-- 2b. ระบบภายนอก (เว็บไซต์อื่น) -->
     <div class="section-header" style="margin-top: 1.5rem;">

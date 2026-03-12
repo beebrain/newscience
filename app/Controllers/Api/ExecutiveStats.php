@@ -172,6 +172,11 @@ class ExecutiveStats extends BaseController
         }
         $totalUsers = $totalUsersAdmin + $studentsCount;
 
+        $academicServicesTotal = 0;
+        if ($this->db->tableExists('academic_services')) {
+            $academicServicesTotal = (int) $this->db->table('academic_services')->countAllResults();
+        }
+
         return $this->respond([
             'success' => true,
             'data' => [
@@ -185,6 +190,74 @@ class ExecutiveStats extends BaseController
                 'research' => $researchTotal,
                 'page_views' => $pageViewsTotal,
                 'total_users' => $totalUsers,
+                'academic_services' => $academicServicesTotal,
+            ],
+        ]);
+    }
+
+    /**
+     * GET academic-services: summary stats for academic service (บริการวิชาการ)
+     * Total by year, by service_type, distinct participants count
+     */
+    public function academicServices()
+    {
+        if ($r = $this->ensureExecutiveAccess()) {
+            return $r;
+        }
+
+        if (! $this->db->tableExists('academic_services')) {
+            return $this->respond([
+                'success' => true,
+                'data' => [
+                    'total' => 0,
+                    'by_year' => [],
+                    'by_service_type' => [],
+                    'distinct_participants' => 0,
+                ],
+            ]);
+        }
+
+        $total = (int) $this->db->table('academic_services')->countAllResults();
+
+        $byYear = [];
+        $rows = $this->db->table('academic_services')
+            ->select('academic_year, COUNT(*) as count')
+            ->where('academic_year IS NOT NULL')
+            ->where('academic_year !=', '')
+            ->groupBy('academic_year')
+            ->orderBy('academic_year', 'DESC')
+            ->get()
+            ->getResultArray();
+        foreach ($rows as $row) {
+            $byYear[] = ['year' => $row['academic_year'], 'count' => (int) $row['count']];
+        }
+
+        $byServiceType = [];
+        $rows = $this->db->table('academic_services')
+            ->select('service_type, COUNT(*) as count')
+            ->where('service_type IS NOT NULL')
+            ->where('service_type !=', '')
+            ->groupBy('service_type')
+            ->orderBy('count', 'DESC')
+            ->get()
+            ->getResultArray();
+        foreach ($rows as $row) {
+            $byServiceType[] = ['service_type' => $row['service_type'], 'count' => (int) $row['count']];
+        }
+
+        $distinctParticipants = 0;
+        if ($this->db->tableExists('academic_service_participants')) {
+            $row = $this->db->query('SELECT COUNT(DISTINCT user_uid) AS c FROM academic_service_participants WHERE user_uid IS NOT NULL')->getRow();
+            $distinctParticipants = (int) ($row->c ?? 0);
+        }
+
+        return $this->respond([
+            'success' => true,
+            'data' => [
+                'total' => $total,
+                'by_year' => $byYear,
+                'by_service_type' => $byServiceType,
+                'distinct_participants' => $distinctParticipants,
             ],
         ]);
     }

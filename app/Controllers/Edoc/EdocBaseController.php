@@ -30,14 +30,12 @@ class EdocBaseController extends BaseController
             $userModel = new \App\Models\UserModel();
             $user = $userModel->find($this->edocUser['uid']);
             if ($user) {
-                // Use AccessControl library to check permissions
                 $this->isEdocAdmin = AccessControl::hasAccess($this->edocUser['uid'], 'edoc_admin');
-
-                // Keep backward compatibility - also store the access levels
-                $this->edocUser['edoc']       = AccessControl::hasAccess($this->edocUser['uid'], 'edoc') ? 1 : 0;
+                // ทุกคนที่ล็อกอินเข้า E-Document (ดูเอกสาร) ได้; จัดการ (admin) เฉพาะ edoc_admin
+                $this->edocUser['edoc']       = 1;
                 $this->edocUser['admin_edoc'] = $this->isEdocAdmin ? 1 : 0;
-                $this->edocUser['tf_name']  = $user['tf_name'] ?? '';
-                $this->edocUser['tl_name']  = $user['tl_name'] ?? '';
+                $this->edocUser['tf_name']   = $user['tf_name'] ?? '';
+                $this->edocUser['tl_name']   = $user['tl_name'] ?? '';
             }
         }
     }

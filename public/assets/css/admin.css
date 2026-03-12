@@ -131,6 +131,67 @@ body {
     height: 20px;
 }
 
+/* Collapsible sidebar submenu groups */
+.sidebar-submenu {
+    margin: 0.5rem 0;
+}
+
+.sidebar-submenu .submenu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    color: var(--color-gray-600);
+    font-size: 1rem;
+    font-weight: 600;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s ease, color 0.2s ease;
+    text-align: left;
+    font-family: inherit;
+}
+
+.sidebar-submenu .submenu-header:hover {
+    background-color: var(--color-gray-50);
+    color: var(--color-primary-dark);
+}
+
+.sidebar-submenu .submenu-header:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-gray-300);
+}
+
+.sidebar-submenu .submenu-caret {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.sidebar-submenu.open .submenu-caret {
+    transform: rotate(180deg);
+}
+
+.sidebar-submenu .submenu-items {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+
+.sidebar-submenu.open .submenu-items {
+    max-height: 800px;
+    opacity: 1;
+}
+
+.sidebar-submenu .submenu-items a {
+    padding-left: 2rem;
+}
+
 .admin-skip-link {
     position: absolute;
     top: -2.5rem;
@@ -198,6 +259,18 @@ body {
 .topbar-user a {
     color: var(--color-error);
     text-decoration: none;
+}
+
+.topbar-quicklink {
+    font-size: 0.9375rem;
+    color: var(--color-primary, #0d6efd);
+    text-decoration: none;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+}
+.topbar-quicklink:hover {
+    text-decoration: underline;
+    background: var(--color-gray-100, #f3f4f6);
 }
 
 .content {

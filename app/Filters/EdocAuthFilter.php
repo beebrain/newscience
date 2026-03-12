@@ -7,27 +7,35 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Libraries\AccessControl;
 
+/**
+ * E-Document: ทุกคนที่ล็อกอินแล้วเข้า E-Document (ดูเอกสาร) ได้
+ * เฉพาะ path edoc/admin (การจัดการ) ต้องมีสิทธิ์ edoc_admin
+ */
 class EdocAuthFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
         $session = session();
 
-        if (!$session->get('admin_logged_in')) {
+        if (! $session->get('admin_logged_in')) {
             $session->set('redirect_url', current_url());
             return redirect()->to(base_url('admin/login'))
                 ->with('error', 'กรุณาเข้าสู่ระบบก่อนใช้งาน E-Document');
         }
 
-        $userId = (int) $session->get('admin_id');
         $path = $request->getUri()->getPath();
-        $systemSlug = (strpos($path, 'edoc/admin') !== false) ? 'edoc_admin' : 'edoc';
+        $isAdminPath = (strpos($path, 'edoc/admin') !== false);
 
-        if (!AccessControl::hasAccess($userId, $systemSlug)) {
-            return redirect()->to(base_url('dashboard'))
-                ->with('error', $systemSlug === 'edoc_admin' ? 'คุณไม่มีสิทธิ์จัดการ E-Document' : 'คุณไม่มีสิทธิ์เข้าใช้ระบบ E-Document');
+        if ($isAdminPath) {
+            $userId = (int) $session->get('admin_id');
+            if (! AccessControl::hasAccess($userId, 'edoc_admin')) {
+                return redirect()->to(base_url('edoc'))
+                    ->with('error', 'คุณไม่มีสิทธิ์จัดการ E-Document เฉพาะ Admin ที่ได้รับสิทธิ์เท่านั้น');
+            }
         }
     }
 
-    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null) {}
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
+    {
+    }
 }

@@ -85,6 +85,25 @@ $routes->get('/oauth/logout', 'OAuthController::logout');
 $routes->get('/dashboard', 'User\Dashboard::index', ['filter' => 'loggedin']);
 $routes->get('/go-research-record', 'Admin\Auth::goResearchRecord', ['filter' => 'loggedin']);
 
+// Teaching evaluation (ประเมินผลการสอน) — lecture submit + admin ต้อง login; แบบฟอร์มผู้ประเมินเข้าจาก link
+$routes->group('evaluate', static function ($routes) {
+    $routes->get('card', 'Evaluate\EvaluateController::card');
+    $routes->get('self-form', 'Evaluate\EvaluateController::selfForm');
+    $routes->post('self/save', 'Evaluate\EvaluateController::saveSelf');
+    $routes->get('/', 'Evaluate\LectureEvaluateController::submitEvaluate');
+    $routes->post('lecture-evaluate/save', 'Evaluate\LectureEvaluateController::save');
+    $routes->get('admin', 'Evaluate\AdminEvaluateController::index');
+    $routes->get('admin/rights', 'Evaluate\AdminEvaluateController::rights');
+    $routes->post('admin/saveRights', 'Evaluate\AdminEvaluateController::saveRights');
+    $routes->post('admin/getResult', 'Evaluate\AdminEvaluateController::getResult');
+    $routes->post('admin/getEvaluateInfo', 'Evaluate\AdminEvaluateController::getEvaluateInfo');
+    $routes->post('admin/printRefAndSave', 'Evaluate\AdminEvaluateController::printRefAndSave');
+    $routes->post('admin/sendmailEvaluate', 'Evaluate\AdminEvaluateController::sendmailEvaluate');
+    $routes->post('admin/saveDate', 'Evaluate\AdminEvaluateController::saveDate');
+    $routes->get('evaluate/(:segment)', 'Evaluate\EvaluateController::index/$1');
+    $routes->post('saveEvaluate', 'Evaluate\EvaluateController::saveEvaluate');
+});
+
 // DevTools - สำหรับทดสอบโดยไม่ต้องผ่าน Authen (development only)
 $routes->group('dev', function ($routes) {
     $routes->get('/', 'DevTools::index');
@@ -266,6 +285,16 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->get('downloads/delete/(:num)', 'Admin\Downloads::delete/$1');
     $routes->post('downloads/update-doc-order', 'Admin\Downloads::updateDocOrder');
 
+    // Academic Service (ข้อมูลการบริการวิชาการ)
+    $routes->get('academic-services', 'Admin\AcademicServices::index');
+    $routes->get('academic-services/create', 'Admin\AcademicServices::create');
+    $routes->post('academic-services/store', 'Admin\AcademicServices::store');
+    $routes->get('academic-services/edit/(:num)', 'Admin\AcademicServices::edit/$1');
+    $routes->post('academic-services/update/(:num)', 'Admin\AcademicServices::update/$1');
+    $routes->get('academic-services/delete/(:num)', 'Admin\AcademicServices::delete/$1');
+    $routes->get('academic-services/search-users', 'Admin\AcademicServices::searchUsers');
+    $routes->get('academic-services/report', 'Admin\AcademicServices::report');
+
     // Site Settings Management
     $routes->get('settings', 'Admin\Settings::index');
     $routes->post('settings/store', 'Admin\Settings::store');
@@ -316,6 +345,7 @@ $routes->group('api', function ($routes) {
         $routes->get('research', 'Api\ExecutiveStats::research');
         $routes->get('pageviews', 'Api\ExecutiveStats::pageviews');
         $routes->get('program-summary', 'Api\ExecutiveStats::programSummary');
+        $routes->get('academic-services', 'Api\ExecutiveStats::academicServices');
     });
 
     // News

@@ -4,11 +4,12 @@ namespace App\Controllers\User;
 
 use App\Controllers\BaseController;
 use App\Models\UserModel;
+use App\Models\Evaluate\EvaluateUserRightsModel;
 
 /**
  * หน้า Dashboard สำหรับผู้ใช้งาน (role = user ธรรมดา) — หน้าตาเหมือน Admin
  * แยก Controller ไว้ในโฟลเดอร์ User เพื่อการจัดการ
- * เมนู: เข้าสู่ Edoc, เข้าสู่หน้าการจัดการงานวิจัย (Research Record)
+ * เมนู: เข้าสู่ Edoc, เข้าสู่หน้าการจัดการงานวิจัย (Research Record), ระบบประเมินผลการสอน
  * หน้าแรก: ข้อมูลพื้นฐานของผู้ใช้คนนั้น (ชื่อ นามสกุล อีเมล ฯลฯ)
  */
 class Dashboard extends BaseController
@@ -39,9 +40,16 @@ class Dashboard extends BaseController
             'updated_at'    => $row['updated_at'] ?? null,
         ];
 
+        $rightsModel = new EvaluateUserRightsModel();
+        $canManageEvaluate = $rightsModel->canManageEvaluate((int) $userId);
+        if (! $canManageEvaluate && in_array($profile['role'], ['super_admin', 'faculty_admin'], true)) {
+            $canManageEvaluate = true;
+        }
+
         $data = [
-            'page_title' => 'การจัดการ',
-            'profile'    => $profile,
+            'page_title'         => 'การจัดการ',
+            'profile'            => $profile,
+            'can_manage_evaluate' => $canManageEvaluate,
         ];
 
         return view('user/dashboard/index', $data);

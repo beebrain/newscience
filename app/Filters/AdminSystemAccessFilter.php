@@ -37,6 +37,7 @@ class AdminSystemAccessFilter implements FilterInterface
         'events'         => 'admin_core',
         'urgent-popups'  => 'admin_urgent_popup',  // จัดการป๊อปอัปประกาศด่วน (หรือ admin_core)
         'downloads'      => 'admin_downloads',     // จัดการไฟล์ดาวน์โหลดคณะ (หรือ admin_core)
+        'academic-services' => 'academic_service',  // ข้อมูลการบริการวิชาการ (หรือ admin_core)
         'users'          => 'user_management',
         'settings'       => 'site_settings',
         'cert-templates' => 'ecert',
@@ -85,6 +86,10 @@ class AdminSystemAccessFilter implements FilterInterface
         } elseif ($slug === 'admin_downloads') {
             // จัดการไฟล์ดาวน์โหลดคณะ: เข้าได้ถ้ามี admin_downloads หรือ admin_core
             $allowed = AccessControl::hasAccess((int) $adminId, 'admin_downloads')
+                || AccessControl::hasAccess((int) $adminId, 'admin_core');
+        } elseif ($slug === 'academic_service') {
+            // ข้อมูลการบริการวิชาการ: เข้าได้ถ้ามี academic_service หรือ admin_core
+            $allowed = AccessControl::hasAccess((int) $adminId, 'academic_service')
                 || AccessControl::hasAccess((int) $adminId, 'admin_core');
         } else {
             $allowed = AccessControl::hasAccess((int) $adminId, $slug);
