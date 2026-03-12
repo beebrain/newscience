@@ -949,7 +949,7 @@
                             <p id="msg_order" class="text-gray-800 mt-0.5"></p>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3 mt-4 pt-4 border-t border-gray-200">
+                    <div id="modal-file-header" class="d-flex justify-content-between align-items-center mb-3 mt-4 pt-4 border-t border-gray-200">
                         <h6 class="mb-0 text-sm font-semibold text-gray-700"><i class="bx bx-file-blank me-1"></i>เอกสารแนบ</h6>
                         <a id="msg_fileaddresslink" href="" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">ดาวน์โหลด</a>
                     </div>
@@ -2340,36 +2340,6 @@
             }).filter(file => file && file.length > 0);
         }
 
-        // Updated displayMultipleFilesWithTabs function
-        function displayMultipleFilesWithTabs(result_data) {
-            const baseUrl = "<?php echo base_url('index.php/edoc/viewPDF/'); ?>";
-
-            // รองรับทั้ง 2 รูปแบบ: ใช้ fileaddress_list จาก API (หน้ารอ่านข้อมูล) หรือ parse เอง
-            let fileList = Array.isArray(result_data.fileaddress_list) && result_data.fileaddress_list.length ?
-                result_data.fileaddress_list :
-                parseFileAddress(result_data.fileaddress);
-
-            console.log('Parsed file list:', fileList); // Debug log
-
-            if (fileList.length === 0) {
-                // No files
-                updateFileHeader(0);
-                $('.pdf-container').html(createNoFileDisplay());
-                return;
-            }
-
-            // Update header with file count and download options
-            updateFileHeader(fileList.length, fileList, baseUrl);
-
-            if (fileList.length === 1) {
-                // Single file - display directly without tabs
-                displaySingleFile(fileList[0], baseUrl);
-            } else {
-                // Multiple files - create tabs
-                createFileTabsInterface(fileList, baseUrl);
-            }
-        }
-
         function edit(id) {
             $('#saveForm').prop('disabled', true);
             $.ajax({
@@ -2576,12 +2546,12 @@
                             if (typeof displayMultipleFilesWithTabs === 'function') {
                                 displayMultipleFilesWithTabs(result_data);
                             } else {
-                                $('.pdf-container').html('<p class="text-muted p-3">ไม่พบเอกสารแนบ</p>');
+                                $('#modalCenter .pdf-container').html('<p class="text-muted p-3">ไม่พบเอกสารแนบ</p>');
                             }
                         } catch (e) {
                             console.error('info() fill error:', e);
-                            if (!$('.pdf-container').html()) {
-                                $('.pdf-container').html('<p class="text-muted p-3">โหลดรายละเอียดไม่สมบูรณ์</p>');
+                            if (!$('#modalCenter .pdf-container').html()) {
+                                $('#modalCenter .pdf-container').html('<p class="text-muted p-3">โหลดรายละเอียดไม่สมบูรณ์</p>');
                             }
                         }
                         // ย้าย modal ไปที่ body ถ้าอยู่ลึกใน layout (ป้องกัน overflow ตัด)
@@ -2614,78 +2584,55 @@
 
 
         function displayMultipleFilesWithTabs(result_data) {
-            // Use viewPDF controller for existing files
-            const baseUrl = "<?php echo base_url('index.php/edoc/viewPDF/'); ?>" + result_data.iddoc + "?file=true&subfile=";
-
-            // รองรับทั้ง 2 รูปแบบ: ใช้ fileaddress_list จาก API หรือ parse เอง
-            const fileList = Array.isArray(result_data.fileaddress_list) && result_data.fileaddress_list.length ?
-                result_data.fileaddress_list :
-                parseFileAddress(result_data.fileaddress || '');
-
-            console.log('Parsed file list:', fileList); // Debug log
+            var $modal = $('#modalCenter');
+            if (!$modal.length) return;
+            var baseUrl = "<?php echo base_url('index.php/edoc/viewPDF/'); ?>" + result_data.iddoc + "?file=true&subfile=";
+            var fileList = Array.isArray(result_data.fileaddress_list) && result_data.fileaddress_list.length
+                ? result_data.fileaddress_list
+                : parseFileAddress(result_data.fileaddress || '');
 
             if (fileList.length === 0) {
-                // No files
-                updateFileHeader(0);
-                $('.pdf-container').html(createNoFileDisplay());
+                updateFileHeader($modal, 0);
+                $modal.find('.pdf-container').html(createNoFileDisplay());
                 return;
             }
-
-            // Update header with file count and download options
-            updateFileHeader(fileList.length, fileList, baseUrl);
-
+            updateFileHeader($modal, fileList.length, fileList, baseUrl);
             if (fileList.length === 1) {
-                // Single file - display directly without tabs
-                displaySingleFile(fileList[0], baseUrl);
+                displaySingleFile($modal, fileList[0], baseUrl);
             } else {
-                // Multiple files - create tabs
-                createFileTabsInterface(fileList, baseUrl);
+                createFileTabsInterface($modal, fileList, baseUrl);
             }
         }
 
 
 
-        function updateFileHeader(fileCount, fileList = [], baseUrl = '') {
+        function updateFileHeader($modal, fileCount, fileList, baseUrl) {
+            fileList = fileList || [];
+            baseUrl = baseUrl || '';
+            var $header = $modal.find('#modal-file-header');
+            if (!$header.length) $header = $modal.find('.d-flex.justify-content-between.align-items-center.mb-3');
             if (fileCount === 0) {
-                $('.d-flex.justify-content-between.align-items-center.mb-3').html('<h6 class="mb-0">ไม่มีเอกสารแนบ</h6>');
+                $header.html('<h6 class="mb-0">ไม่มีเอกสารแนบ</h6>');
                 return;
             }
-
-            let downloadDropdown = '';
-            if (fileCount > 0) {
-                downloadDropdown = `
-            <div class="btn-group">
-                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-toggle="dropdown">
-                    <i class="fas fa-download me-1"></i>ดาวน์โหลด
-                </button>
-                <div class="dropdown-menu dropdown-menu-right">
-                    ${fileList.map((file, index) => {
-                        const cleanFile = file.trim().replace(/^["'\[]/, '').replace(/["'\]]$/, '');
-                        const fileName = cleanFile.split('/').pop() || cleanFile;
-                        const fileUrl = baseUrl + cleanFile;
-                        return `<a class="dropdown-item" href="${fileUrl}" download>
-                            <i class="fas fa-download me-2"></i>${fileName}
-                        </a>`;
-                    }).join('')}
-                    ${fileCount > 1 ? `
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#" onclick="downloadAllFiles(['${fileList.map(f => f.trim().replace(/^["'\[]/, '').replace(/["'\]]$/, '')).join("','")}'], '${baseUrl}')">
-                        <i class="fas fa-download me-2"></i>ดาวน์โหลดทั้งหมด (${fileCount} ไฟล์)
-                    </a>` : ''}
-                </div>
-            </div>
-        `;
+            var downloadDropdown = '';
+            if (fileCount > 0 && fileList.length > 0) {
+                var items = fileList.map(function(file) {
+                    var cleanFile = String(file).trim().replace(/^["'\[]/, '').replace(/["'\]]$/, '');
+                    var fileName = cleanFile.split('/').pop() || cleanFile;
+                    var fileUrl = baseUrl + encodeURIComponent(cleanFile);
+                    return '<a class="dropdown-item" href="' + fileUrl + '" download><i class="fas fa-download me-2"></i>' + fileName + '</a>';
+                }).join('');
+                var allUrlList = fileList.map(function(f) { return String(f).trim().replace(/^["'\[]/, '').replace(/["'\]]$/, ''); });
+                downloadDropdown = '<div class="btn-group">' +
+                    '<button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-toggle="dropdown">' +
+                    '<i class="fas fa-download me-1"></i>ดาวน์โหลด</button>' +
+                    '<div class="dropdown-menu dropdown-menu-right">' + items +
+                    (fileCount > 1 ? '<div class="dropdown-divider"></div><a class="dropdown-item" href="#" onclick="downloadAllFiles(JSON.parse(\'' + JSON.stringify(allUrlList) + '\'), \'' + baseUrl.replace(/'/g, "\\'") + '\'); return false;"><i class="fas fa-download me-2"></i>ดาวน์โหลดทั้งหมด (' + fileCount + ' ไฟล์)</a>' : '') +
+                    '</div></div>';
             }
-
-            const headerHtml = `
-        <h6 class="mb-0">
-            เอกสารแนบ 
-            <span class="badge badge-primary ms-2">${fileCount} ไฟล์</span>
-        </h6>
-        ${downloadDropdown}
-    `;
-
-            $('.d-flex.justify-content-between.align-items-center.mb-3').html(headerHtml);
+            var headerHtml = '<h6 class="mb-0">เอกสารแนบ <span class="badge badge-primary ms-2">' + fileCount + ' ไฟล์</span></h6>' + downloadDropdown;
+            $header.html(headerHtml);
         }
 
 
@@ -2701,64 +2648,32 @@
     `;
         }
 
-        function displaySingleFile(file, baseUrl) {
-            const fileUrl = baseUrl + encodeURIComponent(file);
-            const fileName = file.split('/').pop() || file;
-            const fileExtension = fileName.split('.').pop().toLowerCase();
-            const isMobileDevice = isMobile();
-
-            let content = '';
-
-            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
-                // Image files
-                content = `
-            <div class="text-center">
-                <img src="${fileUrl}" class="img-fluid rounded mx-auto d-block" 
-                     style="max-height: ${isMobileDevice ? '400px' : '600px'}; cursor: pointer;" 
-                     alt="${fileName}" onclick="openImageModal('${fileUrl}', '${fileName}')">
-                <p class="mt-2 text-muted small">${fileName}</p>
-            </div>
-        `;
+        function displaySingleFile($modal, file, baseUrl) {
+            var fileUrl = baseUrl + encodeURIComponent(file);
+            var fileName = (file && file.split('/').pop()) || file || '';
+            var fileExtension = fileName.split('.').pop().toLowerCase();
+            var isMobileDevice = typeof isMobile === 'function' ? isMobile() : false;
+            var content = '';
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].indexOf(fileExtension) !== -1) {
+                content = '<div class="text-center"><img src="' + fileUrl + '" class="img-fluid rounded mx-auto d-block" style="max-height: ' + (isMobileDevice ? '400px' : '600px') + '; cursor: pointer;" alt="' + fileName.replace(/"/g, '&quot;') + '" onclick="openImageModal(\'' + fileUrl.replace(/'/g, "\\'") + '\', \'' + fileName.replace(/'/g, "\\'") + '\')"><p class="mt-2 text-muted small">' + fileName + '</p></div>';
             } else if (fileExtension === 'pdf' && !isMobileDevice) {
-                // PDF on desktop
-                content = `
-            <div class="embed-responsive" style="height: 600px;">
-                <embed src="${fileUrl}" width="100%" height="100%" type="application/pdf">
-            </div>
-        `;
+                content = '<div class="embed-responsive" style="height: 600px;"><embed src="' + fileUrl + '" width="100%" height="100%" type="application/pdf"></div>';
             } else {
-                // Other files or mobile PDF
-                const fileIcon = getFileIcon(fileName);
-                content = `
-            <div class="text-center py-5">
-                <div class="mb-3">
-                    <i class="fas ${fileIcon.split(' ')[1]}" style="font-size: 64px; color: #3b82f6;"></i>
-                </div>
-                <h5 class="mb-3">${fileName}</h5>
-                <p class="mb-4 text-muted">
-                    ${isMobileDevice && fileExtension === 'pdf' ? 
-                        'PDF ไม่สามารถแสดงตัวอย่างบนอุปกรณ์มือถือได้' : 
-                        'กรุณาดาวน์โหลดเพื่อดูไฟล์'}
-                </p>
-                <a href="${fileUrl}" class="btn btn-primary" download>
-                    <i class="fas fa-download me-2"></i>ดาวน์โหลด
-                </a>
-            </div>
-        `;
+                var fileIcon = typeof getFileIcon === 'function' ? getFileIcon(fileName) : 'fa-file text-secondary';
+                var iconClass = fileIcon.split(' ')[1] || 'fa-file';
+                content = '<div class="text-center py-5"><div class="mb-3"><i class="fas ' + iconClass + '" style="font-size: 64px; color: #3b82f6;"></i></div><h5 class="mb-3">' + fileName + '</h5><p class="mb-4 text-muted">' + (isMobileDevice && fileExtension === 'pdf' ? 'PDF ไม่สามารถแสดงตัวอย่างบนอุปกรณ์มือถือได้' : 'กรุณาดาวน์โหลดเพื่อดูไฟล์') + '</p><a href="' + fileUrl + '" class="btn btn-primary" download><i class="fas fa-download me-2"></i>ดาวน์โหลด</a></div>';
             }
-
-            $('.pdf-container').html(content);
+            $modal.find('.pdf-container').html(content);
         }
 
 
-        function createFileTabsInterface(fileList, baseUrl) {
-            const tabId = 'fileTabs_' + Date.now();
-            const contentId = 'fileTabContent_' + Date.now();
+        function createFileTabsInterface($modal, fileList, baseUrl) {
+            var tabId = 'fileTabs_' + Date.now();
+            var contentId = 'fileTabContent_' + Date.now();
+            var tabsHtml = '<ul class="nav nav-tabs mb-3" id="' + tabId + '" role="tablist">';
+            var contentHtml = '<div class="tab-content" id="' + contentId + '">';
 
-            let tabsHtml = `<ul class="nav nav-tabs mb-3" id="${tabId}" role="tablist">`;
-            let contentHtml = `<div class="tab-content" id="${contentId}">`;
-
-            fileList.forEach((file, index) => {
+            fileList.forEach(function(file, index) {
                 // Clean the file path
                 const cleanFile = file.trim().replace(/^["'\[]/, '').replace(/["'\]]$/, '');
                 const fileName = cleanFile.split('/').pop() || cleanFile;
@@ -2856,7 +2771,7 @@
             tabsHtml += '</ul>';
             contentHtml += '</div>';
 
-            $('.pdf-container').html(tabsHtml + contentHtml);
+            $modal.find('.pdf-container').html(tabsHtml + contentHtml);
         }
 
 

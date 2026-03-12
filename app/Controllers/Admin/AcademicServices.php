@@ -157,6 +157,8 @@ class AcademicServices extends BaseController
         if (! $service) {
             return redirect()->to(base_url('admin/academic-services'))->with('error', 'ไม่พบข้อมูล');
         }
+        $service['target_group_users'] = $this->decodeUserTags($service['target_group_spec'] ?? '');
+        $service['responsible_users']  = $this->decodeUserTags($service['responsible_person_text'] ?? '');
 
         $data = [
             'page_title'   => 'แก้ไขรายการบริการวิชาการ',
@@ -208,7 +210,8 @@ class AcademicServices extends BaseController
     }
 
     /**
-     * AJAX: ค้นหาผู้ใช้สำหรับแท็กผู้ร่วมบริการ (ชื่อ/อีเมล)
+     * AJAX: ค้นหาผู้ใช้สำหรับแท็ก (ชื่อ/อีเมล)
+     * GET exclude_uids: คั่นด้วย comma เพื่อไม่ให้แสดงในผลลัพธ์ (ใช้กรณีผู้ร่วมบริการไม่ซ้ำกับผู้รับผิดชอบ)
      */
     public function searchUsers()
     {
@@ -217,16 +220,29 @@ class AcademicServices extends BaseController
             return $this->response->setJSON(['status' => 'success', 'data' => []]);
         }
 
-        $users = $this->userModel
+        $excludeRaw = $this->request->getGet('exclude_uids');
+        $excludeIds = [];
+        if (is_string($excludeRaw) && $excludeRaw !== '') {
+            foreach (explode(',', $excludeRaw) as $id) {
+                $id = (int) trim($id);
+                if ($id > 0) {
+                    $excludeIds[] = $id;
+                }
+            }
+        }
+
+        $builder = $this->userModel
             ->groupStart()
             ->like('email', $q)
             ->orLike('tf_name', $q)
             ->orLike('tl_name', $q)
             ->orLike('gf_name', $q)
             ->orLike('gl_name', $q)
-            ->groupEnd()
-            ->limit(20)
-            ->findAll();
+            ->groupEnd();
+        if ($excludeIds !== []) {
+            $builder->whereNotIn('uid', $excludeIds);
+        }
+        $users = $builder->limit(20)->findAll();
 
         $data = [];
         foreach ($users as $u) {
@@ -313,5 +329,29 @@ class AcademicServices extends BaseController
         }
 
         $this->participantModel->syncParticipants($serviceId, $normalized);
+    }
+
+    /**
+     * Decode user-tags JSON from spec/person_text field (array of {uid, label})
+     */
+    private function decodeUserTags(string $json): array
+    {
+        if ($json === '' || $json === null) {
+            return [];
+        }
+        $decoded = json_decode($json, true);
+        if (! is_array($decoded)) {
+            return [];
+        }
+        $out = [];
+        foreach ($decoded as $item) {
+            $label = isset($item['label']) ? trim((string) $item['label']) : '';
+            if ($label === '') {
+                continue;
+            }
+            $uid = isset($item['uid']) ? (int) $item['uid'] : 0;
+            $out[] = ['uid' => $uid, 'label' => $label];
+        }
+        return $out;
     }
 }

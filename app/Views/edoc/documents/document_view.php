@@ -245,8 +245,19 @@
                                                         <h6>ไฟล์ประเภท <?php echo strtoupper($file_extension); ?></h6>
                                                         <p class="text-muted mb-3">ไม่สามารถแสดงตัวอย่างได้ กรุณาดาวน์โหลดเพื่อดูเอกสาร</p>
                                                     <?php endif; ?>
-                                                    <?php if (!empty($document['fileaddress_list']) && count($document['fileaddress_list']) > 1): ?>
-                                                        <p class="text-muted small mt-2">เอกสารนี้มี <?php echo count($document['fileaddress_list']); ?> ไฟล์ — แสดงตัวอย่างไฟล์แรก</p>
+                                                    <?php if (!empty($document['fileaddress_list'])): ?>
+                                                        <?php $fileList = $document['fileaddress_list']; $viewPdfBase = base_url('index.php/edoc/viewPDF/' . ($document['iddoc'] ?? '') . '?file=true&subfile='); ?>
+                                                        <?php if (count($fileList) > 1): ?>
+                                                            <p class="text-muted small mt-2">เอกสารนี้มี <?php echo count($fileList); ?> ไฟล์ — แสดงตัวอย่างไฟล์แรก</p>
+                                                            <div class="mt-3 text-start">
+                                                                <p class="small fw-semibold mb-2">ดาวน์โหลดทุกไฟล์:</p>
+                                                                <ul class="list-unstyled small mb-0">
+                                                                    <?php foreach ($fileList as $idx => $f): $name = basename(trim($f)); $url = $viewPdfBase . urlencode(trim($f)); ?>
+                                                                        <li class="mb-1"><a href="<?php echo esc($url); ?>" download class="text-primary"><?php echo esc($name); ?></a></li>
+                                                                    <?php endforeach; ?>
+                                                                </ul>
+                                                            </div>
+                                                        <?php endif; ?>
                                                     <?php endif; ?>
 
                                                     <!-- <a href="<?php echo base_url(); ?>index.php/Documents/secureDownload/<?php //echo $this->uri->segment(3); 

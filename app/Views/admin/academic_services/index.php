@@ -230,7 +230,7 @@
         });
     }
 
-    <?php if ($this->request->getGet('openModal') === 'create' || session('errors')): ?>
+    <?php if (service('request')->getGet('openModal') === 'create' || session('errors')): ?>
     openModal();
     <?php endif; ?>
 })();
