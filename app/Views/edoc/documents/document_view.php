@@ -223,53 +223,114 @@
 
                                         <!-- Preview Tab -->
                                         <div class="tab-pane fade" id="navs-justified-preview" role="tabpanel">
-                                            <div class="card-body text-center">
+                                            <div class="card-body">
                                                 <?php
-                                                // รองรับทั้ง fileaddress เดี่ยว และ JSON/หลายไฟล์ (ใช้ fileaddress_first จาก Controller)
-                                                $file_for_preview = isset($document['fileaddress_first']) && $document['fileaddress_first'] !== '' ? $document['fileaddress_first'] : ($document['fileaddress'] ?? '');
-                                                $file_extension = !empty($file_for_preview) ? strtolower(pathinfo($file_for_preview, PATHINFO_EXTENSION)) : '';
-                                                $file_extension = preg_replace('/["\'\[\]\s]+$/', '', $file_extension);
+                                                $fileList = !empty($document['fileaddress_list']) ? $document['fileaddress_list'] : [];
+                                                if (empty($fileList) && !empty($document['fileaddress_first'])) {
+                                                    $fileList = [$document['fileaddress_first']];
+                                                }
+                                                if (empty($fileList) && !empty($document['fileaddress'])) {
+                                                    $raw = trim($document['fileaddress']);
+                                                    if (strpos($raw, '[') === 0) {
+                                                        $dec = @json_decode($raw, true);
+                                                        if (is_array($dec)) {
+                                                            $fileList = $dec;
+                                                        }
+                                                    }
+                                                    if (empty($fileList) && $raw !== '') {
+                                                        $fileList = array_map('trim', explode(',', $raw));
+                                                        $fileList = array_filter($fileList);
+                                                    }
+                                                }
+                                                $fileCount = count($fileList);
+                                                $viewPdfBase = base_url('index.php/edoc/viewPDF/' . ($document['iddoc'] ?? '') . '?file=true&subfile=');
                                                 ?>
 
-                                                <?php if (!empty($file_for_preview)): ?>
-                                                    <?php if ($file_extension === 'pdf'): ?>
-                                                        <div class="pdf-container mb-3">
-                                                            <iframe src="<?php echo str_replace('public/', '', base_url('EdocDocument/' . $file_for_preview)); ?>" width="100%" height="100%" style="border: none;"></iframe>
+                                                <?php if ($fileCount === 0): ?>
+                                                    <div class="text-center py-4">
+                                                        <div class="file-icon text-warning">
+                                                            <i class="bx bx-error-circle"></i>
                                                         </div>
-                                                    <?php elseif (in_array($file_extension, ['jpg', 'jpeg', 'png', 'gif'])): ?>
-                                                        <img src="<?php echo str_replace('public/', '', base_url('EdocDocument/' . $file_for_preview)); ?>" alt="<?php echo htmlspecialchars($document['title'] ?? ''); ?>" class="image-preview mb-3">
-                                                    <?php else: ?>
-                                                        <div class="file-icon text-primary">
-                                                            <i class="bx bx-file"></i>
-                                                        </div>
-                                                        <h6>ไฟล์ประเภท <?php echo strtoupper($file_extension); ?></h6>
-                                                        <p class="text-muted mb-3">ไม่สามารถแสดงตัวอย่างได้ กรุณาดาวน์โหลดเพื่อดูเอกสาร</p>
-                                                    <?php endif; ?>
-                                                    <?php if (!empty($document['fileaddress_list'])): ?>
-                                                        <?php $fileList = $document['fileaddress_list']; $viewPdfBase = base_url('index.php/edoc/viewPDF/' . ($document['iddoc'] ?? '') . '?file=true&subfile='); ?>
-                                                        <?php if (count($fileList) > 1): ?>
-                                                            <p class="text-muted small mt-2">เอกสารนี้มี <?php echo count($fileList); ?> ไฟล์ — แสดงตัวอย่างไฟล์แรก</p>
-                                                            <div class="mt-3 text-start">
-                                                                <p class="small fw-semibold mb-2">ดาวน์โหลดทุกไฟล์:</p>
-                                                                <ul class="list-unstyled small mb-0">
-                                                                    <?php foreach ($fileList as $idx => $f): $name = basename(trim($f)); $url = $viewPdfBase . urlencode(trim($f)); ?>
-                                                                        <li class="mb-1"><a href="<?php echo esc($url); ?>" download class="text-primary"><?php echo esc($name); ?></a></li>
-                                                                    <?php endforeach; ?>
-                                                                </ul>
-                                                            </div>
-                                                        <?php endif; ?>
-                                                    <?php endif; ?>
-
-                                                    <!-- <a href="<?php echo base_url(); ?>index.php/Documents/secureDownload/<?php //echo $this->uri->segment(3); 
-                                                                                                                                ?>" class="btn btn-primary">
-                                                        <i class="bx bx-download me-1"></i> ดาวน์โหลดเอกสาร
-                                                    </a> -->
-                                                <?php else: ?>
-                                                    <div class="file-icon text-warning">
-                                                        <i class="bx bx-error-circle"></i>
+                                                        <h6>ไม่พบไฟล์เอกสาร</h6>
+                                                        <p class="text-muted"><?php echo isset($error) ? esc($error) : 'เอกสารนี้ไม่มีไฟล์แนบ'; ?></p>
                                                     </div>
-                                                    <h6>ไม่พบไฟล์เอกสาร</h6>
-                                                    <p class="text-muted"><?php echo isset($error) ? $error : 'เอกสารนี้ไม่มีไฟล์แนบ'; ?></p>
+                                                <?php else: ?>
+                                                    <p class="text-muted small mb-3">
+                                                        <i class="bx bx-file-blank"></i> เอกสารแนบ <strong><?php echo $fileCount; ?> ไฟล์</strong>
+                                                    </p>
+
+                                                    <?php if ($fileCount === 1): ?>
+                                                        <?php
+                                                        $f = trim($fileList[0]);
+                                                        $name = basename($f);
+                                                        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+                                                        $ext = preg_replace('/["\'\[\]\s]+$/', '', $ext);
+                                                        $fileUrl = $viewPdfBase . urlencode($f);
+                                                        ?>
+                                                        <div class="text-center">
+                                                            <?php if ($ext === 'pdf'): ?>
+                                                                <div class="pdf-container mb-3">
+                                                                    <iframe src="<?php echo esc($fileUrl); ?>" width="100%" height="100%" style="border: none;"></iframe>
+                                                                </div>
+                                                            <?php elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
+                                                                <img src="<?php echo esc($fileUrl); ?>" alt="<?php echo esc($document['title'] ?? $name); ?>" class="image-preview mb-3">
+                                                            <?php else: ?>
+                                                                <div class="file-icon text-primary"><i class="bx bx-file"></i></div>
+                                                                <h6>ไฟล์ประเภท <?php echo strtoupper($ext); ?></h6>
+                                                                <p class="text-muted mb-3">ไม่สามารถแสดงตัวอย่างได้ กรุณาดาวน์โหลดเพื่อดูเอกสาร</p>
+                                                                <a href="<?php echo esc($fileUrl); ?>" class="btn btn-primary" download><i class="bx bx-download me-1"></i>ดาวน์โหลด</a>
+                                                            <?php endif; ?>
+                                                            <p class="small text-muted mt-2"><?php echo esc($name); ?></p>
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <ul class="nav nav-tabs mb-3" role="tablist">
+                                                            <?php foreach ($fileList as $idx => $f):
+                                                                $f = trim($f);
+                                                                $name = basename($f);
+                                                                $tabId = 'edoc-file-tab-' . $idx;
+                                                                $panelId = 'edoc-file-panel-' . $idx;
+                                                                $active = $idx === 0;
+                                                                $shortName = strlen($name) > 20 ? substr($name, 0, 17) . '…' : $name;
+                                                            ?>
+                                                                <li class="nav-item" role="presentation">
+                                                                    <button type="button" class="nav-link <?php echo $active ? 'active' : ''; ?>" id="<?php echo $tabId; ?>" data-bs-toggle="tab" data-bs-target="#<?php echo $panelId; ?>" role="tab" aria-controls="<?php echo $panelId; ?>" aria-selected="<?php echo $active ? 'true' : 'false'; ?>" title="<?php echo esc($name); ?>">
+                                                                        <i class="bx bx-file me-1"></i> <?php echo esc($shortName); ?>
+                                                                    </button>
+                                                                </li>
+                                                            <?php endforeach; ?>
+                                                        </ul>
+                                                        <div class="tab-content">
+                                                            <?php foreach ($fileList as $idx => $f):
+                                                                $f = trim($f);
+                                                                $name = basename($f);
+                                                                $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+                                                                $ext = preg_replace('/["\'\[\]\s]+$/', '', $ext);
+                                                                $fileUrl = $viewPdfBase . urlencode($f);
+                                                                $panelId = 'edoc-file-panel-' . $idx;
+                                                                $active = $idx === 0;
+                                                            ?>
+                                                                <div class="tab-pane fade <?php echo $active ? 'show active' : ''; ?>" id="<?php echo $panelId; ?>" role="tabpanel" aria-labelledby="edoc-file-tab-<?php echo $idx; ?>">
+                                                                    <div class="text-center">
+                                                                        <?php if ($ext === 'pdf'): ?>
+                                                                            <div class="pdf-container mb-3">
+                                                                                <iframe src="<?php echo esc($fileUrl); ?>" width="100%" height="100%" style="border: none;"></iframe>
+                                                                            </div>
+                                                                        <?php elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
+                                                                            <img src="<?php echo esc($fileUrl); ?>" alt="<?php echo esc($name); ?>" class="image-preview mb-3">
+                                                                        <?php else: ?>
+                                                                            <div class="file-icon text-primary"><i class="bx bx-file"></i></div>
+                                                                            <h6>ไฟล์ประเภท <?php echo strtoupper($ext); ?></h6>
+                                                                            <p class="text-muted mb-3">กรุณาดาวน์โหลดเพื่อดูเอกสาร</p>
+                                                                            <a href="<?php echo esc($fileUrl); ?>" class="btn btn-primary" download><i class="bx bx-download me-1"></i>ดาวน์โหลด <?php echo esc($name); ?></a>
+                                                                        <?php endif; ?>
+                                                                        <p class="small text-muted mt-2">
+                                                                            <a href="<?php echo esc($fileUrl); ?>" download class="text-primary"><?php echo esc($name); ?></a>
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
