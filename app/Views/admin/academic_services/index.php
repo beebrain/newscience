@@ -69,6 +69,7 @@
                             'consultant' => 'ที่ปรึกษาทางวิชาการ',
                             'lab_testing' => 'วิเคราะห์ทดสอบ/ห้องปฏิบัติการ',
                             'expert_evaluator' => 'ผู้ทรงคุณวุฒิประเมินผล',
+                            'lecturer' => 'วิทยากร',
                             'other' => 'อื่นๆ',
                         ];
                         foreach ($list as $row):

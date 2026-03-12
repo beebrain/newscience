@@ -80,6 +80,17 @@ class AcademicServices extends BaseController
             }
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
+        if ($this->request->getPost('has_compensation') === 'yes') {
+            $comp = $this->request->getPost('compensation_amount');
+            if ($comp === null || $comp === '') {
+                $errors = $this->validator->getErrors();
+                $errors['compensation_amount'] = 'กรุณาระบุจำนวนเงินค่าตอบแทน';
+                if ($this->request->isAJAX()) {
+                    return $this->response->setStatusCode(422)->setJSON(['success' => false, 'errors' => $errors]);
+                }
+                return redirect()->back()->withInput()->with('errors', $errors);
+            }
+        }
 
         $payload = $this->getServiceDataFromRequest();
         $payload['created_by_uid'] = session()->get('admin_id') ? (int) session()->get('admin_id') : null;
@@ -145,6 +156,7 @@ class AcademicServices extends BaseController
             'consultant'       => 'ที่ปรึกษาทางวิชาการ',
             'lab_testing'      => 'วิเคราะห์ทดสอบ/ห้องปฏิบัติการ',
             'expert_evaluator' => 'ผู้ทรงคุณวุฒิประเมินผล',
+            'lecturer'         => 'วิทยากร',
             'other'            => 'อื่นๆ',
         ];
 
@@ -229,6 +241,17 @@ class AcademicServices extends BaseController
                 ]);
             }
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+        if ($this->request->getPost('has_compensation') === 'yes') {
+            $comp = $this->request->getPost('compensation_amount');
+            if ($comp === null || $comp === '') {
+                $errors = $this->validator->getErrors();
+                $errors['compensation_amount'] = 'กรุณาระบุจำนวนเงินค่าตอบแทน';
+                if ($this->request->isAJAX()) {
+                    return $this->response->setStatusCode(422)->setJSON(['success' => false, 'errors' => $errors]);
+                }
+                return redirect()->back()->withInput()->with('errors', $errors);
+            }
         }
 
         $payload = $this->getServiceDataFromRequest();
@@ -320,6 +343,12 @@ class AcademicServices extends BaseController
             $revenueUnknown = 1;
         }
 
+        $hasComp = $this->request->getPost('has_compensation');
+        $compensationAmount = null;
+        if ($hasComp === 'yes') {
+            $compensationAmount = $this->request->getPost('compensation_amount') !== '' ? (float) $this->request->getPost('compensation_amount') : null;
+        }
+
         return [
             'academic_year'           => $this->request->getPost('academic_year') ?: null,
             'service_date'           => $this->request->getPost('service_date'),
@@ -338,6 +367,7 @@ class AcademicServices extends BaseController
             'budget_source'          => $this->request->getPost('budget_source') ?: null,
             'budget_source_spec'     => $this->request->getPost('budget_source_spec') ?: null,
             'has_compensation'       => $this->request->getPost('has_compensation') ?: null,
+            'compensation_amount'    => $compensationAmount,
             'revenue_amount'         => $revenueAmount,
             'revenue_unknown'        => $revenueUnknown,
         ];

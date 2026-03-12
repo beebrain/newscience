@@ -28,6 +28,7 @@ class AcademicServiceModel extends Model
         'budget_source',
         'budget_source_spec',
         'has_compensation',
+        'compensation_amount',
         'revenue_amount',
         'revenue_unknown',
         'created_by_uid',

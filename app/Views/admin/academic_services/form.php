@@ -91,18 +91,8 @@ for ($y = $currentYear - 2; $y <= $currentYear + 1; $y++) {
 
                 <div class="form-block">
                     <label class="form-label">กลุ่มผู้รับการบริการวิชาการ</label>
-                    <p class="form-text" style="margin-bottom: 0.5rem;">เลือกประเภทแล้วระบุชื่อ (ค้นหาจากบุคลากรในระบบ)</p>
-                    <select name="target_group_type" class="form-control" style="max-width: 360px; margin-bottom: 0.75rem;">
-                        <option value="">— เลือก —</option>
-                        <option value="internal" <?= ($s['target_group_type'] ?? '') === 'internal' ? 'selected' : '' ?>>บุคลากรภายในมหาวิทยาลัย</option>
-                        <option value="external" <?= ($s['target_group_type'] ?? '') === 'external' ? 'selected' : '' ?>>บุคลากรภายนอกมหาวิทยาลัย</option>
-                    </select>
-                    <div style="margin-bottom: 0.5rem;">
-                        <input type="text" id="targetGroupSearch" class="form-control" placeholder="พิมพ์ชื่อหรืออีเมล (อย่างน้อย 2 ตัวอักษร)" style="max-width: 280px;" autocomplete="off">
-                    </div>
-                    <div id="targetGroupSearchResults" class="participant-results" style="display: none; position: absolute; z-index: 10; background: #fff; border: 1px solid #ccc; max-height: 200px; overflow-y: auto; min-width: 280px;"></div>
-                    <div id="targetGroupTags" class="tag-list tag-list-block"></div>
-                    <input type="hidden" name="target_group_spec" id="targetGroupSpec" value="<?= esc($s['target_group_spec'] ?? old('target_group_spec') ?? '') ?>">
+                    <p class="form-text" style="margin-bottom: 0.5rem;">ระบุรายละเอียดกลุ่มผู้รับการบริการ (หน่วยงาน/กลุ่มเป้าหมาย)</p>
+                    <textarea name="target_group_spec" id="targetGroupSpec" class="form-control" rows="3" placeholder="เช่น บุคลากรหน่วยงาน X, นิสิตระดับบัณฑิตศึกษา ฯลฯ"><?= esc($s['target_group_spec'] ?? old('target_group_spec') ?? '') ?></textarea>
                 </div>
             </div>
 
@@ -154,6 +144,7 @@ for ($y = $currentYear - 2; $y <= $currentYear + 1; $y++) {
                         <option value="consultant" <?= ($s['service_type'] ?? '') === 'consultant' ? 'selected' : '' ?>>ที่ปรึกษาทางวิชาการ</option>
                         <option value="lab_testing" <?= ($s['service_type'] ?? '') === 'lab_testing' ? 'selected' : '' ?>>บริการวิเคราะห์ทดสอบ/ห้องปฏิบัติการ</option>
                         <option value="expert_evaluator" <?= ($s['service_type'] ?? '') === 'expert_evaluator' ? 'selected' : '' ?>>ผู้ทรงคุณวุฒิประเมินผล/ตัดสินการแข่งขัน</option>
+                        <option value="lecturer" <?= ($s['service_type'] ?? '') === 'lecturer' ? 'selected' : '' ?>>วิทยากร</option>
                         <option value="other" <?= ($s['service_type'] ?? '') === 'other' ? 'selected' : '' ?>>อื่นๆ</option>
                     </select>
                     <input type="text" name="service_type_spec" class="form-control" style="margin-top: 0.5rem;"
@@ -179,24 +170,28 @@ for ($y = $currentYear - 2; $y <= $currentYear + 1; $y++) {
                 </div>
 
                 <div class="form-block">
-                    <label class="form-label">ค่าตอบแทน</label>
-                    <select name="has_compensation" class="form-control" style="max-width: 360px;">
-                        <option value="">— เลือก —</option>
-                        <option value="yes" <?= ($s['has_compensation'] ?? '') === 'yes' ? 'selected' : '' ?>>มีค่าตอบแทน</option>
-                        <option value="no" <?= ($s['has_compensation'] ?? '') === 'no' ? 'selected' : '' ?>>ไม่มีค่าตอบแทน</option>
-                        <option value="unknown" <?= ($s['has_compensation'] ?? '') === 'unknown' ? 'selected' : '' ?>>ไม่มีข้อมูล</option>
-                    </select>
-                </div>
-
-                <div class="form-block">
-                    <label class="form-label">รายได้ที่เกิดขึ้นกับคณะ</label>
-                    <select name="revenue_option" id="revenue_option_select" class="form-control" style="max-width: 280px; display: inline-block; vertical-align: middle;">
-                        <option value="none" <?= (($s['revenue_unknown'] ?? 0) == 0 && empty($s['revenue_amount'])) ? 'selected' : '' ?>>ไม่มี</option>
-                        <option value="amount" <?= !empty($s['revenue_amount']) ? 'selected' : '' ?>>มี (ระบุจำนวน)</option>
-                        <option value="unknown" <?= (($s['revenue_unknown'] ?? 0) == 1 ? 'selected' : '') ?>>ไม่มีข้อมูล</option>
-                    </select>
-                    <input type="number" name="revenue_amount" id="revenue_amount" class="form-control" step="0.01" min="0" placeholder="บาท" style="width: 140px; margin-left: 0.5rem; display: inline-block; vertical-align: middle;"
-                           value="<?= isset($s['revenue_amount']) && $s['revenue_amount'] !== null && $s['revenue_amount'] !== '' ? esc($s['revenue_amount']) : '' ?>">
+                    <label class="form-label">ค่าตอบแทนและรายได้ที่เกิดขึ้นกับคณะ</label>
+                    <p class="form-text" style="margin-bottom: 0.5rem;">ค่าตอบแทน: เลือกมีค่าตอบแทนต้องระบุจำนวนเงิน (บาท)</p>
+                    <div style="margin-bottom: 0.75rem;">
+                        <select name="has_compensation" id="has_compensation_select" class="form-control" style="max-width: 280px; display: inline-block; vertical-align: middle;">
+                            <option value="">— เลือก —</option>
+                            <option value="yes" <?= ($s['has_compensation'] ?? '') === 'yes' ? 'selected' : '' ?>>มีค่าตอบแทน</option>
+                            <option value="no" <?= ($s['has_compensation'] ?? '') === 'no' ? 'selected' : '' ?>>ไม่มีค่าตอบแทน</option>
+                            <option value="unknown" <?= ($s['has_compensation'] ?? '') === 'unknown' ? 'selected' : '' ?>>ไม่มีข้อมูล</option>
+                        </select>
+                        <input type="number" name="compensation_amount" id="compensation_amount" class="form-control" step="0.01" min="0" placeholder="จำนวนบาท" style="width: 140px; margin-left: 0.5rem; display: inline-block; vertical-align: middle;"
+                               value="<?= isset($s['compensation_amount']) && $s['compensation_amount'] !== null && $s['compensation_amount'] !== '' ? esc($s['compensation_amount']) : '' ?>">
+                    </div>
+                    <p class="form-text" style="margin-bottom: 0.5rem;">รายได้ที่เกิดขึ้นกับคณะ</p>
+                    <div>
+                        <select name="revenue_option" id="revenue_option_select" class="form-control" style="max-width: 280px; display: inline-block; vertical-align: middle;">
+                            <option value="none" <?= (($s['revenue_unknown'] ?? 0) == 0 && empty($s['revenue_amount'])) ? 'selected' : '' ?>>ไม่มี</option>
+                            <option value="amount" <?= !empty($s['revenue_amount']) ? 'selected' : '' ?>>มี (ระบุจำนวน)</option>
+                            <option value="unknown" <?= (($s['revenue_unknown'] ?? 0) == 1 ? 'selected' : '') ?>>ไม่มีข้อมูล</option>
+                        </select>
+                        <input type="number" name="revenue_amount" id="revenue_amount" class="form-control" step="0.01" min="0" placeholder="บาท" style="width: 140px; margin-left: 0.5rem; display: inline-block; vertical-align: middle;"
+                               value="<?= isset($s['revenue_amount']) && $s['revenue_amount'] !== null && $s['revenue_amount'] !== '' ? esc($s['revenue_amount']) : '' ?>">
+                    </div>
                 </div>
             </div>
 
@@ -231,7 +226,6 @@ for ($y = $currentYear - 2; $y <= $currentYear + 1; $y++) {
 <?= $this->endSection() ?>
 
 <?php
-$target_group_users = $s['target_group_users'] ?? [];
 $responsible_users  = $s['responsible_users'] ?? [];
 $initial_participants = array_map(function ($p) {
     return [
@@ -246,7 +240,6 @@ $initial_participants = array_map(function ($p) {
 <script>
 (function() {
     var searchUrl = '<?= base_url('admin/academic-services/search-users') ?>';
-    var initialTargetGroup = <?= json_encode($target_group_users) ?>;
     var initialResponsible = <?= json_encode($responsible_users) ?>;
     var initialParticipants = <?= json_encode($initial_participants) ?>;
 
@@ -262,56 +255,14 @@ $initial_participants = array_map(function ($p) {
         });
     }
 
-    // --- กลุ่มผู้รับการบริการวิชาการ: 2 ตัวเลือก + ระบุชื่อ (Tag) ---
-    var targetGroupList = initialTargetGroup.slice();
-    var $targetGroupTags = document.getElementById('targetGroupTags');
-    var $targetGroupSpec = document.getElementById('targetGroupSpec');
-    var $targetGroupSearch = document.getElementById('targetGroupSearch');
-    var $targetGroupResults = document.getElementById('targetGroupSearchResults');
-    var targetGroupSearchT = null;
-
-    function renderTargetGroup() {
-        $targetGroupTags.innerHTML = targetGroupList.map(function(t) {
-            return '<span class="tag" data-uid="' + t.uid + '">' + (t.label || '').replace(/</g, '&lt;') + ' <button type="button" class="tag-remove" aria-label="ลบ">&times;</button></span>';
-        }).join('');
-        $targetGroupSpec.value = targetGroupList.length ? JSON.stringify(targetGroupList) : '';
-        $targetGroupTags.querySelectorAll('.tag-remove').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var uid = parseInt(btn.closest('.tag').getAttribute('data-uid'), 10);
-                targetGroupList = targetGroupList.filter(function(x) { return x.uid !== uid; });
-                renderTargetGroup();
-            });
-        });
+    var $hasCompensation = document.getElementById('has_compensation_select');
+    var $compensationAmount = document.getElementById('compensation_amount');
+    function toggleCompensationAmount() {
+        if ($compensationAmount) $compensationAmount.style.visibility = ($hasCompensation && $hasCompensation.value === 'yes') ? 'visible' : 'hidden';
     }
-    function addTargetGroup(uid, label) {
-        if (targetGroupList.some(function(x) { return x.uid === uid; })) return;
-        targetGroupList.push({ uid: uid, label: label || '' });
-        renderTargetGroup();
-        $targetGroupSearch.value = '';
-        $targetGroupResults.style.display = 'none';
-    }
-    function doTargetGroupSearch() {
-        var q = ($targetGroupSearch.value || '').trim();
-        if (q.length < 2) { $targetGroupResults.style.display = 'none'; return; }
-        fetch(searchUrl + '?q=' + encodeURIComponent(q)).then(function(r) { return r.json(); }).then(function(res) {
-            if (res.status !== 'success' || !res.data || !res.data.length) {
-                $targetGroupResults.innerHTML = '<div style="padding: 0.75rem;">ไม่พบรายชื่อ</div>';
-            } else {
-                $targetGroupResults.innerHTML = res.data.map(function(u) {
-                    return '<div data-uid="' + u.uid + '" data-label="' + (u.label || '').replace(/"/g, '&quot;') + '">' + (u.label || u.email) + '</div>';
-                }).join('');
-                $targetGroupResults.querySelectorAll('div[data-uid]').forEach(function(div) {
-                    div.addEventListener('click', function() { addTargetGroup(parseInt(div.getAttribute('data-uid'), 10), div.getAttribute('data-label')); });
-                });
-            }
-            $targetGroupResults.style.display = 'block';
-        });
-    }
-    renderTargetGroup();
-    if ($targetGroupSearch) {
-        $targetGroupSearch.addEventListener('input', function() { clearTimeout(targetGroupSearchT); targetGroupSearchT = setTimeout(doTargetGroupSearch, 300); });
-        $targetGroupSearch.addEventListener('blur', function() { setTimeout(function() { $targetGroupResults.style.display = 'none'; }, 200); });
-    }
+    if ($hasCompensation) $hasCompensation.addEventListener('change', toggleCompensationAmount);
+    toggleCompensationAmount();
+    if ($compensationAmount) $compensationAmount.addEventListener('focus', function() { if ($hasCompensation) $hasCompensation.value = 'yes'; toggleCompensationAmount(); });
 
     // --- ผู้รับผิดชอบ: 3 ตัวเลือก (คณะ / หลักสูตร + popup / บุคคล + tag หรือชื่อเอง) ---
     var responsibleList = initialResponsible.slice();
