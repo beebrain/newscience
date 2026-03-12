@@ -82,7 +82,7 @@
                                 <td><?= esc($typeLabel) ?></td>
                                 <td><?= $count ?></td>
                                 <td>
-                                    <a href="<?= base_url('admin/academic-services/edit/' . $row['id']) ?>" class="btn btn-secondary btn-sm">แก้ไข</a>
+                                    <button type="button" class="btn btn-secondary btn-sm btn-edit-service" data-id="<?= (int) $row['id'] ?>">แก้ไข</button>
                                     <a href="<?= base_url('admin/academic-services/delete/' . $row['id']) ?>"
                                        class="btn btn-danger btn-sm"
                                        onclick="return confirm('ยืนยันการลบรายการนี้?')">ลบ</a>
@@ -96,51 +96,16 @@
     </div>
 </div>
 
-<!-- Modal เพิ่มรายการบริการวิชาการ -->
-<div id="createServiceModal" class="academic-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="createModalTitle" aria-hidden="true" style="display: none;">
-    <div class="academic-modal" style="max-width: 480px;">
+<!-- Modal เดียว: เพิ่ม/แก้ไข (โหลดฟอร์มเต็มใน iframe — ไม่มีเมนูแอดมิน) -->
+<div id="academicServiceModal" class="academic-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="academicModalTitle" aria-hidden="true" style="display: none;">
+    <div class="academic-modal academic-modal-lg" style="max-width: 900px; height: 90vh;">
         <div class="academic-modal-header">
-            <h2 id="createModalTitle">เพิ่มรายการบริการวิชาการ</h2>
-            <button type="button" class="academic-modal-close" id="btnCloseCreateModal" aria-label="ปิด">×</button>
+            <h2 id="academicModalTitle">เพิ่มรายการบริการวิชาการ</h2>
+            <button type="button" class="academic-modal-close" id="btnCloseAcademicModal" aria-label="ปิด">×</button>
         </div>
-        <form action="<?= base_url('admin/academic-services/store') ?>" method="post" id="createServiceForm">
-            <?= csrf_field() ?>
-            <div class="academic-modal-body">
-                <?php if (session('errors')): ?>
-                    <div class="alert alert-danger" role="alert">
-                        <ul style="margin: 0; padding-left: 1.2rem;">
-                            <?php foreach (session('errors') as $e): ?>
-                                <li><?= esc($e) ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                <?php endif; ?>
-                <div class="form-group">
-                    <label for="modal_academic_year" class="form-label">ปีการศึกษา (พ.ศ.)</label>
-                    <select id="modal_academic_year" name="academic_year" class="form-control">
-                        <option value="">— เลือก —</option>
-                        <?php foreach ($years as $y): ?>
-                            <option value="<?= esc($y) ?>" <?= (old('academic_year', $selected_year ?? '') === $y ? 'selected' : '') ?>><?= esc($y) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="modal_service_date" class="form-label">วัน/เดือน/ปี ที่บริการวิชาการ <span class="required">*</span></label>
-                    <input type="date" id="modal_service_date" name="service_date" class="form-control" required
-                           value="<?= esc(old('service_date', date('Y-m-d'))) ?>">
-                </div>
-                <div class="form-group">
-                    <label for="modal_title" class="form-label">ชื่อโครงการ/กิจกรรม/หัวข้อ <span class="required">*</span></label>
-                    <input type="text" id="modal_title" name="title" class="form-control" required
-                           value="<?= esc(old('title')) ?>"
-                           placeholder="ชื่อโครงการหรือกิจกรรม">
-                </div>
-            </div>
-            <div class="academic-modal-footer">
-                <button type="button" class="btn btn-secondary" id="btnCancelCreateModal">ยกเลิก</button>
-                <button type="submit" class="btn btn-primary">บันทึกและกรอกข้อมูลเพิ่ม</button>
-            </div>
-        </form>
+        <div class="academic-modal-body" style="flex: 1; min-height: 0; padding: 0;">
+            <iframe id="academicServiceFrame" name="academicServiceFrame" style="width: 100%; height: 100%; min-height: 70vh; border: none;"></iframe>
+        </div>
     </div>
 </div>
 
@@ -185,6 +150,8 @@
 }
 .academic-modal-close:hover { color: #111; }
 .academic-modal-body { padding: 1.25rem; overflow-y: auto; }
+/* Modal ที่มีแต่ iframe: ไม่ให้มี scroll ซ้อน — ให้ scroll เฉพาะใน iframe */
+.academic-modal-lg .academic-modal-body { padding: 0; overflow: hidden; }
 .academic-modal-footer {
     display: flex;
     gap: 0.75rem;
@@ -192,21 +159,30 @@
     padding: 1rem 1.25rem;
     border-top: 1px solid var(--color-gray-200, #e5e7eb);
 }
+
 </style>
 
 <script>
 (function() {
-    var modal = document.getElementById('createServiceModal');
+    var modal = document.getElementById('academicServiceModal');
+    var modalTitle = document.getElementById('academicModalTitle');
     var btnOpen = document.getElementById('btnOpenCreateModal');
-    var btnClose = document.getElementById('btnCloseCreateModal');
-    var btnCancel = document.getElementById('btnCancelCreateModal');
+    var btnClose = document.getElementById('btnCloseAcademicModal');
+    var frame = document.getElementById('academicServiceFrame');
+    var formViewBase = '<?= base_url('admin/academic-services/form-view') ?>';
 
-    function openModal() {
-        if (!modal) return;
+    function openModal(mode, id) {
+        if (!modal || !frame) return;
+        if (mode === 'edit' && id) {
+            frame.src = formViewBase + '/' + id;
+            if (modalTitle) modalTitle.textContent = 'แก้ไขรายการบริการวิชาการ';
+        } else {
+            frame.src = formViewBase;
+            if (modalTitle) modalTitle.textContent = 'เพิ่มรายการบริการวิชาการ';
+        }
         modal.style.display = '';
         modal.setAttribute('aria-hidden', 'false');
         if (btnOpen) btnOpen.setAttribute('aria-expanded', 'true');
-        document.getElementById('modal_title').focus();
         document.body.style.overflow = 'hidden';
     }
     function closeModal() {
@@ -214,13 +190,23 @@
         modal.style.display = 'none';
         modal.setAttribute('aria-hidden', 'true');
         if (btnOpen) btnOpen.setAttribute('aria-expanded', 'false');
+        if (frame) frame.src = 'about:blank';
         document.body.style.overflow = '';
     }
 
-    if (btnOpen) btnOpen.addEventListener('click', openModal);
-    [].forEach.call(document.querySelectorAll('.open-create-modal'), function(b) { b.addEventListener('click', openModal); });
+    if (btnOpen) btnOpen.addEventListener('click', function() { openModal('create'); });
+    [].forEach.call(document.querySelectorAll('.open-create-modal'), function(b) {
+        b.addEventListener('click', function() { openModal('create'); });
+    });
     if (btnClose) btnClose.addEventListener('click', closeModal);
-    if (btnCancel) btnCancel.addEventListener('click', closeModal);
+
+    [].forEach.call(document.querySelectorAll('.btn-edit-service'), function(b) {
+        b.addEventListener('click', function() {
+            var id = this.getAttribute('data-id');
+            if (id) openModal('edit', id);
+        });
+    });
+
     if (modal) {
         modal.addEventListener('click', function(e) {
             if (e.target === modal) closeModal();
@@ -230,8 +216,15 @@
         });
     }
 
+    window.addEventListener('message', function(e) {
+        if (e.data === 'academic-service-updated' || e.data === 'academic-close-modal') {
+            closeModal();
+            if (e.data === 'academic-service-updated') window.location.reload();
+        }
+    });
+
     <?php if (service('request')->getGet('openModal') === 'create' || session('errors')): ?>
-    openModal();
+    openModal('create');
     <?php endif; ?>
 })();
 </script>

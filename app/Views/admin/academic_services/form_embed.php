@@ -1,7 +1,3 @@
-<?= $this->extend('admin/layouts/admin_layout') ?>
-
-<?= $this->section('content') ?>
-
 <?php
 $isEdit = isset($service) && $service !== null;
 $formAction = $isEdit ? base_url('admin/academic-services/update/' . $service['id']) : base_url('admin/academic-services/store');
@@ -12,14 +8,32 @@ $yearOptions = [];
 for ($y = $currentYear - 2; $y <= $currentYear + 1; $y++) {
     $yearOptions[] = (string) $y;
 }
+$target_group_users = $s['target_group_users'] ?? [];
+$responsible_users  = $s['responsible_users'] ?? [];
+$participants = $participants ?? [];
+$initial_participants = array_map(function ($p) {
+    return [
+        'user_uid' => (int) ($p['user_uid'] ?? 0),
+        'display_name' => $p['display_name'] ?? $p['display_label'] ?? '',
+        'program_name' => $p['program_name'] ?? '',
+        'role' => $p['role'] ?? 'co_participant',
+    ];
+}, $participants);
 ?>
-
-<div class="card">
-    <div class="card-header">
-        <h2><?= $pageLabel ?></h2>
-        <a href="<?= base_url('admin/academic-services') ?>" class="btn btn-secondary">← กลับ</a>
-    </div>
-
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= esc($pageLabel) ?></title>
+    <base href="<?= base_url() ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/admin.css') ?>">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body style="margin:0; padding: 1rem; background: #fff;">
+<div class="card" style="border: none; box-shadow: none;">
     <div class="card-body">
         <?php if (session('errors')): ?>
             <div class="alert alert-danger">
@@ -202,7 +216,7 @@ for ($y = $currentYear - 2; $y <= $currentYear + 1; $y++) {
 
             <div class="form-actions" style="margin-top: 1.5rem;">
                 <button type="submit" class="btn btn-primary"><?= $isEdit ? 'บันทึกการแก้ไข' : 'บันทึก' ?></button>
-                <a href="<?= base_url('admin/academic-services') ?>" class="btn btn-secondary">ยกเลิก</a>
+                <button type="button" class="btn btn-secondary" id="btnCancelEmbed">ยกเลิก</button>
             </div>
         </form>
     </div>
@@ -225,24 +239,8 @@ for ($y = $currentYear - 2; $y <= $currentYear + 1; $y++) {
 .tag-list-block .tag { display: flex; width: fit-content; }
 .participant-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0; border-bottom: 1px solid var(--color-gray-100, #f3f4f6); }
 .participant-row .tag { flex: 1; }
-#revenue_amount_wrap { margin-top: 0.5rem; }
 </style>
 
-<?= $this->endSection() ?>
-
-<?php
-$target_group_users = $s['target_group_users'] ?? [];
-$responsible_users  = $s['responsible_users'] ?? [];
-$initial_participants = array_map(function ($p) {
-    return [
-        'user_uid' => (int) ($p['user_uid'] ?? 0),
-        'display_name' => $p['display_name'] ?? $p['display_label'] ?? '',
-        'program_name' => $p['program_name'] ?? '',
-        'role' => $p['role'] ?? 'co_participant',
-    ];
-}, $participants);
-?>
-<?= $this->section('scripts') ?>
 <script>
 (function() {
     var searchUrl = '<?= base_url('admin/academic-services/search-users') ?>';
@@ -262,7 +260,6 @@ $initial_participants = array_map(function ($p) {
         });
     }
 
-    // --- กลุ่มผู้รับการบริการวิชาการ: 2 ตัวเลือก + ระบุชื่อ (Tag) ---
     var targetGroupList = initialTargetGroup.slice();
     var $targetGroupTags = document.getElementById('targetGroupTags');
     var $targetGroupSpec = document.getElementById('targetGroupSpec');
@@ -313,7 +310,6 @@ $initial_participants = array_map(function ($p) {
         $targetGroupSearch.addEventListener('blur', function() { setTimeout(function() { $targetGroupResults.style.display = 'none'; }, 200); });
     }
 
-    // --- ผู้รับผิดชอบ: 3 ตัวเลือก (คณะ / หลักสูตร + popup / บุคคล + tag หรือชื่อเอง) ---
     var responsibleList = initialResponsible.slice();
     var $responsibleTags = document.getElementById('responsibleTags');
     var $responsiblePersonText = document.getElementById('responsiblePersonText');
@@ -337,10 +333,8 @@ $initial_participants = array_map(function ($p) {
         if (t !== 'person') $responsiblePersonText.value = '';
         if (t === 'program' && $responsibleProgram.value) $responsibleProgramLabel.textContent = $responsibleProgram.value;
     }
-    (function() {
-        var sel = document.getElementById('responsibleTypeSelect');
-        if (sel) sel.addEventListener('change', updateResponsibleVisibility);
-    })();
+    var sel = document.getElementById('responsibleTypeSelect');
+    if (sel) sel.addEventListener('change', updateResponsibleVisibility);
 
     document.getElementById('btnSetProgram').addEventListener('click', function() {
         var current = $responsibleProgram.value || '';
@@ -429,7 +423,6 @@ $initial_participants = array_map(function ($p) {
     if (getResponsibleType() === 'program' && $responsibleProgram.value) $responsibleProgramLabel.textContent = $responsibleProgram.value;
     if (getResponsibleType() === 'person' && responsibleList.length) $responsiblePersonWrap.style.display = 'block';
 
-    // --- ผู้ร่วมบริการวิชาการ: จาก user table เท่านั้น, ไม่แสดงชื่อที่อยู่ในผู้รับผิดชอบ, 1 tag 1 บรรทัด ---
     var participantList = initialParticipants.slice();
     var $body = document.getElementById('participantsBody');
     var $participantSearch = document.getElementById('participantSearch');
@@ -495,43 +488,47 @@ $initial_participants = array_map(function ($p) {
         $participantSearch.addEventListener('blur', function() { setTimeout(function() { $participantResults.style.display = 'none'; }, 200); });
     }
 
-    // เมื่อเปิดใน iframe (จากหน้า index): ส่งฟอร์มแบบ AJAX แล้วแจ้ง parent ปิด modal และรีโหลด
-    if (window.self !== window.top) {
-        var formEl = document.getElementById('academicServiceForm');
-        if (formEl) {
-            formEl.addEventListener('submit', function(ev) {
-                ev.preventDefault();
-                var submitBtn = formEl.querySelector('button[type="submit"]');
-                if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'กำลังบันทึก...'; }
-                var fd = new FormData(formEl);
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', formEl.action);
-                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                xhr.onload = function() {
-                    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '<?= $isEdit ? "บันทึกการแก้ไข" : "บันทึก" ?>'; }
-                    try {
-                        var res = JSON.parse(xhr.responseText);
-                        if (res.success) {
-                            window.parent.postMessage('academic-service-updated', '*');
-                        } else {
-                            var msg = res.message || 'บันทึกไม่สำเร็จ';
-                            if (res.errors && typeof res.errors === 'object') {
-                                msg = Object.keys(res.errors).map(function(k) { return res.errors[k]; }).join('\n');
-                            }
-                            alert(msg || 'บันทึกไม่สำเร็จ');
-                        }
-                    } catch (e) {
-                        alert('เกิดข้อผิดพลาด');
-                    }
-                };
-                xhr.onerror = function() {
-                    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '<?= $isEdit ? "บันทึกการแก้ไข" : "บันทึก" ?>'; }
-                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
-                };
-                xhr.send(fd);
-            });
+    document.getElementById('btnCancelEmbed').addEventListener('click', function() {
+        if (window.self !== window.top) {
+            window.parent.postMessage('academic-close-modal', '*');
         }
+    });
+
+    var formEl = document.getElementById('academicServiceForm');
+    if (formEl) {
+        formEl.addEventListener('submit', function(ev) {
+            ev.preventDefault();
+            var submitBtn = formEl.querySelector('button[type="submit"]');
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'กำลังบันทึก...'; }
+            var fd = new FormData(formEl);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', formEl.action);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onload = function() {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '<?= $isEdit ? "บันทึกการแก้ไข" : "บันทึก" ?>'; }
+                try {
+                    var res = JSON.parse(xhr.responseText);
+                    if (res.success) {
+                        window.parent.postMessage('academic-service-updated', '*');
+                    } else {
+                        var msg = res.message || 'บันทึกไม่สำเร็จ';
+                        if (res.errors && typeof res.errors === 'object') {
+                            msg = Object.keys(res.errors).map(function(k) { return res.errors[k]; }).join('\n');
+                        }
+                        alert(msg || 'บันทึกไม่สำเร็จ');
+                    }
+                } catch (e) {
+                    alert('เกิดข้อผิดพลาด');
+                }
+            };
+            xhr.onerror = function() {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '<?= $isEdit ? "บันทึกการแก้ไข" : "บันทึก" ?>'; }
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            };
+            xhr.send(fd);
+        });
     }
 })();
 </script>
-<?= $this->endSection() ?>
+</body>
+</html>

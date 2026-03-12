@@ -72,6 +72,12 @@ class AcademicServices extends BaseController
             'title'         => 'required|max_length[500]',
         ];
         if (! $this->validate($rules)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'errors'  => $this->validator->getErrors(),
+                ]);
+            }
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
@@ -80,11 +86,17 @@ class AcademicServices extends BaseController
 
         $id = $this->serviceModel->insert($payload);
         if (! $id) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'บันทึกไม่สำเร็จ']);
+            }
             return redirect()->back()->withInput()->with('error', 'บันทึกไม่สำเร็จ');
         }
 
         $this->syncParticipantsFromRequest((int) $id);
 
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => true, 'id' => (int) $id]);
+        }
         return redirect()->to(base_url('admin/academic-services/edit/' . $id))
             ->with('success', 'เพิ่มรายการสำเร็จ กรุณากรอกข้อมูลเพิ่มเติม (ถ้าต้องการ)');
     }
@@ -149,7 +161,33 @@ class AcademicServices extends BaseController
     }
 
     /**
-     * ฟอร์มแก้ไข
+     * ฟอร์มสำหรับ embed ใน modal (ไม่มีเมนูแอดมิน) — ใช้ทั้งเพิ่มและแก้ไข
+     * GET academic-services/form-view       = ฟอร์มเพิ่ม (ว่าง)
+     * GET academic-services/form-view/123   = ฟอร์มแก้ไข
+     */
+    public function formView($id = null)
+    {
+        $service     = null;
+        $participants = [];
+
+        if ($id !== null && (int) $id > 0) {
+            $service = $this->serviceModel->getWithParticipants((int) $id);
+            if (! $service) {
+                return redirect()->to(base_url('admin/academic-services'))->with('error', 'ไม่พบข้อมูล');
+            }
+            $service['target_group_users'] = $this->decodeUserTags($service['target_group_spec'] ?? '');
+            $service['responsible_users']  = $this->decodeUserTags($service['responsible_person_text'] ?? '');
+            $participants = $service['participants'] ?? [];
+        }
+
+        return view('admin/academic_services/form_embed', [
+            'service'      => $service,
+            'participants' => $participants,
+        ]);
+    }
+
+    /**
+     * ฟอร์มแก้ไข (หน้าเต็ม มีเมนู)
      */
     public function edit($id)
     {
@@ -184,6 +222,12 @@ class AcademicServices extends BaseController
             'title'         => 'required|max_length[500]',
         ];
         if (! $this->validate($rules)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'errors'  => $this->validator->getErrors(),
+                ]);
+            }
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
@@ -191,6 +235,9 @@ class AcademicServices extends BaseController
         $this->serviceModel->update($id, $payload);
         $this->syncParticipantsFromRequest((int) $id);
 
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => true]);
+        }
         return redirect()->to(base_url('admin/academic-services'))
             ->with('success', 'แก้ไขรายการบริการวิชาการสำเร็จ');
     }

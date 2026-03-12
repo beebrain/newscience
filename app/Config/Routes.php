@@ -288,6 +288,8 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     // Academic Service (ข้อมูลการบริการวิชาการ)
     $routes->get('academic-services', 'Admin\AcademicServices::index');
     $routes->get('academic-services/create', 'Admin\AcademicServices::create');
+    $routes->get('academic-services/form-view/(:num)', 'Admin\AcademicServices::formView/$1');
+    $routes->get('academic-services/form-view', 'Admin\AcademicServices::formView');
     $routes->post('academic-services/store', 'Admin\AcademicServices::store');
     $routes->get('academic-services/edit/(:num)', 'Admin\AcademicServices::edit/$1');
     $routes->post('academic-services/update/(:num)', 'Admin\AcademicServices::update/$1');
