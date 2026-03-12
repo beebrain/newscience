@@ -104,8 +104,13 @@ $initial_participants = array_map(function ($p) {
 
                 <div class="form-block">
                     <label class="form-label">กลุ่มผู้รับการบริการวิชาการ</label>
-                    <p class="form-text" style="margin-bottom: 0.5rem;">ระบุรายละเอียดกลุ่มผู้รับการบริการ (หน่วยงาน/กลุ่มเป้าหมาย)</p>
-                    <textarea name="target_group_spec" id="targetGroupSpec" class="form-control" rows="3" placeholder="เช่น บุคลากรหน่วยงาน X, นิสิตระดับบัณฑิตศึกษา ฯลฯ"><?= esc($s['target_group_spec'] ?? old('target_group_spec') ?? '') ?></textarea>
+                    <p class="form-text" style="margin-bottom: 0.5rem;">เลือกกลุ่มแล้วระบุรายละเอียด</p>
+                    <select name="target_group_type" class="form-control" style="max-width: 360px; margin-bottom: 0.5rem;">
+                        <option value="">— เลือก —</option>
+                        <option value="internal" <?= ($s['target_group_type'] ?? '') === 'internal' ? 'selected' : '' ?>>ภายในมหาวิทยาลัย</option>
+                        <option value="external" <?= ($s['target_group_type'] ?? '') === 'external' ? 'selected' : '' ?>>ภายนอกมหาวิทยาลัย</option>
+                    </select>
+                    <textarea name="target_group_spec" id="targetGroupSpec" class="form-control" rows="3" placeholder="ระบุรายละเอียดกลุ่มผู้รับการบริการ (หน่วยงาน/กลุ่มเป้าหมาย)"><?= esc($s['target_group_spec'] ?? old('target_group_spec') ?? '') ?></textarea>
                 </div>
             </div>
 
