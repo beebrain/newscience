@@ -32,9 +32,9 @@ $initial_participants = array_map(function ($p) {
     <link rel="stylesheet" href="<?= base_url('assets/css/admin.css') ?>">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body style="margin:0; padding: 1rem; background: #fff;">
-<div class="card" style="border: none; box-shadow: none;">
-    <div class="card-body">
+<body class="form-embed-body">
+<div class="card form-embed-card">
+    <div class="card-body form-embed-card-body">
         <?php if (session('errors')): ?>
             <div class="alert alert-danger">
                 <ul style="margin: 0; padding-left: 1.2rem;">
@@ -214,7 +214,7 @@ $initial_participants = array_map(function ($p) {
                 </div>
             </div>
 
-            <div class="form-actions" style="margin-top: 1.5rem;">
+            <div class="form-actions" style="margin-top: 1rem;">
                 <button type="submit" class="btn btn-primary"><?= $isEdit ? 'บันทึกการแก้ไข' : 'บันทึก' ?></button>
                 <button type="button" class="btn btn-secondary" id="btnCancelEmbed">ยกเลิก</button>
             </div>
@@ -223,10 +223,13 @@ $initial_participants = array_map(function ($p) {
 </div>
 
 <style>
-.form-section { margin-bottom: 2rem; }
-.form-section-card { padding: 1.25rem; border: 1px solid var(--color-gray-200, #e5e7eb); border-radius: 8px; background: var(--color-gray-50, #f9fafb); }
-.form-section-title { font-size: 1.05rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-gray-200, #e5e7eb); color: var(--color-gray-800, #1f2937); }
-.form-block { padding: 1rem; margin-bottom: 1rem; background: #fff; border-radius: 6px; border: 1px solid var(--color-gray-100, #f3f4f6); }
+.form-embed-body { margin: 0; padding: 0.5rem; background: #fff; }
+.form-embed-card { border: none; box-shadow: none; margin: 0; }
+.form-embed-card-body { padding: 0.5rem !important; }
+.form-section { margin-bottom: 1rem; }
+.form-section-card { padding: 0.75rem; border: 1px solid var(--color-gray-200, #e5e7eb); border-radius: 6px; background: var(--color-gray-50, #f9fafb); }
+.form-section-title { font-size: 1rem; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--color-gray-200, #e5e7eb); color: var(--color-gray-800, #1f2937); }
+.form-block { padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; background: #fff; border-radius: 6px; border: 1px solid var(--color-gray-100, #f3f4f6); }
 .form-block:last-child { margin-bottom: 0; }
 .form-block .form-label { font-weight: 500; }
 .participant-results { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
