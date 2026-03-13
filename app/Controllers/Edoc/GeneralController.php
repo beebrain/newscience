@@ -413,7 +413,8 @@ class GeneralController extends EdocBaseController
         $view_data = [
             'document' => $document,
             'user' => $user,
-            'is_temporary_access' => true
+            'is_temporary_access' => true,
+            'access_token' => $token,
         ];
 
         if (empty($document['fileaddress']) && empty($document['fileaddress_first'])) {
@@ -463,5 +464,129 @@ class GeneralController extends EdocBaseController
         $document['fileaddress_list'] = $list;
         $document['fileaddress_first'] = $list[0] ?? '';
         return $document;
+    }
+
+    /**
+     * Public route: แสดง/ดาวน์โหลดไฟล์เอกสารเมื่อเข้า via secure-access (ใช้ token ไม่ต้อง login)
+     * GET /edoc/public/view-file/{id}?token=...&file=true&subfile=...
+     */
+    public function publicViewFile($id)
+    {
+        $token = $this->request->getGet('token') ?: session()->get('temp_access_token');
+        if (empty($token)) {
+            return $this->response->setStatusCode(400)->setBody('No access token provided');
+        }
+
+        $encrypted = base64_decode(strtr($token, '-_,', '+/='));
+        $secret_key = 'Sci_edoc';
+        $json = $this->simpleDecrypt($encrypted, $secret_key);
+        if ($json === false) {
+            return $this->response->setStatusCode(400)->setBody('Invalid access token');
+        }
+
+        $data = json_decode($json, true);
+        if (! isset($data['user_id'], $data['doc_id'], $data['expires']) || (int) $data['doc_id'] !== (int) $id) {
+            return $this->response->setStatusCode(403)->setBody('Access denied');
+        }
+        if (time() > $data['expires']) {
+            return $this->response->setStatusCode(403)->setBody('Access token has expired');
+        }
+
+        $document = $this->edoctitleModel->find($data['doc_id']);
+        if (! $document) {
+            return $this->response->setStatusCode(404)->setBody('Document not found');
+        }
+
+        $parsed = $this->parseFileAddressForRead($document['fileaddress'] ?? '');
+        $fileList = $parsed['list'];
+        if (empty($fileList)) {
+            return $this->response->setStatusCode(404)->setBody('No files found for this document');
+        }
+
+        $requestedFile = $this->request->getGet('subfile');
+        $targetFile = '';
+        if ($requestedFile && in_array($requestedFile, $fileList)) {
+            $targetFile = $requestedFile;
+        } else {
+            $targetFile = $fileList[0];
+        }
+
+        $targetFile = str_replace('\\', '/', trim($targetFile));
+        if (strpos($targetFile, '..') !== false) {
+            $targetFile = basename($targetFile);
+        }
+        $targetFileSafe = ltrim($targetFile, '/');
+        $targetBasename = basename($targetFile);
+
+        $basePaths = [
+            $this->getEdocDocumentPath(),
+            WRITEPATH . 'uploads/',
+            WRITEPATH . 'uploads/documents/',
+            ROOTPATH . 'EdocDocument/',
+            FCPATH . 'EdocDocument/',
+        ];
+        $filePath = null;
+        foreach ($basePaths as $base) {
+            foreach ([$targetFileSafe, $targetBasename] as $name) {
+                if ($name === '') {
+                    continue;
+                }
+                $candidate = $base . $name;
+                if (file_exists($candidate) && is_file($candidate)) {
+                    $filePath = $candidate;
+                    break 2;
+                }
+            }
+        }
+
+        if (! $filePath || ! file_exists($filePath)) {
+            return $this->response->setStatusCode(404)->setBody('File not found');
+        }
+
+        $mimeType = mime_content_type($filePath);
+        return $this->response
+            ->setHeader('Content-Type', $mimeType)
+            ->setHeader('Content-Disposition', 'inline; filename="' . basename($filePath) . '"')
+            ->setBody(file_get_contents($filePath));
+    }
+
+    /**
+     * Parse fileaddress สำหรับอ่านไฟล์ — รองรับชื่อเดี่ยว หรือ JSON array หรือ comma-separated
+     */
+    private function parseFileAddressForRead(?string $fileaddress): array
+    {
+        $out = ['first' => '', 'list' => []];
+        if ($fileaddress === null || trim($fileaddress) === '') {
+            return $out;
+        }
+        $raw = trim($fileaddress);
+        $list = [];
+        $decoded = @json_decode($raw, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            $list = $decoded;
+        } else {
+            $parts = array_map('trim', explode(',', $raw));
+            foreach ($parts as $p) {
+                $p = trim($p, " \"'[]");
+                if ($p !== '') {
+                    $list[] = $p;
+                }
+            }
+            if (empty($list)) {
+                $clean = trim($raw, " \"'[]");
+                if ($clean !== '') {
+                    $list = [$clean];
+                }
+            }
+        }
+        $list = array_map(function ($f) {
+            return trim(preg_replace('/["\'\[\]\s]+$/', '', preg_replace('/^["\'\[\]\s]+/', '', (string) $f)));
+        }, $list);
+        $list = array_values(array_filter($list, function ($f) {
+            return $f !== '';
+        }));
+        $out['list'] = $list;
+        $out['first'] = $list[0] ?? '';
+        return $out;
     }
 }

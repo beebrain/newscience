@@ -243,7 +243,10 @@
                                                     }
                                                 }
                                                 $fileCount = count($fileList);
-                                                $viewPdfBase = base_url('index.php/edoc/viewPDF/' . ($document['iddoc'] ?? '') . '?file=true&subfile=');
+                                                // เข้า via secure-access (มี token): ใช้ public view-file ไม่ต้อง login
+                                                $viewPdfBase = (!empty($is_temporary_access) && !empty($access_token))
+                                                    ? base_url('index.php/edoc/public/view-file/' . ($document['iddoc'] ?? '') . '?token=' . urlencode($access_token) . '&file=true&subfile=')
+                                                    : base_url('index.php/edoc/viewPDF/' . ($document['iddoc'] ?? '') . '?file=true&subfile=');
                                                 ?>
 
                                                 <?php if ($fileCount === 0): ?>

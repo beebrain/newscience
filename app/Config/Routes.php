@@ -489,6 +489,7 @@ $routes->group('edoc', ['filter' => 'edocauth'], function ($routes) {
 
 // Edoc public routes (no auth required — accessed via email link)
 $routes->get('edoc/public/secure-access', 'Edoc\GeneralController::secureAccess');
+$routes->get('edoc/public/view-file/(:any)', 'Edoc\GeneralController::publicViewFile/$1');
 // Edoc notifications — ดึงข้อมูลข่าว/เอกสารประจำวัน (ไม่ต้อง login)
 $routes->get('edoc/notifications', 'Edoc\GeneralController::getDocumentNotificationsData');
 $routes->get('edoc/notifications/(:segment)', 'Edoc\GeneralController::getDocumentNotificationsData/$1');
