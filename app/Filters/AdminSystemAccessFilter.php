@@ -43,6 +43,7 @@ class AdminSystemAccessFilter implements FilterInterface
         'cert-templates' => 'ecert',
         'cert-events'    => 'ecert',
         'certificates'   => 'ecert',
+        'calendar'       => 'calendar',   // ปฏิทินนัดหมายกิจกรรมผู้บริหาร
     ];
 
     public function before(RequestInterface $request, $arguments = null): ?ResponseInterface

@@ -182,6 +182,12 @@
     }
     .card-evaluate:hover .system-card-title { color: #16a34a; }
 
+    .card-calendar .system-card-icon {
+        background: #fef9c3;
+        color: var(--color-primary, #eab308);
+    }
+    .card-calendar:hover .system-card-title { color: var(--color-primary, #ca8a04); }
+
     .evaluate-admin-entry {
         margin-top: 0.75rem;
         padding-left: 0.25rem;
@@ -299,6 +305,23 @@
             </div>
             <div class="system-card-title">ระบบประเมินผลการสอน</div>
             <div class="system-card-desc">ส่งคำร้องขอประเมิน แบบประเมินของตนเอง และจัดการผู้ประเมิน</div>
+            <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+        </a>
+
+        <a href="<?= esc(base_url('dashboard/calendar')) ?>" class="system-card card-calendar">
+            <div class="system-card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+            </div>
+            <div class="system-card-title">ปฏิทินนัดหมาย</div>
+            <div class="system-card-desc">ดูและจัดการตารางนัดหมายกิจกรรมของตนเอง</div>
             <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>

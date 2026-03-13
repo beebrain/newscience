@@ -419,6 +419,33 @@ class UserModel extends Model
     }
 
     /**
+     * Get users eligible for calendar (tag / filter) - active users with name or email
+     */
+    public function getCalendarEligibleUsers(): array
+    {
+        $builder = $this->db->table($this->table)
+            ->select('uid, email, gf_name, gl_name, tf_name, tl_name, title')
+            ->orderBy('tf_name', 'ASC')
+            ->orderBy('tl_name', 'ASC');
+        if ($this->db->fieldExists('status', $this->table)) {
+            $builder->where('status', 'active');
+        } elseif ($this->db->fieldExists('active', $this->table)) {
+            $builder->where('active', 1);
+        }
+        $rows = $builder->get()->getResultArray();
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = [
+                'uid'     => (int) $row['uid'],
+                'email'   => $row['email'] ?? '',
+                'name_th' => $this->getFullNameThaiForDisplay($row),
+                'name_en' => trim(($row['gf_name'] ?? '') . ' ' . ($row['gl_name'] ?? '')),
+            ];
+        }
+        return $out;
+    }
+
+    /**
      * Check if user is super admin
      */
     public function isSuperAdmin(array $user): bool
