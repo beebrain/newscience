@@ -343,6 +343,20 @@ class Pages extends BaseController
     }
 
     /**
+     * ปฏิทินผู้บริหาร (สาธารณะ) — ใครก็ดูได้ (ไม่ต้องล็อกอิน)
+     */
+    public function calendar(): string
+    {
+        $siteInfo = $this->siteSettingModel->getAll();
+        $data = array_merge($this->getCommonData(), [
+            'page_title'       => 'ปฏิทินผู้บริหาร | ' . ($siteInfo['site_name_th'] ?? 'Calendar'),
+            'meta_description' => 'ปฏิทินนัดหมายและกิจกรรมผู้บริหาร คณะวิทยาศาสตร์และเทคโนโลยี',
+            'active_page'      => 'calendar',
+        ]);
+        return view('pages/calendar', $data);
+    }
+
+    /**
      * Single event detail page
      */
     public function eventDetail($id): string

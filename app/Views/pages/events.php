@@ -17,12 +17,15 @@
 <!-- Upcoming Events -->
 <section class="section">
     <div class="container">
-        <div class="section-header">
-            <span class="section-header__subtitle">กิจกรรมที่จะมาถึง</span>
-            <h2 class="section-header__title">Upcoming Events</h2>
-            <p class="section-header__description">
-                กิจกรรมและโครงการต่างๆ ที่จะเกิดขึ้นของคณะวิทยาศาสตร์และเทคโนโลยี
-            </p>
+        <div class="section-header" style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem;">
+            <div>
+                <span class="section-header__subtitle">กิจกรรมที่จะมาถึง</span>
+                <h2 class="section-header__title">Upcoming Events</h2>
+                <p class="section-header__description">
+                    กิจกรรมและโครงการต่างๆ ที่จะเกิดขึ้นของคณะวิทยาศาสตร์และเทคโนโลยี
+                </p>
+            </div>
+            <a href="<?= base_url('calendar') ?>" class="btn btn-secondary" style="align-self: center;">ดูปฏิทินผู้บริหาร</a>
         </div>
 
         <?php if (empty($events)): ?>

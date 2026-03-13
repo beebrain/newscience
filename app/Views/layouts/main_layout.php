@@ -170,6 +170,7 @@
                     <li><a href="<?= base_url('academics') ?>" class="nav__link <?= ($active_page ?? '') === 'academics' ? 'active' : '' ?>">หลักสูตร</a></li>
                     <li><a href="<?= base_url('research') ?>" class="nav__link <?= ($active_page ?? '') === 'research' ? 'active' : '' ?>">วิจัย</a></li>
                     <li><a href="<?= base_url('news') ?>" class="nav__link <?= ($active_page ?? '') === 'news' ? 'active' : '' ?>">ข่าว</a></li>
+                    <li><a href="<?= base_url('events') ?>" class="nav__link <?= ($active_page ?? '') === 'events' ? 'active' : '' ?>">กิจกรรม</a></li>
                     <li class="nav__item--has-dropdown">
                         <a href="<?= base_url('personnel') ?>" class="nav__link <?= in_array($active_page ?? '', ['personnel', 'executives']) ? 'active' : '' ?>">บุคลากร <?= $navSvg ?></a>
                         <ul class="nav__dropdown">
@@ -204,65 +205,38 @@
                                     <li><a href="https://sci.uru.ac.th/scienceweek" target="_blank" class="nav__dropdown-link" rel="noopener">สัปดาห์วิทยาศาสตร์แห่งชาติ</a></li>
                                 </ul>
                             </li>
-                            <li class="nav__item--has-dropdown nav__item--has-subdropdown">
-                                <span class="nav__dropdown-link nav__dropdown-link--subtrigger">ลิงก์ด่วน</span>
-                                <ul class="nav__dropdown nav__dropdown--sub">
-                                    <?php
-                                    $quickLinks = [];
-                                    foreach (($settings ?? []) as $k => $v) {
-                                        if (!is_string($k) || strpos($k, 'quick_link_') !== 0) {
-                                            continue;
-                                        }
-                                        $idx = (int) preg_replace('/[^0-9]/', '', $k);
-                                        $payload = null;
-                                        if (is_string($v) && $v !== '') {
-                                            $decoded = json_decode($v, true);
-                                            if (is_array($decoded)) {
-                                                $payload = $decoded;
-                                            }
-                                        }
-                                        if (!is_array($payload)) {
-                                            continue;
-                                        }
-                                        $name = trim((string) ($payload['name_th'] ?? $payload['name_en'] ?? ''));
-                                        $url = trim((string) ($payload['url'] ?? ''));
-                                        if ($name === '' || $url === '') {
-                                            continue;
-                                        }
-                                        $quickLinks[] = [
-                                            'idx' => $idx,
-                                            'name' => $name,
-                                            'url' => $url,
-                                        ];
-                                    }
-
-                                    usort($quickLinks, static function ($a, $b) {
-                                        return ($a['idx'] ?? 0) <=> ($b['idx'] ?? 0);
-                                    });
-                                    ?>
-
-                                    <?php foreach ($quickLinks as $ql): ?>
-                                        <?php
-                                        $href = $ql['url'];
-                                        $isExternal = (strpos($href, 'http://') === 0 || strpos($href, 'https://') === 0);
-                                        ?>
-                                        <li>
-                                            <a href="<?= esc($href) ?>" class="nav__dropdown-link" <?= $isExternal ? 'target="_blank" rel="noopener"' : '' ?>>
-                                                <?= esc($ql['name']) ?>
-                                            </a>
-                                        </li>
-                                    <?php endforeach; ?>
-
-                                    <li><a href="<?= base_url('dashboard') ?>" class="nav__dropdown-link">การจัดการ (Dashboard)</a></li>
-                                </ul>
-                            </li>
+                        </ul>
+                    </li>
+                    <?php
+                    $quickLinks = [];
+                    foreach (($settings ?? []) as $k => $v) {
+                        if (!is_string($k) || strpos($k, 'quick_link_') !== 0) continue;
+                        $idx = (int) preg_replace('/[^0-9]/', '', $k);
+                        $payload = is_string($v) && $v !== '' ? json_decode($v, true) : null;
+                        if (!is_array($payload)) continue;
+                        $name = trim((string) ($payload['name_th'] ?? $payload['name_en'] ?? ''));
+                        $url = trim((string) ($payload['url'] ?? ''));
+                        if ($name === '' || $url === '') continue;
+                        $quickLinks[] = ['idx' => $idx, 'name' => $name, 'url' => $url];
+                    }
+                    usort($quickLinks, static function ($a, $b) { return ($a['idx'] ?? 0) <=> ($b['idx'] ?? 0); });
+                    ?>
+                    <li class="nav__item--has-dropdown">
+                        <a href="#" class="nav__link">บริการสารสนเทศ <?= $navSvg ?></a>
+                        <ul class="nav__dropdown">
+                            <?php foreach ($quickLinks as $ql): ?>
+                                <?php $href = $ql['url']; $isExternal = (strpos($href, 'http://') === 0 || strpos($href, 'https://') === 0); ?>
+                                <li><a href="<?= esc($href) ?>" class="nav__dropdown-link" <?= $isExternal ? 'target="_blank" rel="noopener"' : '' ?>><?= esc($ql['name']) ?></a></li>
+                            <?php endforeach; ?>
+                            <li><a href="<?= base_url('dashboard') ?>" class="nav__dropdown-link">การจัดการ (Dashboard)</a></li>
                         </ul>
                     </li>
                     <li class="nav__item--has-dropdown">
-                        <a href="<?= base_url('about') ?>" class="nav__link <?= in_array($active_page ?? '', ['about', 'contact']) ? 'active' : '' ?>">เกี่ยวกับ <?= $navSvg ?></a>
+                        <a href="<?= base_url('about') ?>" class="nav__link <?= in_array($active_page ?? '', ['about', 'contact', 'calendar']) ? 'active' : '' ?>">เกี่ยวกับคณะ <?= $navSvg ?></a>
                         <ul class="nav__dropdown">
                             <li><a href="<?= base_url('about') ?>" class="nav__dropdown-link">เกี่ยวกับเรา</a></li>
                             <li><a href="<?= base_url('contact') ?>" class="nav__dropdown-link">ติดต่อ</a></li>
+                            <li><a href="<?= base_url('calendar') ?>" class="nav__dropdown-link">ปฏิทินผู้บริหาร</a></li>
                         </ul>
                     </li>
                     <?php if (session()->get('admin_logged_in')): ?>
@@ -325,13 +299,22 @@
             <li><a href="<?= base_url('academics') ?>" class="mobile-nav__link">หลักสูตร</a></li>
             <li><a href="<?= base_url('research') ?>" class="mobile-nav__link">วิจัย</a></li>
             <li><a href="<?= base_url('news') ?>" class="mobile-nav__link">ข่าว</a></li>
+            <li><a href="<?= base_url('events') ?>" class="mobile-nav__link">กิจกรรม</a></li>
             <li class="mobile-nav__header-item">บุคลากร</li>
             <li><a href="<?= base_url('executives') ?>" class="mobile-nav__link" style="padding-left: 2rem;">ผู้บริหาร</a></li>
             <li><a href="<?= base_url('personnel') ?>" class="mobile-nav__link" style="padding-left: 2rem;">บุคลากร</a></li>
             <li class="mobile-nav__header-item">บริการ</li>
             <li><a href="<?= base_url('documents') ?>" class="mobile-nav__link" style="padding-left: 2rem;">บริการด้านเอกสาร</a></li>
-            <li><a href="<?= base_url('about') ?>" class="mobile-nav__link">เกี่ยวกับ</a></li>
-            <li><a href="<?= base_url('contact') ?>" class="mobile-nav__link">ติดต่อ</a></li>
+            <li class="mobile-nav__header-item">บริการสารสนเทศ</li>
+            <?php foreach ($quickLinks as $ql): ?>
+                <?php $href = $ql['url']; $isExt = (strpos($href, 'http://') === 0 || strpos($href, 'https://') === 0); ?>
+                <li><a href="<?= esc($href) ?>" class="mobile-nav__link" style="padding-left: 2rem;" <?= $isExt ? 'target="_blank" rel="noopener"' : '' ?>><?= esc($ql['name']) ?></a></li>
+            <?php endforeach; ?>
+            <li><a href="<?= base_url('dashboard') ?>" class="mobile-nav__link" style="padding-left: 2rem;">การจัดการ (Dashboard)</a></li>
+            <li class="mobile-nav__header-item">เกี่ยวกับคณะ</li>
+            <li><a href="<?= base_url('about') ?>" class="mobile-nav__link" style="padding-left: 2rem;">เกี่ยวกับเรา</a></li>
+            <li><a href="<?= base_url('contact') ?>" class="mobile-nav__link" style="padding-left: 2rem;">ติดต่อ</a></li>
+            <li><a href="<?= base_url('calendar') ?>" class="mobile-nav__link" style="padding-left: 2rem;">ปฏิทินผู้บริหาร</a></li>
             <li><a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener noreferrer" class="mobile-nav__link">สมัครเรียน</a></li>
             <li class="mobile-nav__divider" role="presentation"></li>
             <?php if (session()->get('admin_logged_in')): ?>
@@ -410,6 +393,8 @@
                     <h4>ลิงก์ด่วน</h4>
                     <ul class="footer__links">
                         <li><a href="<?= base_url('news') ?>" class="footer__link">ข่าวประชาสัมพันธ์</a></li>
+                        <li><a href="<?= base_url('events') ?>" class="footer__link">กิจกรรม</a></li>
+                        <li><a href="<?= base_url('calendar') ?>" class="footer__link">ปฏิทินผู้บริหาร</a></li>
                         <li><a href="<?= base_url('research') ?>" class="footer__link">งานวิจัย</a></li>
                         <li><a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener noreferrer" class="footer__link">สมัครเรียน</a></li>
                         <li><a href="<?= base_url('contact') ?>" class="footer__link">ติดต่อเรา</a></li>

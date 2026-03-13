@@ -59,6 +59,40 @@ class CalendarApi extends BaseController
     }
 
     /**
+     * GET api/calendar/public/events?start=...&end=... — สาธารณะ ไม่ต้องล็อกอิน แสดงทุกกิจกรรม (status active)
+     */
+    public function publicEvents()
+    {
+        $start = $this->request->getGet('start');
+        $end   = $this->request->getGet('end');
+        if (! $start || ! $end) {
+            return $this->response->setJSON(['error' => 'start and end required'])->setStatusCode(400);
+        }
+        $events = $this->eventModel->getEventsForRange($start, $end, null);
+        return $this->response->setJSON($events);
+    }
+
+    /**
+     * GET api/calendar/public/feed — ฟีด .ics สำหรับสมัครรับในแอปปฏิทินมือถือ (ไม่ต้องล็อกอิน)
+     * คืนช่วงประมาณ 2 เดือนที่ผ่านมา ถึง 14 เดือนข้างหน้า
+     */
+    public function publicFeedIcs()
+    {
+        $start = $this->request->getGet('start');
+        $end   = $this->request->getGet('end');
+        if (! $start || ! $end) {
+            $start = date('Y-m-d 00:00:00', strtotime('-2 months'));
+            $end   = date('Y-m-d 23:59:59', strtotime('+14 months'));
+        }
+        $events = $this->eventModel->getEventsForRange($start, $end, null);
+        $ics = $this->buildIcs($events);
+        return $this->response
+            ->setHeader('Content-Type', 'text/calendar; charset=utf-8')
+            ->setHeader('Cache-Control', 'public, max-age=3600')
+            ->setBody($ics);
+    }
+
+    /**
      * GET api/calendar/users - list users for filter dropdown (admin gets all, user gets self)
      */
     public function users()
@@ -83,6 +117,43 @@ class CalendarApi extends BaseController
             }
         }
         return $this->response->setJSON($list);
+    }
+
+    /**
+     * GET api/calendar/export-ics?start=...&end=...&user_id=... - ดาวน์โหลดกิจกรรมเป็นไฟล์ .ics นำเข้าแอปปฏิทินได้
+     */
+    public function exportIcs()
+    {
+        $userId = (int) session()->get('admin_id');
+        if (! $userId) {
+            return $this->response->setStatusCode(401)->setBody('Unauthorized');
+        }
+
+        $start = $this->request->getGet('start');
+        $end   = $this->request->getGet('end');
+        if (! $start || ! $end) {
+            $start = date('Y-m-01 00:00:00');
+            $end   = date('Y-m-t 23:59:59');
+        }
+
+        $filterUserId = $this->request->getGet('user_id');
+        if ($filterUserId !== null && $filterUserId !== '') {
+            $filterUserId = (int) $filterUserId;
+        } else {
+            $filterUserId = null;
+        }
+
+        $isAdmin = $this->isCalendarAdmin($userId);
+        if (! $isAdmin && $filterUserId !== null && $filterUserId !== $userId) {
+            $filterUserId = $userId;
+        }
+
+        $events = $this->eventModel->getEventsForRange($start, $end, $filterUserId);
+        $ics = $this->buildIcs($events);
+        return $this->response
+            ->setHeader('Content-Type', 'text/calendar; charset=utf-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="calendar.ics"')
+            ->setBody($ics);
     }
 
     /**
@@ -281,6 +352,74 @@ class CalendarApi extends BaseController
 
         $this->eventModel->delete($id);
         return $this->response->setJSON(['success' => true]);
+    }
+
+    /**
+     * สร้างเนื้อหา iCalendar (.ics) จากรายการ events (รูปแบบจาก getEventsForRange)
+     */
+    private function buildIcs(array $events): string
+    {
+        $prodId = '-//Science Calendar//TH';
+        $lines  = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:{$prodId}", "CALSCALE:GREGORIAN"];
+        $domain = parse_url(base_url(), PHP_URL_HOST) ?: 'calendar';
+
+        foreach ($events as $ev) {
+            $uid    = 'event-' . ($ev['id'] ?? uniqid()) . '@' . $domain;
+            $title  = $ev['title'] ?? 'Event';
+            $desc   = $ev['extendedProps']['description'] ?? '';
+            $loc    = $ev['extendedProps']['location'] ?? '';
+            $allDay = ! empty($ev['allDay']);
+            $start  = $ev['start'] ?? '';
+            $end    = $ev['end'] ?? '';
+
+            $lines[] = 'BEGIN:VEVENT';
+            $lines[] = 'UID:' . $uid;
+            $lines[] = 'DTSTAMP:' . gmdate('Ymd\THis\Z');
+            $lines[] = $this->icsFold('SUMMARY:' . $this->icsEscape($title));
+
+            if ($desc !== '') {
+                $lines[] = $this->icsFold('DESCRIPTION:' . $this->icsEscape($desc));
+            }
+            if ($loc !== '') {
+                $lines[] = $this->icsFold('LOCATION:' . $this->icsEscape($loc));
+            }
+
+            if ($allDay) {
+                $dtStart = substr(str_replace(['-', ' ', ':'], '', $start), 0, 8);
+                $dtEnd   = substr(str_replace(['-', ' ', ':'], '', $end), 0, 8);
+                $lines[] = 'DTSTART;VALUE=DATE:' . $dtStart;
+                $lines[] = 'DTEND;VALUE=DATE:' . $dtEnd;
+            } else {
+                $tsStart = strtotime($start);
+                $tsEnd   = strtotime($end);
+                $lines[] = 'DTSTART:' . ($tsStart ? gmdate('Ymd\THis\Z', $tsStart) : '');
+                $lines[] = 'DTEND:' . ($tsEnd ? gmdate('Ymd\THis\Z', $tsEnd) : '');
+            }
+
+            $lines[] = 'END:VEVENT';
+        }
+
+        $lines[] = 'END:VCALENDAR';
+        return implode("\r\n", $lines);
+    }
+
+    private function icsEscape(string $s): string
+    {
+        return str_replace(['\\', ';', ',', "\n"], ['\\\\', '\\;', '\\,', '\\n'], $s);
+    }
+
+    private function icsFold(string $line): string
+    {
+        if (strlen($line) <= 75) {
+            return $line;
+        }
+        $out = substr($line, 0, 75);
+        $i   = 75;
+        while ($i < strlen($line)) {
+            $out .= "\r\n " . substr($line, $i, 74);
+            $i   += 74;
+        }
+        return $out;
     }
 
     private function isCalendarAdmin(int $uid): bool

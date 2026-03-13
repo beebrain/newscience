@@ -77,7 +77,7 @@ $participantEmails = $event['participant_emails'] ?? [];
             <?php endif; ?>
         </div>
 
-        <div class="calendar-event-form-actions" style="display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; padding-top: 1rem; margin-top: 1rem; border-top: 1px solid #e5e7eb;">
+        <div class="calendar-event-form-actions" style="position: sticky; bottom: 0; display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; padding-top: 1rem; margin-top: 1rem; margin-left: -1.25rem; margin-right: -1.25rem; margin-bottom: -1.25rem; padding-left: 1.25rem; padding-right: 1.25rem; padding-bottom: 1.25rem; border-top: 1px solid #e5e7eb; background: #fff; z-index: 1;">
             <button type="button" class="btn btn-danger" id="calendarEventDelete" style="margin-right: auto; display: none;">ลบกิจกรรม</button>
             <button type="button" class="btn btn-secondary" onclick="closeModal('calendarEventModal')">ยกเลิก</button>
             <button type="button" class="btn btn-primary" id="calendarEventSubmit">บันทึก</button>

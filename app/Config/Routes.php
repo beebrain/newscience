@@ -15,6 +15,7 @@ $routes->get('/news', 'Pages::news');
 $routes->get('/news/(:num)', 'Pages::newsDetail/$1');
 $routes->get('/events', 'Pages::events');
 $routes->get('/events/(:num)', 'Pages::eventDetail/$1');
+$routes->get('/calendar', 'Pages::calendar');
 $routes->get('/contact', 'Pages::contact');
 $routes->get('/personnel', 'Pages::personnel');
 $routes->get('/executives', 'Pages::executives');
@@ -342,11 +343,16 @@ $routes->group('utility', ['filter' => ['adminauth', 'adminsystemaccess']], func
 
 // API Routes for AJAX
 $routes->group('api', function ($routes) {
+    // ปฏิทินสาธารณะ — ใครก็ดูได้ (ไม่ต้องล็อกอิน)
+    $routes->get('calendar/public/events', 'Api\CalendarApi::publicEvents');
+    $routes->get('calendar/public/feed', 'Api\CalendarApi::publicFeedIcs'); // ฟีด .ics สำหรับสมัครรับในแอปปฏิทินมือถือ
+
     // Calendar (ปฏิทินนัดหมาย — ต้องล็อกอิน)
     $routes->group('calendar', ['filter' => 'loggedin'], function ($routes) {
         $routes->get('events', 'Api\CalendarApi::events');
         $routes->get('users', 'Api\CalendarApi::users');
         $routes->get('event/(:num)', 'Api\CalendarApi::getEvent/$1');
+        $routes->get('export-ics', 'Api\CalendarApi::exportIcs');
         $routes->post('store', 'Api\CalendarApi::store');
         $routes->post('update/(:num)', 'Api\CalendarApi::update/$1');
         $routes->post('delete/(:num)', 'Api\CalendarApi::delete/$1');

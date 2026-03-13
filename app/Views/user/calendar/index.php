@@ -18,6 +18,8 @@
                 </select>
             </label>
             <?php endif; ?>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="btnConnectMobileCalendar" title="ดูในแอปปฏิทินมือถือ">📱 เชื่อมต่อปฏิทินในมือถือ</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnExportIcs" title="นำเข้าแอปปฏิทินมือถือได้">ดาวน์โหลด .ics</button>
             <button type="button" class="btn btn-primary" id="btnNewEvent">
                 + สร้างกิจกรรม
             </button>
@@ -269,6 +271,19 @@
         document.getElementById('cal_end').type = 'datetime-local';
         if (typeof window.setCalendarParticipantEmails === 'function') window.setCalendarParticipantEmails([]);
         setFormSubmitMode('create');
+    });
+
+    document.getElementById('btnExportIcs').addEventListener('click', function() {
+        var view = calendar.view;
+        if (!view || !view.currentStart || !view.currentEnd) return;
+        var s = view.currentStart, e = view.currentEnd;
+        function pad(n) { return String(n).padStart(2, '0'); }
+        var startStr = s.getFullYear() + '-' + pad(s.getMonth() + 1) + '-' + pad(s.getDate()) + ' 00:00:00';
+        var endStr = e.getFullYear() + '-' + pad(e.getMonth() + 1) + '-' + pad(e.getDate()) + ' 23:59:59';
+        var url = apiBase + 'export-ics?start=' + encodeURIComponent(startStr) + '&end=' + encodeURIComponent(endStr);
+        var userId = userFilter ? userFilter.value : '';
+        if (userId) url += '&user_id=' + encodeURIComponent(userId);
+        window.location.href = url;
     });
 
     calendar.render();
