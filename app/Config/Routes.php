@@ -475,9 +475,7 @@ $routes->group('edoc', ['filter' => 'edocauth'], function ($routes) {
     $routes->get('api/advanced-analytics', 'Edoc\DocumentAnalysisController::getAdvancedAnalytics');
     $routes->get('api/export-report', 'Edoc\DocumentAnalysisController::exportAnalysisReport');
 
-    // Notifications
-    $routes->get('notifications', 'Edoc\GeneralController::getDocumentNotificationsData');
-    $routes->get('notifications/(:segment)', 'Edoc\GeneralController::getDocumentNotificationsData/$1');
+    // Notifications (send-notifications ยังต้อง login)
     $routes->get('send-notifications', 'Edoc\GeneralController::sendTodayDocumentNotifications');
 
     // File Upload (Edoc-specific)
@@ -491,3 +489,6 @@ $routes->group('edoc', ['filter' => 'edocauth'], function ($routes) {
 
 // Edoc public routes (no auth required — accessed via email link)
 $routes->get('edoc/public/secure-access', 'Edoc\GeneralController::secureAccess');
+// Edoc notifications — ดึงข้อมูลข่าว/เอกสารประจำวัน (ไม่ต้อง login)
+$routes->get('edoc/notifications', 'Edoc\GeneralController::getDocumentNotificationsData');
+$routes->get('edoc/notifications/(:segment)', 'Edoc\GeneralController::getDocumentNotificationsData/$1');
