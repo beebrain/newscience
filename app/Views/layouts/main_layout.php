@@ -170,7 +170,6 @@
                     <li><a href="<?= base_url('academics') ?>" class="nav__link <?= ($active_page ?? '') === 'academics' ? 'active' : '' ?>">หลักสูตร</a></li>
                     <li><a href="<?= base_url('research') ?>" class="nav__link <?= ($active_page ?? '') === 'research' ? 'active' : '' ?>">วิจัย</a></li>
                     <li><a href="<?= base_url('news') ?>" class="nav__link <?= ($active_page ?? '') === 'news' ? 'active' : '' ?>">ข่าว</a></li>
-                    <li><a href="<?= base_url('events') ?>" class="nav__link <?= ($active_page ?? '') === 'events' ? 'active' : '' ?>">กิจกรรม</a></li>
                     <li class="nav__item--has-dropdown">
                         <a href="<?= base_url('personnel') ?>" class="nav__link <?= in_array($active_page ?? '', ['personnel', 'executives']) ? 'active' : '' ?>">บุคลากร <?= $navSvg ?></a>
                         <ul class="nav__dropdown">
@@ -299,7 +298,6 @@
             <li><a href="<?= base_url('academics') ?>" class="mobile-nav__link">หลักสูตร</a></li>
             <li><a href="<?= base_url('research') ?>" class="mobile-nav__link">วิจัย</a></li>
             <li><a href="<?= base_url('news') ?>" class="mobile-nav__link">ข่าว</a></li>
-            <li><a href="<?= base_url('events') ?>" class="mobile-nav__link">กิจกรรม</a></li>
             <li class="mobile-nav__header-item">บุคลากร</li>
             <li><a href="<?= base_url('executives') ?>" class="mobile-nav__link" style="padding-left: 2rem;">ผู้บริหาร</a></li>
             <li><a href="<?= base_url('personnel') ?>" class="mobile-nav__link" style="padding-left: 2rem;">บุคลากร</a></li>

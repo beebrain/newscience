@@ -111,12 +111,12 @@
                 '<p style="margin:0 0 0.5rem 0; font-weight:600;">iPhone (แอป ปฏิทิน):</p>' +
                 '<p style="margin:0 0 0.75rem 0;">ตั้งค่า → ปฏิทิน → บัญชี → เพิ่มบัญชี → บัญชีที่สมัครรับ → วางลิงก์ด้านบน → ถัดไป → บันทึก</p>' +
                 '<p style="margin:0 0 0.5rem 0; font-weight:600;">Android (Google Calendar):</p>' +
-                '<p style="margin:0 0 0.75rem 0;">เปิดแอป ปฏิทิน → เมนู (≡) → การตั้งค่า → เพิ่มบัญชี → จาก URL → วางลิงก์ด้านบน → เพิ่ม</p>' +
+                '<p style="margin:0 0 0.75rem 0;">แอปมือถือไม่มีเมนูจาก URL — เปิด<strong> เบราว์เซอร์</strong> แล้วไปที่ <strong>calendar.google.com</strong> → เมนู (≡) → การตั้งค่า → เพิ่มปฏิทิน → จาก URL → วางลิงก์ด้านบน → เพิ่ม หลังจากนั้นปฏิทินจะโผล่ในแอปอัตโนมัติ</p>' +
                 '<p style="margin:0; font-weight:600;">แอปอื่น:</p>' +
                 '<p style="margin:0;">หาเมนู "เพิ่มปฏิทินจาก URL" หรือ "Subscribe" แล้ววางลิงก์เดียวกัน</p>' +
                 '</div></div>';
             if (typeof Swal === 'undefined') {
-                alert('ลิงก์สำหรับเชื่อมต่อ: ' + feedUrl + '\n\niPhone: ตั้งค่า → ปฏิทิน → บัญชี → เพิ่มบัญชี → บัญชีที่สมัครรับ\nAndroid: ปฏิทิน → เมนู → การตั้งค่า → เพิ่มบัญชี → จาก URL');
+                alert('ลิงก์สำหรับเชื่อมต่อ: ' + feedUrl + '\n\nAndroid: เปิดเบราว์เซอร์ไป calendar.google.com → เมนู → การตั้งค่า → เพิ่มปฏิทิน → จาก URL');
                 return;
             }
             Swal.fire({
