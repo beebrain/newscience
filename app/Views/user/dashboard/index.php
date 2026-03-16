@@ -29,7 +29,7 @@
         box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         border: 1px solid var(--dash-border);
     }
-    
+
     .welcome-avatar {
         width: 64px;
         height: 64px;
@@ -162,36 +162,52 @@
         background: #eff6ff;
         color: #2563eb;
     }
-    .card-edoc:hover .system-card-title { color: #2563eb; }
+
+    .card-edoc:hover .system-card-title {
+        color: #2563eb;
+    }
 
     .card-edoc-legacy .system-card-icon {
         background: #f3f4f6;
         color: #6b7280;
     }
-    .card-edoc-legacy:hover .system-card-title { color: #4b5563; }
+
+    .card-edoc-legacy:hover .system-card-title {
+        color: #4b5563;
+    }
 
     .card-research .system-card-icon {
         background: #ecfdf5;
         color: #059669;
     }
-    .card-research:hover .system-card-title { color: #059669; }
+
+    .card-research:hover .system-card-title {
+        color: #059669;
+    }
 
     .card-evaluate .system-card-icon {
         background: #f0fdf4;
         color: #16a34a;
     }
-    .card-evaluate:hover .system-card-title { color: #16a34a; }
+
+    .card-evaluate:hover .system-card-title {
+        color: #16a34a;
+    }
 
     .card-calendar .system-card-icon {
         background: #fef9c3;
         color: var(--color-primary, #eab308);
     }
-    .card-calendar:hover .system-card-title { color: var(--color-primary, #ca8a04); }
+
+    .card-calendar:hover .system-card-title {
+        color: var(--color-primary, #ca8a04);
+    }
 
     .evaluate-admin-entry {
         margin-top: 0.75rem;
         padding-left: 0.25rem;
     }
+
     .evaluate-admin-link {
         display: inline-flex;
         align-items: center;
@@ -200,6 +216,7 @@
         color: #16a34a;
         text-decoration: none;
     }
+
     .evaluate-admin-link:hover {
         color: #15803d;
         text-decoration: underline;
@@ -249,7 +266,7 @@
 </style>
 
 <div class="dashboard-container">
-    
+
     <!-- 1. Profile / Welcome Section -->
     <?php $p = $profile ?? []; ?>
     <div class="welcome-card">
@@ -259,8 +276,8 @@
         <div class="welcome-text">
             <h1>สวัสดี, <?= esc($p['name_th'] ?: ($p['name_en'] ?? 'User')) ?></h1>
             <p>
-                <?= esc($p['email'] ?? '') ?> 
-                <span style="margin: 0 0.5rem; color: #d1d5db;">|</span> 
+                <?= esc($p['email'] ?? '') ?>
+                <span style="margin: 0 0.5rem; color: #d1d5db;">|</span>
                 <span class="badge" style="background-color: #f3f4f6; color: #4b5563; font-size: 0.75rem;"><?= esc(ucfirst($p['role'] ?? 'User')) ?></span>
             </p>
         </div>
@@ -290,6 +307,23 @@
             </div>
             <div class="system-card-title">งานสารบรรณ (e-Doc)</div>
             <div class="system-card-desc">ระบบรับ-ส่งหนังสือราชการและเอกสารอิเล็กทรอนิกส์</div>
+            <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+        </a>
+
+        <a href="<?= esc(base_url('exam')) ?>" class="system-card card-exam">
+            <div class="system-card-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+            </div>
+            <div class="system-card-title">ดูตารางคุมสอบ</div>
+            <div class="system-card-desc">ดูตารางคุมสอบและตรวจสอบกำหนดการสอบของคุณ</div>
             <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
@@ -330,12 +364,15 @@
     </div>
 
     <?php if (!empty($can_manage_evaluate)): ?>
-    <div class="evaluate-admin-entry">
-        <a href="<?= esc(base_url('evaluate/admin')) ?>" class="evaluate-admin-link">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            จัดการระบบประเมินผลการสอน (Admin)
-        </a>
-    </div>
+        <div class="evaluate-admin-entry">
+            <a href="<?= esc(base_url('evaluate/admin')) ?>" class="evaluate-admin-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+                จัดการระบบประเมินผลการสอน (Admin)
+            </a>
+        </div>
     <?php endif; ?>
 
     <!-- 2b. ระบบภายนอก (เว็บไซต์อื่น) -->
@@ -374,21 +411,21 @@
         $researchSso = config(\Config\ResearchRecordSso::class);
         if ($researchSso->enabled && $researchSso->baseUrl !== ''):
         ?>
-        <a href="<?= esc(rtrim($researchSso->baseUrl, '/') . '/index.php/dashboard') ?>" target="_blank" rel="noopener" class="system-card card-research">
-            <div class="system-card-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" opacity="0.1"></path>
-                    <path d="M9 12l2 2 4-4"></path>
-                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            <a href="<?= esc(rtrim($researchSso->baseUrl, '/') . '/index.php/dashboard') ?>" target="_blank" rel="noopener" class="system-card card-research">
+                <div class="system-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" opacity="0.1"></path>
+                        <path d="M9 12l2 2 4-4"></path>
+                        <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                </div>
+                <div class="system-card-title">จัดการงานวิจัย</div>
+                <div class="system-card-desc">ระบบบันทึกและจัดการข้อมูลงานวิจัย (Research Record)</div>
+                <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
                 </svg>
-            </div>
-            <div class="system-card-title">จัดการงานวิจัย</div>
-            <div class="system-card-desc">ระบบบันทึกและจัดการข้อมูลงานวิจัย (Research Record)</div>
-            <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-        </a>
+            </a>
         <?php endif; ?>
     </div>
 
@@ -398,102 +435,102 @@
     $isAdmin = in_array($sidebarAdminRole, ['admin', 'editor', 'super_admin', 'faculty_admin'], true);
     if ($isAdmin):
     ?>
-    <div class="section-header" style="margin-top: 2rem;">
-        <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H11a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1zm2.5 1a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-1z"></path>
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-        </svg>
-        <h2 class="section-title">ผู้ดูแลระบบ (Admin Tools)</h2>
-    </div>
+        <div class="section-header" style="margin-top: 2rem;">
+            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H11a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1zm2.5 1a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-1z"></path>
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            <h2 class="section-title">ผู้ดูแลระบบ (Admin Tools)</h2>
+        </div>
 
-    <div class="admin-grid">
-        <a href="<?= base_url('admin/news') ?>" class="admin-card">
-            <div class="admin-icon-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 1-2-2V7m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
-                </svg>
-            </div>
-            <div class="admin-card-text">จัดการข่าว</div>
-        </a>
+        <div class="admin-grid">
+            <a href="<?= base_url('admin/news') ?>" class="admin-card">
+                <div class="admin-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 1-2-2V7m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                    </svg>
+                </div>
+                <div class="admin-card-text">จัดการข่าว</div>
+            </a>
 
-        <a href="<?= base_url('admin/organization') ?>" class="admin-card">
-            <div class="admin-icon-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-            </div>
-            <div class="admin-card-text">โครงสร้างองค์กร</div>
-        </a>
+            <a href="<?= base_url('admin/organization') ?>" class="admin-card">
+                <div class="admin-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <div class="admin-card-text">โครงสร้างองค์กร</div>
+            </a>
 
-        <a href="<?= base_url('admin/programs') ?>" class="admin-card">
-            <div class="admin-icon-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                </svg>
-            </div>
-            <div class="admin-card-text">หลักสูตร</div>
-        </a>
+            <a href="<?= base_url('admin/programs') ?>" class="admin-card">
+                <div class="admin-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                </div>
+                <div class="admin-card-text">หลักสูตร</div>
+            </a>
 
-        <a href="<?= base_url('admin/users') ?>" class="admin-card">
-            <div class="admin-icon-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                </svg>
-            </div>
-            <div class="admin-card-text">ผู้ใช้งาน</div>
-        </a>
+            <a href="<?= base_url('admin/users') ?>" class="admin-card">
+                <div class="admin-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <div class="admin-card-text">ผู้ใช้งาน</div>
+            </a>
 
-        <a href="<?= base_url('admin/hero-slides') ?>" class="admin-card">
-            <div class="admin-icon-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-            </div>
-            <div class="admin-card-text">ภาพสไลด์</div>
-        </a>
+            <a href="<?= base_url('admin/hero-slides') ?>" class="admin-card">
+                <div class="admin-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                </div>
+                <div class="admin-card-text">ภาพสไลด์</div>
+            </a>
 
-        <a href="<?= base_url('admin/events') ?>" class="admin-card">
-            <div class="admin-icon-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-            </div>
-            <div class="admin-card-text">กิจกรรม</div>
-        </a>
+            <a href="<?= base_url('admin/events') ?>" class="admin-card">
+                <div class="admin-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </div>
+                <div class="admin-card-text">กิจกรรม</div>
+            </a>
 
-        <a href="<?= base_url('student-admin/barcode-events') ?>" class="admin-card">
-            <div class="admin-icon-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                </svg>
-            </div>
-            <div class="admin-card-text">จัดการบาร์โค้ด</div>
-        </a>
+            <a href="<?= base_url('student-admin/barcode-events') ?>" class="admin-card">
+                <div class="admin-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                </div>
+                <div class="admin-card-text">จัดการบาร์โค้ด</div>
+            </a>
 
-        <?php if (in_array($sidebarAdminRole, ['super_admin'])): ?>
-        <a href="<?= base_url('utility/import-data') ?>" class="admin-card">
-            <div class="admin-icon-box">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-            </div>
-            <div class="admin-card-text">Import Data</div>
-        </a>
-        <?php endif; ?>
-    </div>
+            <?php if (in_array($sidebarAdminRole, ['super_admin'])): ?>
+                <a href="<?= base_url('utility/import-data') ?>" class="admin-card">
+                    <div class="admin-icon-box">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </div>
+                    <div class="admin-card-text">Import Data</div>
+                </a>
+            <?php endif; ?>
+        </div>
     <?php endif; ?>
 
 </div>
