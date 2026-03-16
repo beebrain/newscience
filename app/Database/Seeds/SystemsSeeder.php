@@ -93,6 +93,20 @@ class SystemsSeeder extends Seeder
                 'description' => 'Upload, Import, Categorize News',
                 'sort_order'  => 12,
             ],
+            [
+                'slug'        => 'exam',
+                'name_th'     => 'ตารางคุมสอบ (ดู)',
+                'name_en'     => 'Exam Schedule View',
+                'description' => 'ดูตารางคุมสอบส่วนตัว',
+                'sort_order'  => 13,
+            ],
+            [
+                'slug'        => 'exam_admin',
+                'name_th'     => 'ตารางคุมสอบ (จัดการ)',
+                'name_en'     => 'Exam Schedule Admin',
+                'description' => 'จัดการตารางคุมสอบ นำเข้า Excel',
+                'sort_order'  => 14,
+            ],
         ];
 
         $this->db->table('systems')->insertBatch($data);

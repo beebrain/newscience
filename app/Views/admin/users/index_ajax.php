@@ -141,43 +141,97 @@
         <form id="editUserForm" onsubmit="saveUser(event)">
             <input type="hidden" id="editUserUid" name="uid">
             <div class="modal-body" style="padding: 1.5rem;">
-                <div class="form-group">
-                    <label class="form-label">ชื่อ <span style="color: var(--color-danger);">*</span></label>
-                    <input type="text" id="editUserGfName" name="gf_name" class="form-control" required>
+                <!-- Section: Names -->
+                <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-gray-200);">
+                    <h4 style="font-size: 0.875rem; color: var(--color-gray-600); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">ชื่อ-นามสกุล (ไทย)</h4>
+                    <div style="display: grid; grid-template-columns: 80px 1fr; gap: 1rem; align-items: end;">
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">คำนำหน้า</label>
+                            <input type="text" id="editUserTitle" name="title" class="form-control" placeholder="เช่น อ., ดร.">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group" style="margin: 0;">
+                                <label class="form-label">ชื่อ (ไทย)</label>
+                                <input type="text" id="editUserTfName" name="tf_name" class="form-control">
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label class="form-label">นามสกุล (ไทย)</label>
+                                <input type="text" id="editUserTlName" name="tl_name" class="form-control">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">นามสกุล <span style="color: var(--color-danger);">*</span></label>
-                    <input type="text" id="editUserGlName" name="gl_name" class="form-control" required>
+
+                <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-gray-200);">
+                    <h4 style="font-size: 0.875rem; color: var(--color-gray-600); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">ชื่อ-นามสกุล (อังกฤษ)</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">ชื่อ (อังกฤษ)</label>
+                            <input type="text" id="editUserGfName" name="gf_name" class="form-control">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">นามสกุล (อังกฤษ)</label>
+                            <input type="text" id="editUserGlName" name="gl_name" class="form-control">
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">ชื่อแสดง</label>
-                    <input type="text" id="editUserDisplayName" name="display_name" class="form-control">
+
+                <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-gray-200);">
+                    <h4 style="font-size: 0.875rem; color: var(--color-gray-600); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">ตำแหน่งและชื่อแสดง</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">ตำแหน่ง (ไทย)</label>
+                            <input type="text" id="editUserPositionTh" name="position_th" class="form-control" placeholder="เช่น อาจารย์, ผู้ช่วยศาสตราจารย์">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">ตำแหน่ง (อังกฤษ)</label>
+                            <input type="text" id="editUserPositionEn" name="position_en" class="form-control" placeholder="e.g., Lecturer, Assistant Professor">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">ชื่อแสดง</label>
+                            <input type="text" id="editUserDisplayName" name="display_name" class="form-control">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">Nickname (สำหรับจับคู่ตารางสอบ)</label>
+                            <input type="text" id="editUserNickname" name="nickname" class="form-control" placeholder="ชื่อที่ปรากฏใน Excel ตารางสอบ">
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">อีเมล <span style="color: var(--color-danger);">*</span></label>
-                    <input type="email" id="editUserEmail" name="email" class="form-control" required>
+
+                <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-gray-200);">
+                    <h4 style="font-size: 0.875rem; color: var(--color-gray-600); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">ข้อมูลการเข้าสู่ระบบ</h4>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label">อีเมล <span style="color: var(--color-danger);">*</span></label>
+                        <input type="email" id="editUserEmail" name="email" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label">Login ID (อ่านอย่างเดียว)</label>
+                        <input type="text" id="editUserLoginUid" name="login_uid" class="form-control" style="background: var(--color-gray-100); cursor: not-allowed;" readonly title="Login ID ไม่สามารถแก้ไขได้">
+                        <span style="font-size: 0.75rem; color: var(--color-gray-500);">* Login ID ใช้สำหรับเข้าสู่ระบบ ไม่สามารถแก้ไขได้</span>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">login_uid</label>
-                    <input type="text" id="editUserLoginUid" name="login_uid" class="form-control">
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">บทบาท <span style="color: var(--color-danger);">*</span></label>
+                        <select id="editUserRole" name="role" class="form-control" required>
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                            <option value="editor">Editor</option>
+                            <option value="faculty_admin">Faculty Admin</option>
+                            <option value="super_admin">Super Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">หลักสูตร</label>
+                        <select id="editUserProgramId" name="program_id" class="form-control">
+                            <option value="">ไม่ระบุ</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">บทบาท <span style="color: var(--color-danger);">*</span></label>
-                    <select id="editUserRole" name="role" class="form-control" required>
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                        <option value="editor">Editor</option>
-                        <option value="faculty_admin">Faculty Admin</option>
-                        <option value="super_admin">Super Admin</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">หลักสูตร</label>
-                    <select id="editUserProgramId" name="program_id" class="form-control">
-                        <option value="">ไม่ระบุ</option>
-                    </select>
-                </div>
-                <div class="form-group">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
                     <label class="form-label">สถานะ</label>
                     <select id="editUserStatus" name="status" class="form-control">
                         <option value="active">ใช้งาน</option>
@@ -802,11 +856,23 @@
                 if (data.success) {
                     const u = data.data;
                     document.getElementById('editUserUid').value = u.uid;
+                    // Thai names
+                    document.getElementById('editUserTitle').value = u.title || '';
+                    document.getElementById('editUserTfName').value = u.tf_name || '';
+                    document.getElementById('editUserTlName').value = u.tl_name || '';
+                    // English names
                     document.getElementById('editUserGfName').value = u.gf_name || '';
                     document.getElementById('editUserGlName').value = u.gl_name || '';
+                    // Position
+                    document.getElementById('editUserPositionTh').value = u.position_th || '';
+                    document.getElementById('editUserPositionEn').value = u.position_en || '';
+                    // Display name and nickname
                     document.getElementById('editUserDisplayName').value = u.display_name || '';
+                    document.getElementById('editUserNickname').value = u.nickname || '';
+                    // Login info
                     document.getElementById('editUserEmail').value = u.email || '';
                     document.getElementById('editUserLoginUid').value = u.login_uid || '';
+                    // Role and status
                     document.getElementById('editUserRole').value = u.role || 'user';
                     document.getElementById('editUserProgramId').value = u.program_id || '';
                     document.getElementById('editUserStatus').value = u.status || 'active';
@@ -1014,45 +1080,53 @@
 
     function toggleUserStatus(uid, currentStatus) {
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-        swalConfirm({ title: `ต้องการ${newStatus === 'active' ? 'เปิด' : 'ปิด'}ใช้งานผู้ใช้นี้?`, confirmText: 'ตกลง', cancelText: 'ยกเลิก' }).then(function(ok) {
+        swalConfirm({
+            title: `ต้องการ${newStatus === 'active' ? 'เปิด' : 'ปิด'}ใช้งานผู้ใช้นี้?`,
+            confirmText: 'ตกลง',
+            cancelText: 'ยกเลิก'
+        }).then(function(ok) {
             if (!ok) return;
             fetch(`${baseUrl}admin/users/toggle-user-status/${uid}`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(r => r.json())
-            .then(result => {
-                if (result.success) {
-                    loadUsers(currentPage.users);
-                } else {
-                    swalAlert(result.message || 'เกิดข้อผิดพลาด', 'error');
-                }
-            })
-            .catch(console.error);
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(r => r.json())
+                .then(result => {
+                    if (result.success) {
+                        loadUsers(currentPage.users);
+                    } else {
+                        swalAlert(result.message || 'เกิดข้อผิดพลาด', 'error');
+                    }
+                })
+                .catch(console.error);
         });
     }
 
     function toggleStudentStatus(id, currentStatus) {
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-        swalConfirm({ title: `ต้องการ${newStatus === 'active' ? 'เปิด' : 'ปิด'}ใช้งานนักศึกษานี้?`, confirmText: 'ตกลง', cancelText: 'ยกเลิก' }).then(function(ok) {
+        swalConfirm({
+            title: `ต้องการ${newStatus === 'active' ? 'เปิด' : 'ปิด'}ใช้งานนักศึกษานี้?`,
+            confirmText: 'ตกลง',
+            cancelText: 'ยกเลิก'
+        }).then(function(ok) {
             if (!ok) return;
             fetch(`${baseUrl}admin/users/toggle-student-status/${id}`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(r => r.json())
-            .then(result => {
-                if (result.success) {
-                    loadStudents(currentPage.students);
-                } else {
-                    swalAlert(result.message || 'เกิดข้อผิดพลาด', 'error');
-                }
-            })
-            .catch(console.error);
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(r => r.json())
+                .then(result => {
+                    if (result.success) {
+                        loadStudents(currentPage.students);
+                    } else {
+                        swalAlert(result.message || 'เกิดข้อผิดพลาด', 'error');
+                    }
+                })
+                .catch(console.error);
         });
     }
 

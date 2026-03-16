@@ -16,10 +16,13 @@ class UserModel extends Model
         'email',
         'password',
         'title',
+        'position_th',
+        'position_en',
         'gf_name',
         'gl_name',
         'tf_name',
         'tl_name',
+        'nickname',
         'role',
         'program_id',
         'profile_image',
@@ -49,6 +52,41 @@ class UserModel extends Model
             return $activeOrStatus;
         }
         return (int) $activeOrStatus === 1 ? 'active' : 'inactive';
+    }
+
+    /**
+     * Find user by nickname
+     */
+    public function findByNickname(string $nickname): ?array
+    {
+        return $this->where('nickname', $nickname)->first();
+    }
+
+    /**
+     * Search users by nickname (partial match)
+     */
+    public function searchByNickname(string $query): array
+    {
+        return $this->like('nickname', $query)->findAll();
+    }
+
+    /**
+     * Get users with nickname for exam matching
+     */
+    public function getUsersWithNickname(): array
+    {
+        return $this->where('nickname IS NOT NULL')
+            ->where('nickname !=', '')
+            ->where('status', 'active')
+            ->findAll();
+    }
+
+    /**
+     * Update user nickname
+     */
+    public function updateNickname(int $uid, ?string $nickname): bool
+    {
+        return $this->update($uid, ['nickname' => $nickname]);
     }
 
     /**

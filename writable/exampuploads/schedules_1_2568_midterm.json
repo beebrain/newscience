@@ -1,0 +1,4450 @@
+{
+    "metadata": {
+        "semester": "1\/2568",
+        "exam_type": "midterm",
+        "exam_type_display": "สอบกลางภาค",
+        "upload_date": "2025-07-31 04:38:54",
+        "filename": "_schedules_1_2568_midterm.json"
+    },
+    "schedules": [
+        {
+            "section": "Sect.",
+            "course_code": "รหัสวิชา",
+            "course_name": "ชื่อวิชา",
+            "student_group": "หมู่เรียน",
+            "student_program": "นักศึกษา",
+            "instructor": "ผู้สอน",
+            "exam_date": "วันที่สอบ",
+            "exam_time": "เวลาสอบ",
+            "room": "ห้องสอบ",
+            "examiner1": "กรรมการ 1",
+            "examiner2": "กรรมการ 2"
+        },
+        {
+            "section": "1",
+            "course_code": "4022622",
+            "course_name": "เคมีวิเคราะห์ 1",
+            "student_group": "670425201",
+            "student_program": "เคมี",
+            "instructor": "วชิราภรณ์ เขียวมั่ง, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STC201",
+            "examiner1": "วชิราภรณ์",
+            "examiner2": "สิงหเดช"
+        },
+        {
+            "section": "1",
+            "course_code": "4063407",
+            "course_name": "การประเมินผลกระทบสิ่งแวดล้อม",
+            "student_group": "650429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "สุภาพร พงศ์ธรพฤกษ์, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "ENV201",
+            "examiner1": "สุภาพร",
+            "examiner2": "ราตรี"
+        },
+        {
+            "section": "2",
+            "course_code": "4073226",
+            "course_name": "สุขศึกษาและพฤติกรรมสุขภาพ",
+            "student_group": "660427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "เผด็จการ กันแจ่ม, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA205",
+            "examiner1": "เผด็จการ",
+            "examiner2": "ชนิดา"
+        },
+        {
+            "section": "3",
+            "course_code": "4073226",
+            "course_name": "สุขศึกษาและพฤติกรรมสุขภาพ",
+            "student_group": "660427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "เผด็จการ กันแจ่ม, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA206",
+            "examiner1": "สุนีย์",
+            "examiner2": "กนกวรรณ ก"
+        },
+        {
+            "section": "1",
+            "course_code": "4073226",
+            "course_name": "สุขศึกษาและพฤติกรรมสุขภาพ",
+            "student_group": "660427903",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "เผด็จการ กันแจ่ม, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA207",
+            "examiner1": "จงรัก",
+            "examiner2": "คเชนทร์"
+        },
+        {
+            "section": "1",
+            "course_code": "4094411",
+            "course_name": "ตัวแปรเชิงซ้อน",
+            "student_group": "650422611",
+            "student_program": "คณิตศาสตร์ประยุกต์",
+            "instructor": "ธัชชัย อยู่ยิ่ง, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA309",
+            "examiner1": "วิไลวรรณ",
+            "examiner2": "ชาณิภา"
+        },
+        {
+            "section": "1",
+            "course_code": "4113106",
+            "course_name": "สถิติเพื่อการวิจัย",
+            "student_group": "650420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "ยุทธชัย มิ่งขวัญ, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "คหกรรม1",
+            "examiner1": "ยุทธชัย",
+            "examiner2": "กชกร"
+        },
+        {
+            "section": "1",
+            "course_code": "4123104",
+            "course_name": "การบริหารโครงการ",
+            "student_group": "660429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "จุฬาลักษณ์ มหาวัน, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA208",
+            "examiner1": "จุฬาลักษณ์",
+            "examiner2": "สิริวดี"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4133101",
+            "course_name": "การออกแบบและการบริหารเครือข่าย",
+            "student_group": "650429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "พิชิต พวงภาคีศิริ, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA204",
+            "examiner1": "จำรูญ",
+            "examiner2": "โศภิดา"
+        },
+        {
+            "section": "19",
+            "course_code": "1108",
+            "course_name": "การสร้างเสริมและดูแลสุขภาวะ",
+            "student_group": "660449001",
+            "student_program": "นิติศาสตร์",
+            "instructor": "พงษ์ศักดิ์ อ้นมอย, เผด็จการ กันแจ่ม",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "A304",
+            "examiner1": "พงษ์ศักดิ์",
+            "examiner2": "รสสุคนธ์"
+        },
+        {
+            "section": "22",
+            "course_code": "1108",
+            "course_name": "การสร้างเสริมและดูแลสุขภาวะ",
+            "student_group": "680499201",
+            "student_program": "พยาบาลศาสตร์",
+            "instructor": "พงษ์ศักดิ์ อ้นมอย, เผด็จการ กันแจ่ม",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "A305",
+            "examiner1": "ศศิธร",
+            "examiner2": "ฐิติพร"
+        },
+        {
+            "section": "2,4",
+            "course_code": "1108",
+            "course_name": "การสร้างเสริมและดูแลสุขภาวะ",
+            "student_group": "660462201",
+            "student_program": "วิศวกรรมบริหารงานก่อสร้าง",
+            "instructor": "พงษ์ศักดิ์ อ้นมอย, เผด็จการ กันแจ่ม",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "หอประชุม1",
+            "examiner1": "ธนากร",
+            "examiner2": "กานต์ธิดา"
+        },
+        {
+            "section": "6,7",
+            "course_code": "1108",
+            "course_name": "การสร้างเสริมและดูแลสุขภาวะ",
+            "student_group": "660310401",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "พงษ์ศักดิ์ อ้นมอย, เผด็จการ กันแจ่ม",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "หอประชุม2",
+            "examiner1": "ศรัณยู",
+            "examiner2": "ชื่นกมล"
+        },
+        {
+            "section": "5,11,12,13,14",
+            "course_code": "1108",
+            "course_name": "การสร้างเสริมและดูแลสุขภาวะ",
+            "student_group": "660310102",
+            "student_program": "ภาษาไทย",
+            "instructor": "พงษ์ศักดิ์ อ้นมอย, เผด็จการ กันแจ่ม",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "หอประชุม3",
+            "examiner1": "กิตติวรรณ",
+            "examiner2": "สุทธิพันธุ์"
+        },
+        {
+            "section": "15,16,17,20,21",
+            "course_code": "1108",
+            "course_name": "การสร้างเสริมและดูแลสุขภาวะ",
+            "student_group": "660444201",
+            "student_program": "การพัฒนาชุมชน",
+            "instructor": "พงษ์ศักดิ์ อ้นมอย, เผด็จการ กันแจ่ม",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "หอประชุม4",
+            "examiner1": "วรวุฒิ",
+            "examiner2": "จักรกฤษณ์"
+        },
+        {
+            "section": "1,8",
+            "course_code": "1108",
+            "course_name": "การสร้างเสริมและดูแลสุขภาวะ",
+            "student_group": "660465621",
+            "student_program": "เทคโนโลยีคอมพิวเตอร์เพื่อการออกแบบ",
+            "instructor": "พงษ์ศักดิ์ อ้นมอย, เผด็จการ กันแจ่ม",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "หอประชุม5",
+            "examiner1": "ภาคภูมิ",
+            "examiner2": "ณิชารีย์"
+        },
+        {
+            "section": "9",
+            "course_code": "1108",
+            "course_name": "การสร้างเสริมและดูแลสุขภาวะ",
+            "student_group": "660314001",
+            "student_program": "การศึกษาปฐมวัย",
+            "instructor": "พงษ์ศักดิ์ อ้นมอย, เผด็จการ กันแจ่ม",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "หอประชุม6",
+            "examiner1": "วีระศักดิ์ ก",
+            "examiner2": "มานิตย์"
+        },
+        {
+            "section": "10",
+            "course_code": "1108",
+            "course_name": "การสร้างเสริมและดูแลสุขภาวะ",
+            "student_group": "660314002",
+            "student_program": "การศึกษาปฐมวัย",
+            "instructor": "พงษ์ศักดิ์ อ้นมอย, เผด็จการ กันแจ่ม",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "หอประชุม7",
+            "examiner1": "กิตติ์ ค",
+            "examiner2": "สุรพล"
+        },
+        {
+            "section": "18",
+            "course_code": "1108",
+            "course_name": "การสร้างเสริมและดูแลสุขภาวะ",
+            "student_group": "660446102",
+            "student_program": "รัฐประศาสนศาสตร์",
+            "instructor": "พงษ์ศักดิ์ อ้นมอย, เผด็จการ กันแจ่ม",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "หอประชุม8",
+            "examiner1": "ชุติมา",
+            "examiner2": "อนุชา"
+        },
+        {
+            "section": "2",
+            "course_code": "4011101",
+            "course_name": "ฟิสิกส์เบื้องต้น",
+            "student_group": "680429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "กนกวรรณ มารักษ์, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA206",
+            "examiner1": "กนกวรรณ ม",
+            "examiner2": "โสภณ"
+        },
+        {
+            "section": "1",
+            "course_code": "4082301",
+            "course_name": "เวชศาสตร์การกีฬาและการออกกำลังกาย",
+            "student_group": "660429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "ธนากร ธนวัฒน์, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A401",
+            "examiner1": "ธนากร",
+            "examiner2": "พิศิษฐ์"
+        },
+        {
+            "section": "3",
+            "course_code": "4092201",
+            "course_name": "ระบบจำนวน",
+            "student_group": "670310402",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "นภาภรณ์ จันทร์สี, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA204",
+            "examiner1": "วรินสินี",
+            "examiner2": "วันวิสาข์"
+        },
+        {
+            "section": "2",
+            "course_code": "4092201",
+            "course_name": "ระบบจำนวน",
+            "student_group": "670310401",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "ดิเรก บัวหลวง, นภาภรณ์ จันทร์สี",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA205",
+            "examiner1": "ดิเรก",
+            "examiner2": "พุทธดี"
+        },
+        {
+            "section": "1",
+            "course_code": "4123602",
+            "course_name": "การพัฒนาสื่อดิจิทัล",
+            "student_group": "660423801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "กฤษณ์ ชัยวัณณคุปต์, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA207",
+            "examiner1": "กฤษณ์",
+            "examiner2": "จิราภรณ์ น"
+        },
+        {
+            "section": "1,2,5,6,8",
+            "course_code": "1233",
+            "course_name": "เสน่ห์แห่งพลังงานและสิ่งแวดล้อมในการใช้ชีวิต",
+            "student_group": "670425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "จันทร์เพ็ญ ชุมแสง, ชาติทนง โพธิ์ดง",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A206",
+            "examiner1": "จันทร์เพ็ญ",
+            "examiner2": "อัมพวัน"
+        },
+        {
+            "section": "3,4,7,9",
+            "course_code": "1233",
+            "course_name": "เสน่ห์แห่งพลังงานและสิ่งแวดล้อมในการใช้ชีวิต",
+            "student_group": "680318101",
+            "student_program": "ภาษาต่างประเทศ(เอกภาษาเกาหลี)",
+            "instructor": "สุภาพร พงศ์ธรพฤกษ์, กฤษณะ คำฟอง",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A207",
+            "examiner1": "ชาติทนง",
+            "examiner2": "พันธุ์ทิพย์"
+        },
+        {
+            "section": "1",
+            "course_code": "4011107",
+            "course_name": "ฟิสิกส์สำหรับวิศวกร 2",
+            "student_group": "670167701",
+            "student_program": "วิศวกรรมการจัดการพลังงานในงานอุตสาหกรรม",
+            "instructor": "วิศิษฎ์ มหานิล, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA206",
+            "examiner1": "วิศิษฎ์",
+            "examiner2": "จำรูญ"
+        },
+        {
+            "section": "1",
+            "course_code": "4013303",
+            "course_name": "ไฟฟ้าและพลังงาน",
+            "student_group": "660310501",
+            "student_program": "วิทยาศาสตร์ทั่วไป",
+            "instructor": "ธันยบูรณ์ ถาวรวรรณ์, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA204",
+            "examiner1": "ธันยบูรณ์",
+            "examiner2": "ราตรี"
+        },
+        {
+            "section": "2",
+            "course_code": "4073522",
+            "course_name": "การจัดการสังคมสูงวัย",
+            "student_group": "650427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "กิตติวรรณ จันทร์ฤทธิ์, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA107",
+            "examiner1": "กิตติวรรณ",
+            "examiner2": "นราวดี"
+        },
+        {
+            "section": "1",
+            "course_code": "4073522",
+            "course_name": "การจัดการสังคมสูงวัย",
+            "student_group": "650427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "กิตติวรรณ จันทร์ฤทธิ์, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA108",
+            "examiner1": "สุนีย์",
+            "examiner2": "กชกร"
+        },
+        {
+            "section": "1",
+            "course_code": "4083420",
+            "course_name": "มวยไทยรูปแบบพระยาพิชัยดาบหัก",
+            "student_group": "650429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "ชุติมา เมืองด่าน, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A401",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1",
+            "course_code": "4123904",
+            "course_name": "ระเบียบวิธีวิจัยด้านคอมพิวเตอร์และเทคโนโลยีสารสนเทศ",
+            "student_group": "670123801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "กนกวรรณ กันยะมี, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA205",
+            "examiner1": "กนกวรรณ ก",
+            "examiner2": "สิริวดี"
+        },
+        {
+            "section": "1",
+            "course_code": "4512401",
+            "course_name": "ศิลปะการออกแบบและตกแต่งอาหาร",
+            "student_group": "660420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "ชื่นกมล ปัญญายง, -",
+            "exam_date": "8\/4\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "คหกรรม1",
+            "examiner1": "ชื่นกมล",
+            "examiner2": "ชุมพล"
+        },
+        {
+            "section": "1",
+            "course_code": "1208",
+            "course_name": "ชีวิตออกแบบได้ด้วยวิทยาศาสตร์",
+            "student_group": "660462201",
+            "student_program": "วิศวกรรมบริหารงานก่อสร้าง",
+            "instructor": "ธันยบูรณ์ ถาวรวรรณ์, กฤษณะ คำฟอง",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "A402",
+            "examiner1": "ธันยบูรณ์",
+            "examiner2": "สุทธิดา"
+        },
+        {
+            "section": "1,2,7",
+            "course_code": "1222",
+            "course_name": "การออกแบบสุขภาพ",
+            "student_group": "670429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "ภาคภูมิ โชคทวีพาณิชย์, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "A305",
+            "examiner1": "ภาคภูมิ",
+            "examiner2": "คเชนทร์"
+        },
+        {
+            "section": "5,6,8,9",
+            "course_code": "1222",
+            "course_name": "การออกแบบสุขภาพ",
+            "student_group": "680313901",
+            "student_program": "คอมพิวเตอร์และเทคโนโลยีดิจิทัลเพื่อการศึกษา",
+            "instructor": "ภาคภูมิ โชคทวีพาณิชย์, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "A802",
+            "examiner1": "รสสุคนธ์",
+            "examiner2": "ชาณิภา"
+        },
+        {
+            "section": "1",
+            "course_code": "4011108",
+            "course_name": "ปฏิบัติการฟิสิกส์สำหรับวิศวกร 2",
+            "student_group": "670167701",
+            "student_program": "วิศวกรรมการจัดการพลังงานในงานอุตสาหกรรม",
+            "instructor": "วิศิษฎ์ มหานิล, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA207",
+            "examiner1": "วิศิษฎ์",
+            "examiner2": "กชกร"
+        },
+        {
+            "section": "1",
+            "course_code": "4063603",
+            "course_name": "แผนที่และภูมิสารสนเทศทางภูมิศาสตร์เพื่อสิ่งแวดล้อม",
+            "student_group": "650429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "กฤษณะ คำฟอง, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "ENV201",
+            "examiner1": "กฤษณะ",
+            "examiner2": "วันวิสาข์"
+        },
+        {
+            "section": "1",
+            "course_code": "4081501",
+            "course_name": "กรีฑา",
+            "student_group": "680429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "กิตติ์ คุณกิตติ, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "A304",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1",
+            "course_code": "4123107",
+            "course_name": "การทดสอบและประเมินคุณภาพซอฟต์แวร์",
+            "student_group": "670129701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "พีระพล ขุนอาสา, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA206",
+            "examiner1": "พีระพล",
+            "examiner2": "จิราภรณ์ น"
+        },
+        {
+            "section": "1",
+            "course_code": "4124103",
+            "course_name": "ความมั่นคงของระบบสารสนเทศ",
+            "student_group": "650429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "กนกวรรณ กันยะมี, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA204",
+            "examiner1": "กนกวรรณ ก",
+            "examiner2": "อัมพวัน"
+        },
+        {
+            "section": "1",
+            "course_code": "4124612",
+            "course_name": "การพัฒนาแอปพลิเคชันบนอุปกรณ์ไร้สาย",
+            "student_group": "660423801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "พรเทพ จันทร์เพ็ง, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA205",
+            "examiner1": "อนุชา",
+            "examiner2": "พันธุ์ทิพย์"
+        },
+        {
+            "section": "5,7",
+            "course_code": "1110",
+            "course_name": "การคิดและการตัดสินใจ",
+            "student_group": "660310802",
+            "student_program": "พลศึกษา",
+            "instructor": "ดิเรก บัวหลวง, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A206",
+            "examiner1": "ยุทธชัย",
+            "examiner2": "จันทร์เพ็ญ"
+        },
+        {
+            "section": "4,6",
+            "course_code": "1110",
+            "course_name": "การคิดและการตัดสินใจ",
+            "student_group": "660310801",
+            "student_program": "พลศึกษา",
+            "instructor": "วิไลวรรณ รัตนกูล, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A207",
+            "examiner1": "คเชนทร์",
+            "examiner2": "ชาติทนง"
+        },
+        {
+            "section": "2,8,10,12,18",
+            "course_code": "1110",
+            "course_name": "การคิดและการตัดสินใจ",
+            "student_group": "660310101",
+            "student_program": "ภาษาไทย",
+            "instructor": "วิไลวรรณ รัตนกูล, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A208",
+            "examiner1": "พัชรี",
+            "examiner2": "พุทธดี"
+        },
+        {
+            "section": "1,3,9,11",
+            "course_code": "1110",
+            "course_name": "การคิดและการตัดสินใจ",
+            "student_group": "670466511",
+            "student_program": "เทคโนโลยีอุตสาหการ",
+            "instructor": "ดิเรก บัวหลวง, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A405",
+            "examiner1": "วรินสินี",
+            "examiner2": "เผด็จการ"
+        },
+        {
+            "section": "1,3",
+            "course_code": "2504902",
+            "course_name": "สถิติสำหรับการวิจัยทางสังคมศาสตร์",
+            "student_group": "660446101",
+            "student_program": "รัฐประศาสนศาสตร์",
+            "instructor": "วิไลวรรณ รัตนกูล, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "1142",
+            "examiner1": "วิไลวรรณ",
+            "examiner2": "ศศิธร"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4022307",
+            "course_name": "เคมีอินทรีย์ 1",
+            "student_group": "670425201",
+            "student_program": "เคมี",
+            "instructor": "ณัฐกฤตา บุณณ์ประกอบ, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA204",
+            "examiner1": "ณัฐกฤตา",
+            "examiner2": "วีระศักดิ์ ก"
+        },
+        {
+            "section": "1",
+            "course_code": "4082414",
+            "course_name": "การเป็นผู้นำนันทนาการและการอยู่ค่ายพักแรม",
+            "student_group": "660429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "เสรี แสงอุทัย, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A402",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1",
+            "course_code": "4083801",
+            "course_name": "การเตรียมประสบการณ์ภาคสนามทางวิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "student_group": "650429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "เสรี แสงอุทัย, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A401",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1",
+            "course_code": "4091501",
+            "course_name": "เรขาคณิตเบื้องต้น",
+            "student_group": "680310401",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "อิสระ อินจันทร์, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA206",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "2",
+            "course_code": "4091501",
+            "course_name": "เรขาคณิตเบื้องต้น",
+            "student_group": "680310402",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "อิสระ อินจันทร์, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA207",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1",
+            "course_code": "4094801",
+            "course_name": "การเตรียมประสบการณ์ภาคสนามทางคณิตศาสตร์ประยุกต์",
+            "student_group": "650422611",
+            "student_program": "คณิตศาสตร์ประยุกต์",
+            "instructor": "ดิเรก บัวหลวง, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA309",
+            "examiner1": "นภาภรณ์",
+            "examiner2": "กิตติ์ ค"
+        },
+        {
+            "section": "1",
+            "course_code": "4124708",
+            "course_name": "เทคโนโลยีไร้สายและการสื่อสารการเชื่อมต่อสิ่งของผ่านอินเทอร์เน็ต",
+            "student_group": "660429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "จำรูญ จันทร์กุญชร, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA205",
+            "examiner1": "จำรูญ",
+            "examiner2": "สิงหเดช"
+        },
+        {
+            "section": "1",
+            "course_code": "4513801",
+            "course_name": "การเตรียมประสบการณ์ภาคสนามทางอาหารและโภชนาการ",
+            "student_group": "650420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "สุทธิพันธุ์ แดงใจ, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "คหกรรม1",
+            "examiner1": "สุทธิพันธุ์",
+            "examiner2": "ชุมพล"
+        },
+        {
+            "section": "5,6,7,8,13,14",
+            "course_code": "1210",
+            "course_name": "ชีวิตชาญฉลาดในยุคดิจิทัล",
+            "student_group": "670429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "จำรูญ จันทร์กุญชร, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A305",
+            "examiner1": "สุรพล",
+            "examiner2": "ณิชารีย์"
+        },
+        {
+            "section": "1,2,3",
+            "course_code": "1210",
+            "course_name": "ชีวิตชาญฉลาดในยุคดิจิทัล",
+            "student_group": "660422611",
+            "student_program": "คณิตศาสตร์ประยุกต์",
+            "instructor": "มานิตย์ พ่วงบางโพ, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A307",
+            "examiner1": "มานิตย์",
+            "examiner2": "อัมพวัน"
+        },
+        {
+            "section": "9",
+            "course_code": "1210",
+            "course_name": "ชีวิตชาญฉลาดในยุคดิจิทัล",
+            "student_group": "680499201",
+            "student_program": "พยาบาลศาสตร์",
+            "instructor": "มานิตย์ พ่วงบางโพ, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A904",
+            "examiner1": "โสภณ",
+            "examiner2": "พุทธดี"
+        },
+        {
+            "section": "3,9",
+            "course_code": "1223",
+            "course_name": "มนุษย์กับสุขภาพวิถีใหม่",
+            "student_group": "680440201",
+            "student_program": "ภาษาอังกฤษ(ภาษาอังกฤษ)",
+            "instructor": "สุนีย์ กันแจ่ม, กิตติวรรณ จันทร์ฤทธิ์",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A204",
+            "examiner1": "สุนีย์",
+            "examiner2": "ชื่นกมล"
+        },
+        {
+            "section": "1",
+            "course_code": "1223",
+            "course_name": "มนุษย์กับสุขภาพวิถีใหม่",
+            "student_group": "670449001",
+            "student_program": "นิติศาสตร์",
+            "instructor": "ศรัณยู เรือนจันทร์, ธนากร ธนวัฒน์",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A206",
+            "examiner1": "ศรัณยู",
+            "examiner2": "ฐิติพร"
+        },
+        {
+            "section": "2,4,7,10,11",
+            "course_code": "1223",
+            "course_name": "มนุษย์กับสุขภาพวิถีใหม่",
+            "student_group": "680434951",
+            "student_program": "การจัดการธุรกิจบริการ",
+            "instructor": "ศรัณยู เรือนจันทร์, ธนากร ธนวัฒน์",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A207",
+            "examiner1": "ธนากร",
+            "examiner2": "ชนิดา"
+        },
+        {
+            "section": "8",
+            "course_code": "1223",
+            "course_name": "มนุษย์กับสุขภาพวิถีใหม่",
+            "student_group": "680427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "สุนีย์ กันแจ่ม, กิตติวรรณ จันทร์ฤทธิ์",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A208",
+            "examiner1": "กิตติวรรณ",
+            "examiner2": "กนกวรรณ ก"
+        },
+        {
+            "section": "1,2",
+            "course_code": "1224",
+            "course_name": "ศาสตร์ชะลอวัย",
+            "student_group": "670420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "ภาคภูมิ โชคทวีพาณิชย์, ธนากร ธนวัฒน์",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A401",
+            "examiner1": "ภาคภูมิ",
+            "examiner2": "วรินสินี"
+        },
+        {
+            "section": "1",
+            "course_code": "1225",
+            "course_name": "ชีวิตอัจฉริยะกับปัญญาประดิษฐ์",
+            "student_group": "680166801",
+            "student_program": "วิศวกรรมคอมพิวเตอร์",
+            "instructor": "พีระพล ขุนอาสา, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A402",
+            "examiner1": "พีระพล",
+            "examiner2": "พิศิษฐ์"
+        },
+        {
+            "section": "1",
+            "course_code": "4032105",
+            "course_name": "ระบบวิทยาและความหลากหลายทางชีวภาพ",
+            "student_group": "660425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "พัทธชัย ปิ่นนาค, กชกร ลาภมาก",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STC301",
+            "examiner1": "กชกร",
+            "examiner2": "ณัฐกฤตา"
+        },
+        {
+            "section": "1",
+            "course_code": "4061106",
+            "course_name": "วิทยาศาสตร์สิ่งแวดล้อม",
+            "student_group": "660310501",
+            "student_program": "วิทยาศาสตร์ทั่วไป",
+            "instructor": "สุภาพร พงศ์ธรพฤกษ์, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA204",
+            "examiner1": "ปริญญา",
+            "examiner2": "พันธุ์ทิพย์"
+        },
+        {
+            "section": "2",
+            "course_code": "4074301",
+            "course_name": "การสื่อสารและให้คำปรึกษาในงานสาธารณสุข",
+            "student_group": "650427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "จงรัก ดวงทอง, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA107",
+            "examiner1": "จงรัก",
+            "examiner2": "จิราพร ก"
+        },
+        {
+            "section": "1",
+            "course_code": "4074301",
+            "course_name": "การสื่อสารและให้คำปรึกษาในงานสาธารณสุข",
+            "student_group": "650427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "จงรัก ดวงทอง, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA108",
+            "examiner1": "พงษ์ศักดิ์",
+            "examiner2": "กิตติ์ ค"
+        },
+        {
+            "section": "1",
+            "course_code": "4124203",
+            "course_name": "ปัญญาประดิษฐ์",
+            "student_group": "670123801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "ราตรี คำโมง, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA205",
+            "examiner1": "จุฬาลักษณ์",
+            "examiner2": "สิงหเดช"
+        },
+        {
+            "section": "1",
+            "course_code": "4513102",
+            "course_name": "อาหารและโภชนาการในวัฏจักรชีวิต",
+            "student_group": "660420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "รสสุคนธ์ วงษ์ดอกไม้, -",
+            "exam_date": "8\/5\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "คหกรรม1",
+            "examiner1": "รสสุคนธ์",
+            "examiner2": "จักรกฤษณ์"
+        },
+        {
+            "section": "1",
+            "course_code": "1653403",
+            "course_name": "การดำเนินงานและการจัดการครัว",
+            "student_group": "650441801",
+            "student_program": "การท่องเที่ยวและการโรงแรม",
+            "instructor": "สุทธิพันธุ์ แดงใจ, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "1145",
+            "examiner1": "สุทธิพันธุ์",
+            "examiner2": "ราตรี"
+        },
+        {
+            "section": "1",
+            "course_code": "4033107",
+            "course_name": "วิวัฒนาการ",
+            "student_group": "660425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "วันวิสาข์ พิระภาค, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STC301",
+            "examiner1": "วันวิสาข์",
+            "examiner2": "สมคิด"
+        },
+        {
+            "section": "2",
+            "course_code": "4074336",
+            "course_name": "จรรยาบรรณวิชาชีพและกฎหมายสาธารณสุข",
+            "student_group": "650427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "สุนีย์ กันแจ่ม, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA107",
+            "examiner1": "สุนีย์",
+            "examiner2": "จำรูญ"
+        },
+        {
+            "section": "1",
+            "course_code": "4074336",
+            "course_name": "จรรยาบรรณวิชาชีพและกฎหมายสาธารณสุข",
+            "student_group": "650427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ศรัณยู เรือนจันทร์, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA108",
+            "examiner1": "ศรัณยู",
+            "examiner2": "นราวดี"
+        },
+        {
+            "section": "1",
+            "course_code": "4081505",
+            "course_name": "ว่ายน้ำ",
+            "student_group": "680429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "วีระศักดิ์ แก้วทรัพย์, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "A904",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1",
+            "course_code": "4084203",
+            "course_name": "ผู้สูงอายุกับการออกกำลังกาย",
+            "student_group": "650429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "ชุติมา เมืองด่าน, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "A401",
+            "examiner1": "ชุติมา",
+            "examiner2": "วรินสินี"
+        },
+        {
+            "section": "4",
+            "course_code": "4121305",
+            "course_name": "หลักการเขียนโปรแกรม",
+            "student_group": "680423801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "ชุมพล แพร่น่าน, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA206",
+            "examiner1": "ชุมพล",
+            "examiner2": "กิตติ ม"
+        },
+        {
+            "section": "3",
+            "course_code": "4121305",
+            "course_name": "หลักการเขียนโปรแกรม",
+            "student_group": "680429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "กฤษณ์ ชัยวัณณคุปต์, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA207",
+            "examiner1": "กฤษณ์",
+            "examiner2": "พัทธชัย"
+        },
+        {
+            "section": "1",
+            "course_code": "4123708",
+            "course_name": "สถาปัตยกรรมคอมพิวเตอร์",
+            "student_group": "680123801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "สุรพล ชุ่มกลิ่น, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA208",
+            "examiner1": "สุรพล",
+            "examiner2": "วีรศักดิ์ จ"
+        },
+        {
+            "section": "1",
+            "course_code": "4512301",
+            "course_name": "การบริการอาหารและเครื่องดื่ม",
+            "student_group": "670420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "กานต์ธิดา ไชยมา, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "คหกรรม1",
+            "examiner1": "กานต์ธิดา",
+            "examiner2": "อัมพวัน"
+        },
+        {
+            "section": "1,2,4",
+            "course_code": "4031109",
+            "course_name": "ชีววิทยาเบื้องต้น",
+            "student_group": "680120601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "วารุณี จอมกิติชัย, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA107",
+            "examiner1": "วารุณี",
+            "examiner2": "พันธุ์ทิพย์"
+        },
+        {
+            "section": "1",
+            "course_code": "4032603",
+            "course_name": "ปฏิบัติการจุลชีววิทยาเบื้องต้น",
+            "student_group": "670425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "วันวิสาข์ พิระภาค, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STC301",
+            "examiner1": "วันวิสาข์",
+            "examiner2": "จิราพร ก"
+        },
+        {
+            "section": "1",
+            "course_code": "4082530",
+            "course_name": "หลักการฝึกและการเป็นผู้ตัดสินกรีฑา",
+            "student_group": "670429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "กิตติ์ คุณกิตติ, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A402",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1",
+            "course_code": "4083104",
+            "course_name": "การเรียนรู้ทักษะการเคลื่อนไหว",
+            "student_group": "660429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "ภาคภูมิ โชคทวีพาณิชย์, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A401",
+            "examiner1": "ภาคภูมิ",
+            "examiner2": "จันทร์เพ็ญ"
+        },
+        {
+            "section": "1",
+            "course_code": "4092202",
+            "course_name": "การสร้างตัวแบบเชิงคณิตศาสตร์เบื้องต้น",
+            "student_group": "660428701",
+            "student_program": "วิทยาการข้อมูล",
+            "instructor": "พัชรี มณีรัตน์, พิศิษฐ์ นาคใจ",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA308",
+            "examiner1": "พัชรี",
+            "examiner2": "พิศิษฐ์"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4121403",
+            "course_name": "การปฏิบัติการระบบคอมพิวเตอร์",
+            "student_group": "670429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "พิชิต พวงภาคีศิริ, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA204",
+            "examiner1": "พิชิต",
+            "examiner2": "พัทธชัย"
+        },
+        {
+            "section": "1",
+            "course_code": "4121701",
+            "course_name": "ดิจิทัลเบื้องต้น",
+            "student_group": "670423801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "สุรพล ชุ่มกลิ่น, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA206",
+            "examiner1": "สุรพล",
+            "examiner2": "จิราภรณ์ น"
+        },
+        {
+            "section": "1",
+            "course_code": "4132606",
+            "course_name": "เทคโนโลยีธุรกิจอิเล็กทรอนิกส์",
+            "student_group": "660429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "มานิตย์ พ่วงบางโพ, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA207",
+            "examiner1": "นารีวรรณ",
+            "examiner2": "นราวดี"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4133201",
+            "course_name": "การวิเคราะห์และจัดการข้อมูลขนาดใหญ่",
+            "student_group": "650422611",
+            "student_program": "คณิตศาสตร์ประยุกต์",
+            "instructor": "โสภณ วิริยะรัตนกุล, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA205",
+            "examiner1": "โสภณ",
+            "examiner2": "วีรศักดิ์ จ"
+        },
+        {
+            "section": "1",
+            "course_code": "4513203",
+            "course_name": "เค้กและการแต่งหน้า",
+            "student_group": "660420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "ฐิติพร เทียรฆนิธิกูล, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "คหกรรม1",
+            "examiner1": "ฐิติพร",
+            "examiner2": "ชุติมา"
+        },
+        {
+            "section": "1",
+            "course_code": "4022623",
+            "course_name": "ปฏิบัติการเคมีวิเคราะห์ 1",
+            "student_group": "670425201",
+            "student_program": "เคมี",
+            "instructor": "วชิราภรณ์ เขียวมั่ง, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STC201",
+            "examiner1": "วชิราภรณ์",
+            "examiner2": "ณิชารีย์"
+        },
+        {
+            "section": "1",
+            "course_code": "4063902",
+            "course_name": "สถิติเพื่อการวิจัยทางด้านสิ่งแวดล้อม",
+            "student_group": "650429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "ปริญญา ไกรวุฒินันท์, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "ENV201",
+            "examiner1": "ปริญญา",
+            "examiner2": "ชุมพล"
+        },
+        {
+            "section": "3",
+            "course_code": "4073336",
+            "course_name": "อนามัยสิ่งแวดล้อม",
+            "student_group": "660427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ศรัณยู เรือนจันทร์, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA205",
+            "examiner1": "ศรัณยู",
+            "examiner2": "ราตรี"
+        },
+        {
+            "section": "1",
+            "course_code": "4073336",
+            "course_name": "อนามัยสิ่งแวดล้อม",
+            "student_group": "660427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ศรัณยู เรือนจันทร์, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA206",
+            "examiner1": "เผด็จการ",
+            "examiner2": "จุฬาลักษณ์"
+        },
+        {
+            "section": "2",
+            "course_code": "4073336",
+            "course_name": "อนามัยสิ่งแวดล้อม",
+            "student_group": "660427903",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ศรัณยู เรือนจันทร์, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA207",
+            "examiner1": "ธนากร",
+            "examiner2": "ชนิดา"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4123706",
+            "course_name": "การสื่อสารข้อมูลและเครือข่ายคอมพิวเตอร์",
+            "student_group": "660423801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "จำรูญ จันทร์กุญชร, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA204",
+            "examiner1": "จำรูญ",
+            "examiner2": "วารุณี"
+        },
+        {
+            "section": "1",
+            "course_code": "4134601",
+            "course_name": "เทคโนโลยีสารสนเทศเพื่อการจัดการความรู้",
+            "student_group": "650429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "สมคิด ทุ่นใจ, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA208",
+            "examiner1": "สมคิด",
+            "examiner2": "พงศ์เทพ"
+        },
+        {
+            "section": "1",
+            "course_code": "4513901",
+            "course_name": "สัมมนาทางอาหารและโภชนาการ",
+            "student_group": "650420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "ชื่นกมล ปัญญายง, -",
+            "exam_date": "8\/6\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "คหกรรม1",
+            "examiner1": "ชื่นกมล",
+            "examiner2": "สุภาพร"
+        },
+        {
+            "section": "1",
+            "course_code": "4012106",
+            "course_name": "อิเล็กทรอนิกส์",
+            "student_group": "660316201",
+            "student_program": "วิทยาศาสตร์(ฟิสิกส์)",
+            "instructor": "วิศิษฎ์ มหานิล, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STC401",
+            "examiner1": "วิศิษฎ์",
+            "examiner2": "วิไลวรรณ"
+        },
+        {
+            "section": "1",
+            "course_code": "4032602",
+            "course_name": "จุลชีววิทยาเบื้องต้น",
+            "student_group": "670425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "วันวิสาข์ พิระภาค, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STC301",
+            "examiner1": "ธนิต",
+            "examiner2": "ดิเรก"
+        },
+        {
+            "section": "1",
+            "course_code": "4064501",
+            "course_name": "การจัดการสิ่งแวดล้อม",
+            "student_group": "650429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "กฤษณะ คำฟอง, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "ENV201",
+            "examiner1": "กฤษณะ",
+            "examiner2": "ยุทธชัย"
+        },
+        {
+            "section": "1",
+            "course_code": "4073337",
+            "course_name": "เศรษฐศาสตร์สาธารณสุข",
+            "student_group": "660427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ศศิธร สุขจิตต์, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA206",
+            "examiner1": "พงษ์ศักดิ์",
+            "examiner2": "กนกวรรณ ม"
+        },
+        {
+            "section": "2",
+            "course_code": "4073337",
+            "course_name": "เศรษฐศาสตร์สาธารณสุข",
+            "student_group": "660427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ศศิธร สุขจิตต์, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA207",
+            "examiner1": "กิตติวรรณ",
+            "examiner2": "วีระศักดิ์ ก"
+        },
+        {
+            "section": "3",
+            "course_code": "4073337",
+            "course_name": "เศรษฐศาสตร์สาธารณสุข",
+            "student_group": "660427903",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ศศิธร สุขจิตต์, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA208",
+            "examiner1": "วรวุฒิ",
+            "examiner2": "ปิยะดา"
+        },
+        {
+            "section": "1",
+            "course_code": "4074601",
+            "course_name": "การวางแผนและประเมินผลโครงการทางสาธารณสุข",
+            "student_group": "650427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ณิชารีย์ ใจคำวัง, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA107",
+            "examiner1": "จักรกฤษณ์",
+            "examiner2": "ไพทูล"
+        },
+        {
+            "section": "2",
+            "course_code": "4074601",
+            "course_name": "การวางแผนและประเมินผลโครงการทางสาธารณสุข",
+            "student_group": "650427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ณิชารีย์ ใจคำวัง, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA108",
+            "examiner1": "พีระพล",
+            "examiner2": "อุทัยวรรณ"
+        },
+        {
+            "section": "1",
+            "course_code": "4083303",
+            "course_name": "การช่วยชีวิตและความปลอดภัยทางน้ำ",
+            "student_group": "670429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "วีระศักดิ์ แก้วทรัพย์, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "A401",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1,2",
+            "course_code": "4122205",
+            "course_name": "ระบบฐานข้อมูลและการออกแบบ",
+            "student_group": "660422611",
+            "student_program": "คณิตศาสตร์ประยุกต์",
+            "instructor": "พรเทพ จันทร์เพ็ง, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA204",
+            "examiner1": "มานิตย์",
+            "examiner2": "จินตนา"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4133601",
+            "course_name": "เทคโนโลยีสารสนเทศสำหรับโลจิสติกส์",
+            "student_group": "650422611",
+            "student_program": "คณิตศาสตร์ประยุกต์",
+            "instructor": "อนุชา เรืองศิริวัฒนกุล, รัชดา คำจริง",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA205",
+            "examiner1": "กฤษณ์",
+            "examiner2": "สุกัญญา"
+        },
+        {
+            "section": "1",
+            "course_code": "4514901",
+            "course_name": "การวิจัยอาหารและโภชนาการ",
+            "student_group": "650420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "สุทธิพันธุ์ แดงใจ, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "คหกรรม1",
+            "examiner1": "กานต์ธิดา",
+            "examiner2": "จันทร์แรม"
+        },
+        {
+            "section": "1",
+            "course_code": "4021501",
+            "course_name": "ชีวเคมีสำหรับวิทยาศาสตร์สุขภาพ",
+            "student_group": "680427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "อัมพวัน วิริยะรัตนกุล, โศภิดา วงศ์วาสน์",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA107",
+            "examiner1": "ธนิต",
+            "examiner2": "ชนันทกร"
+        },
+        {
+            "section": "2",
+            "course_code": "4021501",
+            "course_name": "ชีวเคมีสำหรับวิทยาศาสตร์สุขภาพ",
+            "student_group": "680427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "อัมพวัน วิริยะรัตนกุล, โศภิดา วงศ์วาสน์",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA108",
+            "examiner1": "วชิราภรณ์",
+            "examiner2": "อาภาวรรณ"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4091106",
+            "course_name": "แคลคูลัสเบื้องต้น",
+            "student_group": "670123801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "วรินสินี จันทะคุณ, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA204",
+            "examiner1": "วิไลวรรณ",
+            "examiner2": "อิศรา"
+        },
+        {
+            "section": "3",
+            "course_code": "4091106",
+            "course_name": "แคลคูลัสเบื้องต้น",
+            "student_group": "680429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "ยุทธชัย มิ่งขวัญ, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA205",
+            "examiner1": "ยุทธชัย",
+            "examiner2": "อุเทน"
+        },
+        {
+            "section": "1",
+            "course_code": "4092302",
+            "course_name": "พีชคณิตนามธรรม",
+            "student_group": "670310401",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "นภาภรณ์ จันทร์สี, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA208",
+            "examiner1": "ดิเรก",
+            "examiner2": "เชาวฤทธิ์"
+        },
+        {
+            "section": "2",
+            "course_code": "4092302",
+            "course_name": "พีชคณิตนามธรรม",
+            "student_group": "670310402",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "นภาภรณ์ จันทร์สี, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA305",
+            "examiner1": "กนกวรรณ ม",
+            "examiner2": "ปรียาพร"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4093301",
+            "course_name": "พีชคณิตนามธรรม",
+            "student_group": "660310401",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "นภาภรณ์ จันทร์สี, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA109",
+            "examiner1": "ธันยบูรณ์",
+            "examiner2": "สุกัญญา"
+        },
+        {
+            "section": "1",
+            "course_code": "4134801",
+            "course_name": "การเตรียมประสบการณ์ภาคสนามทางเทคโนโลยีสารสนเทศ",
+            "student_group": "650429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "นารีวรรณ พวงภาคีศิริ, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA206",
+            "examiner1": "มานิตย์",
+            "examiner2": "พรพรรณ"
+        },
+        {
+            "section": "1",
+            "course_code": "4511204",
+            "course_name": "ขนมอบขั้นพื้นฐาน",
+            "student_group": "670420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "ฐิติพร เทียรฆนิธิกูล, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "คหกรรม1",
+            "examiner1": "กานต์ธิดา",
+            "examiner2": "คณาธิป"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4022308",
+            "course_name": "ปฏิบัติการเคมีอินทรีย์ 1",
+            "student_group": "670429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "ณัฐกฤตา บุณณ์ประกอบ, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA204",
+            "examiner1": "วชิราภรณ์",
+            "examiner2": "อังคณา"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4052102",
+            "course_name": "วิทยาศาสตร์โลกทั้งระบบ",
+            "student_group": "660310501",
+            "student_program": "วิทยาศาสตร์ทั่วไป",
+            "instructor": "ธันยบูรณ์ ถาวรวรรณ์, ภาณุมาศ จันทร",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA205",
+            "examiner1": "ธันยบูรณ์",
+            "examiner2": "ญาณภา"
+        },
+        {
+            "section": "1",
+            "course_code": "4071501",
+            "course_name": "อนามัยการเจริญพันธุ์ในงานสาธารณสุข",
+            "student_group": "670427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "จงรัก ดวงทอง, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA107",
+            "examiner1": "พงษ์ศักดิ์",
+            "examiner2": "อุทัยวรรณ"
+        },
+        {
+            "section": "2",
+            "course_code": "4071501",
+            "course_name": "อนามัยการเจริญพันธุ์ในงานสาธารณสุข",
+            "student_group": "670427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "จงรัก ดวงทอง, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA206",
+            "examiner1": "กิตติวรรณ",
+            "examiner2": "พจนีย์"
+        },
+        {
+            "section": "1",
+            "course_code": "4084902",
+            "course_name": "การศึกษารายกรณีทางวิทยาศาสตร์การกีฬา 2",
+            "student_group": "650429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "ภาคภูมิ โชคทวีพาณิชย์, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A401",
+            "examiner1": "ภาคภูมิ",
+            "examiner2": "คณาธิป"
+        },
+        {
+            "section": "1",
+            "course_code": "4134603",
+            "course_name": "ผู้ประกอบการดิจิทัล",
+            "student_group": "660429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "ราตรี คำโมง, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA207",
+            "examiner1": "กฤษณ์",
+            "examiner2": "กฤษณ์"
+        },
+        {
+            "section": "1",
+            "course_code": "4513208",
+            "course_name": "อาหารเอเชีย",
+            "student_group": "660420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "ชื่นกมล ปัญญายง, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "คหกรรม1",
+            "examiner1": "ชุติมา",
+            "examiner2": "จันทร์แรม"
+        },
+        {
+            "section": "1",
+            "course_code": "4062408",
+            "course_name": "พลังงาน สิ่งแวดล้อมและการอนุรักษ์",
+            "student_group": "590000001",
+            "student_program": "-",
+            "instructor": "พุทธดี อุบลศุข, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "15.45-17.45",
+            "room": "A206",
+            "examiner1": "กฤษณะ",
+            "examiner2": "จันทร์แรม"
+        },
+        {
+            "section": "1",
+            "course_code": "4063304",
+            "course_name": "สถานการณ์สิ่งแวดล้อมปัจจุบัน",
+            "student_group": "590000001",
+            "student_program": "-",
+            "instructor": "จันทร์เพ็ญ ชุมแสง, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "15.45-17.45",
+            "room": "A207",
+            "examiner1": "วีระศักดิ์ ก",
+            "examiner2": "คณาธิป"
+        },
+        {
+            "section": "1",
+            "course_code": "4092603",
+            "course_name": "เครื่องมือพื้นฐานสำหรับวิทยาการข้อมูลเบื้องต้น",
+            "student_group": "590000001",
+            "student_program": "-",
+            "instructor": "คเชนทร์ ซ่อนกลิ่น, ชาณิภา ซ่อนกลิ่น",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "15.45-17.45",
+            "room": "A305",
+            "examiner1": "คเชนทร์",
+            "examiner2": "ชาณิภา"
+        },
+        {
+            "section": "1",
+            "course_code": "4124304",
+            "course_name": "เกมและการจำลอง",
+            "student_group": "590000001",
+            "student_program": "-",
+            "instructor": "โสภณ วิริยะรัตนกุล, -",
+            "exam_date": "8\/7\/2568",
+            "exam_time": "15.45-17.45",
+            "room": "A208",
+            "examiner1": "พีระพล",
+            "examiner2": "พรพรรณ"
+        },
+        {
+            "section": "1",
+            "course_code": "4031603",
+            "course_name": "จุลชีววิทยาและปรสิตวิทยาทางสาธารณสุข",
+            "student_group": "680427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "กิตติ เมืองตุ้ม, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA107",
+            "examiner1": "กนกวรรณ ม",
+            "examiner2": "อิศรา"
+        },
+        {
+            "section": "2",
+            "course_code": "4031603",
+            "course_name": "จุลชีววิทยาและปรสิตวิทยาทางสาธารณสุข",
+            "student_group": "680427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "กิตติ เมืองตุ้ม, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA108",
+            "examiner1": "กฤษณะ",
+            "examiner2": "พจนีย์"
+        },
+        {
+            "section": "1",
+            "course_code": "4084904",
+            "course_name": "การสัมมนาทางวิทยาศาสตร์การกีฬา",
+            "student_group": "650429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "ภาคภูมิ โชคทวีพาณิชย์, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "A401",
+            "examiner1": "ภาคภูมิ",
+            "examiner2": "คณาธิป"
+        },
+        {
+            "section": "3",
+            "course_code": "4091403",
+            "course_name": "แคลคูลัส 1",
+            "student_group": "680425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "ดิเรก บัวหลวง, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA204",
+            "examiner1": "ดิเรก",
+            "examiner2": "ชนันทกร"
+        },
+        {
+            "section": "1",
+            "course_code": "4091405",
+            "course_name": "แคลคูลัส 1",
+            "student_group": "680310401",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "นราวดี นวลสอาด, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA205",
+            "examiner1": "นราวดี",
+            "examiner2": "อาภาวรรณ"
+        },
+        {
+            "section": "2",
+            "course_code": "4091405",
+            "course_name": "แคลคูลัส 1",
+            "student_group": "680310402",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "นราวดี นวลสอาด, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA206",
+            "examiner1": "วิไลวรรณ",
+            "examiner2": "อุเทน"
+        },
+        {
+            "section": "2",
+            "course_code": "4092303",
+            "course_name": "คณิตศาสตร์เต็มหน่วย",
+            "student_group": "670310401",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "วรินสินี จันทะคุณ, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA207",
+            "examiner1": "ยุทธชัย",
+            "examiner2": "เชาวฤทธิ์"
+        },
+        {
+            "section": "1",
+            "course_code": "4092303",
+            "course_name": "คณิตศาสตร์เต็มหน่วย",
+            "student_group": "670310402",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "วรินสินี จันทะคุณ, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA208",
+            "examiner1": "วิศิษฎ์",
+            "examiner2": "ปรียาพร"
+        },
+        {
+            "section": "1",
+            "course_code": "4093602",
+            "course_name": "วิธีการหาค่าเหมาะสมที่สุด",
+            "student_group": "660428701",
+            "student_program": "วิทยาการข้อมูล",
+            "instructor": "พิศิษฐ์ นาคใจ, พัชรี มณีรัตน์",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA308",
+            "examiner1": "พีระพล",
+            "examiner2": "ปัทมา"
+        },
+        {
+            "section": "1",
+            "course_code": "4511101",
+            "course_name": "โภชนศาสตร์เบื้องต้น",
+            "student_group": "680120601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "รสสุคนธ์ วงษ์ดอกไม้, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "คหกรรม1",
+            "examiner1": "กานต์ธิดา",
+            "examiner2": "จันทร์แรม"
+        },
+        {
+            "section": "1",
+            "course_code": "4012111",
+            "course_name": "ฟิสิกส์พื้นฐานสำหรับครู",
+            "student_group": "670310501",
+            "student_program": "วิทยาศาสตร์ทั่วไป",
+            "instructor": "เอมอร วันเอก, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA305",
+            "examiner1": "กนกวรรณ ม",
+            "examiner2": "อังคณา"
+        },
+        {
+            "section": "1",
+            "course_code": "4032601",
+            "course_name": "จุลชีววิทยา",
+            "student_group": "670451101",
+            "student_program": "เกษตรศาสตร์",
+            "instructor": "กชกร ลาภมาก, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STC302",
+            "examiner1": "ธันยบูรณ์",
+            "examiner2": "พรพรรณ"
+        },
+        {
+            "section": "1",
+            "course_code": "4033108",
+            "course_name": "ชีววิทยาของเซลล์",
+            "student_group": "660425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "พัทธชัย ปิ่นนาค, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STC301",
+            "examiner1": "ธนิต",
+            "examiner2": "ญาณภา"
+        },
+        {
+            "section": "1",
+            "course_code": "4064510",
+            "course_name": "การจัดการระบบสิ่งแวดล้อมสำหรับการเกษตร",
+            "student_group": "650429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "จันทร์เพ็ญ ชุมแสง, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "ENV201",
+            "examiner1": "วชิราภรณ์",
+            "examiner2": "สุกัญญา"
+        },
+        {
+            "section": "1",
+            "course_code": "4072215",
+            "course_name": "การพัฒนาสุขภาพชุมชน 1",
+            "student_group": "670427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "จักรกฤษณ์ พิญญาพงษ์, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA109",
+            "examiner1": "จักรกฤษณ์",
+            "examiner2": "อุทัยวรรณ"
+        },
+        {
+            "section": "2",
+            "course_code": "4072215",
+            "course_name": "การพัฒนาสุขภาพชุมชน 1",
+            "student_group": "670427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "จักรกฤษณ์ พิญญาพงษ์, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA206",
+            "examiner1": "พงษ์ศักดิ์",
+            "examiner2": "ไพทูล"
+        },
+        {
+            "section": "1",
+            "course_code": "4074801",
+            "course_name": "การเตรียมประสบการณ์ภาคสนามทางสาธารณสุข",
+            "student_group": "650427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ธนากร ธนวัฒน์, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA107",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "2",
+            "course_code": "4074801",
+            "course_name": "การเตรียมประสบการณ์ภาคสนามทางสาธารณสุข",
+            "student_group": "650427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ธนากร ธนวัฒน์, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA108",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1",
+            "course_code": "4083111",
+            "course_name": "การวิจัยเบื้องต้นทางวิทยาศาสตร์การกีฬา",
+            "student_group": "660429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "วรวุฒิ ธุวะคำ, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A401",
+            "examiner1": "วรวุฒิ",
+            "examiner2": "คณาธิป"
+        },
+        {
+            "section": "1",
+            "course_code": "4094404",
+            "course_name": "การวิเคราะห์เชิงคณิตศาสตร์",
+            "student_group": "660310401",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "อิสระ อินจันทร์, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA207",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "2",
+            "course_code": "4094404",
+            "course_name": "การวิเคราะห์เชิงคณิตศาสตร์",
+            "student_group": "660310402",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "ธัชชัย อยู่ยิ่ง, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA208",
+            "examiner1": "มานิตย์",
+            "examiner2": "จินตนา"
+        },
+        {
+            "section": "1",
+            "course_code": "4094407",
+            "course_name": "ระเบียบวิธีเชิงตัวเลข",
+            "student_group": "660422611",
+            "student_program": "คณิตศาสตร์ประยุกต์",
+            "instructor": "วรินสินี จันทะคุณ, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA309",
+            "examiner1": "กฤษณ์",
+            "examiner2": "ปิยะดา"
+        },
+        {
+            "section": "1,3",
+            "course_code": "4121105",
+            "course_name": "จริยธรรมและกฎหมายสำหรับผู้ประกอบวิชาชีพคอมพิวเตอร์",
+            "student_group": "680129701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "กนกวรรณ กันยะมี, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA204",
+            "examiner1": "วิไลวรรณ",
+            "examiner2": "พจนีย์"
+        },
+        {
+            "section": "2,4",
+            "course_code": "4121105",
+            "course_name": "จริยธรรมและกฎหมายสำหรับผู้ประกอบวิชาชีพคอมพิวเตอร์",
+            "student_group": "680423801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "นารีวรรณ พวงภาคีศิริ, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA205",
+            "examiner1": "พีระพล",
+            "examiner2": "ชนันทกร"
+        },
+        {
+            "section": "2",
+            "course_code": "4511101",
+            "course_name": "โภชนศาสตร์เบื้องต้น",
+            "student_group": "680420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "รสสุคนธ์ วงษ์ดอกไม้, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "คหกรรม1",
+            "examiner1": "รสสุคนธ์",
+            "examiner2": "จันทร์แรม"
+        },
+        {
+            "section": "1,3,4",
+            "course_code": "4011105",
+            "course_name": "ฟิสิกส์สำหรับวิศวกร 1",
+            "student_group": "680162201",
+            "student_program": "วิศวกรรมบริหารงานก่อสร้าง",
+            "instructor": "สิงหเดช แตงจวง, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA107",
+            "examiner1": "สิงหเดช",
+            "examiner2": "เชาวฤทธิ์"
+        },
+        {
+            "section": "2,5",
+            "course_code": "4011105",
+            "course_name": "ฟิสิกส์สำหรับวิศวกร 1",
+            "student_group": "680166801",
+            "student_program": "วิศวกรรมคอมพิวเตอร์",
+            "instructor": "วิศิษฎ์ มหานิล, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA108",
+            "examiner1": "วิศิษฎ์",
+            "examiner2": "ปิยะดา"
+        },
+        {
+            "section": "6,7",
+            "course_code": "4011105",
+            "course_name": "ฟิสิกส์สำหรับวิศวกร 1",
+            "student_group": "680467101",
+            "student_program": "วิศวกรรมโลจิสติกส์",
+            "instructor": "สิงหเดช แตงจวง, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA109",
+            "examiner1": "ดิเรก",
+            "examiner2": "ไพทูล"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4031601",
+            "course_name": "จุลชีววิทยาทั่วไป",
+            "student_group": "680155801",
+            "student_program": "เทคโนโลยีการอาหาร",
+            "instructor": "สุทธิดา วิทนาลัย, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA204",
+            "examiner1": "สุทธิดา",
+            "examiner2": "ญาณภา"
+        },
+        {
+            "section": "1",
+            "course_code": "4061105",
+            "course_name": "จริยธรรมวิชาชีพทางสิ่งแวดล้อม",
+            "student_group": "680429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "กฤษณะ คำฟอง, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "ENV201",
+            "examiner1": "กฤษณะ",
+            "examiner2": "อุเทน"
+        },
+        {
+            "section": "2",
+            "course_code": "4073801",
+            "course_name": "การฝึกปฏิบัติการพัฒนาสุขภาพชุมชน",
+            "student_group": "660427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "จักรกฤษณ์ พิญญาพงษ์, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA205",
+            "examiner1": "จักรกฤษณ์",
+            "examiner2": "อาภาวรรณ"
+        },
+        {
+            "section": "1",
+            "course_code": "4073801",
+            "course_name": "การฝึกปฏิบัติการพัฒนาสุขภาพชุมชน",
+            "student_group": "660427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "จักรกฤษณ์ พิญญาพงษ์, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA206",
+            "examiner1": "สุนีย์",
+            "examiner2": "อังคณา"
+        },
+        {
+            "section": "3",
+            "course_code": "4073801",
+            "course_name": "การฝึกปฏิบัติการพัฒนาสุขภาพชุมชน",
+            "student_group": "660427903",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "จักรกฤษณ์ พิญญาพงษ์, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA207",
+            "examiner1": "จงรัก",
+            "examiner2": "ปรียาพร"
+        },
+        {
+            "section": "1",
+            "course_code": "4081401",
+            "course_name": "พื้นฐานพลศึกษา สุขศึกษา และนันทนาการ",
+            "student_group": "680429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "เสรี แสงอุทัย, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A304",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1",
+            "course_code": "4094903",
+            "course_name": "สัมมนาคณิตศาสตร์ประยุกต์",
+            "student_group": "650422611",
+            "student_program": "คณิตศาสตร์ประยุกต์",
+            "instructor": "นราวดี นวลสอาด, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA309",
+            "examiner1": "นราวดี",
+            "examiner2": "ปัทมา"
+        },
+        {
+            "section": "1",
+            "course_code": "4513210",
+            "course_name": "อาหารท้องถิ่น",
+            "student_group": "660420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "กานต์ธิดา ไชยมา, -",
+            "exam_date": "8\/8\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "คหกรรม1",
+            "examiner1": "กานต์ธิดา",
+            "examiner2": "จันทร์แรม"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4023711",
+            "course_name": "เคมีอาหาร",
+            "student_group": "680120601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "พงศ์เทพ จันทร์สันเทียะ, วชิราภรณ์ เขียวมั่ง",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA204",
+            "examiner1": "พงศ์เทพ",
+            "examiner2": "นารีวรรณ"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4027101",
+            "course_name": "เคมีพื้นฐานสำหรับนักเทคโนโลยีการอาหาร",
+            "student_group": "680155801",
+            "student_program": "เทคโนโลยีการอาหาร",
+            "instructor": "ณัฐกฤตา บุณณ์ประกอบ, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA205",
+            "examiner1": "ณัฐกฤตา",
+            "examiner2": "สมคิด"
+        },
+        {
+            "section": "1",
+            "course_code": "4064902",
+            "course_name": "โครงงานวิจัยทางสิ่งแวดล้อม",
+            "student_group": "650429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "ชาติทนง โพธิ์ดง, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "ENV201",
+            "examiner1": "ชาติทนง",
+            "examiner2": "ชุมพล"
+        },
+        {
+            "section": "1",
+            "course_code": "4072327",
+            "course_name": "การสร้างเสริมสุขภาพ",
+            "student_group": "670427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "กิตติวรรณ จันทร์ฤทธิ์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA107",
+            "examiner1": "กิตติวรรณ",
+            "examiner2": "พรเทพ"
+        },
+        {
+            "section": "2",
+            "course_code": "4072327",
+            "course_name": "การสร้างเสริมสุขภาพ",
+            "student_group": "670427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "กิตติวรรณ จันทร์ฤทธิ์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA305",
+            "examiner1": "เผด็จการ",
+            "examiner2": "พิชิต"
+        },
+        {
+            "section": "1",
+            "course_code": "4112201",
+            "course_name": "ความน่าจะเป็นและสถิติเบื้องต้น",
+            "student_group": "660423801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "พัชรี มณีรัตน์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA206",
+            "examiner1": "พัชรี",
+            "examiner2": "สุรพล"
+        },
+        {
+            "section": "2",
+            "course_code": "4112201",
+            "course_name": "ความน่าจะเป็นและสถิติ",
+            "student_group": "670310401",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "ดิเรก บัวหลวง, อิสระ อินจันทร์",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA207",
+            "examiner1": "ดิเรก",
+            "examiner2": "โสภณ"
+        },
+        {
+            "section": "3",
+            "course_code": "4112201",
+            "course_name": "ความน่าจะเป็นและสถิติ",
+            "student_group": "670310402",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "ดิเรก บัวหลวง, อิสระ อินจันทร์",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA208",
+            "examiner1": "อิสระ",
+            "examiner2": "เอมอร"
+        },
+        {
+            "section": "1",
+            "course_code": "4113407",
+            "course_name": "สถิติและการวิจัยเบื้องต้น",
+            "student_group": "650422611",
+            "student_program": "คณิตศาสตร์ประยุกต์",
+            "instructor": "พัชรี มณีรัตน์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA309",
+            "examiner1": "พิศิษฐ์",
+            "examiner2": "กชกร"
+        },
+        {
+            "section": "1",
+            "course_code": "4123204",
+            "course_name": "ข้อมูลขนาดใหญ่",
+            "student_group": "660428701",
+            "student_program": "วิทยาการข้อมูล",
+            "instructor": "ชาณิภา ซ่อนกลิ่น, คเชนทร์ ซ่อนกลิ่น",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA308",
+            "examiner1": "ชาณิภา",
+            "examiner2": "คเชนทร์"
+        },
+        {
+            "section": "1",
+            "course_code": "4511401",
+            "course_name": "ศิลปะการจัดดอกไม้-ใบตอง และการแกะสลัก",
+            "student_group": "670420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "สุทธิพันธุ์ แดงใจ, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "คหกรรม1",
+            "examiner1": "สุทธิพันธุ์",
+            "examiner2": "วันวิสาข์"
+        },
+        {
+            "section": "1",
+            "course_code": "4021101",
+            "course_name": "เคมีทั่วไป 1",
+            "student_group": "680451101",
+            "student_program": "เกษตรศาสตร์",
+            "instructor": "ธนิต เมธีนุกูล, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STC201",
+            "examiner1": "ธนิต",
+            "examiner2": "ธัชชัย"
+        },
+        {
+            "section": "4",
+            "course_code": "4021109",
+            "course_name": "หลักเคมี 1",
+            "student_group": "680429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "พันธุ์ทิพย์ ถือเงิน, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA107",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "2,3",
+            "course_code": "4021109",
+            "course_name": "หลักเคมี 1",
+            "student_group": "680425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "วชิราภรณ์ เขียวมั่ง, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA206",
+            "examiner1": "วชิราภรณ์",
+            "examiner2": "วรินสินี"
+        },
+        {
+            "section": "1",
+            "course_code": "4022503",
+            "course_name": "ชีวเคมี 1",
+            "student_group": "670425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "พรทิพพา พิญญาพงษ์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STC301",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1",
+            "course_code": "4062103",
+            "course_name": "วิทยาศาสตร์สิ่งแวดล้อมกายภาพ",
+            "student_group": "670429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "ชาติทนง โพธิ์ดง, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "ENV201",
+            "examiner1": "ชาติทนง",
+            "examiner2": "จิราภรณ์ น"
+        },
+        {
+            "section": "1",
+            "course_code": "4071104",
+            "course_name": "กายวิภาคศาสตร์และสรีรวิทยา",
+            "student_group": "680427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ธนากร ธนวัฒน์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA108",
+            "examiner1": "ธนากร",
+            "examiner2": "วารุณี"
+        },
+        {
+            "section": "2",
+            "course_code": "4071104",
+            "course_name": "กายวิภาคศาสตร์และสรีรวิทยา",
+            "student_group": "680427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ธนากร ธนวัฒน์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA109",
+            "examiner1": "ศรัณยู",
+            "examiner2": "พัทธชัย"
+        },
+        {
+            "section": "1,2,4",
+            "course_code": "4091606",
+            "course_name": "คณิตศาสตร์สำหรับคอมพิวเตอร์",
+            "student_group": "680123801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "พิศิษฐ์ นาคใจ, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA204",
+            "examiner1": "พิศิษฐ์",
+            "examiner2": "ณัฐกฤตา"
+        },
+        {
+            "section": "3",
+            "course_code": "4091606",
+            "course_name": "คณิตศาสตร์สำหรับคอมพิวเตอร์",
+            "student_group": "680423801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "อิสระ อินจันทร์, พิศิษฐ์ นาคใจ",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA205",
+            "examiner1": "อิสระ",
+            "examiner2": "วีรศักดิ์ จ"
+        },
+        {
+            "section": "1",
+            "course_code": "4092605",
+            "course_name": "คณิตศาสตร์วิศวกรรม",
+            "student_group": "670462201",
+            "student_program": "วิศวกรรมบริหารงานก่อสร้าง",
+            "instructor": "นราวดี นวลสอาด, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA305",
+            "examiner1": "นราวดี",
+            "examiner2": "พงศ์เทพ"
+        },
+        {
+            "section": "1",
+            "course_code": "4122206",
+            "course_name": "ระบบจัดการฐานข้อมูล",
+            "student_group": "670423801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "ชนิดา เรืองศิริวัฒนกุล, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA208",
+            "examiner1": "ชนิดา",
+            "examiner2": "อัมพวัน"
+        },
+        {
+            "section": "1",
+            "course_code": "4123905",
+            "course_name": "การสัมมนาทางด้านคอมพิวเตอร์และเทคโนโลยีสารสนเทศ",
+            "student_group": "670129701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "จุฬาลักษณ์ มหาวัน, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA207",
+            "examiner1": "นารีวรรณ",
+            "examiner2": "พันธุ์ทิพย์"
+        },
+        {
+            "section": "1",
+            "course_code": "4513307",
+            "course_name": "การดำเนินธุรกิจอาหารและบริการ",
+            "student_group": "660420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "ฐิติพร เทียรฆนิธิกูล, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "คหกรรม1",
+            "examiner1": "ฐิติพร",
+            "examiner2": "โศภิดา"
+        },
+        {
+            "section": "1",
+            "course_code": "1092501",
+            "course_name": "การวิเคราะห์และออกแบบระบบ",
+            "student_group": "670313901",
+            "student_program": "คอมพิวเตอร์และเทคโนโลยีดิจิทัลเพื่อการศึกษา",
+            "instructor": "จุฬาลักษณ์ มหาวัน, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "ED307",
+            "examiner1": "จุฬาลักษณ์",
+            "examiner2": "สุภาพร"
+        },
+        {
+            "section": "3,6,7",
+            "course_code": "4011106",
+            "course_name": "ปฏิบัติการฟิสิกส์สำหรับวิศวกร 1",
+            "student_group": "680462201",
+            "student_program": "วิศวกรรมบริหารงานก่อสร้าง",
+            "instructor": "กนกวรรณ มารักษ์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA204",
+            "examiner1": "กนกวรรณ ม",
+            "examiner2": "จันทร์เพ็ญ"
+        },
+        {
+            "section": "1,4",
+            "course_code": "4011106",
+            "course_name": "ปฏิบัติการฟิสิกส์สำหรับวิศวกร 1",
+            "student_group": "680166801",
+            "student_program": "วิศวกรรมคอมพิวเตอร์",
+            "instructor": "กนกวรรณ มารักษ์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA205",
+            "examiner1": "ธันยบูรณ์",
+            "examiner2": "ปริญญา"
+        },
+        {
+            "section": "2,5",
+            "course_code": "4011106",
+            "course_name": "ปฏิบัติการฟิสิกส์สำหรับวิศวกร 1",
+            "student_group": "680167701",
+            "student_program": "วิศวกรรมการจัดการพลังงานในงานอุตสาหกรรม",
+            "instructor": "เอมอร วันเอก, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA206",
+            "examiner1": "เอมอร",
+            "examiner2": "พุทธดี"
+        },
+        {
+            "section": "1",
+            "course_code": "4021116",
+            "course_name": "เคมีสำหรับวิศวกร",
+            "student_group": "670467701",
+            "student_program": "วิศวกรรมการจัดการพลังงานในงานอุตสาหกรรม",
+            "instructor": "ธนิต เมธีนุกูล, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA308",
+            "examiner1": "ธนิต",
+            "examiner2": "จำรูญ"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4021118",
+            "course_name": "เคมีพื้นฐานสำหรับครู",
+            "student_group": "680310501",
+            "student_program": "วิทยาศาสตร์ทั่วไป",
+            "instructor": "จิราพร เกตุวราภรณ์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA207",
+            "examiner1": "จิราพร ก",
+            "examiner2": "สมคิด"
+        },
+        {
+            "section": "2",
+            "course_code": "4074901",
+            "course_name": "ภาคนิพนธ์",
+            "student_group": "650427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ศศิธร สุขจิตต์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA107",
+            "examiner1": "ศศิธร",
+            "examiner2": "พิชิต"
+        },
+        {
+            "section": "1",
+            "course_code": "4074901",
+            "course_name": "ภาคนิพนธ์",
+            "student_group": "650427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ศศิธร สุขจิตต์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA108",
+            "examiner1": "จงรัก",
+            "examiner2": "พรเทพ"
+        },
+        {
+            "section": "1",
+            "course_code": "4081601",
+            "course_name": "ฟุตบอล",
+            "student_group": "670429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "วีระศักดิ์ แก้วทรัพย์, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A401",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1",
+            "course_code": "4121306",
+            "course_name": "การเขียนโปรแกรมเชิงวัตถุ",
+            "student_group": "670429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "พรเทพ จันทร์เพ็ง, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA208",
+            "examiner1": "พรเทพ",
+            "examiner2": "ธัชชัย"
+        },
+        {
+            "section": "1",
+            "course_code": "4124910",
+            "course_name": "การศึกษาเอกเทศด้านวิทยาการคอมพิวเตอร์",
+            "student_group": "670123801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "ราตรี คำโมง, -",
+            "exam_date": "8\/13\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA305",
+            "examiner1": "ราตรี",
+            "examiner2": "วารุณี"
+        },
+        {
+            "section": "2",
+            "course_code": "4021110",
+            "course_name": "ปฏิบัติการหลักเคมี 1",
+            "student_group": "680425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "วีรศักดิ์ จอมกิติชัย, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA204",
+            "examiner1": "วีรศักดิ์ จ",
+            "examiner2": "วารุณี"
+        },
+        {
+            "section": "3",
+            "course_code": "4021110",
+            "course_name": "ปฏิบัติการหลักเคมี 1",
+            "student_group": "680429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "จิราพร เกตุวราภรณ์, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA205",
+            "examiner1": "จิราพร ก",
+            "examiner2": "พัทธชัย"
+        },
+        {
+            "section": "1",
+            "course_code": "4072501",
+            "course_name": "การบริบาลปฐมภูมิ",
+            "student_group": "670427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ณิชารีย์ ใจคำวัง, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA107",
+            "examiner1": "ณิชารีย์",
+            "examiner2": "สิงหเดช"
+        },
+        {
+            "section": "2",
+            "course_code": "4072501",
+            "course_name": "การบริบาลปฐมภูมิ",
+            "student_group": "670427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ณิชารีย์ ใจคำวัง, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA207",
+            "examiner1": "ณิชารีย์",
+            "examiner2": "สิงหเดช"
+        },
+        {
+            "section": "1",
+            "course_code": "4113303",
+            "course_name": "สถิติไม่อิงพารามิเตอร์",
+            "student_group": "660422611",
+            "student_program": "คณิตศาสตร์ประยุกต์",
+            "instructor": "ยุทธชัย มิ่งขวัญ, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA309",
+            "examiner1": "ยุทธชัย",
+            "examiner2": "พรเทพ"
+        },
+        {
+            "section": "1",
+            "course_code": "4123307",
+            "course_name": "การพัฒนาเว็บแอปพลิเคชัน",
+            "student_group": "670423801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "ชุมพล แพร่น่าน, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA305",
+            "examiner1": "ชุมพล",
+            "examiner2": "กิตติ ม"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4131101",
+            "course_name": "หลักสำคัญของเทคโนโลยีสารสนเทศ",
+            "student_group": "680129701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "นารีวรรณ พวงภาคีศิริ, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA206",
+            "examiner1": "นารีวรรณ",
+            "examiner2": "โศภิดา"
+        },
+        {
+            "section": "1",
+            "course_code": "4022404",
+            "course_name": "เคมีเชิงฟิสิกส์ 1",
+            "student_group": "670425201",
+            "student_program": "เคมี",
+            "instructor": "พงศ์เทพ จันทร์สันเทียะ, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STC201",
+            "examiner1": "พงศ์เทพ",
+            "examiner2": "จันทร์เพ็ญ"
+        },
+        {
+            "section": "1",
+            "course_code": "4031201",
+            "course_name": "ชีววิทยาด้านพืช",
+            "student_group": "680451101",
+            "student_program": "เกษตรศาสตร์",
+            "instructor": "จิราภรณ์ นิคมทัศน์, พัทธชัย ปิ่นนาค",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STC301",
+            "examiner1": "จิราภรณ์ น",
+            "examiner2": "ปริญญา"
+        },
+        {
+            "section": "1",
+            "course_code": "4082108",
+            "course_name": "การประยุกต์คอมพิวเตอร์ในการจัดการกีฬา",
+            "student_group": "670429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "วรวุฒิ ธุวะคำ, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A402",
+            "examiner1": "วรวุฒิ",
+            "examiner2": "กฤษณะ"
+        },
+        {
+            "section": "1",
+            "course_code": "4083408",
+            "course_name": "แอโรบิคแดนซ์",
+            "student_group": "660429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "กิตติ์ คุณกิตติ, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "A401",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "6",
+            "course_code": "4091607",
+            "course_name": "พื้นฐานคณิตศาสตร์สำหรับวิศวกรรม",
+            "student_group": "680467101",
+            "student_program": "วิศวกรรมโลจิสติกส์",
+            "instructor": "ยุทธชัย มิ่งขวัญ, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA204",
+            "examiner1": "ยุทธชัย",
+            "examiner2": "พุทธดี"
+        },
+        {
+            "section": "1,5",
+            "course_code": "4091607",
+            "course_name": "พื้นฐานคณิตศาสตร์สำหรับวิศวกรรม",
+            "student_group": "670166801",
+            "student_program": "วิศวกรรมคอมพิวเตอร์",
+            "instructor": "วรินสินี จันทะคุณ, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA205",
+            "examiner1": "วรินสินี",
+            "examiner2": "สุภาพร"
+        },
+        {
+            "section": "2,4,7",
+            "course_code": "4091607",
+            "course_name": "พื้นฐานคณิตศาสตร์สำหรับวิศวกรรม",
+            "student_group": "680162201",
+            "student_program": "วิศวกรรมบริหารงานก่อสร้าง",
+            "instructor": "วรินสินี จันทะคุณ, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA206",
+            "examiner1": "พัชรี",
+            "examiner2": "จงรัก"
+        },
+        {
+            "section": "1",
+            "course_code": "4134901",
+            "course_name": "การศึกษาเอกเทศด้านเทคโนโลยีสารสนเทศ",
+            "student_group": "670129701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "จำรูญ จันทร์กุญชร, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA207",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1",
+            "course_code": "4022504",
+            "course_name": "ปฏิบัติการชีวเคมี 1",
+            "student_group": "670425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "พรทิพพา พิญญาพงษ์, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STC301",
+            "examiner1": "สอบนอกตาราง",
+            "examiner2": ""
+        },
+        {
+            "section": "1,2",
+            "course_code": "4023712",
+            "course_name": "ปฏิบัติการเคมีอาหาร",
+            "student_group": "680120601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "พงศ์เทพ จันทร์สันเทียะ, โศภิดา วงศ์วาสน์",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA204",
+            "examiner1": "พงศ์เทพ",
+            "examiner2": "นารีวรรณ"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4027102",
+            "course_name": "ปฏิบัติการเคมีพื้นฐานสำหรับนักเทคโนโลยีการอาหาร",
+            "student_group": "680155801",
+            "student_program": "เทคโนโลยีการอาหาร",
+            "instructor": "ณัฐกฤตา บุณณ์ประกอบ, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA205",
+            "examiner1": "ณัฐกฤตา",
+            "examiner2": "สิงหเดช"
+        },
+        {
+            "section": "1",
+            "course_code": "4062209",
+            "course_name": "เคมีวิเคราะห์ทางสิ่งแวดล้อม",
+            "student_group": "670429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "สุภาพร พงศ์ธรพฤกษ์, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "ENV201",
+            "examiner1": "สุภาพร",
+            "examiner2": "พิชิต"
+        },
+        {
+            "section": "1",
+            "course_code": "4071306",
+            "course_name": "การสาธารณสุขเบื้องต้น",
+            "student_group": "680427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ศศิธร สุขจิตต์, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA107",
+            "examiner1": "ศศิธร",
+            "examiner2": "จุฬาลักษณ์"
+        },
+        {
+            "section": "2",
+            "course_code": "4071306",
+            "course_name": "การสาธารณสุขเบื้องต้น",
+            "student_group": "680427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "ศศิธร สุขจิตต์, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA108",
+            "examiner1": "เผด็จการ",
+            "examiner2": "พิชิต"
+        },
+        {
+            "section": "1",
+            "course_code": "4081101",
+            "course_name": "วิทยาศาสตร์การกีฬาและการออกกำลังกายเบื้องต้น",
+            "student_group": "680429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "วรวุฒิ ธุวะคำ, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A304",
+            "examiner1": "วรวุฒิ",
+            "examiner2": "ราตรี"
+        },
+        {
+            "section": "2",
+            "course_code": "4092601",
+            "course_name": "พีชคณิตเชิงเส้น",
+            "student_group": "670310401",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "ธัชชัย อยู่ยิ่ง, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA208",
+            "examiner1": "ธัชชัย",
+            "examiner2": "จักรกฤษณ์"
+        },
+        {
+            "section": "1",
+            "course_code": "4092601",
+            "course_name": "พีชคณิตเชิงเส้น",
+            "student_group": "670310402",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "ธัชชัย อยู่ยิ่ง, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA305",
+            "examiner1": "ดิเรก",
+            "examiner2": "ณิชารีย์"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4121102",
+            "course_name": "วิทยาการคอมพิวเตอร์เบื้องต้น",
+            "student_group": "680123801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "สมคิด ทุ่นใจ, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA206",
+            "examiner1": "สมคิด",
+            "examiner2": "อิสระ"
+        },
+        {
+            "section": "1",
+            "course_code": "4132604",
+            "course_name": "การออกแบบและพัฒนาสื่อดิจิทัล",
+            "student_group": "670429701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "อนุชา เรืองศิริวัฒนกุล, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA207",
+            "examiner1": "อนุชา",
+            "examiner2": "พิศิษฐ์"
+        },
+        {
+            "section": "1",
+            "course_code": "4512201",
+            "course_name": "อาหารไทย",
+            "student_group": "670420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "กานต์ธิดา ไชยมา, -",
+            "exam_date": "8\/14\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "คหกรรม1",
+            "examiner1": "ฐิติพร",
+            "examiner2": "เอมอร"
+        },
+        {
+            "section": "1",
+            "course_code": "1092303",
+            "course_name": "วิทยาการคำนวณทางวิทยาศาสตร์ศึกษา",
+            "student_group": "670310501",
+            "student_program": "วิทยาศาสตร์ทั่วไป",
+            "instructor": "ธันยบูรณ์ ถาวรวรรณ์, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "ED305",
+            "examiner1": "ธันยบูรณ์",
+            "examiner2": "กนกวรรณ ก"
+        },
+        {
+            "section": "2",
+            "course_code": "4011102",
+            "course_name": "ปฏิบัติการฟิสิกส์เบื้องต้น",
+            "student_group": "680429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "กนกวรรณ มารักษ์, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA206",
+            "examiner1": "กนกวรรณ ม",
+            "examiner2": "จิราพร ก"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4031602",
+            "course_name": "ปฏิบัติการจุลชีววิทยาทั่วไป",
+            "student_group": "680155801",
+            "student_program": "เทคโนโลยีการอาหาร",
+            "instructor": "สุทธิดา วิทนาลัย, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA204",
+            "examiner1": "สุทธิดา",
+            "examiner2": "วิศิษฎ์"
+        },
+        {
+            "section": "2",
+            "course_code": "4073415",
+            "course_name": "วิทยาการระบาดในงานสาธารณสุข",
+            "student_group": "670427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "พงษ์ศักดิ์ อ้นมอย, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA108",
+            "examiner1": "พงษ์ศักดิ์",
+            "examiner2": "เอมอร"
+        },
+        {
+            "section": "1",
+            "course_code": "4073415",
+            "course_name": "วิทยาการระบาดในงานสาธารณสุข",
+            "student_group": "670427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "พงษ์ศักดิ์ อ้นมอย, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA205",
+            "examiner1": "ธนากร",
+            "examiner2": "กชกร"
+        },
+        {
+            "section": "1",
+            "course_code": "4082201",
+            "course_name": "สรีรวิทยาการออกกำลังกาย",
+            "student_group": "670429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "วรวุฒิ ธุวะคำ, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "A401",
+            "examiner1": "วรวุฒิ",
+            "examiner2": "วารุณี"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4091603",
+            "course_name": "คณิตศาสตร์วิศวกรรมคอมพิวเตอร์",
+            "student_group": "680166801",
+            "student_program": "วิศวกรรมคอมพิวเตอร์",
+            "instructor": "พัชรี มณีรัตน์, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA107",
+            "examiner1": "พัชรี",
+            "examiner2": "พัทธชัย"
+        },
+        {
+            "section": "1",
+            "course_code": "4123404",
+            "course_name": "ระบบปฏิบัติการคอมพิวเตอร์",
+            "student_group": "670423801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "โสภณ วิริยะรัตนกุล, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "08.15-10.15",
+            "room": "STA207",
+            "examiner1": "โสภณ",
+            "examiner2": "โศภิดา"
+        },
+        {
+            "section": "1",
+            "course_code": "4022405",
+            "course_name": "ปฏิบัติการเคมีเชิงฟิสิกส์ 1",
+            "student_group": "670425201",
+            "student_program": "เคมี",
+            "instructor": "พงศ์เทพ จันทร์สันเทียะ, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STC201",
+            "examiner1": "พงศ์เทพ",
+            "examiner2": "วีระศักดิ์ ก"
+        },
+        {
+            "section": "1",
+            "course_code": "4031110",
+            "course_name": "ปฏิบัติการชีววิทยาเบื้องต้น",
+            "student_group": "680120601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "วันวิสาข์ พิระภาค, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA204",
+            "examiner1": "วันวิสาข์",
+            "examiner2": "นารีวรรณ"
+        },
+        {
+            "section": "2",
+            "course_code": "4031110",
+            "course_name": "ปฏิบัติการชีววิทยาเบื้องต้น",
+            "student_group": "680420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "สุทธิดา วิทนาลัย, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA205",
+            "examiner1": "สุทธิดา",
+            "examiner2": "กิตติ์ ค"
+        },
+        {
+            "section": "4",
+            "course_code": "4031110",
+            "course_name": "ปฏิบัติการชีววิทยาเบื้องต้น",
+            "student_group": "680425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "จิราภรณ์ นิคมทัศน์, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA206",
+            "examiner1": "จิราภรณ์ น",
+            "examiner2": "สมคิด"
+        },
+        {
+            "section": "1",
+            "course_code": "4072210",
+            "course_name": "สุขภาพจิตชุมชน",
+            "student_group": "680427901",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "สุนีย์ กันแจ่ม, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA107",
+            "examiner1": "สุนีย์",
+            "examiner2": "พรเทพ"
+        },
+        {
+            "section": "2",
+            "course_code": "4072210",
+            "course_name": "สุขภาพจิตชุมชน",
+            "student_group": "680427902",
+            "student_program": "สาธารณสุขศาสตร์",
+            "instructor": "สุนีย์ กันแจ่ม, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA108",
+            "examiner1": "ศศิธร",
+            "examiner2": "พิชิต"
+        },
+        {
+            "section": "1",
+            "course_code": "4123507",
+            "course_name": "การออกแบบส่วนต่อประสานกับผู้ใช้",
+            "student_group": "680123801",
+            "student_program": "วิทยาการคอมพิวเตอร์",
+            "instructor": "อนุชา เรืองศิริวัฒนกุล, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "10.30-12.30",
+            "room": "STA207",
+            "examiner1": "อนุชา",
+            "examiner2": "อิสระ"
+        },
+        {
+            "section": "1",
+            "course_code": "1094606",
+            "course_name": "ระบบฐานข้อมูลทางการศึกษา",
+            "student_group": "670315401",
+            "student_program": "คอมพิวเตอร์และเทคโนโลยีดิจิทัลเพื่อการศึกษา",
+            "instructor": "ชนิดา เรืองศิริวัฒนกุล, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "ED405",
+            "examiner1": "ชนิดา",
+            "examiner2": "พัชรี"
+        },
+        {
+            "section": "1,2",
+            "course_code": "4031111",
+            "course_name": "ชีววิทยาพื้นฐานสำหรับครู",
+            "student_group": "680310501",
+            "student_program": "วิทยาศาสตร์ทั่วไป",
+            "instructor": "พัทธชัย ปิ่นนาค, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA207",
+            "examiner1": "พัทธชัย",
+            "examiner2": "ธัชชัย"
+        },
+        {
+            "section": "1",
+            "course_code": "4031304",
+            "course_name": "สัตววิทยา",
+            "student_group": "670425301",
+            "student_program": "ชีววิทยา",
+            "instructor": "สิริวดี พรหมน้อย, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STC301",
+            "examiner1": "สิริวดี",
+            "examiner2": "วีรศักดิ์ จ"
+        },
+        {
+            "section": "1",
+            "course_code": "4063606",
+            "course_name": "เทคโนโลยีสะอาด",
+            "student_group": "670429401",
+            "student_program": "สิ่งแวดล้อม",
+            "instructor": "พุทธดี อุบลศุข, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "ENV201",
+            "examiner1": "พุทธดี",
+            "examiner2": "เอมอร"
+        },
+        {
+            "section": "1",
+            "course_code": "4081206",
+            "course_name": "กายวิภาคศาสตร์กับการกีฬา 1",
+            "student_group": "680429501",
+            "student_program": "วิทยาศาสตร์การกีฬาและการออกกำลังกาย",
+            "instructor": "ภาคภูมิ โชคทวีพาณิชย์, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "A304",
+            "examiner1": "ภาคภูมิ",
+            "examiner2": "ชาณิภา"
+        },
+        {
+            "section": "1",
+            "course_code": "4091201",
+            "course_name": "หลักการคณิตศาสตร์ (ย้ายไปสอบห้อง STA107)",
+            "student_group": "680310401",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "อิสระ อินจันทร์, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA205",
+            "examiner1": "อิสระ",
+            "examiner2": "โศภิดา"
+        },
+        {
+            "section": "2",
+            "course_code": "4091201",
+            "course_name": "หลักการคณิตศาสตร์ (ย้ายไปสอบห้อง STA107)",
+            "student_group": "680310402",
+            "student_program": "คณิตศาสตร์",
+            "instructor": "อิสระ อินจันทร์, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA206",
+            "examiner1": "อิสระ",
+            "examiner2": "โศภิดา"
+        },
+        {
+            "section": "1",
+            "course_code": "4121204",
+            "course_name": "โครงสร้างข้อมูลและอัลกอริทึม",
+            "student_group": "680129701",
+            "student_program": "เทคโนโลยีสารสนเทศ",
+            "instructor": "กฤษณ์ ชัยวัณณคุปต์, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "STA204",
+            "examiner1": "กฤษณ์",
+            "examiner2": "ธนิต"
+        },
+        {
+            "section": "1",
+            "course_code": "4512202",
+            "course_name": "การถนอมและแปรรูปอาหาร",
+            "student_group": "670420601",
+            "student_program": "อาหารและโภชนาการ",
+            "instructor": "สุทธิพันธุ์ แดงใจ, -",
+            "exam_date": "8\/15\/2568",
+            "exam_time": "13.30-15.30",
+            "room": "คหกรรม1",
+            "examiner1": "สุทธิพันธุ์",
+            "examiner2": "ชุติมา"
+        }
+    ],
+    "examiners": [
+        "กชกร",
+        "กนกวรรณ ก",
+        "กนกวรรณ ม",
+        "กรรมการ 1",
+        "กรรมการ 2",
+        "กฤษณะ",
+        "กฤษณ์",
+        "กานต์ธิดา",
+        "กิตติ ม",
+        "กิตติวรรณ",
+        "กิตติ์ ค",
+        "คณาธิป",
+        "คเชนทร์",
+        "จงรัก",
+        "จักรกฤษณ์",
+        "จันทร์เพ็ญ",
+        "จันทร์แรม",
+        "จำรูญ",
+        "จินตนา",
+        "จิราพร ก",
+        "จิราภรณ์ น",
+        "จุฬาลักษณ์",
+        "ชนันทกร",
+        "ชนิดา",
+        "ชาณิภา",
+        "ชาติทนง",
+        "ชื่นกมล",
+        "ชุติมา",
+        "ชุมพล",
+        "ญาณภา",
+        "ฐิติพร",
+        "ณัฐกฤตา",
+        "ณิชารีย์",
+        "ดิเรก",
+        "ธนากร",
+        "ธนิต",
+        "ธัชชัย",
+        "ธันยบูรณ์",
+        "นภาภรณ์",
+        "นราวดี",
+        "นารีวรรณ",
+        "ปริญญา",
+        "ปรียาพร",
+        "ปัทมา",
+        "ปิยะดา",
+        "พงศ์เทพ",
+        "พงษ์ศักดิ์",
+        "พจนีย์",
+        "พรพรรณ",
+        "พรเทพ",
+        "พัชรี",
+        "พัทธชัย",
+        "พันธุ์ทิพย์",
+        "พิชิต",
+        "พิศิษฐ์",
+        "พีระพล",
+        "พุทธดี",
+        "ภาคภูมิ",
+        "มานิตย์",
+        "ยุทธชัย",
+        "รสสุคนธ์",
+        "ราตรี",
+        "วชิราภรณ์",
+        "วรวุฒิ",
+        "วรินสินี",
+        "วันวิสาข์",
+        "วารุณี",
+        "วิศิษฎ์",
+        "วิไลวรรณ",
+        "วีรศักดิ์ จ",
+        "วีระศักดิ์ ก",
+        "ศรัณยู",
+        "ศศิธร",
+        "สมคิด",
+        "สอบนอกตาราง",
+        "สิงหเดช",
+        "สิริวดี",
+        "สุกัญญา",
+        "สุทธิดา",
+        "สุทธิพันธุ์",
+        "สุนีย์",
+        "สุภาพร",
+        "สุรพล",
+        "อนุชา",
+        "อังคณา",
+        "อัมพวัน",
+        "อาภาวรรณ",
+        "อิศรา",
+        "อิสระ",
+        "อุทัยวรรณ",
+        "อุเทน",
+        "เชาวฤทธิ์",
+        "เผด็จการ",
+        "เอมอร",
+        "โศภิดา",
+        "โสภณ",
+        "ไพทูล"
+    ],
+    "examinerStats": {
+        "กรรมการ 1": {
+            "total": 1,
+            "as_examiner1": 1,
+            "as_examiner2": 0,
+            "dates": {
+                "วันที่สอบ": 1
+            }
+        },
+        "กรรมการ 2": {
+            "total": 1,
+            "as_examiner1": 0,
+            "as_examiner2": 1,
+            "dates": {
+                "วันที่สอบ": 1
+            }
+        },
+        "วชิราภรณ์": {
+            "total": 6,
+            "as_examiner1": 6,
+            "as_examiner2": 0,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 1,
+                "8\/13\/2568": 1
+            }
+        },
+        "สิงหเดช": {
+            "total": 7,
+            "as_examiner1": 1,
+            "as_examiner2": 6,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 2,
+                "8\/8\/2568": 1,
+                "8\/14\/2568": 3
+            }
+        },
+        "สุภาพร": {
+            "total": 5,
+            "as_examiner1": 2,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 2
+            }
+        },
+        "ราตรี": {
+            "total": 6,
+            "as_examiner1": 1,
+            "as_examiner2": 5,
+            "dates": {
+                "8\/4\/2568": 2,
+                "8\/6\/2568": 2,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1
+            }
+        },
+        "เผด็จการ": {
+            "total": 5,
+            "as_examiner1": 4,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1
+            }
+        },
+        "ชนิดา": {
+            "total": 5,
+            "as_examiner1": 2,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "สุนีย์": {
+            "total": 6,
+            "as_examiner1": 6,
+            "as_examiner2": 0,
+            "dates": {
+                "8\/4\/2568": 2,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/8\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "กนกวรรณ ก": {
+            "total": 5,
+            "as_examiner1": 2,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/4\/2568": 2,
+                "8\/5\/2568": 2,
+                "8\/15\/2568": 1
+            }
+        },
+        "จงรัก": {
+            "total": 5,
+            "as_examiner1": 4,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/8\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1
+            }
+        },
+        "คเชนทร์": {
+            "total": 5,
+            "as_examiner1": 2,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 2,
+                "8\/7\/2568": 1,
+                "8\/13\/2568": 1
+            }
+        },
+        "วิไลวรรณ": {
+            "total": 6,
+            "as_examiner1": 5,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 2
+            }
+        },
+        "ชาณิภา": {
+            "total": 5,
+            "as_examiner1": 1,
+            "as_examiner2": 4,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/7\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "ยุทธชัย": {
+            "total": 7,
+            "as_examiner1": 6,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 1,
+                "8\/14\/2568": 2
+            }
+        },
+        "กชกร": {
+            "total": 6,
+            "as_examiner1": 1,
+            "as_examiner2": 5,
+            "dates": {
+                "8\/4\/2568": 2,
+                "8\/5\/2568": 2,
+                "8\/13\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "จุฬาลักษณ์": {
+            "total": 5,
+            "as_examiner1": 3,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1
+            }
+        },
+        "สิริวดี": {
+            "total": 3,
+            "as_examiner1": 1,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/4\/2568": 2,
+                "8\/15\/2568": 1
+            }
+        },
+        "จำรูญ": {
+            "total": 6,
+            "as_examiner1": 3,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/4\/2568": 2,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 2,
+                "8\/13\/2568": 1
+            }
+        },
+        "โศภิดา": {
+            "total": 6,
+            "as_examiner1": 0,
+            "as_examiner2": 6,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 3
+            }
+        },
+        "พงษ์ศักดิ์": {
+            "total": 6,
+            "as_examiner1": 6,
+            "as_examiner2": 0,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "รสสุคนธ์": {
+            "total": 4,
+            "as_examiner1": 3,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 2,
+                "8\/8\/2568": 1
+            }
+        },
+        "ศศิธร": {
+            "total": 5,
+            "as_examiner1": 4,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "ฐิติพร": {
+            "total": 5,
+            "as_examiner1": 3,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1
+            }
+        },
+        "ธนากร": {
+            "total": 6,
+            "as_examiner1": 6,
+            "as_examiner2": 0,
+            "dates": {
+                "8\/4\/2568": 2,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "กานต์ธิดา": {
+            "total": 6,
+            "as_examiner1": 5,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 2
+            }
+        },
+        "ศรัณยู": {
+            "total": 5,
+            "as_examiner1": 5,
+            "as_examiner2": 0,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 2,
+                "8\/13\/2568": 1
+            }
+        },
+        "ชื่นกมล": {
+            "total": 4,
+            "as_examiner1": 2,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/4\/2568": 2,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1
+            }
+        },
+        "กิตติวรรณ": {
+            "total": 6,
+            "as_examiner1": 6,
+            "as_examiner2": 0,
+            "dates": {
+                "8\/4\/2568": 2,
+                "8\/5\/2568": 1,
+                "8\/7\/2568": 2,
+                "8\/13\/2568": 1
+            }
+        },
+        "สุทธิพันธุ์": {
+            "total": 5,
+            "as_examiner1": 4,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "วรวุฒิ": {
+            "total": 6,
+            "as_examiner1": 6,
+            "as_examiner2": 0,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 1,
+                "8\/14\/2568": 2,
+                "8\/15\/2568": 1
+            }
+        },
+        "จักรกฤษณ์": {
+            "total": 6,
+            "as_examiner1": 3,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 2,
+                "8\/14\/2568": 1
+            }
+        },
+        "ภาคภูมิ": {
+            "total": 7,
+            "as_examiner1": 7,
+            "as_examiner2": 0,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 2,
+                "8\/6\/2568": 1,
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "ณิชารีย์": {
+            "total": 6,
+            "as_examiner1": 2,
+            "as_examiner2": 4,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/14\/2568": 3
+            }
+        },
+        "วีระศักดิ์ ก": {
+            "total": 5,
+            "as_examiner1": 2,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/7\/2568": 2,
+                "8\/15\/2568": 1
+            }
+        },
+        "มานิตย์": {
+            "total": 5,
+            "as_examiner1": 4,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 1
+            }
+        },
+        "กิตติ์ ค": {
+            "total": 4,
+            "as_examiner1": 1,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 2,
+                "8\/15\/2568": 1
+            }
+        },
+        "สุรพล": {
+            "total": 5,
+            "as_examiner1": 3,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 2,
+                "8\/13\/2568": 1
+            }
+        },
+        "ชุติมา": {
+            "total": 5,
+            "as_examiner1": 3,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/6\/2568": 2,
+                "8\/7\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "อนุชา": {
+            "total": 4,
+            "as_examiner1": 3,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "กนกวรรณ ม": {
+            "total": 7,
+            "as_examiner1": 6,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 2,
+                "8\/13\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "โสภณ": {
+            "total": 5,
+            "as_examiner1": 3,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "พิศิษฐ์": {
+            "total": 6,
+            "as_examiner1": 2,
+            "as_examiner2": 4,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 2,
+                "8\/14\/2568": 1
+            }
+        },
+        "วรินสินี": {
+            "total": 6,
+            "as_examiner1": 3,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 2,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1
+            }
+        },
+        "วันวิสาข์": {
+            "total": 6,
+            "as_examiner1": 3,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 2,
+                "8\/13\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "ดิเรก": {
+            "total": 7,
+            "as_examiner1": 6,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 2,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1
+            }
+        },
+        "พุทธดี": {
+            "total": 6,
+            "as_examiner1": 1,
+            "as_examiner2": 5,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 2,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "กฤษณ์": {
+            "total": 7,
+            "as_examiner1": 6,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/7\/2568": 3,
+                "8\/8\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "จิราภรณ์ น": {
+            "total": 6,
+            "as_examiner1": 2,
+            "as_examiner2": 4,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "จันทร์เพ็ญ": {
+            "total": 5,
+            "as_examiner1": 1,
+            "as_examiner2": 4,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1
+            }
+        },
+        "อัมพวัน": {
+            "total": 5,
+            "as_examiner1": 0,
+            "as_examiner2": 5,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 2,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1
+            }
+        },
+        "ชาติทนง": {
+            "total": 4,
+            "as_examiner1": 3,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/13\/2568": 2
+            }
+        },
+        "พันธุ์ทิพย์": {
+            "total": 5,
+            "as_examiner1": 0,
+            "as_examiner2": 5,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 2,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1
+            }
+        },
+        "วิศิษฎ์": {
+            "total": 6,
+            "as_examiner1": 5,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 2,
+                "8\/15\/2568": 1
+            }
+        },
+        "ธันยบูรณ์": {
+            "total": 7,
+            "as_examiner1": 7,
+            "as_examiner2": 0,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "นราวดี": {
+            "total": 6,
+            "as_examiner1": 3,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/6\/2568": 2,
+                "8\/8\/2568": 2,
+                "8\/13\/2568": 1
+            }
+        },
+        "สอบนอกตาราง": {
+            "total": 19,
+            "as_examiner1": 19,
+            "as_examiner2": 0,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 5,
+                "8\/6\/2568": 2,
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 4,
+                "8\/13\/2568": 3,
+                "8\/14\/2568": 3
+            }
+        },
+        "ชุมพล": {
+            "total": 6,
+            "as_examiner1": 2,
+            "as_examiner2": 4,
+            "dates": {
+                "8\/4\/2568": 1,
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 2,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1
+            }
+        },
+        "สุทธิดา": {
+            "total": 4,
+            "as_examiner1": 3,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/5\/2568": 1,
+                "8\/8\/2568": 1,
+                "8\/15\/2568": 2
+            }
+        },
+        "กฤษณะ": {
+            "total": 6,
+            "as_examiner1": 5,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/5\/2568": 1,
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 2,
+                "8\/14\/2568": 1
+            }
+        },
+        "พีระพล": {
+            "total": 6,
+            "as_examiner1": 6,
+            "as_examiner2": 0,
+            "dates": {
+                "8\/5\/2568": 2,
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 2
+            }
+        },
+        "พัชรี": {
+            "total": 6,
+            "as_examiner1": 5,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 2
+            }
+        },
+        "ณัฐกฤตา": {
+            "total": 5,
+            "as_examiner1": 3,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/5\/2568": 2,
+                "8\/13\/2568": 2,
+                "8\/14\/2568": 1
+            }
+        },
+        "นภาภรณ์": {
+            "total": 1,
+            "as_examiner1": 1,
+            "as_examiner2": 0,
+            "dates": {
+                "8\/5\/2568": 1
+            }
+        },
+        "ปริญญา": {
+            "total": 4,
+            "as_examiner1": 2,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1
+            }
+        },
+        "จิราพร ก": {
+            "total": 5,
+            "as_examiner1": 2,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/5\/2568": 1,
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "สมคิด": {
+            "total": 6,
+            "as_examiner1": 2,
+            "as_examiner2": 4,
+            "dates": {
+                "8\/6\/2568": 2,
+                "8\/13\/2568": 2,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "กิตติ ม": {
+            "total": 2,
+            "as_examiner1": 0,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/6\/2568": 1,
+                "8\/14\/2568": 1
+            }
+        },
+        "พัทธชัย": {
+            "total": 6,
+            "as_examiner1": 1,
+            "as_examiner2": 5,
+            "dates": {
+                "8\/6\/2568": 2,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 2
+            }
+        },
+        "วีรศักดิ์ จ": {
+            "total": 5,
+            "as_examiner1": 1,
+            "as_examiner2": 4,
+            "dates": {
+                "8\/6\/2568": 2,
+                "8\/13\/2568": 1,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "วารุณี": {
+            "total": 6,
+            "as_examiner1": 1,
+            "as_examiner2": 5,
+            "dates": {
+                "8\/6\/2568": 2,
+                "8\/13\/2568": 2,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "พิชิต": {
+            "total": 6,
+            "as_examiner1": 1,
+            "as_examiner2": 5,
+            "dates": {
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 2,
+                "8\/14\/2568": 2,
+                "8\/15\/2568": 1
+            }
+        },
+        "นารีวรรณ": {
+            "total": 6,
+            "as_examiner1": 3,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 2,
+                "8\/14\/2568": 2,
+                "8\/15\/2568": 1
+            }
+        },
+        "พงศ์เทพ": {
+            "total": 6,
+            "as_examiner1": 4,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/6\/2568": 1,
+                "8\/13\/2568": 2,
+                "8\/14\/2568": 2,
+                "8\/15\/2568": 1
+            }
+        },
+        "ธนิต": {
+            "total": 6,
+            "as_examiner1": 5,
+            "as_examiner2": 1,
+            "dates": {
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 1,
+                "8\/13\/2568": 2,
+                "8\/15\/2568": 1
+            }
+        },
+        "ปิยะดา": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 2
+            }
+        },
+        "ไพทูล": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 2
+            }
+        },
+        "อุทัยวรรณ": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 1
+            }
+        },
+        "จินตนา": {
+            "total": 2,
+            "as_examiner1": 0,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 1
+            }
+        },
+        "สุกัญญา": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 1
+            }
+        },
+        "จันทร์แรม": {
+            "total": 6,
+            "as_examiner1": 0,
+            "as_examiner2": 6,
+            "dates": {
+                "8\/7\/2568": 3,
+                "8\/8\/2568": 3
+            }
+        },
+        "ชนันทกร": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 2
+            }
+        },
+        "อาภาวรรณ": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 2
+            }
+        },
+        "อิศรา": {
+            "total": 2,
+            "as_examiner1": 0,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 1
+            }
+        },
+        "อุเทน": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 2
+            }
+        },
+        "เชาวฤทธิ์": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 2
+            }
+        },
+        "ปรียาพร": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 2
+            }
+        },
+        "พรพรรณ": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 2,
+                "8\/8\/2568": 1
+            }
+        },
+        "คณาธิป": {
+            "total": 5,
+            "as_examiner1": 0,
+            "as_examiner2": 5,
+            "dates": {
+                "8\/7\/2568": 3,
+                "8\/8\/2568": 2
+            }
+        },
+        "อังคณา": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 2
+            }
+        },
+        "ญาณภา": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 2
+            }
+        },
+        "พจนีย์": {
+            "total": 3,
+            "as_examiner1": 0,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/7\/2568": 1,
+                "8\/8\/2568": 2
+            }
+        },
+        "ปัทมา": {
+            "total": 2,
+            "as_examiner1": 0,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/8\/2568": 2
+            }
+        },
+        "พรเทพ": {
+            "total": 5,
+            "as_examiner1": 1,
+            "as_examiner2": 4,
+            "dates": {
+                "8\/13\/2568": 3,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        },
+        "อิสระ": {
+            "total": 6,
+            "as_examiner1": 4,
+            "as_examiner2": 2,
+            "dates": {
+                "8\/13\/2568": 2,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 3
+            }
+        },
+        "เอมอร": {
+            "total": 5,
+            "as_examiner1": 1,
+            "as_examiner2": 4,
+            "dates": {
+                "8\/13\/2568": 2,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 2
+            }
+        },
+        "ธัชชัย": {
+            "total": 4,
+            "as_examiner1": 1,
+            "as_examiner2": 3,
+            "dates": {
+                "8\/13\/2568": 2,
+                "8\/14\/2568": 1,
+                "8\/15\/2568": 1
+            }
+        }
+    },
+    "summary": {
+        "total_schedules": 253,
+        "total_examiners": 97,
+        "merged_from": 339,
+        "total_raw_schedules": 339,
+        "total_merged_schedules": 253
+    }
+}

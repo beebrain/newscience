@@ -493,3 +493,22 @@ $routes->get('edoc/public/view-file/(:any)', 'Edoc\GeneralController::publicView
 // Edoc notifications — ดึงข้อมูลข่าว/เอกสารประจำวัน (ไม่ต้อง login)
 $routes->get('edoc/notifications', 'Edoc\GeneralController::getDocumentNotificationsData');
 $routes->get('edoc/notifications/(:segment)', 'Edoc\GeneralController::getDocumentNotificationsData/$1');
+
+// Exam Routes (ตารางคุมสอบ) - JSON Based
+$routes->group('exam', ['filter' => 'loggedin'], function ($routes) {
+    $routes->get('/', 'ExamJsonController::index');
+    $routes->get('get-semesters', 'ExamJsonController::getSemesters');
+    $routes->get('get-schedules', 'ExamJsonController::getSchedules');
+});
+
+// Admin Exam Routes - JSON Based
+$routes->group('admin/exam', ['filter' => ['adminauth', 'adminsystemaccess']], function ($routes) {
+    $routes->get('/', 'Admin\ExamJsonAdminController::index');
+    $routes->get('upload', 'Admin\ExamJsonAdminController::uploadForm');
+    $routes->post('upload', 'Admin\ExamJsonAdminController::upload');
+    $routes->get('preview/(:num)/(:num)/(:any)', 'Admin\ExamJsonAdminController::preview/$1/$2/$3');
+    $routes->post('publish/(:num)/(:num)/(:any)', 'Admin\ExamJsonAdminController::publish/$1/$2/$3');
+    $routes->post('delete/(:num)/(:num)/(:any)', 'Admin\ExamJsonAdminController::delete/$1/$2/$3');
+    $routes->get('get-semesters', 'Admin\ExamJsonAdminController::getAvailableSemesters');
+    $routes->get('load-data', 'Admin\ExamJsonAdminController::loadData');
+});
