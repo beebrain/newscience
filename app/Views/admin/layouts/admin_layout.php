@@ -40,7 +40,7 @@ use App\Libraries\AccessControl; ?>
             <nav class="sidebar-nav" aria-label="เมนูหลัก">
                 <?php $sidebarAdminId = session()->get('admin_id');
                 $sid = (int) $sidebarAdminId; ?>
-                
+
                 <!-- ตารางคุมสอบ (exam) -->
                 <?php
                 $hasExam = $sidebarAdminId && (AccessControl::hasAccess($sid, 'exam') || AccessControl::hasAccess($sid, 'exam_admin'));
@@ -178,7 +178,37 @@ use App\Libraries\AccessControl; ?>
                     </div>
                 <?php endif; ?>
             </nav>
-        </aside>    <polyline points="22 4 12 14.01 9 11.01" />
+        </aside>
+
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <main id="admin-main" class="main-content" role="main">
+            <header class="topbar">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="topbar-menu-btn btn-secondary" onclick="toggleSidebar()" style="display: none; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--color-gray-300); background: white; cursor: pointer;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1 class="topbar-title" style="margin: 0;"><?= $page_title ?? 'Dashboard' ?></h1>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="topbar-user">
+                        <span><?= session()->get('admin_name') ?? 'Admin' ?></span>
+                        <a href="<?= base_url('admin/logout') ?>" aria-label="ออกจากระบบ (รวมทุกแอป)">Logout</a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <?php if (session()->getFlashdata('success')): ?>
+                    <div class="alert alert-success" role="status" aria-live="polite">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
                         </svg>
                         <?= session()->getFlashdata('success') ?>
                     </div>
@@ -205,7 +235,6 @@ use App\Libraries\AccessControl; ?>
                     </div>
                 <?php endif; ?>
 
-                <!-- Silent Auto-Login Iframes (trigger login on other apps) -->
                 <?php if (session()->getFlashdata('sso_autologin_urls')): ?>
                     <div style="width:0;height:0;overflow:hidden;position:absolute;">
                         <?php foreach (session()->getFlashdata('sso_autologin_urls') as $ssoUrl): ?>
