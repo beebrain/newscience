@@ -485,6 +485,7 @@ $matchName = $nickname ?: $thaiName;
 
 <script>
     const baseUrl = '<?= base_url() ?>';
+    const isAdmin = <?= (session()->get('admin_role') ? 'true' : 'false') ?>;
     const state = {
         activeTab: 'all',
         loading: false,
@@ -855,12 +856,6 @@ $matchName = $nickname ?: $thaiName;
                         <div style="font-size: 0.75rem; color: var(--color-gray-500); margin-bottom: 0.5rem;">
                             รวมจาก: ${group.names.map(name => escapeHtml(name)).join(', ')}
                         </div>
-                    ` : ''}
-                    ${isAdmin ? `
-                    <div class="instructor-card__stats">
-                        <span class="instructor-card__stat primary">คุม ${examCount}</span>
-                        ${ownerCount > 0 ? `<span class="instructor-card__stat success">เจ้าของ ${ownerCount}</span>` : ''}
-                    </div>
                     ` : ''}
                     ${isCurrentUserInstructor ? '<div class="instructor-card__match">✓ ตรงกับข้อมูลของคุณ</div>' : ''}
                 </div>
