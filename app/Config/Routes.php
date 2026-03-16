@@ -88,7 +88,7 @@ $routes->get('/dashboard/calendar', 'User\CalendarController::index', ['filter' 
 $routes->get('/go-research-record', 'Admin\Auth::goResearchRecord', ['filter' => 'loggedin']);
 
 // Teaching evaluation (ประเมินผลการสอน) — lecture submit + admin ต้อง login; แบบฟอร์มผู้ประเมินเข้าจาก link
-$routes->group('evaluate', static function ($routes) {
+$routes->group('evaluate', ['filter' => 'loggedin'], static function ($routes) {
     $routes->get('card', 'Evaluate\EvaluateController::card');
     $routes->get('self-form', 'Evaluate\EvaluateController::selfForm');
     $routes->post('self/save', 'Evaluate\EvaluateController::saveSelf');
