@@ -39,12 +39,235 @@ use App\Libraries\AccessControl; ?>
 
             <nav class="sidebar-nav" aria-label="เมนูหลัก">
                 <?php $sidebarAdminId = session()->get('admin_id');
-                $sid = (int) $sidebarAdminId; ?>
-
-                <!-- ตารางคุมสอบ (exam) -->
-                <?php
+                $sid = (int) $sidebarAdminId;
+                $sidebarRole = session()->get('admin_role');
+                $hasAdminCore = $sidebarAdminId && AccessControl::hasAccess($sid, 'admin_core');
+                $hasAdminNews = $sidebarAdminId && AccessControl::hasAccess($sid, 'admin_news');
+                $hasAdminDownloads = $sidebarAdminId && (AccessControl::hasAccess($sid, 'admin_downloads') || AccessControl::hasAccess($sid, 'admin_core'));
+                $hasAdminUrgentPopup = $sidebarAdminId && (AccessControl::hasAccess($sid, 'admin_urgent_popup') || AccessControl::hasAccess($sid, 'admin_core'));
+                $hasAcademicService = $sidebarAdminId && (AccessControl::hasAccess($sid, 'academic_service') || AccessControl::hasAccess($sid, 'admin_core'));
                 $hasExam = $sidebarAdminId && (AccessControl::hasAccess($sid, 'exam') || AccessControl::hasAccess($sid, 'exam_admin'));
+                $showContentMenu = $hasAdminCore || $hasAdminNews || $hasAdminDownloads || $hasAdminUrgentPopup;
+                $canManageEvaluate = false;
+                if ($sidebarAdminId) {
+                    $evalRightsModel = new \App\Models\Evaluate\EvaluateUserRightsModel();
+                    $canManageEvaluate = $evalRightsModel->canManageEvaluate($sid);
+                    if (! $canManageEvaluate && in_array($sidebarRole, ['super_admin', 'faculty_admin'], true)) {
+                        $canManageEvaluate = true;
+                    }
+                }
                 ?>
+                <a href="<?= base_url('dashboard') ?>" class="<?= (uri_string() == 'dashboard') ? 'active' : '' ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    สลับไปหน้า Dashboard
+                </a>
+
+                <?php if ($sidebarAdminId && ($sidebarRole === 'admin' || $sidebarRole === 'super_admin')): ?>
+                    <a href="<?= base_url('admin/executive-dashboard') ?>" class="<?= (uri_string() == 'admin/executive-dashboard') ? 'active' : '' ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M3 3v18h18" />
+                            <path d="M18 9v4" />
+                            <path d="M13 3v12" />
+                            <path d="M8 7v8" />
+                        </svg>
+                        Dashboard ผู้บริหาร
+                    </a>
+                <?php endif; ?>
+
+                <?php if ($sidebarAdminId): ?>
+                    <div class="sidebar-submenu" data-submenu="edoc">
+                        <button type="button" class="submenu-header" aria-expanded="false">
+                            <span>E-Document</span>
+                            <svg class="submenu-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                        <div class="submenu-items">
+                            <a href="<?= base_url('edoc') ?>" class="<?= (strpos(uri_string(), 'edoc') === 0 && strpos(uri_string(), 'edoc/admin') !== 0) ? 'active' : '' ?>">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                    <polyline points="10 9 9 9 8 9" />
+                                </svg>
+                                E-Document (ดูเอกสาร)
+                            </a>
+                            <?php if (AccessControl::hasAccess($sid, 'edoc_admin')): ?>
+                                <a href="<?= base_url('edoc/admin') ?>" class="<?= (strpos(uri_string(), 'edoc/admin') === 0) ? 'active' : '' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    E-Document (จัดการ)
+                                </a>
+                            <?php endif; ?>
+                            <a href="<?= base_url('edoc/analysis') ?>" class="<?= (strpos(uri_string(), 'edoc/analysis') === 0) ? 'active' : '' ?>">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M3 3v18h18" />
+                                    <path d="M18 9v4" />
+                                    <path d="M13 3v12" />
+                                    <path d="M8 7v8" />
+                                </svg>
+                                วิเคราะห์เอกสาร
+                            </a>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($sidebarAdminId && AccessControl::hasAccess($sid, 'calendar')): ?>
+                    <a href="<?= base_url('admin/calendar') ?>" class="<?= (uri_string() == 'admin/calendar' || strpos(uri_string(), 'admin/calendar') === 0) ? 'active' : '' ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        ปฏิทินนัดหมาย
+                    </a>
+                <?php endif; ?>
+
+                <?php if ($canManageEvaluate): ?>
+                    <div class="sidebar-submenu" data-submenu="evaluate">
+                        <button type="button" class="submenu-header" aria-expanded="false">
+                            <span>ประเมินผลการสอน</span>
+                            <svg class="submenu-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                        <div class="submenu-items">
+                            <a href="<?= base_url('evaluate/admin') ?>" class="<?= (uri_string() === 'evaluate/admin') ? 'active' : '' ?>">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M9 11l3 3L22 4" />
+                                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                                </svg>
+                                จัดการระบบประเมินผลการสอน (Admin)
+                            </a>
+                            <a href="<?= base_url('evaluate/admin/rights') ?>" class="<?= (uri_string() == 'evaluate/admin/rights') ? 'active' : '' ?>">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                                    <path d="M16 3.13a4 4 0 010 7.75" />
+                                </svg>
+                                ระบุสิทธิ์รายบุคคล
+                            </a>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($showContentMenu): ?>
+                    <div class="sidebar-submenu" data-submenu="content">
+                        <button type="button" class="submenu-header" aria-expanded="false">
+                            <span>จัดการเนื้อหา</span>
+                            <svg class="submenu-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                        <div class="submenu-items">
+                            <?php if ($hasAdminCore || $hasAdminNews): ?>
+                                <a href="<?= base_url('admin/news') ?>" class="<?= (uri_string() == 'admin/news' || strpos(uri_string(), 'admin/news') === 0) ? 'active' : '' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                    </svg>
+                                    ประกาศข่าว / News
+                                </a>
+                            <?php endif; ?>
+                            <?php if ($hasAdminCore): ?>
+                                <a href="<?= base_url('admin/organization') ?>" class="<?= (uri_string() == 'admin/organization' || strpos(uri_string(), 'admin/organization') === 0) ? 'active' : '' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                        <circle cx="9" cy="7" r="4" />
+                                        <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                                        <path d="M16 3.13a4 4 0 010 7.75" />
+                                    </svg>
+                                    โครงสร้างองค์กร
+                                </a>
+                                <a href="<?= base_url('admin/programs') ?>" class="<?= (uri_string() == 'admin/programs' || strpos(uri_string(), 'admin/programs') === 0) ? 'active' : '' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                                        <line x1="8" y1="6" x2="16" y2="6" />
+                                        <line x1="8" y1="10" x2="16" y2="10" />
+                                    </svg>
+                                    จัดการหลักสูตร
+                                </a>
+                                <a href="<?= base_url('admin/hero-slides') ?>" class="<?= (uri_string() == 'admin/hero-slides' || strpos(uri_string(), 'admin/hero-slides') === 0) ? 'active' : '' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                        <polyline points="21 15 16 10 5 21" />
+                                    </svg>
+                                    Hero Slides
+                                </a>
+                                <?php if ($hasAdminUrgentPopup): ?>
+                                    <a href="<?= base_url('admin/urgent-popups') ?>" class="<?= (uri_string() == 'admin/urgent-popups' || strpos(uri_string(), 'admin/urgent-popups') === 0) ? 'active' : '' ?>">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                            <line x1="12" y1="9" x2="12" y2="13" />
+                                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                                        </svg>
+                                        ประกาศด่วน (ป๊อปอัป)
+                                    </a>
+                                <?php endif; ?>
+                                <a href="<?= base_url('admin/events') ?>" class="<?= (uri_string() == 'admin/events' || strpos(uri_string(), 'admin/events') === 0) ? 'active' : '' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                        <line x1="16" y1="2" x2="16" y2="6" />
+                                        <line x1="8" y1="2" x2="8" y2="6" />
+                                        <line x1="3" y1="10" x2="21" y2="10" />
+                                    </svg>
+                                    Events Coming Up
+                                </a>
+                                <?php if ($hasAdminDownloads): ?>
+                                    <a href="<?= base_url('admin/downloads') ?>" class="<?= (uri_string() == 'admin/downloads' || strpos(uri_string(), 'admin/downloads') === 0) ? 'active' : '' ?>">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                            <polyline points="7 10 12 15 17 10" />
+                                            <line x1="12" y1="15" x2="12" y2="3" />
+                                        </svg>
+                                        จัดการดาวน์โหลดคณะ
+                                    </a>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($hasAcademicService): ?>
+                    <div class="sidebar-submenu" data-submenu="academic_service">
+                        <button type="button" class="submenu-header" aria-expanded="false">
+                            <span>บริการวิชาการ</span>
+                            <svg class="submenu-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                        <div class="submenu-items">
+                            <a href="<?= base_url('admin/academic-services') ?>" class="<?= ((uri_string() == 'admin/academic-services' || strpos(uri_string(), 'admin/academic-services') === 0) && strpos(uri_string(), 'admin/academic-services/report') !== 0) ? 'active' : '' ?>">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                                </svg>
+                                จัดการบริการวิชาการ
+                            </a>
+                            <a href="<?= base_url('admin/academic-services/report') ?>" class="<?= (uri_string() == 'admin/academic-services/report' || strpos(uri_string(), 'admin/academic-services/report') === 0) ? 'active' : '' ?>">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                    <polyline points="10 9 9 9 8 9" />
+                                </svg>
+                                แบบรายงานสรุป
+                            </a>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <?php if ($hasExam): ?>
                     <div class="sidebar-submenu" data-submenu="exam">
                         <button type="button" class="submenu-header" aria-expanded="false">
@@ -63,10 +286,7 @@ use App\Libraries\AccessControl; ?>
                                 </svg>
                                 ดูตารางคุมสอบ
                             </a>
-                            <?php if (\App\Libraries\AccessControl::hasAccess($sid, 'exam_admin')): ?>
-                                <div class="nav-section">
-                                    <div class="nav-section-title">จัดการตารางสอบ</div>
-                                </div>
+                            <?php if (AccessControl::hasAccess($sid, 'exam_admin')): ?>
                                 <a href="<?= base_url('admin/exam') ?>" class="<?= (uri_string() == 'admin/exam' || strpos(uri_string(), 'admin/exam') === 0) ? 'active' : '' ?>">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
@@ -89,94 +309,176 @@ use App\Libraries\AccessControl; ?>
                     </div>
                 <?php endif; ?>
 
-                <!-- จัดการผู้ใช้ -->
-                <?php if ($sidebarAdminId && AccessControl::hasAccess($sid, 'admin_core')): ?>
-                    <a href="<?= base_url('admin/users') ?>" class="<?= (uri_string() == 'admin/users' || strpos(uri_string(), 'admin/users') === 0) ? 'active' : '' ?>">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                            <circle cx="9" cy="7" r="4" />
-                            <path d="M23 21v-2a4 4 0 00-3-3.87" />
-                            <path d="M16 3.13a4 4 0 010 7.75" />
-                        </svg>
-                        จัดการผู้ใช้
-                    </a>
-                <?php endif; ?>
-
-                <!-- จัดการเนื้อหา -->
-                <?php
-                $hasAdminCore = $sidebarAdminId && AccessControl::hasAccess($sid, 'admin_core');
-                $hasAdminNews = $sidebarAdminId && AccessControl::hasAccess($sid, 'admin_news');
-                $showContentMenu = $hasAdminCore || $hasAdminNews;
-                ?>
-                <?php if ($showContentMenu): ?>
-                    <div class="sidebar-submenu" data-submenu="content">
+                <?php if ($sidebarAdminId && AccessControl::hasAccess($sid, 'program_admin')): ?>
+                    <div class="sidebar-submenu" data-submenu="program_admin">
                         <button type="button" class="submenu-header" aria-expanded="false">
-                            <span>จัดการเนื้อหา</span>
+                            <span>Content Builder</span>
                             <svg class="submenu-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                 <polyline points="6 9 12 15 18 9" />
                             </svg>
                         </button>
                         <div class="submenu-items">
-                            <?php if ($hasAdminCore || $hasAdminNews): ?>
-                                <a href="<?= base_url('admin/news') ?>" class="<?= (uri_string() == 'admin/news' || strpos(uri_string(), 'admin/news') === 0) ? 'active' : '' ?>">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                        <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                                    </svg>
-                                    ประกาศข่าว / News
-                                </a>
-                            <?php endif; ?>
-                            <?php if ($hasAdminCore): ?>
-                                <a href="<?= base_url('admin/hero-slides') ?>" class="<?= (uri_string() == 'admin/hero-slides' || strpos(uri_string(), 'admin/hero-slides') === 0) ? 'active' : '' ?>">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                        <polyline points="21 15 16 10 5 21" />
-                                    </svg>
-                                    Hero Slides
-                                </a>
-                                <a href="<?= base_url('admin/events') ?>" class="<?= (uri_string() == 'admin/events' || strpos(uri_string(), 'admin/events') === 0) ? 'active' : '' ?>">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                                        <line x1="16" y1="2" x2="16" y2="6" />
-                                        <line x1="8" y1="2" x2="8" y2="6" />
-                                        <line x1="3" y1="10" x2="21" y2="10" />
-                                    </svg>
-                                    Events Coming Up
-                                </a>
-                            <?php endif; ?>
+                            <a href="<?= base_url('program-admin') ?>" class="<?= (strpos(uri_string(), 'program-admin') === 0) ? 'active' : '' ?>">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M12 19l7-7 3 3-7 7-3-3z" />
+                                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+                                    <path d="M2 2l7.586 7.586" />
+                                    <circle cx="11" cy="11" r="2" />
+                                </svg>
+                                แก้ไขเว็บหลักสูตร
+                            </a>
                         </div>
                     </div>
                 <?php endif; ?>
 
-                <!-- E-Document (เฉพาะสำหรับผู้จัดการ) -->
-                <?php if ($sidebarAdminId && AccessControl::hasAccess($sid, 'edoc_admin')): ?>
-                    <div class="sidebar-submenu" data-submenu="edoc">
+                <?php if ($sidebarAdminId && in_array($sidebarRole, ['admin', 'editor', 'super_admin', 'faculty_admin'], true)): ?>
+                    <a href="<?= base_url('student-admin/barcode-events') ?>" class="<?= (strpos(uri_string(), 'student-admin') === 0) ? 'active' : '' ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                        </svg>
+                        จัดการบาร์โค้ด
+                    </a>
+                <?php endif; ?>
+
+                <?php if ($sidebarAdminId && AccessControl::hasAccess($sid, 'ecert')): ?>
+                    <div class="sidebar-submenu" data-submenu="ecert">
                         <button type="button" class="submenu-header" aria-expanded="false">
-                            <span>E-Document</span>
+                            <span>E-Certificate</span>
                             <svg class="submenu-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                 <polyline points="6 9 12 15 18 9" />
                             </svg>
                         </button>
                         <div class="submenu-items">
-                            <a href="<?= base_url('edoc') ?>" class="<?= (strpos(uri_string(), 'edoc') === 0 && strpos(uri_string(), 'edoc/admin') !== 0) ? 'active' : '' ?>">
+                            <a href="<?= base_url('admin/cert-events') ?>" class="<?= (strpos(uri_string(), 'admin/cert-events') === 0) ? 'active' : '' ?>">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                กิจกรรม/อบรม
+                            </a>
+                            <a href="<?= base_url('admin/cert-templates') ?>" class="<?= (strpos(uri_string(), 'admin/cert-templates') === 0) ? 'active' : '' ?>">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                                     <polyline points="14 2 14 8 20 8" />
                                     <line x1="16" y1="13" x2="8" y2="13" />
                                     <line x1="16" y1="17" x2="8" y2="17" />
-                                    <polyline points="10 9 9 9 8 9" />
                                 </svg>
-                                E-Document (ดูเอกสาร)
+                                เทมเพลตใบรับรอง
                             </a>
-                            <a href="<?= base_url('edoc/admin') ?>" class="<?= (strpos(uri_string(), 'edoc/admin') === 0) ? 'active' : '' ?>">
+                            <a href="<?= base_url('admin/certificates') ?>" class="<?= (strpos(uri_string(), 'admin/certificates') === 0) ? 'active' : '' ?>">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                     <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                E-Document (จัดการ)
+                                คำขอใบรับรอง (เดิม)
                             </a>
                         </div>
                     </div>
                 <?php endif; ?>
+
+                <?php if ($sidebarAdminId && AccessControl::hasAccess($sid, 'cert_approve')): ?>
+                    <div class="sidebar-submenu" data-submenu="cert_approve">
+                        <button type="button" class="submenu-header" aria-expanded="false">
+                            <span>อนุมัติใบรับรอง</span>
+                            <svg class="submenu-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                        <div class="submenu-items">
+                            <a href="<?= base_url('approve/certificates') ?>" class="<?= (strpos(uri_string(), 'approve') === 0) ? 'active' : '' ?>">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M9 12l2 2 4-4" />
+                                    <circle cx="12" cy="12" r="10" />
+                                </svg>
+                                อนุมัติใบรับรอง
+                            </a>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($sidebarAdminId && (AccessControl::hasAccess($sid, 'user_management') || AccessControl::hasAccess($sid, 'site_settings') || AccessControl::hasAccess($sid, 'utility'))): ?>
+                    <div class="sidebar-submenu" data-submenu="sysadmin">
+                        <button type="button" class="submenu-header" aria-expanded="false">
+                            <span>ผู้ดูแลระบบ</span>
+                            <svg class="submenu-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                        <div class="submenu-items">
+                            <?php if (AccessControl::hasAccess($sid, 'user_management')): ?>
+                                <a href="<?= base_url('admin/users') ?>" class="<?= (uri_string() == 'admin/users' || strpos(uri_string(), 'admin/users') === 0) ? 'active' : '' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                        <circle cx="9" cy="7" r="4" />
+                                        <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                                        <path d="M16 3.13a4 4 0 010 7.75" />
+                                    </svg>
+                                    จัดการผู้ใช้
+                                </a>
+                            <?php endif; ?>
+                            <?php if (AccessControl::hasAccess($sid, 'site_settings')): ?>
+                                <a href="<?= base_url('admin/settings') ?>" class="<?= (uri_string() == 'admin/settings' || strpos(uri_string(), 'admin/settings') === 0) ? 'active' : '' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="3" />
+                                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" />
+                                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+                                    </svg>
+                                    ตั้งค่าเว็บไซต์
+                                </a>
+                            <?php endif; ?>
+                            <?php if (AccessControl::hasAccess($sid, 'utility')): ?>
+                                <a href="<?= base_url('utility/import-data') ?>" class="<?= (uri_string() === 'utility/import-data' || strpos(uri_string(), 'utility/import-data') === 0) ? 'active' : '' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                        <polyline points="17 8 12 3 7 8" />
+                                        <line x1="12" y1="3" x2="12" y2="15" />
+                                    </svg>
+                                    Import Data
+                                </a>
+                                <a href="<?= base_url('utility/categorize-news') ?>" class="<?= (uri_string() === 'utility/categorize-news' || strpos(uri_string(), 'utility/categorize-news') === 0) ? 'active' : '' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                        <polyline points="10 9 9 9 8 9" />
+                                    </svg>
+                                    จัดหมวดข่าว
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <div class="sidebar-submenu" data-submenu="external">
+                    <button type="button" class="submenu-header" aria-expanded="false">
+                        <span>ลิงก์ภายนอก</span>
+                        <svg class="submenu-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                    </button>
+                    <div class="submenu-items">
+                        <?php
+                        $researchSso = config(\Config\ResearchRecordSso::class);
+                        $showResearch = $researchSso->enabled && $researchSso->baseUrl !== '' && $sidebarAdminId && AccessControl::hasAccess($sid, 'research_record');
+                        if ($showResearch):
+                        ?>
+                            <a href="<?= esc(rtrim($researchSso->baseUrl, '/') . '/index.php/dashboard') ?>" target="_blank" rel="noopener noreferrer" aria-label="เข้าสู่หน้าการจัดการงานวิจัย Research Record (เปิดในแท็บใหม่)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                                Research Record
+                            </a>
+                        <?php endif; ?>
+                        <a href="<?= base_url() ?>" target="_blank" rel="noopener noreferrer" aria-label="ดูเว็บไซต์ (เปิดในแท็บใหม่)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" y1="14" x2="21" y2="3" />
+                            </svg>
+                            View Website
+                        </a>
+                    </div>
+                </div>
             </nav>
         </aside>
 
