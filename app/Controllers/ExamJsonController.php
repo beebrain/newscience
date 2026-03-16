@@ -19,7 +19,7 @@ class ExamJsonController extends BaseController
      */
     public function index()
     {
-        // Get current user info for debugging
+        // Get current user info
         $session = session();
         $userId = $session->get('user_id') ?? $session->get('admin_id');
 
@@ -34,12 +34,6 @@ class ExamJsonController extends BaseController
                     'nickname' => $user['nickname'] ?? '',
                     'thai_name' => trim(($user['tf_name'] ?? '') . ' ' . ($user['tl_name'] ?? '')),
                     'eng_name' => trim(($user['gf_name'] ?? '') . ' ' . ($user['gl_name'] ?? '')),
-                ],
-                'debug_user' => [
-                    'user_id' => $userId,
-                    'nickname' => $user['nickname'] ?? '(ไม่มี)',
-                    'thai_name' => trim(($user['tf_name'] ?? '') . ' ' . ($user['tl_name'] ?? '')) ?: '(ไม่มี)',
-                    'eng_name' => trim(($user['gf_name'] ?? '') . ' ' . ($user['gl_name'] ?? '')) ?: '(ไม่มี)',
                 ]
             ];
         } else {
@@ -50,8 +44,7 @@ class ExamJsonController extends BaseController
                     'nickname' => '',
                     'thai_name' => '',
                     'eng_name' => '',
-                ],
-                'debug_user' => ['error' => 'ไม่พบ User ID']
+                ]
             ];
         }
 

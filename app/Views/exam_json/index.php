@@ -10,17 +10,6 @@ $thaiName = trim((string)($currentUser['thai_name'] ?? ''));
 $matchName = $nickname ?: $thaiName;
 ?>
 
-<?php if (isset($debug_user)): ?>
-    <!-- Debug: Show user data source -->
-    <div style="background: #f0f8ff; border: 1px solid #b0d4f1; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; font-size: 0.8rem;">
-        <strong>Debug - แหล่งข้อมูล:</strong> มาจาก User Table (ผ่าน Controller)<br>
-        <strong>User ID:</strong> <?= esc($debug_user['user_id'] ?? 'N/A') ?><br>
-        <strong>Nickname:</strong> <?= esc($debug_user['nickname'] ?? 'ไม่มี') ?><br>
-        <strong>Thai Name:</strong> <?= esc($debug_user['thai_name'] ?? 'ไม่มี') ?><br>
-        <strong>Match Name:</strong> <?= esc($matchName ?: 'ไม่พบข้อมูล') ?>
-    </div>
-<?php endif; ?>
-
 <div class="container" style="max-width: 1400px; margin: 0 auto; padding: 2rem 1rem;">
     <div style="margin-bottom: 1.5rem;">
         <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem;">ตารางคุมสอบ</h1>
