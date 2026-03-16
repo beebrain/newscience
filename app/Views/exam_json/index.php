@@ -856,10 +856,12 @@ $matchName = $nickname ?: $thaiName;
                             รวมจาก: ${group.names.map(name => escapeHtml(name)).join(', ')}
                         </div>
                     ` : ''}
+                    ${isAdmin ? `
                     <div class="instructor-card__stats">
                         <span class="instructor-card__stat primary">คุม ${examCount}</span>
                         ${ownerCount > 0 ? `<span class="instructor-card__stat success">เจ้าของ ${ownerCount}</span>` : ''}
                     </div>
+                    ` : ''}
                     ${isCurrentUserInstructor ? '<div class="instructor-card__match">✓ ตรงกับข้อมูลของคุณ</div>' : ''}
                 </div>
             `;
