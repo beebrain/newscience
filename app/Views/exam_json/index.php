@@ -731,19 +731,22 @@ $matchName = $nickname ?: $thaiName;
             // Exact match
             if (norm1 === norm2) return true;
 
-            // Check if one contains the other
-            if (norm1.includes(norm2) || norm2.includes(norm1)) return true;
-
             // Check partial matching (handles cases like "พิศิษฐ์" vs "พิศิษฐ์ นาคใจ")
             const parts1 = norm1.split(' ');
             const parts2 = norm2.split(' ');
 
-            // If one is single word and matches any part of the other
-            if (parts1.length === 1 && parts2.some(part => part === norm1)) return true;
-            if (parts2.length === 1 && parts1.some(part => part === norm2)) return true;
+            // If one is a single word, only treat it as the same person when it matches
+            // the first token of the longer name, not just any substring inside a word.
+            if (parts1.length === 1 && parts2.length > 1) return parts2[0] === norm1;
+            if (parts2.length === 1 && parts1.length > 1) return parts1[0] === norm2;
 
-            // Check if any part matches
-            if (parts1.some(part1 => parts2.some(part2 => part1 === part2 && part1.length > 1))) return true;
+            // For multi-part names, require the first token to match and one side to be
+            // a token-boundary prefix of the other.
+            if (parts1.length > 1 && parts2.length > 1 && parts1[0] === parts2[0]) {
+                const shorter = parts1.length <= parts2.length ? parts1 : parts2;
+                const longer = parts1.length > parts2.length ? parts1 : parts2;
+                return shorter.every((part, idx) => longer[idx] === part);
+            }
 
             return false;
         }
