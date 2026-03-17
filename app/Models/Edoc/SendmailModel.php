@@ -6,14 +6,25 @@ use CodeIgniter\Model;
 
 class SendmailModel extends Model
 {
-    private $username = "datascience@uru.ac.th";
-    private $detailname = "Edocument System";
-    private $password = "nwseitudwzpjjanl";
-    private $sendform = "datascience@uru.ac.th";
+    private $username;
+    private $detailname;
+    private $password;
+    private $sendform;
+    private $smtpHost;
+    private $smtpPort;
+    private $smtpSecure;
 
     public function __construct()
     {
         parent::__construct();
+
+        $this->username = (string) env('mail.smtpUsername', '');
+        $this->detailname = (string) env('mail.fromName', 'Edocument System');
+        $this->password = (string) env('mail.smtpPassword', '');
+        $this->sendform = (string) env('mail.fromEmail', $this->username);
+        $this->smtpHost = (string) env('mail.smtpHost', 'smtp.gmail.com');
+        $this->smtpPort = (int) env('mail.smtpPort', 465);
+        $this->smtpSecure = (string) env('mail.smtpSecure', 'ssl');
 
         require_once APPPATH . 'ThirdParty/PHPMailer/PHPMailer.php';
         require_once APPPATH . 'ThirdParty/PHPMailer/SMTP.php';
@@ -60,9 +71,9 @@ Thank you for registering.";
             $mail->isSMTP();
             $mail->CharSet = "UTF-8";
             $mail->SMTPAuth = true;
-            $mail->SMTPSecure = "ssl";
-            $mail->Host = "smtp.gmail.com";
-            $mail->Port = 465;
+            $mail->SMTPSecure = $this->smtpSecure;
+            $mail->Host = $this->smtpHost;
+            $mail->Port = $this->smtpPort;
             $mail->Username = $this->username;
             $mail->Password = $this->password;
             $mail->setFrom($this->sendform, $this->detailname);
@@ -100,9 +111,9 @@ Thank you for registering.";
             $mail->isSMTP();
             $mail->CharSet = "UTF-8";
             $mail->SMTPAuth = true;
-            $mail->SMTPSecure = "ssl";
-            $mail->Host = "smtp.gmail.com";
-            $mail->Port = 465;
+            $mail->SMTPSecure = $this->smtpSecure;
+            $mail->Host = $this->smtpHost;
+            $mail->Port = $this->smtpPort;
             $mail->Username = $this->username;
             $mail->Password = $this->password;
             $mail->setFrom($this->sendform, $this->detailname);

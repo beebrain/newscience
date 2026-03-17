@@ -7,30 +7,35 @@ use CodeIgniter\CLI\CLI;
 use Config\Database;
 
 /**
- * นำเข้าข้อมูลประเมินผลการสอนจาก academic_sci (ตาราง teachingEvaluate, evaluatescore, emailEvaluate)
- * เข้า newScience (teaching_evaluations, evaluation_scores, evaluation_referees).
+ * นำเข้าข้อมูลประเมินผลการสอนจาก sci-edoc (ตาราง teachingEvaluate, evaluatescore, emailEvaluate, user)
+ * เข้า newScience (evaluate_teaching, evaluate_scores, evaluation_referees).
  *
  * ใช้: php spark import:eval [source-group]
- * โดย source-group (เช่น edoclocal) ต้องชี้ไปที่ DB academic_sci ใน .env หรือใช้ default แล้วตั้ง database=academic_sci
+ * เช่น: php spark import:eval edocserver     (ดึงจาก server จริง)
+ *       php spark import:eval edoclocal      (ดึงจาก local clone)
+ *       php spark import:eval edocserver --clear  (ล้างข้อมูลเดิมก่อน import)
  */
 class ImportEval extends BaseCommand
 {
     protected $group       = 'Database';
     protected $name        = 'import:eval';
-    protected $description = 'Import evaluation data from academic_sci (teachingEvaluate, evaluatescore, emailEvaluate) to newScience';
-    protected $usage       = 'import:eval [source-group]. Example: import:eval edoclocal';
+    protected $description = 'Import evaluation data from sci-edoc (teachingEvaluate, evaluatescore, emailEvaluate) to newScience';
+    protected $usage       = 'import:eval [source-group]. Example: import:eval edocserver';
     protected $arguments   = [];
-    protected $options     = [];
+    protected $options     = [
+        'clear' => 'Clear target tables before importing',
+    ];
 
-    /** ชื่อตารางต้นทางใน academic_sci (case-insensitive match) */
+    /** ชื่อตารางต้นทางใน sci-edoc (case-insensitive match) */
     private const SOURCE_TEACHING = 'teachingEvaluate';
     private const SOURCE_SCORES   = 'evaluatescore';
     private const SOURCE_REFEREES = 'emailEvaluate';
+    private const SOURCE_USER     = 'user';
 
     private function getSourceConfig(string $sourceGroup): array
     {
         $base = (new Database())->default;
-        $dbName = env("database.{$sourceGroup}.database") ?: 'academic_sci';
+        $dbName = env("database.{$sourceGroup}.database") ?: 'sci-edoc';
         return array_merge($base, [
             'hostname' => (string) (env("database.{$sourceGroup}.hostname") ?? $base['hostname'] ?? 'localhost'),
             'database' => (string) $dbName,
@@ -72,9 +77,9 @@ class ImportEval extends BaseCommand
     }
 
     /**
-     * แมปแถวจาก teachingEvaluate → teaching_evaluations (snake_case)
+     * แมปแถวจาก teachingEvaluate → evaluate_teaching (snake_case)
      */
-    private function mapTeachingRow(array $row): array
+    private function mapTeachingRow(array $row, array $uidEmailMap = []): array
     {
         $map = [
             'uid' => 'uid',
@@ -107,11 +112,16 @@ class ImportEval extends BaseCommand
                 $out[$dst] = $row[$src];
             }
         }
+        // Populate email from uid → email map
+        $uid = $row['uid'] ?? null;
+        if ($uid !== null && isset($uidEmailMap[(int) $uid])) {
+            $out['email'] = $uidEmailMap[(int) $uid];
+        }
         return $out;
     }
 
     /**
-     * แมปแถวจาก evaluatescore → evaluation_scores
+     * แมปแถวจาก evaluatescore → evaluate_scores
      */
     private function mapScoreRow(array $row, array $teachingIdMap): ?array
     {
@@ -147,37 +157,94 @@ class ImportEval extends BaseCommand
         return [
             'email' => $row['email'] ?? '',
             'name' => $row['name'] ?? null,
+            'institution' => $row['institution'] ?? null,
+            'expertise' => $row['expertise'] ?? null,
+            'phone' => $row['phone'] ?? null,
             'status' => $row['status'] ?? 1,
             'created_at' => $row['created_at'] ?? null,
             'updated_at' => $row['updated_at'] ?? null,
         ];
     }
 
+    /**
+     * สร้าง uid → email map จากตาราง user ต้นทาง
+     */
+    private function buildUidEmailMap($source, string $userTable): array
+    {
+        $map = [];
+        try {
+            $rows = $source->table($userTable)->select('email')->get()->getResultArray();
+            foreach ($rows as $row) {
+                $email = $row['email'] ?? null;
+                if ($email !== null && $email !== '') {
+                    // EdocSci uses email as PK, so use email itself as the value
+                    // UID may not be in this table; we'll match by uid from teachingEvaluate
+                    $map[] = $email;
+                }
+            }
+            // Try to get uid mapping if the table has a uid/id column
+            $fields = $source->getFieldNames($userTable);
+            $hasUid = in_array('uid', $fields, true) || in_array('id', $fields, true);
+            if ($hasUid) {
+                $map = [];
+                $uidCol = in_array('uid', $fields, true) ? 'uid' : 'id';
+                $rows = $source->table($userTable)->select("{$uidCol}, email")->get()->getResultArray();
+                foreach ($rows as $row) {
+                    $uid = $row[$uidCol] ?? null;
+                    $email = $row['email'] ?? null;
+                    if ($uid !== null && $email !== null && $email !== '') {
+                        $map[(int) $uid] = $email;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            CLI::write('Warning: Could not read user table for email mapping: ' . $e->getMessage(), 'yellow');
+        }
+        return $map;
+    }
+
     public function run(array $params): int
     {
-        CLI::write('=== Import ข้อมูลประเมินผลการสอน academic_sci → newScience ===', 'yellow');
+        CLI::write('=== Import ข้อมูลประเมินผลการสอน sci-edoc → newScience ===', 'yellow');
         CLI::newLine();
 
-        $sourceGroup = $params[0] ?? 'edoclocal';
+        $sourceGroup = $params[0] ?? 'edocserver';
         $sourceConfig = $this->getSourceConfig($sourceGroup);
-        $sourceConfig['database'] = $sourceConfig['database'] ?: 'academic_sci';
+        $sourceConfig['database'] = $sourceConfig['database'] ?: 'sci-edoc';
 
+        CLI::write("Connecting to source: {$sourceConfig['hostname']} / {$sourceConfig['database']} ...", 'light_gray');
         $source = $this->connectGroup($sourceGroup, $sourceConfig);
         if ($source === null) {
             return 1;
         }
+        CLI::write('Connected to source DB', 'green');
 
         $target = Database::connect();
-        if (! $target->tableExists('teaching_evaluations') || ! $target->tableExists('evaluation_scores') || ! $target->tableExists('evaluation_referees')) {
-            CLI::error('Target DB must have teaching_evaluations, evaluation_scores, evaluation_referees. Run: php spark migrate');
+        if (! $target->tableExists('evaluate_teaching') || ! $target->tableExists('evaluate_scores') || ! $target->tableExists('evaluation_referees')) {
+            CLI::error('Target DB must have evaluate_teaching, evaluate_scores, evaluation_referees. Run: php spark migrate');
             $source->close();
             return 1;
         }
 
+        // --clear: ล้างข้อมูลเดิมก่อน import
+        $doClear = CLI::getOption('clear') !== null;
+        if ($doClear) {
+            CLI::write('Clearing target tables...', 'yellow');
+            $target->query('SET FOREIGN_KEY_CHECKS = 0');
+            $target->table('evaluate_scores')->truncate();
+            $target->table('evaluate_teaching')->truncate();
+            $target->table('evaluation_referees')->truncate();
+            $target->query('SET FOREIGN_KEY_CHECKS = 1');
+            CLI::write('Target tables cleared', 'green');
+        }
+
         $allTables = $source->listTables();
+        CLI::write('Source tables found: ' . implode(', ', $allTables), 'light_gray');
+
         $teachingTable = $this->findTable($allTables, self::SOURCE_TEACHING);
         $scoresTable   = $this->findTable($allTables, self::SOURCE_SCORES);
         $refereesTable = $this->findTable($allTables, self::SOURCE_REFEREES);
+        $userTable     = $this->findTable($allTables, self::SOURCE_USER);
 
         if (! $teachingTable) {
             CLI::error("Source database does not have table '" . self::SOURCE_TEACHING . "'. Ensure DB name is academic_sci.");
@@ -185,18 +252,29 @@ class ImportEval extends BaseCommand
             return 1;
         }
 
+        // Build uid → email map from source user table
+        $uidEmailMap = [];
+        if ($userTable) {
+            CLI::write("Building uid→email map from {$userTable}...", 'light_gray');
+            $uidEmailMap = $this->buildUidEmailMap($source, $userTable);
+            CLI::write('  Found ' . count($uidEmailMap) . ' user email mappings', 'green');
+        } else {
+            CLI::write('Warning: user table not found — email field will be empty', 'yellow');
+        }
+
         $teachingIdMap = [];
         $rows = $source->table($teachingTable)->get()->getResultArray();
+        CLI::write("Found " . count($rows) . " rows in {$teachingTable}", 'light_gray');
         foreach ($rows as $row) {
             $oldId = isset($row['id']) ? (int) $row['id'] : null;
-            $data = $this->mapTeachingRow($row);
-            $target->table('teaching_evaluations')->insert($data);
+            $data = $this->mapTeachingRow($row, $uidEmailMap);
+            $target->table('evaluate_teaching')->insert($data);
             $newId = $target->insertID();
             if ($oldId !== null && $newId) {
                 $teachingIdMap[$oldId] = (int) $newId;
             }
         }
-        CLI::write("Import teaching_evaluations จาก {$teachingTable}: " . count($teachingIdMap) . " แถว", 'green');
+        CLI::write("Import evaluate_teaching จาก {$teachingTable}: " . count($teachingIdMap) . " แถว", 'green');
 
         if ($scoresTable) {
             $scoreRows = $source->table($scoresTable)->get()->getResultArray();
@@ -204,13 +282,13 @@ class ImportEval extends BaseCommand
             foreach ($scoreRows as $row) {
                 $data = $this->mapScoreRow($row, $teachingIdMap);
                 if ($data !== null) {
-                    $target->table('evaluation_scores')->insert($data);
+                    $target->table('evaluate_scores')->insert($data);
                     $count++;
                 }
             }
-            CLI::write("Import evaluation_scores จาก {$scoresTable}: {$count} แถว", 'green');
+            CLI::write("Import evaluate_scores จาก {$scoresTable}: {$count} แถว", 'green');
         } else {
-            CLI::write('ข้าม evaluation_scores (ไม่พบตาราง ' . self::SOURCE_SCORES . ')', 'yellow');
+            CLI::write('ข้าม evaluate_scores (ไม่พบตาราง ' . self::SOURCE_SCORES . ')', 'yellow');
         }
 
         if ($refereesTable) {

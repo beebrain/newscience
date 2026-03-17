@@ -89,22 +89,25 @@ $routes->get('/go-research-record', 'Admin\Auth::goResearchRecord', ['filter' =>
 
 // Teaching evaluation (ประเมินผลการสอน) — lecture submit + admin ต้อง login; แบบฟอร์มผู้ประเมินเข้าจาก link
 $routes->group('evaluate', ['filter' => 'loggedin'], static function ($routes) {
-    $routes->get('card', 'Evaluate\EvaluateController::card');
-    $routes->get('self-form', 'Evaluate\EvaluateController::selfForm');
-    $routes->post('self/save', 'Evaluate\EvaluateController::saveSelf');
     $routes->get('/', 'Evaluate\LectureEvaluateController::submitEvaluate');
     $routes->post('lecture-evaluate/save', 'Evaluate\LectureEvaluateController::save');
     $routes->get('admin', 'Evaluate\AdminEvaluateController::index');
-    $routes->get('admin/rights', 'Evaluate\AdminEvaluateController::rights');
-    $routes->post('admin/saveRights', 'Evaluate\AdminEvaluateController::saveRights');
+    $routes->get('admin/search', 'Evaluate\AdminEvaluateController::searchByEmail');
     $routes->post('admin/getResult', 'Evaluate\AdminEvaluateController::getResult');
     $routes->post('admin/getEvaluateInfo', 'Evaluate\AdminEvaluateController::getEvaluateInfo');
     $routes->post('admin/printRefAndSave', 'Evaluate\AdminEvaluateController::printRefAndSave');
     $routes->post('admin/sendmailEvaluate', 'Evaluate\AdminEvaluateController::sendmailEvaluate');
     $routes->post('admin/saveDate', 'Evaluate\AdminEvaluateController::saveDate');
-    $routes->get('evaluate/(:segment)', 'Evaluate\EvaluateController::index/$1');
-    $routes->post('saveEvaluate', 'Evaluate\EvaluateController::saveEvaluate');
+    // Admin CRUD ผู้ทรงคุณวุฒิ
+    $routes->get('admin/referees', 'Evaluate\AdminRefereeController::index');
+    $routes->post('admin/referees/save', 'Evaluate\AdminRefereeController::save');
+    $routes->get('admin/referees/get/(:num)', 'Evaluate\AdminRefereeController::get/$1');
+    $routes->post('admin/referees/delete', 'Evaluate\AdminRefereeController::delete');
+    $routes->post('admin/referees/toggleStatus', 'Evaluate\AdminRefereeController::toggleStatus');
 });
+
+$routes->get('evaluate/evaluate/(:segment)', 'Evaluate\EvaluateController::index/$1');
+$routes->post('evaluate/saveEvaluate', 'Evaluate\EvaluateController::saveEvaluate');
 
 // DevTools - สำหรับทดสอบโดยไม่ต้องผ่าน Authen (development only)
 $routes->group('dev', function ($routes) {

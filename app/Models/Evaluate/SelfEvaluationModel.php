@@ -9,7 +9,7 @@ use CodeIgniter\Model;
  */
 class SelfEvaluationModel extends Model
 {
-    protected $table            = 'self_evaluations';
+    protected $table            = 'evaluate_self';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';

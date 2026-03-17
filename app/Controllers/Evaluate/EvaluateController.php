@@ -5,85 +5,20 @@ namespace App\Controllers\Evaluate;
 use App\Controllers\BaseController;
 use App\Models\Evaluate\TeachingEvaluationModel;
 use App\Models\Evaluate\EvaluationScoreModel;
-use App\Models\Evaluate\SelfEvaluationModel;
+use CodeIgniter\HTTP\Files\UploadedFile;
 
 /**
  * Public evaluation form (from email link). No auth required.
- * + หน้าการ์ดแบบประเมินตนเอง (ทุกคนเข้าได้)
  */
 class EvaluateController extends BaseController
 {
     protected $teachingModel;
     protected $scoreModel;
-    protected $selfModel;
 
     public function __construct()
     {
         $this->teachingModel = new TeachingEvaluationModel();
         $this->scoreModel    = new EvaluationScoreModel();
-        $this->selfModel     = new SelfEvaluationModel();
-    }
-
-    /**
-     * หน้าการ์ด — ทุกคนเข้าได้ ไม่ต้อง login แสดงการ์ดลิงก์ไปแบบประเมินของตนเอง
-     */
-    public function card()
-    {
-        return view('evaluate/card');
-    }
-
-    /**
-     * ฟอร์มกรอกแบบประเมินของตนเอง (สาธารณะ)
-     */
-    public function selfForm()
-    {
-        $data['academic_year'] = date('Y') + 543;
-        $data['semester']      = (int) date('n') <= 6 ? '1' : '2';
-        if (session()->get('admin_logged_in') && session()->get('admin_id')) {
-            $user = (new \App\Models\UserModel())->find(session()->get('admin_id'));
-            $data['prefill_name']  = $user ? ($user['gf_name'] ?? $user['tf_name'] ?? '') . ' ' . ($user['gl_name'] ?? $user['tl_name'] ?? '') : '';
-            $data['prefill_email'] = $user['email'] ?? '';
-            $data['prefill_uid']   = session()->get('admin_id');
-        } else {
-            $data['prefill_name']  = '';
-            $data['prefill_email'] = '';
-            $data['prefill_uid']   = null;
-        }
-        return view('evaluate/self_form', $data);
-    }
-
-    /**
-     * บันทึกแบบประเมินของตนเอง
-     */
-    public function saveSelf()
-    {
-        $uid = session()->get('admin_logged_in') ? (int) session()->get('admin_id') : null;
-        $name  = $this->request->getPost('name');
-        $email = $this->request->getPost('email');
-        if ($name === null || $name === '') {
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON(['success' => false, 'message' => 'กรุณากรอกชื่อ']);
-            }
-            return redirect()->back()->withInput()->with('error', 'กรุณากรอกชื่อ');
-        }
-        $data = [
-            'uid'           => $uid,
-            'name'          => $name,
-            'email'         => $email,
-            'academic_year' => $this->request->getPost('academic_year'),
-            'semester'      => $this->request->getPost('semester'),
-            'score_1'       => (int) $this->request->getPost('score_1'),
-            'score_2'       => (int) $this->request->getPost('score_2'),
-            'score_3'       => (int) $this->request->getPost('score_3'),
-            'score_4'       => (int) $this->request->getPost('score_4'),
-            'score_5'       => (int) $this->request->getPost('score_5'),
-            'comment'       => $this->request->getPost('comment'),
-        ];
-        $this->selfModel->insert($data);
-        if ($this->request->isAJAX()) {
-            return $this->response->setJSON(['success' => true, 'message' => 'บันทึกแบบประเมินของท่านเรียบร้อยแล้ว']);
-        }
-        return redirect()->to(base_url('evaluate/card'))->with('success', 'บันทึกแบบประเมินของท่านเรียบร้อยแล้ว');
     }
 
     public function index($param = null)
@@ -99,9 +34,35 @@ class EvaluateController extends BaseController
             return $this->response->setJSON(['success' => false])->setStatusCode(400);
         }
 
+        $fileDoc = $this->request->getPost('file_doc');
+        $file = $this->request->getFile('fileupload');
+        if ($file instanceof UploadedFile && $file->isValid() && ! $file->hasMoved()) {
+            $allowedExtensions = ['pdf', 'doc', 'docx'];
+            $extension = strtolower((string) $file->getExtension());
+            if (! in_array($extension, $allowedExtensions, true)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'รองรับเฉพาะไฟล์ .pdf, .doc และ .docx',
+                ])->setStatusCode(422);
+            }
+
+            $uploadPath = WRITEPATH . 'uploads/documents/';
+            if (! is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            $fileDoc = $file->getRandomName();
+            if (! $file->move($uploadPath, $fileDoc)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'ไม่สามารถอัปโหลดไฟล์หลักฐานได้',
+                ])->setStatusCode(500);
+            }
+        }
+
         $data = [
             'comment'      => $this->request->getPost('comment'),
-            'file_doc'     => $this->request->getPost('file_doc'),
+            'file_doc'     => $fileDoc,
             'score'        => $this->request->getPost('score'),
             'comment_date' => date('Y-m-d'),
             'status'       => (int) $this->request->getPost('status'),

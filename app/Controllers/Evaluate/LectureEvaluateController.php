@@ -6,7 +6,6 @@ use App\Controllers\BaseController;
 use App\Models\UserModel;
 use App\Models\Evaluate\TeachingEvaluationModel;
 use App\Models\Evaluate\EvaluationScoreModel;
-use App\Models\Evaluate\EvaluateUserRightsModel;
 use App\Models\Edoc\SendmailModel;
 
 class LectureEvaluateController extends BaseController
@@ -14,7 +13,6 @@ class LectureEvaluateController extends BaseController
     protected $userModel;
     protected $teachingModel;
     protected $scoreModel;
-    protected $rightsModel;
     protected $sendmail;
 
     public function __construct()
@@ -22,7 +20,6 @@ class LectureEvaluateController extends BaseController
         $this->userModel     = new UserModel();
         $this->teachingModel = new TeachingEvaluationModel();
         $this->scoreModel    = new EvaluationScoreModel();
-        $this->rightsModel   = new EvaluateUserRightsModel();
         $this->sendmail      = new SendmailModel();
         helper(['form', 'url']);
 
@@ -32,20 +29,11 @@ class LectureEvaluateController extends BaseController
         }
     }
 
-    private function canSubmitTeaching(int $uid): bool
-    {
-        $r = $this->rightsModel->getRightsByUid($uid);
-        if ($r === null) {
-            return true;
-        }
-        return (int) ($r['can_submit_teaching'] ?? 0) === 1;
-    }
-
+    /**
+     * Check if user has admin role for managing evaluate
+     */
     private function canManageEvaluate(int $uid): bool
     {
-        if ($this->rightsModel->canManageEvaluate($uid)) {
-            return true;
-        }
         $user = $this->userModel->find($uid);
         return in_array($user['role'] ?? '', ['super_admin', 'faculty_admin'], true);
     }
@@ -58,42 +46,41 @@ class LectureEvaluateController extends BaseController
     public function submitEvaluate()
     {
         $uid = (int) session()->get('admin_id');
-        if (! $this->canSubmitTeaching($uid)) {
-            $data['infoUser'] = [];
-            $data['userSubmissions'] = [];
-            $data['submittedPositions'] = [];
-            $data['availablePositions'] = [];
-            $data['canSubmitNewRequest'] = false;
-            $data['teachingsubmit'] = null;
-            $data['evaluate'] = [];
-            $data['noRightsMessage'] = 'ท่านไม่มีสิทธิ์ส่งคำร้องขอประเมินการสอน กรุณาติดต่อผู้ดูแลระบบ';
-            $data['can_manage_evaluate'] = $this->canManageEvaluate($uid);
-            return view('evaluate/submit_evaluate', $data);
-        }
         $user = $this->userModel->find($uid);
         $data['infoUser'] = is_array($user) ? $user : [];
         $data['can_manage_evaluate'] = $this->canManageEvaluate($uid);
 
         $data['curriculumOptions'] = [];
-        /** @var class-string|null $curriculumClass */
         $curriculumClass = class_exists('App\Models\CurriculumModel') ? 'App\Models\CurriculumModel' : null;
         if ($curriculumClass !== null) {
             $curriculumModel = new $curriculumClass();
             $data['curriculumOptions'] = method_exists($curriculumModel, 'getDropdownOptions') ? $curriculumModel->getDropdownOptions() : [];
         }
-        $data['userNeedsCurriculumSelection'] = empty($data['infoUser']['major'] ?? null);
-        $data['selectedCurriculum'] = $data['infoUser']['major'] ?? '';
+        $user = $this->userModel->find($uid);
+        $data['infoUser'] = is_array($user) ? $user : [];
+        $data['can_manage_evaluate'] = $this->canManageEvaluate($uid);
+        $userEmail = $user['email'] ?? '';
 
-        $data['userSubmissions']    = $this->teachingModel->getByUser($uid);
-        $submittedPositions         = $this->teachingModel->getSubmittedPositions($uid);
+        // Use email to fetch submissions (imported data may have mismatched uid)
+        $data['userSubmissions']    = $userEmail ? $this->teachingModel->getByEmail($userEmail) : [];
+        $submittedPositions         = $this->teachingModel->getSubmittedPositionsByEmail($userEmail);
         $data['submittedPositions'] = $submittedPositions;
 
-        $allPositions = ['ผู้ช่วยศาสตราจารย์', 'รองศาสตราจารย์', 'ศาสตราจารย์'];
-        $data['availablePositions'] = array_values(array_diff($allPositions, $submittedPositions));
+        // Use cooldown-aware position check with email
+        $data['availablePositions'] = $this->teachingModel->getAvailablePositionsWithCooldownByEmail($userEmail);
         $data['canSubmitNewRequest'] = $data['availablePositions'] !== [];
 
-        $result = $this->teachingModel->getSubmissionsWithStatus($uid);
-        if ($result->getNumRows() > 0) {
+        // Provide cooldown info for UI display using email
+        $allPositions = ['ผู้ช่วยศาสตราจารย์', 'รองศาสตราจารย์', 'ศาสตราจารย์'];
+        $data['cooldownInfo'] = [];
+        foreach ($allPositions as $pos) {
+            if ($this->teachingModel->isPositionInCooldownByEmail($userEmail, $pos)) {
+                $data['cooldownInfo'][$pos] = $this->teachingModel->getCooldownEndDateByEmail($userEmail, $pos);
+            }
+        }
+
+        $result = $userEmail ? $this->teachingModel->getSubmissionsWithStatusByEmail($userEmail) : null;
+        if ($result && $result->getNumRows() > 0) {
             $rows = $result->getResultArray();
             $data['teachingsubmit'] = $rows[0];
             $tid = (int) ($data['teachingsubmit']['tid'] ?? $data['teachingsubmit']['id']);
@@ -103,14 +90,13 @@ class LectureEvaluateController extends BaseController
             $data['evaluate'] = [];
         }
 
+        $data['page_title'] = 'ระบบการประเมินการสอน';
         return view('evaluate/submit_evaluate', $data);
     }
 
-    private function getAvailablePositions(int $uid): array
+    private function getAvailablePositions(string $email): array
     {
-        $submitted = $this->teachingModel->getSubmittedPositions($uid);
-        $all = ['ผู้ช่วยศาสตราจารย์', 'รองศาสตราจารย์', 'ศาสตราจารย์'];
-        return array_values(array_diff($all, $submitted));
+        return $this->teachingModel->getAvailablePositionsWithCooldownByEmail($email);
     }
 
     public function save()
@@ -120,22 +106,21 @@ class LectureEvaluateController extends BaseController
         }
 
         $uid = (int) session()->get('admin_id');
-        if (! $this->canSubmitTeaching($uid)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'ท่านไม่มีสิทธิ์ส่งคำร้องขอประเมินการสอน'])->setStatusCode(403);
-        }
         $requestedPosition = $this->request->getPost('position');
-        $availablePositions = $this->getAvailablePositions($uid);
+        $user = $this->userModel->find($uid);
+        $userEmail = $user['email'] ?? '';
+        $availablePositions = $this->getAvailablePositions($userEmail);
 
         if ($availablePositions === []) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'คุณได้ส่งคำร้องขอประเมินครบทุกตำแหน่งแล้ว',
+                'message' => 'ไม่มีตำแหน่งที่สามารถส่งคำร้องได้ในขณะนี้ (คำร้องทุกตำแหน่งยังอยู่ระหว่างดำเนินการ)',
             ])->setStatusCode(409);
         }
         if (! in_array($requestedPosition, $availablePositions, true)) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'คุณได้ส่งคำร้องขอประเมินตำแหน่ง "' . $requestedPosition . '" ไปแล้ว',
+                'message' => 'ตำแหน่ง "' . $requestedPosition . '" ยังมีคำร้องที่อยู่ระหว่างดำเนินการ สามารถส่งใหม่ได้เมื่อคำร้องเดิมสิ้นสุดแล้ว',
                 'availablePositions' => $availablePositions,
             ])->setStatusCode(409);
         }
@@ -160,6 +145,17 @@ class LectureEvaluateController extends BaseController
             ])->setStatusCode(500);
         }
 
+        $user = $this->userModel->find($uid);
+        $userEmail = $user['email'] ?? '';
+
+        // Validate email must be @live.uru.ac.th
+        if (!str_ends_with(strtolower($userEmail), '@live.uru.ac.th')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Email must be @live.uru.ac.th domain only. Please contact administrator.',
+            ])->setStatusCode(403);
+        }
+
         $teachingData = [
             'first_name'        => $this->request->getPost('first_name'),
             'last_name'         => $this->request->getPost('last_name'),
@@ -177,7 +173,8 @@ class LectureEvaluateController extends BaseController
             'file_doc'          => $fileName,
             'link_video'        => $this->request->getPost('link_video') ?: '',
             'uid'               => $uid,
-            'status'            => 0,
+            'email'             => $this->userModel->find($uid)['email'] ?? '',
+            'status'            => TeachingEvaluationModel::STATUS_PENDING,
             'submit_date'       => date('Y-m-d'),
         ];
 
@@ -199,7 +196,7 @@ class LectureEvaluateController extends BaseController
             }
         }
 
-        $remaining = $this->getAvailablePositions($uid);
+        $remaining = $this->getAvailablePositions($userEmail);
         return $this->response->setJSON([
             'success' => true,
             'message' => 'ส่งคำร้องขอประเมินการสอนสำหรับตำแหน่ง "' . $requestedPosition . '" เรียบร้อยแล้ว',
@@ -243,7 +240,9 @@ class LectureEvaluateController extends BaseController
             return $this->response->setStatusCode(400);
         }
         $uid = (int) session()->get('admin_id');
-        $available = $this->getAvailablePositions($uid);
+        $user = $this->userModel->find($uid);
+        $userEmail = $user['email'] ?? '';
+        $available = $this->getAvailablePositions($userEmail);
         return $this->response->setJSON([
             'available' => $available,
             'canSubmit' => $available !== [],

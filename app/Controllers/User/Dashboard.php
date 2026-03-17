@@ -4,7 +4,6 @@ namespace App\Controllers\User;
 
 use App\Controllers\BaseController;
 use App\Models\UserModel;
-use App\Models\Evaluate\EvaluateUserRightsModel;
 
 /**
  * หน้า Dashboard สำหรับผู้ใช้งาน (role = user ธรรมดา) — หน้าตาเหมือน Admin
@@ -40,11 +39,7 @@ class Dashboard extends BaseController
             'updated_at'    => $row['updated_at'] ?? null,
         ];
 
-        $rightsModel = new EvaluateUserRightsModel();
-        $canManageEvaluate = $rightsModel->canManageEvaluate((int) $userId);
-        if (! $canManageEvaluate && in_array($profile['role'], ['super_admin', 'faculty_admin'], true)) {
-            $canManageEvaluate = true;
-        }
+        $canManageEvaluate = in_array($profile['role'], ['super_admin', 'faculty_admin'], true);
 
         $data = [
             'page_title'         => 'การจัดการ',

@@ -10,7 +10,7 @@ use CodeIgniter\Model;
  */
 class EvaluationScoreModel extends Model
 {
-    protected $table            = 'evaluation_scores';
+    protected $table            = 'evaluate_scores';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';

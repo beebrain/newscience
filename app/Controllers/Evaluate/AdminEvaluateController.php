@@ -7,7 +7,6 @@ use App\Models\UserModel;
 use App\Models\Evaluate\TeachingEvaluationModel;
 use App\Models\Evaluate\EvaluationScoreModel;
 use App\Models\Evaluate\EvaluationRefereeModel;
-use App\Models\Evaluate\EvaluateUserRightsModel;
 use App\Models\Edoc\SendmailModel;
 
 class AdminEvaluateController extends BaseController
@@ -16,7 +15,6 @@ class AdminEvaluateController extends BaseController
     protected $teachingModel;
     protected $scoreModel;
     protected $refereeModel;
-    protected $rightsModel;
     protected $sendmail;
 
     public function __construct()
@@ -25,7 +23,6 @@ class AdminEvaluateController extends BaseController
         $this->teachingModel = new TeachingEvaluationModel();
         $this->scoreModel    = new EvaluationScoreModel();
         $this->refereeModel  = new EvaluationRefereeModel();
-        $this->rightsModel   = new EvaluateUserRightsModel();
         $this->sendmail      = new SendmailModel();
 
         if (! session()->get('admin_logged_in')) {
@@ -38,51 +35,10 @@ class AdminEvaluateController extends BaseController
     }
 
     /**
-     * หน้าระบุสิทธิ์รายบุคคล — เฉพาะผู้มีสิทธิ์จัดการระบบประเมิน
+     * Check if user has admin role
      */
-    public function rights()
-    {
-        $adminId = (int) session()->get('admin_id');
-        if (! $this->hasManageRights($adminId)) {
-            return redirect()->to(base_url('evaluate/admin'))->with('error', 'ไม่มีสิทธิ์เข้าหน้านี้');
-        }
-        $data['users'] = $this->userModel->orderBy('uid', 'ASC')->findAll();
-        $data['rightsByUid'] = [];
-        foreach ($this->rightsModel->findAll() as $r) {
-            $data['rightsByUid'][$r['uid']] = $r;
-        }
-        $data['page_title'] = 'ระบุสิทธิ์รายบุคคล — ประเมินผลการสอน';
-        return view('evaluate/admin_rights', $data);
-    }
-
-    public function saveRights()
-    {
-        $adminId = (int) session()->get('admin_id');
-        if (! $this->hasManageRights($adminId)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์'])->setStatusCode(403);
-        }
-        $uids = $this->request->getPost('uid');
-        if (! is_array($uids)) {
-            return redirect()->back()->with('error', 'ข้อมูลไม่ถูกต้อง');
-        }
-        foreach ($uids as $uid) {
-            $uid = (int) $uid;
-            if ($uid <= 0) {
-                continue;
-            }
-            $canSubmit  = (bool) $this->request->getPost("can_submit_{$uid}");
-            $canReferee = (bool) $this->request->getPost("can_referee_{$uid}");
-            $canManage  = (bool) $this->request->getPost("can_manage_{$uid}");
-            $this->rightsModel->setRights($uid, $canSubmit, $canReferee, $canManage);
-        }
-        return redirect()->to(base_url('evaluate/admin/rights'))->with('success', 'บันทึกสิทธิ์เรียบร้อยแล้ว');
-    }
-
     private function hasManageRights(int $uid): bool
     {
-        if ($this->rightsModel->canManageEvaluate($uid)) {
-            return true;
-        }
         $user = $this->userModel->find($uid);
         $role = $user['role'] ?? '';
         return in_array($role, ['super_admin', 'faculty_admin'], true);
@@ -226,7 +182,8 @@ class AdminEvaluateController extends BaseController
                     . $linkAccess . "\n\nขอแสดงความนับถือ\nผศ.ดร.เสรี แสงอุทัย\nคณบดีคณะวิทยาศาสตร์และเทคโนโลยี";
 
                 $subject = 'เรียนเชิญพิจารณาและประเมินการสอน';
-                $this->sendmail->sendMail($mail, $detail, $subject, 'peissara@uru.ac.th');
+                $bcc = env('mail.refereeBcc');
+                $this->sendmail->sendMail($mail, $detail, $subject, $bcc);
             }
         }
 
@@ -241,5 +198,30 @@ class AdminEvaluateController extends BaseController
             $this->teachingModel->updateRecord(['stop_date' => $stopdate], $id);
         }
         return $this->response->setJSON(['id' => $id, 'stopdate' => $stopdate]);
+    }
+
+    /**
+     * Search teaching evaluations by email
+     */
+    public function searchByEmail()
+    {
+        $email = $this->request->getGet('email');
+        if (! $email) {
+            return $this->response->setJSON(['success' => false, 'message' => 'กรุณาระบุอีเมล']);
+        }
+
+        $evaluations = $this->teachingModel->searchByEmail($email);
+        $result = [];
+
+        foreach ($evaluations as $eval) {
+            $eval['referees'] = $this->scoreModel->getByTeachingId($eval['id']);
+            $result[] = $eval;
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'count' => count($result),
+            'data' => $result
+        ]);
     }
 }

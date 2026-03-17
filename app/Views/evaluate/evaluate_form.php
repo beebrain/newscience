@@ -7,25 +7,168 @@ $evaluateList = $evaluate ?? [];
 $evaluate = is_array($evaluateList) && isset($evaluateList[0]) ? $evaluateList[0] : null;
 $refparam = $refparam ?? [];
 $encodeurl = $refparam['encodeurl'] ?? '';
+$existingEvidenceFile = $param['file_doc'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>แบบประเมินการสอน</title>
+    <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: var(--font-primary);
+            background: #f8f9fb;
+            color: var(--color-gray-900, #212529);
+        }
+
+        body,
+        input,
+        textarea,
+        select,
+        button,
+        .btn,
+        .form-control,
+        .form-select,
+        .modal-content,
+        .card,
+        .alert {
+            font-family: var(--font-primary);
+        }
+
+        .evaluate-public-shell {
+            max-width: 920px;
+            margin: 0 auto;
+        }
+
+        .evaluate-public-card {
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+
+        .evaluate-public-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .evaluate-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #212529;
+        }
+
+        .info-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #e7f5ff;
+            color: #1971c2;
+            border: 1px solid #a5d8ff;
+            margin-bottom: 0.75rem;
+        }
+
+        .detail-grid dt {
+            font-weight: 700;
+            color: #495057;
+        }
+
+        .detail-grid dd {
+            color: #212529;
+        }
+
+        .form-section {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #343a40;
+            margin-bottom: 0.4rem;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            min-height: 42px;
+            box-shadow: none;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #4dabf7;
+            box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.12);
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-primary {
+            background: #339af0;
+            border-color: #339af0;
+        }
+
+        .btn-primary:hover {
+            background: #228be6;
+            border-color: #228be6;
+        }
+
+        .btn-outline-secondary {
+            color: #495057;
+            border-color: #ced4da;
+            background: #fff;
+        }
+
+        .evaluate-confirm-modal .modal-content {
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .evaluate-confirm-modal .modal-body {
+            padding: 1.5rem;
+            background: #fcfcfd;
+        }
+
+        .evaluate-confirm-actions {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+    </style>
 </head>
-<body class="bg-light">
-    <div class="container py-5">
+
+<body>
+    <div class="container py-5 evaluate-public-shell">
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <?php if ($info === 'found' && $evaluate): ?>
-                    <div class="card mb-4">
+                    <div class="card evaluate-public-card mb-4">
                         <div class="card-body">
-                            <h4 class="mb-3">รายละเอียดผู้ขอรับการประเมิน</h4>
-                            <dl class="row mb-0">
+                            <div class="info-chip"><i class="bi bi-person-badge"></i>ข้อมูลสำหรับผู้ทรงคุณวุฒิ</div>
+                            <h4 class="evaluate-title">รายละเอียดผู้ขอรับการประเมิน</h4>
+                            <dl class="row mb-0 detail-grid">
                                 <dt class="col-sm-4">ชื่อผู้ขอเสนอ</dt>
                                 <dd class="col-sm-8"><?= esc(($evaluate['first_name'] ?? '') . ' ' . ($evaluate['last_name'] ?? '')) ?></dd>
                                 <dt class="col-sm-4">หลักสูตร</dt>
@@ -60,22 +203,31 @@ $encodeurl = $refparam['encodeurl'] ?? '';
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card evaluate-public-card">
                         <div class="card-body">
                             <?php if (!$param || (int)($param['status'] ?? 0) < 2): ?>
-                                <h4 class="mb-3">แบบฟอร์มสำหรับการประเมินการสอน<?= $param ? ' จากการประเมินของ ' . esc($param['name'] ?? '') : '' ?></h4>
-                                <form id="frmdata" name="frmdata">
-                                    <div class="mb-3">
+                                <div class="info-chip"><i class="bi bi-clipboard-check"></i>แบบฟอร์มประเมิน</div>
+                                <h4 class="evaluate-title">แบบฟอร์มสำหรับการประเมินการสอน<?= $param ? ' จากการประเมินของ ' . esc($param['name'] ?? '') : '' ?></h4>
+                                <form id="frmdata" name="frmdata" enctype="multipart/form-data">
+                                    <div class="form-section mb-3">
                                         <label class="form-label">อัปโหลดข้อเสนอแนะ (ถ้ามี)</label>
                                         <input type="file" class="form-control" id="fileupload" name="fileupload" accept=".docx,.pdf">
                                         <input type="hidden" name="file_doc" id="filedoc" value="">
                                         <small class="text-muted">สนับสนุน .docx, .pdf</small>
+                                        <div id="selectedFileInfo" class="form-text"></div>
+                                        <?php if (!empty($existingEvidenceFile)): ?>
+                                            <div class="mt-2">
+                                                <a href="<?= esc(base_url('serve/uploads/documents/' . $existingEvidenceFile)) ?>" class="btn btn-outline-secondary btn-sm" target="_blank">
+                                                    <i class="bi bi-paperclip me-1"></i>ดูไฟล์หลักฐานเดิม
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
-                                    <div class="mb-3">
+                                    <div class="form-section mb-3">
                                         <label class="form-label">ข้อเสนอแนะ <span class="text-danger">*</span></label>
                                         <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
                                     </div>
-                                    <div class="mb-3">
+                                    <div class="form-section mb-3">
                                         <label class="form-label">ผลการประเมิน <span class="text-danger">*</span></label>
                                         <select class="form-select" id="score" name="score" required>
                                             <option value="">กรุณาเลือก</option>
@@ -86,20 +238,25 @@ $encodeurl = $refparam['encodeurl'] ?? '';
                                     <input type="hidden" name="status" value="2">
                                     <input type="hidden" name="email" value="<?= esc($refparam['email'] ?? '') ?>">
                                     <input type="hidden" name="teaching_id" value="<?= esc($refparam['id'] ?? '') ?>">
-                                    <button type="button" class="btn btn-primary" id="saveBtn">ส่งแบบประเมิน</button>
+                                    <button type="button" class="btn btn-primary" id="saveBtn"><i class="bi bi-send"></i>ส่งแบบประเมิน</button>
                                 </form>
                                 <?php if ($param): ?>
-                                    <script>$(function(){ $('#comment').val(<?= json_encode($param['comment'] ?? '') ?>); $('#score').val(<?= json_encode($param['score'] ?? '') ?>); });</script>
+                                    <script>
+                                        $(function() {
+                                            $('#comment').val(<?= json_encode($param['comment'] ?? '') ?>);
+                                            $('#score').val(<?= json_encode($param['score'] ?? '') ?>);
+                                        });
+                                    </script>
                                 <?php endif; ?>
                             <?php else: ?>
-                                <div class="alert alert-info">
+                                <div class="alert alert-info" style="border-radius: 12px;">
                                     คุณได้ทำการประเมินแล้วเมื่อวันที่ <?= esc($param['comment_date'] ?? '') ?> ขอบคุณสำหรับการประเมิน
                                 </div>
                             <?php endif; ?>
                         </div>
                     </div>
                 <?php else: ?>
-                    <div class="alert alert-danger">
+                    <div class="alert alert-danger" style="border-radius: 12px;">
                         <h4>ไม่พบหน้าที่ต้องการ</h4>
                         <p>ขออภัย ไม่พบข้อมูลการประเมินที่คุณกำลังค้นหา กรุณาตรวจสอบลิงก์อีกครั้ง</p>
                     </div>
@@ -108,13 +265,16 @@ $encodeurl = $refparam['encodeurl'] ?? '';
         </div>
     </div>
 
-    <div class="modal fade" id="modalconfirm" tabindex="-1">
+    <div class="modal fade evaluate-confirm-modal" id="modalconfirm" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-body text-center">
+                    <div class="info-chip justify-content-center"><i class="bi bi-shield-check"></i>ยืนยันการส่งข้อมูล</div>
                     <p class="mb-2">กรุณายืนยันในการส่งผลการประเมิน</p>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                    <button type="button" class="btn btn-primary" id="saveForm">ยืนยัน</button>
+                    <div class="evaluate-confirm-actions">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="button" class="btn btn-primary" id="saveForm"><i class="bi bi-check2-circle"></i>ยืนยัน</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -126,23 +286,75 @@ $encodeurl = $refparam['encodeurl'] ?? '';
         var saveUrl = <?= json_encode(base_url('evaluate/saveEvaluate')) ?>;
         var encodeurl = <?= json_encode($encodeurl) ?>;
         var baseUrl = <?= json_encode(base_url()) ?>;
+        var existingEvidenceFile = <?= json_encode($existingEvidenceFile) ?>;
+
+        $('#fileupload').on('change', function() {
+            var file = this.files && this.files[0] ? this.files[0] : null;
+            var info = document.getElementById('selectedFileInfo');
+            if (!info) {
+                return;
+            }
+
+            if (!file) {
+                info.textContent = existingEvidenceFile ? 'ยังใช้ไฟล์หลักฐานเดิมอยู่' : '';
+                return;
+            }
+
+            var allowed = ['pdf', 'doc', 'docx'];
+            var ext = (file.name.split('.').pop() || '').toLowerCase();
+            if (allowed.indexOf(ext) === -1) {
+                alert('รองรับเฉพาะไฟล์ .pdf, .doc และ .docx');
+                this.value = '';
+                info.textContent = existingEvidenceFile ? 'ยังใช้ไฟล์หลักฐานเดิมอยู่' : '';
+                return;
+            }
+
+            info.textContent = 'ไฟล์ที่เลือก: ' + file.name;
+        });
+
         $('#saveBtn').on('click', function() {
-            if (!$('#score').val()) { alert('กรุณาเลือกผลการประเมิน'); return; }
-            if (!$('#comment').val().trim()) { alert('กรุณากรอกข้อเสนอแนะ'); return; }
+            if (!$('#score').val()) {
+                alert('กรุณาเลือกผลการประเมิน');
+                return;
+            }
+            if (!$('#comment').val().trim()) {
+                alert('กรุณากรอกข้อเสนอแนะ');
+                return;
+            }
             $('#modalconfirm').modal('show');
         });
+
         $('#saveForm').on('click', function() {
-            var data = { teaching_id: $('input[name="teaching_id"]').val(), email: $('input[name="email"]').val(),
-                comment: $('#comment').val(), score: $('#score').val(), file_doc: $('#filedoc').val(), status: 2 };
-            $('#saveForm').prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> กำลังบันทึก...');
-            $.post(saveUrl, data, function(res) {
+            var button = $('#saveForm');
+            var formEl = document.getElementById('frmdata');
+            var formData = new FormData(formEl);
+
+            if (!$('#fileupload').val() && existingEvidenceFile) {
+                formData.set('file_doc', existingEvidenceFile);
+            }
+
+            button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> กำลังบันทึก...');
+
+            $.ajax({
+                url: saveUrl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json'
+            }).done(function(res) {
                 alert('บันทึกข้อมูลเรียบร้อยแล้ว');
                 window.location.href = baseUrl + 'evaluate/evaluate/' + (encodeurl || '');
-            }, 'json').fail(function() {
-                alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
-                $('#saveForm').prop('disabled', false).text('ยืนยัน');
+            }).fail(function(xhr) {
+                var message = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                alert(message);
+                button.prop('disabled', false).text('ยืนยัน');
             });
         });
     </script>
 </body>
+
 </html>
