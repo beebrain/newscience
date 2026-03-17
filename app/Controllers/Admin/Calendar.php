@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\CalendarSchema;
 use App\Models\CalendarEventModel;
 use App\Models\CalendarParticipantModel;
 use App\Models\UserModel;
@@ -18,6 +19,7 @@ class Calendar extends BaseController
 
     public function __construct()
     {
+        CalendarSchema::ensure();
         $this->eventModel      = new CalendarEventModel();
         $this->participantModel = new CalendarParticipantModel();
         $this->userModel       = new UserModel();

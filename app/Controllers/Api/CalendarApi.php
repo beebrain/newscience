@@ -3,6 +3,7 @@
 namespace App\Controllers\Api;
 
 use App\Controllers\BaseController;
+use App\Libraries\CalendarSchema;
 use App\Libraries\AccessControl;
 use App\Models\CalendarEventModel;
 use App\Models\CalendarParticipantModel;
@@ -20,6 +21,7 @@ class CalendarApi extends BaseController
 
     public function __construct()
     {
+        CalendarSchema::ensure();
         $this->eventModel       = new CalendarEventModel();
         $this->participantModel = new CalendarParticipantModel();
         $this->userModel        = new UserModel();
