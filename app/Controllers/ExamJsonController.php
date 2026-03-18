@@ -186,6 +186,19 @@ class ExamJsonController extends BaseController
         $matchDetails = [];
         $instructorMap = [];
 
+        // Build nickname to user mapping for consolidation (only Science and Technology faculty)
+        $nicknameMap = [];
+        $allUsers = $userModel->where('nickname IS NOT NULL')
+            ->where('nickname !=', '')
+            ->where('faculty', 'คณะวิทยาศาสตร์และเทคโนโลยี')
+            ->findAll();
+        foreach ($allUsers as $u) {
+            $nick = trim($u['nickname'] ?? '');
+            if ($nick) {
+                $nicknameMap[$nick] = $u;
+            }
+        }
+
         foreach ($schedules as $schedule) {
             $ownerNames = $this->extractNames($schedule['instructor'] ?? '');
             $examiner1 = trim((string)($schedule['examiner1'] ?? ''));
@@ -241,16 +254,26 @@ class ExamJsonController extends BaseController
                     continue;
                 }
 
-                if (!isset($instructorMap[$name])) {
-                    $instructorMap[$name] = [
-                        'name' => $name,
+                // Resolve name to user for consolidation
+                $resolvedName = $name;
+                $userEmail = null;
+                if (isset($nicknameMap[$name])) {
+                    $userEmail = $nicknameMap[$name]['email'];
+                    $resolvedName = trim(($nicknameMap[$name]['tf_name'] ?? '') . ' ' . ($nicknameMap[$name]['tl_name'] ?? ''));
+                }
+                $mapKey = $userEmail ?? $name;
+
+                if (!isset($instructorMap[$mapKey])) {
+                    $instructorMap[$mapKey] = [
+                        'name' => $resolvedName,
+                        'email' => $userEmail,
                         'exam_schedules' => [],
                         'owner_courses' => [],
                         'owner_course_keys' => [],
                     ];
                 }
 
-                $instructorMap[$name]['exam_schedules'][] = [
+                $instructorMap[$mapKey]['exam_schedules'][] = [
                     'section' => $row['section'],
                     'course_code' => $row['course_code'],
                     'course_name' => $row['course_name'],
@@ -263,9 +286,19 @@ class ExamJsonController extends BaseController
             }
 
             foreach ($ownerNames as $ownerName) {
-                if (!isset($instructorMap[$ownerName])) {
-                    $instructorMap[$ownerName] = [
-                        'name' => $ownerName,
+                // Resolve name to user for consolidation
+                $resolvedName = $ownerName;
+                $userEmail = null;
+                if (isset($nicknameMap[$ownerName])) {
+                    $userEmail = $nicknameMap[$ownerName]['email'];
+                    $resolvedName = trim(($nicknameMap[$ownerName]['tf_name'] ?? '') . ' ' . ($nicknameMap[$ownerName]['tl_name'] ?? ''));
+                }
+                $mapKey = $userEmail ?? $ownerName;
+
+                if (!isset($instructorMap[$mapKey])) {
+                    $instructorMap[$mapKey] = [
+                        'name' => $resolvedName,
+                        'email' => $userEmail,
                         'exam_schedules' => [],
                         'owner_courses' => [],
                         'owner_course_keys' => [],
@@ -278,9 +311,9 @@ class ExamJsonController extends BaseController
                     $row['student_group'],
                 ]);
 
-                if (!isset($instructorMap[$ownerName]['owner_course_keys'][$courseKey])) {
-                    $instructorMap[$ownerName]['owner_course_keys'][$courseKey] = true;
-                    $instructorMap[$ownerName]['owner_courses'][] = [
+                if (!isset($instructorMap[$mapKey]['owner_course_keys'][$courseKey])) {
+                    $instructorMap[$mapKey]['owner_course_keys'][$courseKey] = true;
+                    $instructorMap[$mapKey]['owner_courses'][] = [
                         'section' => $row['section'],
                         'course_code' => $row['course_code'],
                         'course_name' => $row['course_name'],

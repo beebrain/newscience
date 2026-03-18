@@ -520,3 +520,11 @@ $routes->group('admin/exam', ['filter' => ['adminauth', 'adminsystemaccess']], f
     $routes->get('get-semesters', 'Admin\ExamJsonAdminController::getAvailableSemesters');
     $routes->get('load-data', 'Admin\ExamJsonAdminController::loadData');
 });
+
+// Admin User Faculty Routes
+$routes->group('admin/user-faculty', ['filter' => ['adminauth', 'adminsystemaccess']], function ($routes) {
+    $routes->get('/', 'Admin\UserFacultyController::index');
+    $routes->post('update-faculty', 'Admin\UserFacultyController::updateFaculty');
+    $routes->post('bulk-update', 'Admin\UserFacultyController::bulkUpdate');
+    $routes->get('get-user/(:num)', 'Admin\UserFacultyController::getUser/$1');
+});

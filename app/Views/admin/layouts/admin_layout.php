@@ -416,6 +416,12 @@ use App\Libraries\AccessControl; ?>
                                     </svg>
                                     จัดการผู้ใช้
                                 </a>
+                                <a href="<?= base_url('admin/user-faculty') ?>" class="<?= (uri_string() == 'admin/user-faculty' || strpos(uri_string(), 'admin/user-faculty') === 0) ? 'active' : '' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                    จัดการคณะผู้ใช้
+                                </a>
                             <?php endif; ?>
                             <?php if (AccessControl::hasAccess($sid, 'site_settings')): ?>
                                 <a href="<?= base_url('admin/settings') ?>" class="<?= (uri_string() == 'admin/settings' || strpos(uri_string(), 'admin/settings') === 0) ? 'active' : '' ?>">

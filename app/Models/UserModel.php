@@ -25,6 +25,7 @@ class UserModel extends Model
         'nickname',
         'role',
         'program_id',
+        'faculty',
         'profile_image',
         'profile_picture',
         'status',
