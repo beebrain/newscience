@@ -104,6 +104,10 @@ $routes->group('evaluate', ['filter' => 'loggedin'], static function ($routes) {
     $routes->get('admin/referees/get/(:num)', 'Evaluate\AdminRefereeController::get/$1');
     $routes->post('admin/referees/delete', 'Evaluate\AdminRefereeController::delete');
     $routes->post('admin/referees/toggleStatus', 'Evaluate\AdminRefereeController::toggleStatus');
+
+    // Admin ตั้งค่าระบบการประเมิน
+    $routes->get('admin/settings', 'Admin\EvaluateSettingsController::index');
+    $routes->post('admin/settings/save', 'Admin\EvaluateSettingsController::save');
 });
 
 $routes->get('evaluate/evaluate/(:segment)', 'Evaluate\EvaluateController::index/$1');

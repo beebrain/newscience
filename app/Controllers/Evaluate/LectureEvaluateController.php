@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\UserModel;
 use App\Models\Evaluate\TeachingEvaluationModel;
 use App\Models\Evaluate\EvaluationScoreModel;
+use App\Models\Evaluate\EvaluateSettingsModel;
 use App\Models\Edoc\SendmailModel;
 
 class LectureEvaluateController extends BaseController
@@ -14,6 +15,7 @@ class LectureEvaluateController extends BaseController
     protected $teachingModel;
     protected $scoreModel;
     protected $sendmail;
+    protected $settingsModel;
 
     public function __construct()
     {
@@ -21,6 +23,7 @@ class LectureEvaluateController extends BaseController
         $this->teachingModel = new TeachingEvaluationModel();
         $this->scoreModel    = new EvaluationScoreModel();
         $this->sendmail      = new SendmailModel();
+        $this->settingsModel = new EvaluateSettingsModel();
         helper(['form', 'url']);
 
         if (! session()->get('admin_logged_in')) {
@@ -90,6 +93,10 @@ class LectureEvaluateController extends BaseController
             $data['evaluate'] = [];
         }
 
+        // Add system settings for UI display
+        $data['systemSettings'] = $this->settingsModel->getSettings();
+        $data['isAcceptingSubmissions'] = $this->settingsModel->isAcceptingSubmissions();
+
         $data['page_title'] = 'ระบบการประเมินการสอน';
         return view('evaluate/submit_evaluate', $data);
     }
@@ -103,6 +110,21 @@ class LectureEvaluateController extends BaseController
     {
         if (! $this->request->isAJAX()) {
             return $this->response->setJSON(['success' => false, 'message' => 'Invalid request'])->setStatusCode(400);
+        }
+
+        // Check if system is accepting submissions
+        if (! $this->settingsModel->isAcceptingSubmissions()) {
+            $settings = $this->settingsModel->getSettings();
+            $msg = 'อยู่นอกเวลายื่นประเมิน';
+            if (! empty($settings['start_date']) && date('Y-m-d') < $settings['start_date']) {
+                $msg = 'ระบบจะเปิดรับคำร้องวันที่ ' . date('d/m/Y', strtotime($settings['start_date']));
+            } elseif (! empty($settings['end_date']) && date('Y-m-d') > $settings['end_date']) {
+                $msg = 'อยู่นอกเวลายื่นประเมิน (ปิดรับคำร้องวันที่ ' . date('d/m/Y', strtotime($settings['end_date'])) . ')';
+            }
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => $msg,
+            ])->setStatusCode(403);
         }
 
         $uid = (int) session()->get('admin_id');
@@ -191,6 +213,7 @@ class LectureEvaluateController extends BaseController
         if (! empty($user['email'])) {
             try {
                 $this->sendEmailNotification($teachingData, $user);
+                $this->sendNotificationToAdmins($teachingData, $user);
             } catch (\Throwable $e) {
                 log_message('warning', 'Evaluation email failed: ' . $e->getMessage());
             }
@@ -218,20 +241,64 @@ class LectureEvaluateController extends BaseController
 
     private function sendEmailNotification(array $teachingData, array $user): void
     {
-        $email = \Config\Services::email();
-        $subject = 'คำร้องประเมินการสอนของ ' . ($teachingData['first_name'] ?? '') . ' ' . ($teachingData['last_name'] ?? '');
-        $message = 'เรียน ' . ($teachingData['first_name'] ?? '') . ' ' . ($teachingData['last_name'] ?? '') . "\n\n";
-        $message .= "แจ้งระบบการประเมินตำแหน่งวิชาการ มหาวิทยาลัยราชภัฏอุตรดิตถ์\n";
-        $message .= "ทางระบบได้รับความประสงค์ในการประเมินการสอนเรียบร้อยแล้ว ทั้งนี้ ทางผู้เกี่ยวข้องจะดำเนินการในลำดับต่อไป จึงแจ้งมาเพื่อทราบ\n\n";
-        $message .= "รายละเอียด:\n";
-        $message .= "- รายวิชา: " . ($teachingData['subject_name'] ?? '') . "\n";
-        $message .= "- รหัสวิชา: " . ($teachingData['subject_id'] ?? '') . "\n";
-        $message .= "- วันที่ส่ง: " . date('d/m/Y H:i:s') . "\n";
+        $settings = $this->settingsModel->getSettings();
 
+        // Parse template with data
+        $templateData = [
+            'applicant_name' => ($teachingData['first_name'] ?? '') . ' ' . ($teachingData['last_name'] ?? ''),
+            'position'       => $teachingData['position'] ?? '',
+            'subject_name'   => $teachingData['subject_name'] ?? '',
+            'subject_id'     => $teachingData['subject_id'] ?? '',
+            'submit_date'    => date('d/m/Y'),
+        ];
+
+        $subject = $this->settingsModel->parseTemplate($settings['applicant_email_subject'] ?? 'ยืนยันการส่งคำร้องขอรับการประเมิน', $templateData);
+        $message = $this->settingsModel->parseTemplate($settings['applicant_email_template'] ?? '', $templateData);
+
+        if (empty($message)) {
+            // Fallback default message
+            $message = 'เรียน ' . $templateData['applicant_name'] . "\n\n";
+            $message .= "ระบบได้รับคำร้องขอรับการประเมินการสอนของท่านเรียบร้อยแล้ว\n\n";
+            $message .= "รายละเอียด:\n";
+            $message .= "- ตำแหน่ง: " . $templateData['position'] . "\n";
+            $message .= "- วิชา: " . $templateData['subject_name'] . "\n";
+            $message .= "- วันที่ส่ง: " . $templateData['submit_date'] . "\n";
+        }
+
+        $email = \Config\Services::email();
         $email->setTo($user['email']);
         $email->setSubject($subject);
         $email->setMessage($message);
         $email->send();
+    }
+
+    /**
+     * Send notification email to admin emails when new submission received
+     */
+    private function sendNotificationToAdmins(array $teachingData, array $user): void
+    {
+        $adminEmails = $this->settingsModel->getNotificationEmails();
+        if (empty($adminEmails)) {
+            return;
+        }
+
+        $subject = 'แจ้งเตือน: มีผู้ส่งคำร้องขอรับการประเมินใหม่';
+        $message = "เรียน ผู้ดูแลระบบ\n\n";
+        $message .= "มีผู้ส่งคำร้องขอรับการประเมินการสอนใหม่:\n\n";
+        $message .= "- ผู้ส่ง: " . ($teachingData['first_name'] ?? '') . ' ' . ($teachingData['last_name'] ?? '') . "\n";
+        $message .= "- อีเมล: " . ($user['email'] ?? '') . "\n";
+        $message .= "- ตำแหน่ง: " . ($teachingData['position'] ?? '') . "\n";
+        $message .= "- วิชา: " . ($teachingData['subject_name'] ?? '') . "\n";
+        $message .= "- วันที่ส่ง: " . date('d/m/Y H:i:s') . "\n\n";
+        $message .= "กรุณาเข้าสู่ระบบเพื่อตรวจสอบ\n";
+
+        $email = \Config\Services::email();
+        foreach ($adminEmails as $adminEmail) {
+            $email->setTo($adminEmail);
+            $email->setSubject($subject);
+            $email->setMessage($message);
+            $email->send();
+        }
     }
 
     public function checkAvailablePositions()

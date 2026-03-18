@@ -249,7 +249,6 @@ class TeachingEvaluationModel extends Model
             ->where('email', $email)
             ->groupStart()
             ->where('stop_date IS NULL', null, false)
-            ->orWhere('stop_date', '')
             ->groupEnd()
             ->get()
             ->getResultArray();
@@ -281,7 +280,6 @@ class TeachingEvaluationModel extends Model
             ->where('position', $position)
             ->groupStart()
             ->where('stop_date IS NULL', null, false)
-            ->orWhere('stop_date', '')
             ->groupEnd()
             ->countAllResults();
 
