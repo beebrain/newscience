@@ -7,6 +7,7 @@ use App\Models\UserModel;
 use App\Models\Evaluate\TeachingEvaluationModel;
 use App\Models\Evaluate\EvaluationScoreModel;
 use App\Models\Evaluate\EvaluationRefereeModel;
+use App\Models\Evaluate\EvaluateSettingsModel;
 use App\Models\Edoc\SendmailModel;
 
 class AdminEvaluateController extends BaseController
@@ -16,6 +17,7 @@ class AdminEvaluateController extends BaseController
     protected $scoreModel;
     protected $refereeModel;
     protected $sendmail;
+    protected $settingsModel;
 
     public function __construct()
     {
@@ -24,6 +26,7 @@ class AdminEvaluateController extends BaseController
         $this->scoreModel    = new EvaluationScoreModel();
         $this->refereeModel  = new EvaluationRefereeModel();
         $this->sendmail      = new SendmailModel();
+        $this->settingsModel = new EvaluateSettingsModel();
 
         if (! session()->get('admin_logged_in')) {
             session()->remove('access_token');
@@ -173,15 +176,43 @@ class AdminEvaluateController extends BaseController
                 $payload = ['id' => $id, 'email' => $mail];
                 $linkAccess = base_url('evaluate/evaluate/' . base64_encode(json_encode($payload)));
 
-                $detail = "เรียน " . $name . " \n"
-                    . "ตามประกาศคณะกรรมการพิจารณาตําแหน่งวิชาการ มหาวิทยาลัยราชภัฏอุตรดิตถ์ เรื่อง ขั้นตอนและวิธีการเกี่ยวข้องกับผลการสอน "
-                    . "พศ. 2565 ข้อ 4(4.2) ให้คณบดี/รองคณบดี เสนอชื่อผู้ทรงคุณวุฒิประเมินผลการสอนของบุคลากรในคณะฯ นั้น ทางคณะฯ เห็นว่าท่านเป็นผู้มีความรู้ "
-                    . "และความเชี่ยวชาญในสาขา" . ($teaching['position_major'] ?? '') . " "
-                    . "จึงขอเชิญท่านประเมินผลการสอนในรายวิชา " . ($teaching['subject_name'] ?? '') . " "
-                    . "ทั้งนี้ขอให้ท่านประเมินให้แล้วเสร็จภายใน 30 วัน ตาม Link ที่ระบุให้ หลังจากที่ท่านได้รับการแต่งตั้ง \n"
-                    . $linkAccess . "\n\nขอแสดงความนับถือ\nผศ.ดร.เสรี แสงอุทัย\nคณบดีคณะวิทยาศาสตร์และเทคโนโลยี";
+                // Use settings for referee email template
+                $settings = $this->settingsModel->getSettings();
 
-                $subject = 'เรียนเชิญพิจารณาและประเมินการสอน';
+                $templateData = [
+                    'referee_name'   => $name,
+                    'applicant_name' => ($teaching['first_name'] ?? '') . ' ' . ($teaching['last_name'] ?? ''),
+                    'position'       => $teaching['position'] ?? '',
+                    'position_major' => $teaching['position_major'] ?? '',
+                    'subject_name'   => $teaching['subject_name'] ?? '',
+                    'subject_id'     => $teaching['subject_id'] ?? '',
+                    'link_access'    => $linkAccess,
+                ];
+
+                // Parse subject from settings
+                $subject = $this->settingsModel->parseTemplate(
+                    $settings['referee_email_subject'] ?? 'เรียนเชิญพิจารณาและประเมินการสอน',
+                    $templateData
+                );
+
+                // Parse template from settings with fallback
+                $template = $settings['referee_email_template'] ?? '';
+                if (empty($template)) {
+                    // Fallback default template
+                    $template = "เรียน {referee_name}\n\n"
+                        . "ตามประกาศคณะกรรมการพิจารณาตําแหน่งวิชาการ มหาวิทยาลัยราชภัฏอุตรดิตถ์ เรื่อง ขั้นตอนและวิธีการเกี่ยวข้องกับผลการสอน "
+                        . "พศ. 2565 ข้อ 4(4.2) ให้คณบดี/รองคณบดี เสนอชื่อผู้ทรงคุณวุฒิประเมินผลการสอนของบุคลากรในคณะฯ นั้น ทางคณะฯ เห็นว่าท่านเป็นผู้มีความรู้ "
+                        . "และความเชี่ยวชาญในสาขา{position_major} "
+                        . "จึงขอเชิญท่านประเมินผลการสอนในรายวิชา {subject_name} "
+                        . "ทั้งนี้ขอให้ท่านประเมินให้แล้วเสร็จภายใน 30 วัน ตาม Link ที่ระบุให้ หลังจากที่ท่านได้รับการแต่งตั้ง \n"
+                        . "{link_access}\n\n"
+                        . "ขอแสดงความนับถือ\n"
+                        . "ผศ.ดร.เสรี แสงอุทัย\n"
+                        . "คณบดีคณะวิทยาศาสตร์และเทคโนโลยี";
+                }
+
+                $detail = $this->settingsModel->parseTemplate($template, $templateData);
+
                 $bcc = env('mail.refereeBcc');
                 $this->sendmail->sendMail($mail, $detail, $subject, $bcc);
             }
@@ -223,5 +254,60 @@ class AdminEvaluateController extends BaseController
             'count' => count($result),
             'data' => $result
         ]);
+    }
+
+    /**
+     * Delete teaching evaluation record
+     */
+    public function delete()
+    {
+        $id = (int) $this->request->getPost('id');
+
+        if (! $id) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'ไม่พบรหัสรายการที่ต้องการลบ'
+            ])->setStatusCode(400);
+        }
+
+        // Check if user has manage rights
+        $adminId = (int) session()->get('admin_id');
+        if (! $this->hasManageRights($adminId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'ไม่มีสิทธิ์ลบรายการ'
+            ])->setStatusCode(403);
+        }
+
+        // Get record info before deletion for logging
+        $record = $this->teachingModel->getById($id);
+        if (! $record) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'ไม่พบรายการที่ต้องการลบ'
+            ])->setStatusCode(404);
+        }
+
+        // Delete related evaluation scores first
+        $this->scoreModel->updateByCondition(
+            ['teaching_id' => $id],
+            ['status' => (string) EvaluationScoreModel::STATUS_DELETED]
+        );
+
+        // Delete the teaching evaluation record
+        $deleted = $this->teachingModel->delete($id);
+
+        if ($deleted) {
+            log_message('info', 'Teaching evaluation deleted: ID=' . $id . ' by admin=' . $adminId);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'ลบรายการเรียบร้อยแล้ว'
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'ไม่สามารถลบรายการได้'
+        ])->setStatusCode(500);
     }
 }

@@ -97,10 +97,12 @@ class EvaluateSettingsModel extends Model
             '{applicant_name}' => $data['applicant_name'] ?? '',
             '{referee_name}'   => $data['referee_name'] ?? '',
             '{position}'       => $data['position'] ?? '',
+            '{position_major}' => $data['position_major'] ?? '',
             '{subject_name}'   => $data['subject_name'] ?? '',
             '{subject_id}'     => $data['subject_id'] ?? '',
             '{submit_date}'    => $data['submit_date'] ?? date('d/m/Y'),
             '{approval_date}'  => $data['approval_date'] ?? '',
+            '{link_access}'    => $data['link_access'] ?? '',
         ];
         return str_replace(array_keys($replacements), array_values($replacements), $template);
     }

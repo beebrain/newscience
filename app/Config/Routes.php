@@ -98,6 +98,7 @@ $routes->group('evaluate', ['filter' => 'loggedin'], static function ($routes) {
     $routes->post('admin/printRefAndSave', 'Evaluate\AdminEvaluateController::printRefAndSave');
     $routes->post('admin/sendmailEvaluate', 'Evaluate\AdminEvaluateController::sendmailEvaluate');
     $routes->post('admin/saveDate', 'Evaluate\AdminEvaluateController::saveDate');
+    $routes->post('admin/delete', 'Evaluate\AdminEvaluateController::delete');
     // Admin CRUD ผู้ทรงคุณวุฒิ
     $routes->get('admin/referees', 'Evaluate\AdminRefereeController::index');
     $routes->post('admin/referees/save', 'Evaluate\AdminRefereeController::save');

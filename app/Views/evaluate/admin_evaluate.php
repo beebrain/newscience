@@ -540,6 +540,18 @@ $adminBase = rtrim($base, '/') . '/evaluate/admin';
         color: #2b8a3e;
     }
 
+    .evaluate-shell .btn-danger {
+        background: #fff5f5;
+        border-color: #ffc9c9;
+        color: #e03131;
+    }
+
+    .evaluate-shell .btn-danger:hover {
+        background: #ff8787;
+        border-color: #ff6b6b;
+        color: #fff;
+    }
+
     #evaluationTable thead th {
         background: #f8f9fa;
         color: #495057;
@@ -916,6 +928,9 @@ $adminBase = rtrim($base, '/') . '/evaluate/admin';
                                         <button type="button" class="btn btn-sm btn-warning" onclick="getResult(<?= (int)$rawdata['id'] ?>)" title="ผลประเมิน">
                                             <i class="bi bi-clipboard-data"></i> <span>ผลประเมิน</span>
                                         </button>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteRecord(<?= (int)$rawdata['id'] ?>, '<?= esc(($rawdata['first_name'] ?? '') . ' ' . ($rawdata['last_name'] ?? '')) ?>')" title="ลบรายการ">
+                                            <i class="bi bi-trash"></i> <span>ลบ</span>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -1095,6 +1110,7 @@ $adminBase = rtrim($base, '/') . '/evaluate/admin';
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="<?= $base ?>pdfmake/build/pdfmake.min.js"></script>
 <script src="<?= $base ?>pdfmake/build/vfs_fonts.js"></script>
 <script src="<?= $base ?>pdfmake/EvaluateDocument.js"></script>
@@ -1411,6 +1427,60 @@ $adminBase = rtrim($base, '/') . '/evaluate/admin';
                 resultsDiv.innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาดในการค้นหา</div>';
                 console.error('Search error:', err);
             });
+    }
+
+    // Delete record function with SweetAlert confirmation
+    function deleteRecord(id, name) {
+        Swal.fire({
+            title: 'ยืนยันการลบ?',
+            html: 'คุณต้องการลบรายการของ <strong>' + (name || 'รายการนี้') + '</strong> ใช่หรือไม่?<br><span style="color:#dc3545;font-size:0.875rem;">การลบไม่สามารถเรียกคืนได้</span>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ลบรายการ',
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(adminBase + '/delete', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: 'id=' + id
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'สำเร็จ',
+                                text: data.message || 'ลบรายการเรียบร้อยแล้ว',
+                                confirmButtonText: 'ตกลง'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด',
+                                text: data.message || 'ไม่สามารถลบรายการได้',
+                                confirmButtonText: 'ตกลง'
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Delete error:', err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                            confirmButtonText: 'ตกลง'
+                        });
+                    });
+            }
+        });
     }
 </script>
 <?= $this->endSection() ?>
