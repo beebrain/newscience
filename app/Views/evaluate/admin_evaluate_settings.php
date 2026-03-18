@@ -260,44 +260,71 @@ $base = rtrim(base_url(), '/');
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-const saveUrl = '<?= base_url('admin/evaluate/settings/save') ?>';
-const originalData = <?= json_encode($settings) ?>;
+    const saveUrl = '<?= base_url('evaluate/admin/settings/save') ?>';
+    const originalData = <?= json_encode($settings) ?>;
 
-$('#settingsForm').on('submit', function(e) {
-    e.preventDefault();
-    
-    const btn = $('#saveBtn');
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>กำลังบันทึก...');
-    
-    $.ajax({
-        url: saveUrl,
-        type: 'POST',
-        data: $(this).serialize(),
-        dataType: 'json'
-    })
-    .done(function(res) {
-        if (res.success) {
-            alert(res.message);
-            location.reload();
-        } else {
-            alert(res.message || 'เกิดข้อผิดพลาด');
-        }
-    })
-    .fail(function(xhr) {
-        const msg = xhr.responseJSON?.message || 'เกิดข้อผิดพลาดในการบันทึก';
-        alert(msg);
-    })
-    .always(function() {
-        btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i>บันทึกการตั้งค่า');
+    $('#settingsForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const btn = $('#saveBtn');
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>กำลังบันทึก...');
+
+        $.ajax({
+                url: saveUrl,
+                type: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json'
+            })
+            .done(function(res) {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ',
+                        text: res.message,
+                        confirmButtonText: 'ตกลง'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: res.message || 'ไม่สามารถบันทึกได้',
+                        confirmButtonText: 'ตกลง'
+                    });
+                }
+            })
+            .fail(function(xhr) {
+                const msg = xhr.responseJSON?.message || 'เกิดข้อผิดพลาดในการบันทึก';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: msg,
+                    confirmButtonText: 'ตกลง'
+                });
+            })
+            .always(function() {
+                btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i>บันทึกการตั้งค่า');
+            });
     });
-});
 
-function resetForm() {
-    if (confirm('ต้องการรีเซ็ตค่าเป็นค่าเริ่มต้น?')) {
-        location.reload();
+    function resetForm() {
+        Swal.fire({
+            icon: 'warning',
+            title: 'รีเซ็ตค่า?',
+            text: 'ต้องการรีเซ็ตค่าเป็นค่าเริ่มต้น?',
+            showCancelButton: true,
+            confirmButtonText: 'รีเซ็ต',
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: '#dc3545'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                location.reload();
+            }
+        });
     }
-}
 </script>
 
 <?= $this->endSection() ?>
