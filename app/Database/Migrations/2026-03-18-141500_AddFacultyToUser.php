@@ -14,7 +14,6 @@ class AddFacultyToUser extends Migration
                 'constraint' => 100,
                 'null' => true,
                 'comment' => 'คณะที่สังกัด เช่น คณะวิทยาศาสตร์และเทคโนโลยี',
-                'after' => 'program_id',
             ],
         ]);
 
