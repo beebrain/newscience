@@ -284,6 +284,12 @@
         margin-bottom: 15px;
     }
 
+    .faculty-panel-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 12px;
+    }
+
     .search-box {
         margin-bottom: 10px;
     }
@@ -549,6 +555,16 @@
                         </div>
                     </div>
                     <div class="panel-body">
+                        <div class="faculty-panel-actions">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearFacultyMembers()">
+                                <svg class="section-icon-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                                    <path d="M3 6h18"></path>
+                                    <path d="M8 6V4h8v2"></path>
+                                    <path d="M19 6l-1 14H6L5 6"></path>
+                                </svg>
+                                ล้างสมาชิกทั้งหมด
+                            </button>
+                        </div>
                         <div class="drop-zone" id="dropZone">
                             <div class="text-center">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width: 34px; height: 34px; display: block; margin: 0 auto 10px;">
@@ -862,28 +878,92 @@
         document.getElementById('pendingCount').textContent = pendingChanges.length;
     }
 
-    // Save all changes
+    async function clearFacultyMembers() {
+        const facultyItems = Array.from(document.querySelectorAll('#facultyUsersList .user-item'));
+
+        if (!selectedFaculty) {
+            window.swalAlert('กรุณาเลือกคณะก่อน', 'warning');
+            return;
+        }
+
+        if (facultyItems.length === 0) {
+            window.swalAlert('คณะนี้ยังไม่มีสมาชิกให้ล้าง', 'info');
+            return;
+        }
+
+        const confirmed = await window.swalConfirm({
+            title: 'ล้างสมาชิกทั้งหมดของคณะ?',
+            text: `สมาชิก ${facultyItems.length} คนจะถูกนำออกจาก ${selectedFaculty}`,
+            confirmText: 'ล้างทั้งหมด',
+            cancelText: 'ยกเลิก'
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        facultyItems.forEach((item) => {
+            removeFromFaculty(parseInt(item.dataset.userId, 10));
+        });
+    }
+
     async function saveChanges() {
         if (pendingChanges.length === 0) return;
 
         const changesToSave = [...pendingChanges];
 
         try {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'กำลังบันทึกข้อมูล',
+                    text: 'โปรดรอสักครู่ ระบบกำลังประมวลผลการเปลี่ยนแปลง',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+
             for (const change of changesToSave) {
-                await fetch(`${baseUrl}admin/user-faculty/update-faculty`, {
+                const response = await fetch(`${baseUrl}admin/user-faculty/update-faculty`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: `user_id=${change.userId}&faculty=${encodeURIComponent(change.newFaculty)}`
                 });
+
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'ไม่สามารถบันทึกข้อมูลได้');
+                }
             }
 
-            alert(`บันทึกสำเร็จ: ${changesToSave.length} รายการ`);
             pendingChanges = [];
             updatePendingChanges();
+            if (typeof Swal !== 'undefined') {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกสำเร็จ',
+                    text: `บันทึกข้อมูล ${changesToSave.length} รายการเรียบร้อยแล้ว`,
+                    confirmButtonText: 'ตกลง'
+                });
+            } else {
+                alert(`บันทึกสำเร็จ: ${changesToSave.length} รายการ`);
+            }
+
+            window.location.reload();
         } catch (error) {
-            alert('เกิดข้อผิดพลาด: ' + error.message);
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message
+                });
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+            }
         }
     }
 
