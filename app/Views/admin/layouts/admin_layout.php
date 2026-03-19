@@ -17,6 +17,7 @@ use App\Libraries\AccessControl; ?>
     <!-- Central CSS: theme + admin (ธีมสีเดียวกับหน้าแรก) -->
     <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/admin.css') ?>">
+    <?= $this->renderSection('styles') ?>
 </head>
 
 <body>
