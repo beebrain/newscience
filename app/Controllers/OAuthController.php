@@ -36,6 +36,7 @@ class OAuthController extends BaseController
     private const LOG_PREFIX    = 'OAuthController: ';
     private const LOG_FILE      = 'oauth_login';
     private const SESSION_STATE = 'uru_oauth_state';
+    private const SESSION_ATTEMPT_ID = 'uru_oauth_attempt_id';
 
     public function __construct()
     {
@@ -55,19 +56,45 @@ class OAuthController extends BaseController
      */
     public function login(): \CodeIgniter\HTTP\RedirectResponse
     {
+        $ip = $this->request->getIPAddress();
+
         if (!$this->config->enabled) {
-            $this->writeLog('login', 'OAuth disabled', []);
+            $this->writeLog('login_disabled', 'OAuth disabled', [
+                'ip' => $ip,
+            ]);
             return redirect()->to(base_url('admin/login'))
                 ->with('error', 'การเข้าสู่ระบบผ่าน URU Portal ยังไม่เปิดใช้งาน');
         }
 
         // ถ้า login อยู่แล้ว redirect ไปหน้าที่เหมาะสม
         if (session()->get('admin_logged_in')) {
+            $this->writeLog('login_skip', 'User already logged in as admin', [
+                'ip' => $ip,
+                'admin_id' => session()->get('admin_id'),
+                'email' => session()->get('admin_email'),
+                'redirect_to' => base_url('dashboard'),
+            ]);
             return redirect()->to(base_url('dashboard'));
         }
         if (session()->get('student_logged_in')) {
+            $this->writeLog('login_skip', 'User already logged in as student', [
+                'ip' => $ip,
+                'student_id' => session()->get('student_id'),
+                'email' => session()->get('student_email'),
+                'redirect_to' => base_url('student'),
+            ]);
             return redirect()->to(base_url('student'));
         }
+
+        $attemptId = $this->generateAttemptId();
+        session()->set(self::SESSION_ATTEMPT_ID, $attemptId);
+
+        $this->writeLog('login_start', 'Portal login requested', [
+            'attempt_id' => $attemptId,
+            'ip' => $ip,
+            'user_agent' => (string) $this->request->getUserAgent(),
+            'request_uri' => current_url(),
+        ]);
 
         // สร้าง state สำหรับป้องกัน CSRF
         $state = bin2hex(random_bytes(16));
@@ -77,11 +104,24 @@ class OAuthController extends BaseController
         $intended = $this->request->getGet('redirect_url');
         if ($intended && is_string($intended) && strpos($intended, base_url()) === 0) {
             session()->set('oauth_redirect_url', $intended);
+            $this->writeLog('login_redirect_url', 'Stored intended redirect URL', [
+                'attempt_id' => $attemptId,
+                'ip' => $ip,
+                'redirect_url' => $intended,
+            ]);
+        } elseif ($intended) {
+            $this->writeLog('login_redirect_url_rejected', 'Rejected unsafe redirect URL', [
+                'attempt_id' => $attemptId,
+                'ip' => $ip,
+                'redirect_url' => is_string($intended) ? $intended : '(non-string)',
+            ]);
         }
 
         $authUrl = $this->config->buildAuthUrl($state);
 
-        $this->writeLog('login', 'redirect to URU Portal', [
+        $this->writeLog('login_redirect', 'Redirecting user to URU Portal', [
+            'attempt_id' => $attemptId,
+            'ip' => $ip,
             'auth_url' => $authUrl,
             'state'    => $state,
         ]);
@@ -103,8 +143,10 @@ class OAuthController extends BaseController
         $state = $this->request->getGet('state');
         $error = $this->request->getGet('error');
         $ip    = $this->request->getIPAddress();
+        $attemptId = $this->getAttemptId();
 
         $this->writeLog('callback_start', 'OAuth callback received', [
+            'attempt_id' => $attemptId,
             'ip'       => $ip,
             'code_len' => is_string($code) ? strlen($code) : 0,
             'state'    => $state ?? '',
@@ -114,14 +156,14 @@ class OAuthController extends BaseController
         // ตรวจสอบ error จาก Portal
         if ($error !== null && $error !== '') {
             $errDesc = $this->request->getGet('error_description') ?? $error;
-            $this->writeLog('callback_error', 'Portal returned error', ['error' => $error, 'description' => $errDesc, 'ip' => $ip]);
+            $this->writeLog('callback_error', 'Portal returned error', ['attempt_id' => $attemptId, 'error' => $error, 'description' => $errDesc, 'ip' => $ip]);
             return redirect()->to(base_url('admin/login'))
                 ->with('error', 'เข้าสู่ระบบไม่สำเร็จ: ' . $errDesc);
         }
 
         // ตรวจสอบ code
         if (!$code || !is_string($code) || trim($code) === '') {
-            $this->writeLog('callback_error', 'Missing code parameter', ['ip' => $ip]);
+            $this->writeLog('callback_error', 'Missing code parameter', ['attempt_id' => $attemptId, 'ip' => $ip]);
             return redirect()->to(base_url('admin/login'))
                 ->with('error', 'ไม่ได้รับรหัสจาก URU Portal กรุณาลองใหม่อีกครั้ง');
         }
@@ -130,20 +172,40 @@ class OAuthController extends BaseController
         $savedState = session()->get(self::SESSION_STATE);
         if ($savedState !== null && $state !== null && $state !== $savedState) {
             $this->writeLog('callback_error', 'State mismatch (CSRF?)', [
+                'attempt_id' => $attemptId,
                 'expected' => $savedState,
                 'received' => $state,
                 'ip'       => $ip,
             ]);
             session()->remove(self::SESSION_STATE);
+            session()->remove(self::SESSION_ATTEMPT_ID);
             return redirect()->to(base_url('admin/login'))
                 ->with('error', 'คำขอไม่ถูกต้อง (state mismatch) กรุณาลองใหม่อีกครั้ง');
+        }
+        if ($savedState === null) {
+            $this->writeLog('callback_state_missing', 'No state found in session, skipping CSRF validation', [
+                'attempt_id' => $attemptId,
+                'received' => $state ?? '',
+                'ip' => $ip,
+            ]);
+        } else {
+            $this->writeLog('callback_state_valid', 'State validation passed', [
+                'attempt_id' => $attemptId,
+                'ip' => $ip,
+            ]);
         }
         session()->remove(self::SESSION_STATE);
 
         // ---- Step 2: แลก code → token ----
+        $this->writeLog('token_exchange_start', 'Starting authorization code exchange', [
+            'attempt_id' => $attemptId,
+            'ip' => $ip,
+            'code_len' => strlen(trim($code)),
+        ]);
         $tokenSet = $this->oauthService->exchangeCodeForToken(trim($code));
         if ($tokenSet === null) {
-            $this->writeLog('callback_error', 'Token exchange failed', ['ip' => $ip]);
+            $this->writeLog('callback_error', 'Token exchange failed', ['attempt_id' => $attemptId, 'ip' => $ip]);
+            session()->remove(self::SESSION_ATTEMPT_ID);
             return redirect()->to(base_url('admin/login'))
                 ->with('error', 'ไม่สามารถแลกรหัสกับ URU Portal ได้ กรุณาลองใหม่อีกครั้ง');
         }
@@ -153,10 +215,23 @@ class OAuthController extends BaseController
         $expiresIn    = (int) ($tokenSet['expires_in'] ?? 3600);
         $tokenExpires = time() + $expiresIn;
 
+        $this->writeLog('token_exchange_success', 'Authorization code exchange succeeded', [
+            'attempt_id' => $attemptId,
+            'ip' => $ip,
+            'has_refresh_token' => $refreshToken !== '' ? 'yes' : 'no',
+            'expires_in' => $expiresIn,
+            'token_expires_at' => date('Y-m-d H:i:s', $tokenExpires),
+        ]);
+
         // ---- Step 3: ดึงข้อมูลผู้ใช้ ----
+        $this->writeLog('userinfo_start', 'Fetching user info from Portal', [
+            'attempt_id' => $attemptId,
+            'ip' => $ip,
+        ]);
         $portalUser = $this->oauthService->fetchUserInfo($accessToken);
         if ($portalUser === null) {
-            $this->writeLog('callback_error', 'fetchUserInfo failed', ['ip' => $ip]);
+            $this->writeLog('callback_error', 'fetchUserInfo failed', ['attempt_id' => $attemptId, 'ip' => $ip]);
+            session()->remove(self::SESSION_ATTEMPT_ID);
             return redirect()->to(base_url('admin/login'))
                 ->with('error', 'ไม่สามารถดึงข้อมูลผู้ใช้จาก URU Portal ได้ กรุณาลองใหม่อีกครั้ง');
         }
@@ -171,6 +246,7 @@ class OAuthController extends BaseController
             }
         }
         $this->writeLog('callback_user', 'User info received from Portal', [
+            'attempt_id' => $attemptId,
             'email'       => $email,
             'login_uid'   => $loginUid,
             'ip'          => $ip,
@@ -179,10 +255,23 @@ class OAuthController extends BaseController
 
         // ---- Step 4: แยกประเภทผู้ใช้ ----
         if ($this->oauthService->isStudent($portalUser)) {
-            return $this->handleStudentLogin($portalUser, $accessToken, $refreshToken, $tokenExpires, $ip);
+            $this->writeLog('user_classified', 'Portal user classified as student', [
+                'attempt_id' => $attemptId,
+                'email' => $email,
+                'login_uid' => $loginUid,
+                'ip' => $ip,
+            ]);
+            return $this->handleStudentLogin($portalUser, $accessToken, $refreshToken, $tokenExpires, $ip, $attemptId);
         }
 
-        return $this->handlePersonnelLogin($portalUser, $accessToken, $refreshToken, $tokenExpires, $ip);
+        $this->writeLog('user_classified', 'Portal user classified as personnel', [
+            'attempt_id' => $attemptId,
+            'email' => $email,
+            'login_uid' => $loginUid,
+            'ip' => $ip,
+        ]);
+
+        return $this->handlePersonnelLogin($portalUser, $accessToken, $refreshToken, $tokenExpires, $ip, $attemptId);
     }
 
     // -------------------------------------------------------------------------
@@ -250,28 +339,47 @@ class OAuthController extends BaseController
         string $accessToken,
         string $refreshToken,
         int $tokenExpires,
-        string $ip
+        string $ip,
+        string $attemptId
     ): \CodeIgniter\HTTP\RedirectResponse {
         $email    = strtolower(trim($portalUser['email'] ?? ''));
         $loginUid = trim($portalUser['login_uid'] ?? $portalUser['username'] ?? '');
 
+        $this->writeLog('student_process_start', 'Starting student login process', [
+            'attempt_id' => $attemptId,
+            'email' => $email,
+            'login_uid' => $loginUid,
+            'ip' => $ip,
+        ]);
+
         $student = $this->studentModel->findOrCreateFromPortalUser($portalUser);
         if ($student === null) {
-            $this->writeLog('student_error', 'findOrCreateFromPortalUser failed', ['email' => $email, 'ip' => $ip]);
+            $this->writeLog('student_error', 'findOrCreateFromPortalUser failed', ['attempt_id' => $attemptId, 'email' => $email, 'login_uid' => $loginUid, 'ip' => $ip, 'reason' => 'student record could not be created or loaded']);
+            session()->remove(self::SESSION_ATTEMPT_ID);
             return redirect()->to(base_url('student/login'))
                 ->with('error', 'ไม่สามารถสร้างหรือค้นหาบัญชีนักศึกษาได้ กรุณาติดต่อผู้ดูแลระบบ');
         }
 
+        $this->writeLog('student_record_ready', 'Student record loaded', [
+            'attempt_id' => $attemptId,
+            'id' => $student['id'] ?? null,
+            'email' => $email,
+            'status' => $student['status'] ?? '',
+            'ip' => $ip,
+        ]);
+
         if (($student['status'] ?? '') !== 'active') {
-            $this->writeLog('student_inactive', 'Student account inactive', ['email' => $email, 'id' => $student['id'], 'ip' => $ip]);
+            $this->writeLog('student_inactive', 'Student account inactive', ['attempt_id' => $attemptId, 'email' => $email, 'id' => $student['id'], 'status' => $student['status'] ?? '', 'ip' => $ip]);
+            session()->remove(self::SESSION_ATTEMPT_ID);
             return redirect()->to(base_url('student/login'))
                 ->with('error', 'บัญชีนักศึกษาของคุณถูกปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ');
         }
 
         $isNew = (trim($student['login_uid'] ?? '') === '' || $student['login_uid'] === $loginUid) &&
-                 (strtotime($student['created_at'] ?? '') > (time() - 5));
+            (strtotime($student['created_at'] ?? '') > (time() - 5));
 
         $this->writeLog('student_login', 'Student login success', [
+            'attempt_id' => $attemptId,
             'id'        => $student['id'],
             'email'     => $email,
             'login_uid' => $loginUid,
@@ -292,8 +400,27 @@ class OAuthController extends BaseController
             'student_token_expires'  => $tokenExpires,
         ]);
 
+        $this->writeLog('student_session_set', 'Student session established', [
+            'attempt_id' => $attemptId,
+            'id' => $student['id'],
+            'email' => $student['email'] ?? $email,
+            'role' => $student['role'] ?? 'student',
+            'token_expires_at' => date('Y-m-d H:i:s', $tokenExpires),
+            'ip' => $ip,
+        ]);
+
         $redirectUrl = session()->get('oauth_redirect_url') ?? session()->get('student_redirect_url') ?? base_url('student');
         session()->remove(['oauth_redirect_url', 'student_redirect_url']);
+
+        $this->writeLog('login_complete', 'Student login flow completed successfully', [
+            'attempt_id' => $attemptId,
+            'user_type' => 'student',
+            'id' => $student['id'],
+            'email' => $student['email'] ?? $email,
+            'redirect_to' => $redirectUrl,
+            'ip' => $ip,
+        ]);
+        session()->remove(self::SESSION_ATTEMPT_ID);
 
         return redirect()->to($redirectUrl)->with('success', 'เข้าสู่ระบบสำเร็จ ยินดีต้อนรับ ' . $this->studentModel->getFullName($student));
     }
@@ -309,23 +436,42 @@ class OAuthController extends BaseController
         string $accessToken,
         string $refreshToken,
         int $tokenExpires,
-        string $ip
+        string $ip,
+        string $attemptId
     ): \CodeIgniter\HTTP\RedirectResponse {
         $email    = strtolower(trim($portalUser['email'] ?? ''));
         $loginUid = trim($portalUser['login_uid'] ?? $portalUser['username'] ?? '');
 
+        $this->writeLog('personnel_process_start', 'Starting personnel login process', [
+            'attempt_id' => $attemptId,
+            'email' => $email,
+            'login_uid' => $loginUid,
+            'ip' => $ip,
+        ]);
+
         $user = $this->userModel->findOrCreateFromPortalUser($portalUser);
         if ($user === null) {
-            $this->writeLog('personnel_error', 'findOrCreateFromPortalUser failed', ['email' => $email, 'ip' => $ip]);
+            $this->writeLog('personnel_error', 'findOrCreateFromPortalUser failed', ['attempt_id' => $attemptId, 'email' => $email, 'login_uid' => $loginUid, 'ip' => $ip, 'reason' => 'user record could not be created or loaded']);
+            session()->remove(self::SESSION_ATTEMPT_ID);
             return redirect()->to(base_url('admin/login'))
                 ->with('error', 'ไม่สามารถสร้างหรือค้นหาบัญชีผู้ใช้ได้ กรุณาติดต่อผู้ดูแลระบบ');
         }
+
+        $this->writeLog('personnel_record_ready', 'Personnel record loaded', [
+            'attempt_id' => $attemptId,
+            'uid' => $user['uid'] ?? null,
+            'email' => $email,
+            'status' => $user['status'] ?? '',
+            'active' => $user['active'] ?? null,
+            'ip' => $ip,
+        ]);
 
         // ตรวจสอบ status (ตาราง user ใช้ status enum active/inactive)
         $status = $user['status'] ?? '';
         $active = (int) ($user['active'] ?? ($status === 'active' ? 1 : 0));
         if ($status !== 'active' && $active !== 1) {
-            $this->writeLog('personnel_inactive', 'Personnel account inactive', ['email' => $email, 'uid' => $user['uid'], 'ip' => $ip]);
+            $this->writeLog('personnel_inactive', 'Personnel account inactive', ['attempt_id' => $attemptId, 'email' => $email, 'uid' => $user['uid'], 'status' => $status, 'active' => $active, 'ip' => $ip]);
+            session()->remove(self::SESSION_ATTEMPT_ID);
             return redirect()->to(base_url('admin/login'))
                 ->with('error', 'บัญชีของคุณถูกปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ');
         }
@@ -334,6 +480,7 @@ class OAuthController extends BaseController
         $isNew     = strtotime($user['created_at'] ?? '') > (time() - 5);
 
         $this->writeLog('personnel_login', 'Personnel login success', [
+            'attempt_id' => $attemptId,
             'uid'       => $user['uid'],
             'email'     => $email,
             'login_uid' => $loginUid,
@@ -355,8 +502,28 @@ class OAuthController extends BaseController
             'admin_token_expires'  => $tokenExpires,
         ]);
 
+        $this->writeLog('personnel_session_set', 'Personnel session established', [
+            'attempt_id' => $attemptId,
+            'uid' => $user['uid'],
+            'email' => $user['email'] ?? $email,
+            'role' => $adminRole,
+            'token_expires_at' => date('Y-m-d H:i:s', $tokenExpires),
+            'ip' => $ip,
+        ]);
+
         $redirectUrl = session()->get('oauth_redirect_url') ?? session()->get('redirect_url') ?? base_url('dashboard');
         session()->remove(['oauth_redirect_url', 'redirect_url']);
+
+        $this->writeLog('login_complete', 'Personnel login flow completed successfully', [
+            'attempt_id' => $attemptId,
+            'user_type' => 'personnel',
+            'uid' => $user['uid'],
+            'email' => $user['email'] ?? $email,
+            'role' => $adminRole,
+            'redirect_to' => $redirectUrl,
+            'ip' => $ip,
+        ]);
+        session()->remove(self::SESSION_ATTEMPT_ID);
 
         return redirect()->to($redirectUrl)->with('success', 'เข้าสู่ระบบสำเร็จ ยินดีต้อนรับ ' . $this->userModel->getFullName($user));
     }
@@ -383,5 +550,23 @@ class OAuthController extends BaseController
         if (is_dir($logDir) && is_writable($logDir)) {
             @file_put_contents($logFile, $line, FILE_APPEND | LOCK_EX);
         }
+    }
+
+    private function getAttemptId(): string
+    {
+        $attemptId = (string) (session()->get(self::SESSION_ATTEMPT_ID) ?? '');
+        if ($attemptId !== '') {
+            return $attemptId;
+        }
+
+        $attemptId = $this->generateAttemptId();
+        session()->set(self::SESSION_ATTEMPT_ID, $attemptId);
+
+        return $attemptId;
+    }
+
+    private function generateAttemptId(): string
+    {
+        return 'oauth-' . date('YmdHis') . '-' . substr(bin2hex(random_bytes(6)), 0, 12);
     }
 }
