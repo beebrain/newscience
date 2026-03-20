@@ -204,7 +204,11 @@ class OAuthController extends BaseController
         ]);
         $tokenSet = $this->oauthService->exchangeCodeForToken(trim($code));
         if ($tokenSet === null) {
-            $this->writeLog('callback_error', 'Token exchange failed', ['attempt_id' => $attemptId, 'ip' => $ip]);
+            $this->writeLog('callback_error', 'Token exchange failed', [
+                'attempt_id' => $attemptId,
+                'ip' => $ip,
+                'reason' => $this->oauthService->getLastError(),
+            ]);
             session()->remove(self::SESSION_ATTEMPT_ID);
             return redirect()->to(base_url('admin/login'))
                 ->with('error', 'ไม่สามารถแลกรหัสกับ URU Portal ได้ กรุณาลองใหม่อีกครั้ง');
@@ -230,7 +234,11 @@ class OAuthController extends BaseController
         ]);
         $portalUser = $this->oauthService->fetchUserInfo($accessToken);
         if ($portalUser === null) {
-            $this->writeLog('callback_error', 'fetchUserInfo failed', ['attempt_id' => $attemptId, 'ip' => $ip]);
+            $this->writeLog('callback_error', 'fetchUserInfo failed', [
+                'attempt_id' => $attemptId,
+                'ip' => $ip,
+                'reason' => $this->oauthService->getLastError(),
+            ]);
             session()->remove(self::SESSION_ATTEMPT_ID);
             return redirect()->to(base_url('admin/login'))
                 ->with('error', 'ไม่สามารถดึงข้อมูลผู้ใช้จาก URU Portal ได้ กรุณาลองใหม่อีกครั้ง');

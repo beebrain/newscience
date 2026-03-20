@@ -16,10 +16,29 @@ class UruPortalOAuthService
 {
     protected UruPortalOAuth $config;
     private const LOG_PREFIX = 'UruPortalOAuth: ';
+    protected array $lastError = [];
 
     public function __construct(?UruPortalOAuth $config = null)
     {
         $this->config = $config ?? config(UruPortalOAuth::class);
+    }
+
+    public function getLastError(): array
+    {
+        return $this->lastError;
+    }
+
+    private function setLastError(string $stage, string $message, array $context = []): void
+    {
+        $this->lastError = array_merge([
+            'stage' => $stage,
+            'message' => $message,
+        ], $context);
+    }
+
+    private function clearLastError(): void
+    {
+        $this->lastError = [];
     }
 
     // -------------------------------------------------------------------------
@@ -34,6 +53,8 @@ class UruPortalOAuthService
      */
     public function exchangeCodeForToken(string $code): ?array
     {
+        $this->clearLastError();
+
         $payload = [
             'grant_type'    => 'authorization_code',
             'client_id'     => $this->config->clientId,
@@ -47,6 +68,10 @@ class UruPortalOAuthService
         $response = $this->httpPost($this->config->tokenUrl, $payload, 'form');
         if ($response === null) {
             log_message('error', self::LOG_PREFIX . 'exchangeCodeForToken HTTP request failed');
+            $this->setLastError('token_exchange', 'HTTP request failed', [
+                'url' => $this->config->tokenUrl,
+                'code_len' => strlen($code),
+            ] + $this->lastError);
             return null;
         }
 
@@ -56,12 +81,22 @@ class UruPortalOAuthService
 
         if ($status !== 200) {
             log_message('error', self::LOG_PREFIX . 'exchangeCodeForToken non-200 status=' . $status . ' body=' . $body);
+            $this->setLastError('token_exchange', 'Portal token endpoint returned non-200 status', [
+                'url' => $this->config->tokenUrl,
+                'status' => $status,
+                'body_preview' => $preview,
+            ]);
             return null;
         }
 
         $data = json_decode($body, true);
         if (!is_array($data) || empty($data['access_token'])) {
             log_message('error', self::LOG_PREFIX . 'exchangeCodeForToken missing access_token in response body=' . $body);
+            $this->setLastError('token_exchange', 'Token response missing access_token or invalid JSON', [
+                'url' => $this->config->tokenUrl,
+                'status' => $status,
+                'body_preview' => $preview,
+            ]);
             return null;
         }
 
@@ -81,11 +116,16 @@ class UruPortalOAuthService
      */
     public function fetchUserInfo(string $accessToken): ?array
     {
+        $this->clearLastError();
         log_message('info', self::LOG_PREFIX . 'fetchUserInfo GET url=' . $this->config->userInfoUrl);
 
         $response = $this->httpGet($this->config->userInfoUrl, $accessToken);
         if ($response === null) {
             log_message('error', self::LOG_PREFIX . 'fetchUserInfo HTTP request failed');
+            $this->setLastError('userinfo', 'HTTP request failed', [
+                'url' => $this->config->userInfoUrl,
+                'timeout' => (int) ($this->config->userInfoTimeout ?? $this->config->httpTimeout),
+            ] + $this->lastError);
             return null;
         }
 
@@ -95,17 +135,32 @@ class UruPortalOAuthService
 
         if ($status !== 200) {
             log_message('error', self::LOG_PREFIX . 'fetchUserInfo non-200 status=' . $status . ' body=' . $body);
+            $this->setLastError('userinfo', 'Portal user info endpoint returned non-200 status', [
+                'url' => $this->config->userInfoUrl,
+                'status' => $status,
+                'body_preview' => $preview,
+            ]);
             return null;
         }
 
         $data = json_decode($body, true);
         if (!is_array($data)) {
             log_message('error', self::LOG_PREFIX . 'fetchUserInfo response not JSON body=' . $body);
+            $this->setLastError('userinfo', 'User info response is not valid JSON', [
+                'url' => $this->config->userInfoUrl,
+                'status' => $status,
+                'body_preview' => $preview,
+            ]);
             return null;
         }
 
         if (empty($data['email'])) {
             log_message('error', self::LOG_PREFIX . 'fetchUserInfo missing email in response keys=' . implode(',', array_keys($data)));
+            $this->setLastError('userinfo', 'User info response missing email', [
+                'url' => $this->config->userInfoUrl,
+                'status' => $status,
+                'response_keys' => array_keys($data),
+            ]);
             return null;
         }
 
@@ -132,6 +187,8 @@ class UruPortalOAuthService
      */
     public function refreshAccessToken(string $refreshToken): ?array
     {
+        $this->clearLastError();
+
         $payload = [
             'grant_type'    => 'refresh_token',
             'client_id'     => $this->config->clientId,
@@ -144,6 +201,9 @@ class UruPortalOAuthService
         $response = $this->httpPost($this->config->tokenUrl, $payload, 'form');
         if ($response === null) {
             log_message('error', self::LOG_PREFIX . 'refreshAccessToken HTTP request failed');
+            $this->setLastError('refresh_token', 'HTTP request failed', [
+                'url' => $this->config->tokenUrl,
+            ] + $this->lastError);
             return null;
         }
 
@@ -152,12 +212,22 @@ class UruPortalOAuthService
 
         if ($status !== 200) {
             log_message('error', self::LOG_PREFIX . 'refreshAccessToken non-200 status=' . $status . ' body=' . $body);
+            $this->setLastError('refresh_token', 'Refresh token endpoint returned non-200 status', [
+                'url' => $this->config->tokenUrl,
+                'status' => $status,
+                'body_preview' => strlen($body) > 300 ? substr($body, 0, 300) . '...' : $body,
+            ]);
             return null;
         }
 
         $data = json_decode($body, true);
         if (!is_array($data) || empty($data['access_token'])) {
             log_message('error', self::LOG_PREFIX . 'refreshAccessToken missing access_token body=' . $body);
+            $this->setLastError('refresh_token', 'Refresh token response missing access_token or invalid JSON', [
+                'url' => $this->config->tokenUrl,
+                'status' => $status,
+                'body_preview' => strlen($body) > 300 ? substr($body, 0, 300) . '...' : $body,
+            ]);
             return null;
         }
 
@@ -240,7 +310,7 @@ class UruPortalOAuthService
         $timeout = $this->config->httpTimeout;
         $userInfoTimeout = (int) ($this->config->userInfoTimeout ?? $timeout);
         if ($userInfoTimeout < 5) {
-            $userInfoTimeout = 25;
+            $userInfoTimeout = 60;
         }
         $opts = [
             'http' => [
@@ -264,14 +334,26 @@ class UruPortalOAuthService
     private function doRequest(string $url, array $opts): ?array
     {
         $context = stream_context_create($opts);
+        $timeout = (int) ($opts['http']['timeout'] ?? 0);
         try {
             $response = @file_get_contents($url, false, $context);
             if ($response === false) {
                 $err = error_get_last();
                 $msg = $err['message'] ?? 'unknown';
-                if (strpos($msg, 'timeout') !== false || strpos($msg, 'timed out') !== false) {
-                    log_message('error', self::LOG_PREFIX . 'doRequest timeout url=' . $url . ' (increase httpTimeout or userInfoTimeout in config)');
+                $lowerMsg = strtolower($msg);
+                if (strpos($lowerMsg, 'timeout') !== false || strpos($lowerMsg, 'timed out') !== false) {
+                    $this->setLastError('http_request', 'Request timed out', [
+                        'url' => $url,
+                        'timeout' => $timeout,
+                        'error' => $msg,
+                    ]);
+                    log_message('error', self::LOG_PREFIX . 'doRequest timeout url=' . $url . ' timeout=' . $timeout . ' err=' . $msg . ' (increase httpTimeout or userInfoTimeout in config)');
                 } else {
+                    $this->setLastError('http_request', 'Request failed', [
+                        'url' => $url,
+                        'timeout' => $timeout,
+                        'error' => $msg,
+                    ]);
                     log_message('error', self::LOG_PREFIX . 'doRequest failed url=' . $url . ' err=' . $msg);
                 }
                 return null;
@@ -289,6 +371,11 @@ class UruPortalOAuthService
 
             return [$status, $response];
         } catch (\Throwable $e) {
+            $this->setLastError('http_request', 'Request exception', [
+                'url' => $url,
+                'timeout' => $timeout,
+                'error' => $e->getMessage(),
+            ]);
             log_message('error', self::LOG_PREFIX . 'doRequest exception url=' . $url . ' msg=' . $e->getMessage());
             return null;
         }

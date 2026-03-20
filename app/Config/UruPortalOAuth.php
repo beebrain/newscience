@@ -40,8 +40,8 @@ class UruPortalOAuth extends BaseConfig
     /** Timeout (วินาที) สำหรับ HTTP request ไป URU Portal */
     public int $httpTimeout = 15;
 
-    /** Timeout (วินาที) เฉพาะการเรียก GET /me (ถ้าไม่ตั้ง จะใช้ 25 — endpoint /me อาจช้ากว่า /oauth/token) */
-    public ?int $userInfoTimeout = 25;
+    /** Timeout (วินาที) เฉพาะการเรียก GET /me (ถ้าไม่ตั้ง จะใช้ 60 — endpoint /me อาจช้ากว่า /oauth/token) */
+    public ?int $userInfoTimeout = 60;
 
     /** Domain email ของ URU (ใช้ตรวจสอบว่าเป็น user ของ URU) */
     public string $emailDomain = '@live.uru.ac.th';
