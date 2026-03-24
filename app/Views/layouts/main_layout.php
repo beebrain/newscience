@@ -40,6 +40,8 @@
     $is_home = ($active_page ?? '') === 'home';
     $css_ver = (defined('FCPATH') && is_file(FCPATH . 'assets/css/base.css'))
         ? filemtime(FCPATH . 'assets/css/base.css') : '1';
+    $site_nav_ver = (defined('FCPATH') && is_file(FCPATH . 'assets/js/site-nav.js'))
+        ? filemtime(FCPATH . 'assets/js/site-nav.js') : '1';
     ?>
     <!-- Central CSS: theme + base + components (โหลด parallel), home/pages ตามหน้าที่ใช้ -->
     <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>?v=<?= $css_ver ?>">
@@ -275,7 +277,7 @@
     </header>
 
     <!-- Mobile Navigation -->
-    <div class="mobile-nav">
+    <div class="mobile-nav" id="mobile-nav-panel">
         <div class="mobile-nav__header">
             <a href="<?= base_url() ?>" class="logo">
                 <img src="<?= esc($logo) ?>" alt="Logo คณะวิทยาศาสตร์และเทคโนโลยี" class="logo__img" style="height: 40px; width: auto;">
@@ -489,6 +491,7 @@
 
     <!-- Main Scripts -->
     <script src="<?= base_url('assets/js/main.js') ?>"></script>
+    <script src="<?= base_url('assets/js/site-nav.js') ?>?v=<?= $site_nav_ver ?>"></script>
     <!-- Silent Auto-Login Iframes (trigger login on other apps) -->
     <?php if (session()->getFlashdata('sso_autologin_urls')): ?>
         <div style="width:0;height:0;overflow:hidden;position:absolute;">
