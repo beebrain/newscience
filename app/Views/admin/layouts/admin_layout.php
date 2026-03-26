@@ -12,11 +12,25 @@ use App\Libraries\AccessControl; ?>
     <?php helper('site'); ?>
     <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
 
-    <!-- ฟอนต์ Sarabun (โหลดจากโปรเจกต์) -->
     <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>">
-    <!-- Central CSS: theme + admin (ธีมสีเดียวกับหน้าแรก) -->
     <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/admin.css') ?>">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            important: false,
+            corePlugins: { preflight: false },
+            theme: {
+                extend: {
+                    fontFamily: { 'sarabun': ['Sarabun', 'Noto Sans Thai', 'sans-serif'] },
+                    colors: {
+                        primary: { DEFAULT: '#eab308', dark: '#ca8a04', light: '#fef9c3' },
+                    }
+                }
+            }
+        }
+    </script>
     <?= $this->renderSection('styles') ?>
 </head>
 
@@ -501,7 +515,7 @@ use App\Libraries\AccessControl; ?>
         <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <main id="admin-main" class="main-content" role="main">
-            <header class="topbar">
+            <header class="topbar" style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <button class="topbar-menu-btn btn-secondary" onclick="toggleSidebar()" style="display: none; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--color-gray-300); background: white; cursor: pointer;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -513,9 +527,24 @@ use App\Libraries\AccessControl; ?>
                     <h1 class="topbar-title" style="margin: 0;"><?= $page_title ?? 'Dashboard' ?></h1>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <a href="<?= base_url('dashboard') ?>" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 600; border-radius: 9999px; border: 1px solid #e5e7eb; color: #374151; background: #f9fafb; text-decoration: none; transition: all 0.15s;" onmouseover="this.style.background='#f3f4f6';this.style.borderColor='#d1d5db'" onmouseout="this.style.background='#f9fafb';this.style.borderColor='#e5e7eb'">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        Dashboard
+                    </a>
+                    <?php
+                    $topbarRole = session()->get('admin_role') ?? 'user';
+                    $roleBadgeColors = [
+                        'super_admin' => 'background:#fef2f2;color:#991b1b;border-color:#fecaca;',
+                        'admin' => 'background:#eff6ff;color:#1e40af;border-color:#bfdbfe;',
+                        'faculty_admin' => 'background:#f0fdf4;color:#166534;border-color:#bbf7d0;',
+                        'editor' => 'background:#faf5ff;color:#6b21a8;border-color:#e9d5ff;',
+                    ];
+                    $badgeStyle = $roleBadgeColors[$topbarRole] ?? 'background:#f3f4f6;color:#374151;border-color:#e5e7eb;';
+                    ?>
+                    <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.625rem; font-size: 0.6875rem; font-weight: 600; border-radius: 9999px; border: 1px solid; <?= $badgeStyle ?>"><?= esc(ucfirst($topbarRole)) ?></span>
                     <div class="topbar-user">
-                        <span><?= session()->get('admin_name') ?? 'Admin' ?></span>
+                        <span><?= esc(session()->get('admin_name') ?? 'Admin') ?></span>
                         <a href="<?= base_url('admin/logout') ?>" aria-label="ออกจากระบบ (รวมทุกแอป)">Logout</a>
                     </div>
                 </div>

@@ -6,10 +6,9 @@ use App\Controllers\BaseController;
 use App\Models\UserModel;
 
 /**
- * หน้า Dashboard สำหรับผู้ใช้งาน (role = user ธรรมดา) — หน้าตาเหมือน Admin
- * แยก Controller ไว้ในโฟลเดอร์ User เพื่อการจัดการ
- * เมนู: เข้าสู่ Edoc, เข้าสู่หน้าการจัดการงานวิจัย (Research Record), ระบบประเมินผลการสอน
- * หน้าแรก: ข้อมูลพื้นฐานของผู้ใช้คนนั้น (ชื่อ นามสกุล อีเมล ฯลฯ)
+ * หน้า Dashboard — แยก layout ตาม role:
+ *   - super_admin / admin / faculty_admin → admin_layout (sidebar + full management)
+ *   - user / editor                      → user_layout  (topbar-only, card-based)
  */
 class Dashboard extends BaseController
 {
@@ -34,18 +33,23 @@ class Dashboard extends BaseController
             'name_th'       => $userModel->getFullNameThaiForDisplay($row),
             'name_en'       => trim(($row['gf_name'] ?? '') . ' ' . ($row['gl_name'] ?? '')),
             'role'          => $row['role'] ?? 'user',
-            'status'        => \App\Models\UserModel::statusFromActive($row['status'] ?? $row['active'] ?? 0),
+            'status'        => UserModel::statusFromActive($row['status'] ?? $row['active'] ?? 0),
             'created_at'    => $row['created_at'] ?? null,
             'updated_at'    => $row['updated_at'] ?? null,
         ];
 
         $canManageEvaluate = in_array($profile['role'], ['super_admin', 'faculty_admin'], true);
+        $isSuperAdmin = in_array($profile['role'], ['super_admin', 'admin', 'faculty_admin'], true);
 
         $data = [
             'page_title'         => 'การจัดการ',
             'profile'            => $profile,
             'can_manage_evaluate' => $canManageEvaluate,
         ];
+
+        if ($isSuperAdmin) {
+            return view('admin/dashboard/index', $data);
+        }
 
         return view('user/dashboard/index', $data);
     }

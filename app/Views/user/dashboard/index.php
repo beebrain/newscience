@@ -1,537 +1,213 @@
-<?= $this->extend('admin/layouts/admin_layout') ?>
+<?= $this->extend('layouts/user_layout') ?>
 
 <?= $this->section('content') ?>
-<style>
-    :root {
-        --dash-bg: #f9fafb;
-        --dash-card-bg: #ffffff;
-        --dash-text-primary: #1f2937;
-        --dash-text-secondary: #6b7280;
-        --dash-border: #e5e7eb;
-        --dash-hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
+<?php
+$p = $profile ?? [];
+$role = $p['role'] ?? 'user';
+$isAdmin = in_array($role, ['admin', 'editor', 'super_admin', 'faculty_admin'], true);
+$canManageEvaluate = $can_manage_evaluate ?? false;
+?>
 
-    .dashboard-container {
-        padding: 1rem;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
 
-    /* Welcome Section */
-    .welcome-card {
-        background: white;
-        border-radius: 16px;
-        padding: 1.5rem 2rem;
-        margin-bottom: 2.5rem;
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-        border: 1px solid var(--dash-border);
-    }
-
-    .welcome-avatar {
-        width: 64px;
-        height: 64px;
-        background: linear-gradient(135deg, #eab308, #ca8a04);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.75rem;
-        font-weight: bold;
-    }
-
-    .welcome-text h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--dash-text-primary);
-        margin: 0 0 0.25rem 0;
-    }
-
-    .welcome-text p {
-        color: var(--dash-text-secondary);
-        margin: 0;
-        font-size: 0.95rem;
-    }
-
-    /* Section Headers */
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1.25rem;
-        border-bottom: 1px solid var(--dash-border);
-        padding-bottom: 0.75rem;
-    }
-
-    .section-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--dash-text-primary);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin: 0;
-    }
-
-    .section-icon {
-        color: var(--dash-text-secondary);
-        width: 20px;
-        height: 20px;
-    }
-
-    /* Grid Layouts */
-    .system-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-    }
-
-    .admin-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1rem;
-    }
-
-    /* System Card (Large) */
-    .system-card {
-        background: var(--dash-card-bg);
-        border-radius: 12px;
-        padding: 1.75rem;
-        border: 1px solid var(--dash-border);
-        text-decoration: none;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .system-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--dash-hover-shadow);
-        border-color: #d1d5db;
-    }
-
-    .system-card-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1rem;
-        transition: transform 0.2s ease;
-    }
-
-    .system-card:hover .system-card-icon {
-        transform: scale(1.1);
-    }
-
-    .system-card-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--dash-text-primary);
-        margin-bottom: 0.5rem;
-    }
-
-    .system-card-desc {
-        font-size: 0.875rem;
-        color: var(--dash-text-secondary);
-        line-height: 1.5;
-    }
-
-    .system-card-arrow {
-        position: absolute;
-        top: 1.75rem;
-        right: 1.75rem;
-        color: #d1d5db;
-        transition: color 0.2s, transform 0.2s;
-    }
-
-    .system-card:hover .system-card-arrow {
-        color: var(--dash-text-primary);
-        transform: translateX(4px);
-    }
-
-    /* Styles Specific to Systems */
-    .card-edoc .system-card-icon {
-        background: #eff6ff;
-        color: #2563eb;
-    }
-
-    .card-edoc:hover .system-card-title {
-        color: #2563eb;
-    }
-
-    .card-edoc-legacy .system-card-icon {
-        background: #f3f4f6;
-        color: #6b7280;
-    }
-
-    .card-edoc-legacy:hover .system-card-title {
-        color: #4b5563;
-    }
-
-    .card-research .system-card-icon {
-        background: #ecfdf5;
-        color: #059669;
-    }
-
-    .card-research:hover .system-card-title {
-        color: #059669;
-    }
-
-    .card-evaluate .system-card-icon {
-        background: #f0fdf4;
-        color: #16a34a;
-    }
-
-    .card-evaluate:hover .system-card-title {
-        color: #16a34a;
-    }
-
-    .card-calendar .system-card-icon {
-        background: #fef9c3;
-        color: var(--color-primary, #eab308);
-    }
-
-    .card-calendar:hover .system-card-title {
-        color: var(--color-primary, #ca8a04);
-    }
-
-    .evaluate-admin-entry {
-        margin-top: 0.75rem;
-        padding-left: 0.25rem;
-    }
-
-    .evaluate-admin-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        font-size: 0.875rem;
-        color: #16a34a;
-        text-decoration: none;
-    }
-
-    .evaluate-admin-link:hover {
-        color: #15803d;
-        text-decoration: underline;
-    }
-
-    /* Admin Card (Small) */
-    .admin-card {
-        background: white;
-        border: 1px solid var(--dash-border);
-        border-radius: 8px;
-        padding: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        text-decoration: none;
-        transition: all 0.15s ease;
-    }
-
-    .admin-card:hover {
-        background: #fdfdfd;
-        border-color: #9ca3af;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-
-    .admin-icon-box {
-        width: 36px;
-        height: 36px;
-        border-radius: 6px;
-        background: #f3f4f6;
-        color: #4b5563;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .admin-card:hover .admin-icon-box {
-        background: #e5e7eb;
-        color: #111827;
-    }
-
-    .admin-card-text {
-        font-size: 0.9375rem;
-        font-weight: 500;
-        color: var(--dash-text-primary);
-    }
-</style>
-
-<div class="dashboard-container">
-
-    <!-- 1. Profile / Welcome Section -->
-    <?php $p = $profile ?? []; ?>
-    <div class="welcome-card">
-        <div class="welcome-avatar">
-            <?= strtoupper(substr($p['name_en'] ?? 'U', 0, 1)) ?>
-        </div>
-        <div class="welcome-text">
-            <h1>สวัสดี, <?= esc($p['name_th'] ?: ($p['name_en'] ?? 'User')) ?></h1>
-            <p>
-                <?= esc($p['email'] ?? '') ?>
-                <span style="margin: 0 0.5rem; color: #d1d5db;">|</span>
-                <span class="badge" style="background-color: #f3f4f6; color: #4b5563; font-size: 0.75rem;"><?= esc(ucfirst($p['role'] ?? 'User')) ?></span>
-            </p>
-        </div>
-    </div>
-
-    <!-- 2a. ระบบในเว็บไซต์ -->
-    <div class="section-header">
-        <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7"></rect>
-            <rect x="14" y="3" width="7" height="7"></rect>
-            <rect x="14" y="14" width="7" height="7"></rect>
-            <rect x="3" y="14" width="7" height="7"></rect>
-        </svg>
-        <h2 class="section-title">ระบบในเว็บไซต์</h2>
-    </div>
-
-    <div class="system-grid">
-        <a href="<?= esc(base_url('edoc')) ?>" class="system-card card-edoc">
-            <div class="system-card-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-            </div>
-            <div class="system-card-title">งานสารบรรณ (e-Doc)</div>
-            <div class="system-card-desc">ระบบรับ-ส่งหนังสือราชการและเอกสารอิเล็กทรอนิกส์</div>
-            <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-        </a>
-
-        <a href="<?= esc(base_url('exam')) ?>" class="system-card card-exam">
-            <div class="system-card-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-            </div>
-            <div class="system-card-title">ดูตารางคุมสอบ</div>
-            <div class="system-card-desc">ดูตารางคุมสอบและตรวจสอบกำหนดการสอบของคุณ</div>
-            <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-        </a>
-
-        <a href="<?= esc(base_url('evaluate')) ?>" class="system-card card-evaluate">
-            <div class="system-card-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 11l3 3L22 4"></path>
-                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                </svg>
-            </div>
-            <div class="system-card-title">ระบบประเมินผลการสอน</div>
-            <div class="system-card-desc">ส่งคำร้องขอประเมิน แบบประเมินของตนเอง และจัดการผู้ประเมิน</div>
-            <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-        </a>
-
-        <a href="<?= esc(base_url('dashboard/calendar')) ?>" class="system-card card-calendar">
-            <div class="system-card-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-            </div>
-            <div class="system-card-title">ปฏิทินนัดหมาย</div>
-            <div class="system-card-desc">ดูและจัดการตารางนัดหมายกิจกรรมของตนเอง</div>
-            <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-        </a>
-    </div>
-
-    <?php if (!empty($can_manage_evaluate)): ?>
-        <div class="evaluate-admin-entry">
-            <a href="<?= esc(base_url('evaluate/admin')) ?>" class="evaluate-admin-link">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                </svg>
-                จัดการระบบประเมินผลการสอน (Admin)
-            </a>
-        </div>
-    <?php endif; ?>
-
-    <!-- 2b. ระบบภายนอก (เว็บไซต์อื่น) -->
-    <div class="section-header" style="margin-top: 1.5rem;">
-        <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="2" y1="12" x2="22" y2="12"></line>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-        </svg>
-        <h2 class="section-title">ระบบภายนอกเว็บไซต์</h2>
-    </div>
-
-    <div class="system-grid">
-        <?php $edocSso = config(\Config\EdocSso::class);
-        $edocLegacyUrl = ($edocSso->baseUrl !== '') ? rtrim($edocSso->baseUrl, '/') : 'https://edoc.sci.uru.ac.th';
-        ?>
-        <a href="<?= esc($edocLegacyUrl) ?>" target="_blank" rel="noopener" class="system-card card-edoc-legacy">
-            <div class="system-card-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-            </div>
-            <div class="system-card-title">e-Doc เดิม</div>
-            <div class="system-card-desc">ระบบ e-Doc เวอร์ชันเดิม (edoc.sci.uru.ac.th)</div>
-            <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-        </a>
-
-        <?php
-        $researchSso = config(\Config\ResearchRecordSso::class);
-        if ($researchSso->enabled && $researchSso->baseUrl !== ''):
-        ?>
-            <a href="<?= esc(rtrim($researchSso->baseUrl, '/') . '/index.php/dashboard') ?>" target="_blank" rel="noopener" class="system-card card-research">
-                <div class="system-card-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" opacity="0.1"></path>
-                        <path d="M9 12l2 2 4-4"></path>
-                        <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                    </svg>
+    <!-- Welcome Card -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 h-24 sm:h-28"></div>
+        <div class="px-6 pb-6 -mt-10 sm:-mt-12">
+            <div class="flex flex-col sm:flex-row sm:items-end gap-4">
+                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white shadow-lg border-4 border-white flex items-center justify-center text-2xl sm:text-3xl font-bold text-yellow-600 bg-gradient-to-br from-yellow-50 to-yellow-100">
+                    <?= strtoupper(mb_substr($p['name_en'] ?? 'U', 0, 1)) ?>
                 </div>
-                <div class="system-card-title">จัดการงานวิจัย</div>
-                <div class="system-card-desc">ระบบบันทึกและจัดการข้อมูลงานวิจัย (Research Record)</div>
-                <svg class="system-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
-            </a>
-        <?php endif; ?>
-    </div>
-
-    <!-- 3. Admin Systems (Condition: Admin Only) -->
-    <?php
-    $sidebarAdminRole = session()->get('admin_role');
-    $isAdmin = in_array($sidebarAdminRole, ['admin', 'editor', 'super_admin', 'faculty_admin'], true);
-    if ($isAdmin):
-    ?>
-        <div class="section-header" style="margin-top: 2rem;">
-            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2.5a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H11a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1zm2.5 1a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-1z"></path>
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-            </svg>
-            <h2 class="section-title">ผู้ดูแลระบบ (Admin Tools)</h2>
-        </div>
-
-        <div class="admin-grid">
-            <a href="<?= base_url('admin/news') ?>" class="admin-card">
-                <div class="admin-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 1-2-2V7m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
-                    </svg>
-                </div>
-                <div class="admin-card-text">จัดการข่าว</div>
-            </a>
-
-            <a href="<?= base_url('admin/organization') ?>" class="admin-card">
-                <div class="admin-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
-                </div>
-                <div class="admin-card-text">โครงสร้างองค์กร</div>
-            </a>
-
-            <a href="<?= base_url('admin/programs') ?>" class="admin-card">
-                <div class="admin-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                    </svg>
-                </div>
-                <div class="admin-card-text">หลักสูตร</div>
-            </a>
-
-            <a href="<?= base_url('admin/users') ?>" class="admin-card">
-                <div class="admin-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                    </svg>
-                </div>
-                <div class="admin-card-text">ผู้ใช้งาน</div>
-            </a>
-
-            <a href="<?= base_url('admin/hero-slides') ?>" class="admin-card">
-                <div class="admin-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                        <polyline points="21 15 16 10 5 21"></polyline>
-                    </svg>
-                </div>
-                <div class="admin-card-text">ภาพสไลด์</div>
-            </a>
-
-            <a href="<?= base_url('admin/events') ?>" class="admin-card">
-                <div class="admin-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
-                </div>
-                <div class="admin-card-text">กิจกรรม</div>
-            </a>
-
-            <a href="<?= base_url('student-admin/barcode-events') ?>" class="admin-card">
-                <div class="admin-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                    </svg>
-                </div>
-                <div class="admin-card-text">จัดการบาร์โค้ด</div>
-            </a>
-
-            <?php if (in_array($sidebarAdminRole, ['super_admin'])): ?>
-                <a href="<?= base_url('utility/import-data') ?>" class="admin-card">
-                    <div class="admin-icon-box">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
+                <div class="flex-1 pb-1">
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">สวัสดี, <?= esc($p['name_th'] ?: ($p['name_en'] ?? 'User')) ?></h1>
+                    <div class="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500">
+                        <span><?= esc($p['email'] ?? '') ?></span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+                            <?php if ($role === 'super_admin'): ?>bg-red-100 text-red-700
+                            <?php elseif (in_array($role, ['admin', 'faculty_admin'])): ?>bg-blue-100 text-blue-700
+                            <?php elseif ($role === 'editor'): ?>bg-purple-100 text-purple-700
+                            <?php else: ?>bg-gray-100 text-gray-600<?php endif; ?>">
+                            <?= esc(ucfirst($role)) ?>
+                        </span>
                     </div>
-                    <div class="admin-card-text">Import Data</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Access: ระบบภายในเว็บไซต์ -->
+    <section>
+        <div class="flex items-center gap-2 mb-4">
+            <div class="w-1 h-6 bg-yellow-400 rounded-full"></div>
+            <h2 class="text-lg font-bold text-gray-800">ระบบในเว็บไซต์</h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- E-Document -->
+            <a href="<?= base_url('edoc') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all duration-200">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+                <div class="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">งานสารบรรณ (e-Doc)</div>
+                <div class="text-sm text-gray-500 mt-1">รับ-ส่งหนังสือราชการ</div>
+                <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+
+            <!-- ตารางคุมสอบ -->
+            <a href="<?= base_url('exam') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-orange-200 hover:-translate-y-1 transition-all duration-200">
+                <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+                <div class="font-semibold text-gray-800 group-hover:text-orange-600 transition-colors">ตารางคุมสอบ</div>
+                <div class="text-sm text-gray-500 mt-1">ตรวจสอบกำหนดการสอบ</div>
+                <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+
+            <!-- ประเมินผลการสอน -->
+            <a href="<?= base_url('evaluate') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-green-200 hover:-translate-y-1 transition-all duration-200">
+                <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                </div>
+                <div class="font-semibold text-gray-800 group-hover:text-green-600 transition-colors">ประเมินผลการสอน</div>
+                <div class="text-sm text-gray-500 mt-1">ส่งคำร้องขอประเมิน</div>
+                <?php if ($canManageEvaluate): ?>
+                    <span class="inline-block mt-2 text-xs text-green-600 font-medium">+ จัดการระบบประเมิน</span>
+                <?php endif; ?>
+                <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-green-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+
+            <!-- ปฏิทินนัดหมาย -->
+            <a href="<?= base_url('dashboard/calendar') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-yellow-200 hover:-translate-y-1 transition-all duration-200">
+                <div class="w-12 h-12 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+                <div class="font-semibold text-gray-800 group-hover:text-yellow-600 transition-colors">ปฏิทินนัดหมาย</div>
+                <div class="text-sm text-gray-500 mt-1">จัดการตารางนัดหมาย</div>
+                <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-yellow-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- ระบบภายนอก -->
+    <section>
+        <div class="flex items-center gap-2 mb-4">
+            <div class="w-1 h-6 bg-gray-400 rounded-full"></div>
+            <h2 class="text-lg font-bold text-gray-800">ระบบภายนอก</h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <?php
+            $edocSso = config(\Config\EdocSso::class);
+            $edocLegacyUrl = ($edocSso->baseUrl !== '') ? rtrim($edocSso->baseUrl, '/') : 'https://edoc.sci.uru.ac.th';
+            ?>
+            <a href="<?= esc($edocLegacyUrl) ?>" target="_blank" rel="noopener" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-gray-300 hover:-translate-y-1 transition-all duration-200">
+                <div class="w-12 h-12 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </div>
+                <div class="font-semibold text-gray-800 group-hover:text-gray-600 transition-colors">e-Doc เดิม</div>
+                <div class="text-sm text-gray-500 mt-1">edoc.sci.uru.ac.th</div>
+                <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-gray-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+
+            <?php
+            $researchSso = config(\Config\ResearchRecordSso::class);
+            if ($researchSso->enabled && $researchSso->baseUrl !== ''):
+            ?>
+                <a href="<?= esc(rtrim($researchSso->baseUrl, '/') . '/index.php/dashboard') ?>" target="_blank" rel="noopener" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-emerald-200 hover:-translate-y-1 transition-all duration-200">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    </div>
+                    <div class="font-semibold text-gray-800 group-hover:text-emerald-600 transition-colors">จัดการงานวิจัย</div>
+                    <div class="text-sm text-gray-500 mt-1">Research Record</div>
+                    <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </a>
             <?php endif; ?>
+
+            <a href="<?= base_url() ?>" target="_blank" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-yellow-200 hover:-translate-y-1 transition-all duration-200">
+                <div class="w-12 h-12 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                </div>
+                <div class="font-semibold text-gray-800 group-hover:text-yellow-600 transition-colors">เว็บไซต์คณะ</div>
+                <div class="text-sm text-gray-500 mt-1">sci.uru.ac.th</div>
+                <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-yellow-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
         </div>
+    </section>
+
+    <!-- Admin Quick Access (สำหรับ admin/super_admin) -->
+    <?php if ($isAdmin): ?>
+    <section>
+        <div class="flex items-center gap-2 mb-4">
+            <div class="w-1 h-6 bg-red-400 rounded-full"></div>
+            <h2 class="text-lg font-bold text-gray-800">เครื่องมือผู้ดูแล</h2>
+            <span class="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">Admin</span>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                <?php
+                $adminLinks = [
+                    ['url' => 'admin/news', 'label' => 'จัดการข่าว', 'icon' => '<path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>'],
+                    ['url' => 'admin/organization', 'label' => 'โครงสร้างองค์กร', 'icon' => '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>'],
+                    ['url' => 'admin/programs', 'label' => 'หลักสูตร', 'icon' => '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>'],
+                    ['url' => 'admin/users', 'label' => 'ผู้ใช้งาน', 'icon' => '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>'],
+                    ['url' => 'admin/hero-slides', 'label' => 'ภาพสไลด์', 'icon' => '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>'],
+                    ['url' => 'admin/events', 'label' => 'กิจกรรม', 'icon' => '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'],
+                    ['url' => 'student-admin/barcode-events', 'label' => 'บาร์โค้ด', 'icon' => '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>'],
+                    ['url' => 'admin/settings', 'label' => 'ตั้งค่าเว็บ', 'icon' => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>'],
+                ];
+                foreach ($adminLinks as $link):
+                ?>
+                    <a href="<?= base_url($link['url']) ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                        <div class="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><?= $link['icon'] ?></svg>
+                        </div>
+                        <?= $link['label'] ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
     <?php endif; ?>
+
+    <!-- ข้อมูลส่วนตัว -->
+    <section>
+        <div class="flex items-center gap-2 mb-4">
+            <div class="w-1 h-6 bg-blue-400 rounded-full"></div>
+            <h2 class="text-lg font-bold text-gray-800">ข้อมูลส่วนตัว</h2>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="divide-y divide-gray-100">
+                <?php
+                $infoRows = [
+                    ['label' => 'ชื่อ-นามสกุล (ไทย)', 'value' => $p['name_th'] ?? '—'],
+                    ['label' => 'ชื่อ-นามสกุล (อังกฤษ)', 'value' => $p['name_en'] ?? '—'],
+                    ['label' => 'อีเมล', 'value' => $p['email'] ?? '—'],
+                    ['label' => 'Login UID', 'value' => $p['login_uid'] ?? '—'],
+                    ['label' => 'บทบาท', 'value' => ucfirst($p['role'] ?? 'user')],
+                    ['label' => 'สถานะ', 'value' => ($p['status'] ?? '') === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน', 'badge' => ($p['status'] ?? '') === 'active' ? 'green' : 'gray'],
+                    ['label' => 'วันที่สมัคร', 'value' => !empty($p['created_at']) ? date('d/m/', strtotime($p['created_at'])) . (date('Y', strtotime($p['created_at'])) + 543) . date(' H:i', strtotime($p['created_at'])) : '—'],
+                ];
+                foreach ($infoRows as $row):
+                ?>
+                    <div class="flex flex-col sm:flex-row sm:items-center px-6 py-3.5">
+                        <div class="sm:w-48 text-sm font-medium text-gray-500 mb-0.5 sm:mb-0"><?= $row['label'] ?></div>
+                        <div class="text-sm text-gray-900">
+                            <?php if (!empty($row['badge'])): ?>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+                                    <?= $row['badge'] === 'green' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600' ?>">
+                                    <?= esc($row['value']) ?>
+                                </span>
+                            <?php else: ?>
+                                <?= esc($row['value']) ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
 
 </div>
 
