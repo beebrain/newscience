@@ -157,7 +157,7 @@
                 <?php
                 $logo = !empty($settings['logo']) ? $settings['logo'] : base_url('assets/images/logo250.png');
                 ?>
-                <img src="<?= esc($logo) ?>" alt="Logo คณะวิทยาศาสตร์และเทคโนโลยี" class="logo__img" style="height: 50px; width: auto;">
+                <img src="<?= esc($logo) ?>" alt="Logo คณะวิทยาศาสตร์และเทคโนโลยี" class="logo__img logo__img--header">
                 <div class="logo__text">
                     <?= esc($settings['site_name_th'] ?? 'คณะวิทยาศาสตร์และเทคโนโลยี') ?>
                     <span><?= esc($settings['university_name_th'] ?? 'มหาวิทยาลัยราชภัฏอุตรดิตถ์') ?></span>
@@ -300,31 +300,99 @@
             <li><a href="<?= base_url('academics') ?>" class="mobile-nav__link">หลักสูตร</a></li>
             <li><a href="<?= base_url('research') ?>" class="mobile-nav__link">วิจัย</a></li>
             <li><a href="<?= base_url('news') ?>" class="mobile-nav__link">ข่าว</a></li>
-            <li class="mobile-nav__header-item">บุคลากร</li>
-            <li><a href="<?= base_url('executives') ?>" class="mobile-nav__link" style="padding-left: 2rem;">ผู้บริหาร</a></li>
-            <li><a href="<?= base_url('personnel') ?>" class="mobile-nav__link" style="padding-left: 2rem;">บุคลากร</a></li>
-            <li class="mobile-nav__header-item">บริการ</li>
-            <li><a href="<?= base_url('documents') ?>" class="mobile-nav__link" style="padding-left: 2rem;">บริการด้านเอกสาร</a></li>
-            <li class="mobile-nav__header-item">บริการสารสนเทศ</li>
-            <?php foreach ($quickLinks as $ql): ?>
-                <?php $href = $ql['url']; $isExt = (strpos($href, 'http://') === 0 || strpos($href, 'https://') === 0); ?>
-                <li><a href="<?= esc($href) ?>" class="mobile-nav__link" style="padding-left: 2rem;" <?= $isExt ? 'target="_blank" rel="noopener"' : '' ?>><?= esc($ql['name']) ?></a></li>
-            <?php endforeach; ?>
-            <li><a href="<?= base_url('dashboard') ?>" class="mobile-nav__link" style="padding-left: 2rem;">การจัดการ (Dashboard)</a></li>
-            <li class="mobile-nav__header-item">เกี่ยวกับคณะ</li>
-            <li><a href="<?= base_url('about') ?>" class="mobile-nav__link" style="padding-left: 2rem;">เกี่ยวกับเรา</a></li>
-            <li><a href="<?= base_url('contact') ?>" class="mobile-nav__link" style="padding-left: 2rem;">ติดต่อ</a></li>
-            <li><a href="<?= base_url('calendar') ?>" class="mobile-nav__link" style="padding-left: 2rem;">ปฏิทินผู้บริหาร</a></li>
+
+            <li class="mobile-nav__item mobile-nav__item--has-sub">
+                <button type="button" class="mobile-nav__subtoggle" aria-expanded="false" aria-controls="mn-sub-personnel">
+                    <span class="mobile-nav__subtoggle-text">บุคลากร</span>
+                </button>
+                <ul class="mobile-nav__sub" id="mn-sub-personnel" hidden>
+                    <li><a href="<?= base_url('executives') ?>" class="mobile-nav__sublink">ผู้บริหาร</a></li>
+                    <li><a href="<?= base_url('personnel') ?>" class="mobile-nav__sublink">บุคลากร</a></li>
+                </ul>
+            </li>
+
+            <li class="mobile-nav__item mobile-nav__item--has-sub">
+                <button type="button" class="mobile-nav__subtoggle" aria-expanded="false" aria-controls="mn-sub-services">
+                    <span class="mobile-nav__subtoggle-text">บริการ</span>
+                </button>
+                <ul class="mobile-nav__sub" id="mn-sub-services" hidden>
+                    <li><a href="<?= base_url('documents') ?>" class="mobile-nav__sublink">บริการด้านเอกสาร</a></li>
+                    <li class="mobile-nav__item mobile-nav__item--has-sub">
+                        <button type="button" class="mobile-nav__subtoggle mobile-nav__subtoggle--nested" aria-expanded="false" aria-controls="mn-sub-services-sys">
+                            <span class="mobile-nav__subtoggle-text">ระบบและวารสาร</span>
+                        </button>
+                        <ul class="mobile-nav__sub mobile-nav__sub--nested" id="mn-sub-services-sys" hidden>
+                            <li><a href="http://edoc.sci.uru.ac.th/" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">งานวิชาการ (e-Doc)</a></li>
+                            <li><a href="http://sci.uru.ac.th/scienceadmin" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ฐานข้อมูลบริหาร</a></li>
+                            <li><a href="https://advisor.uru.ac.th" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">อาจารย์ที่ปรึกษา</a></li>
+                            <li><a href="https://workload.uru.ac.th/" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ภาระงาน</a></li>
+                            <li><a href="https://sci.uru.ac.th/docs/qa2568.pdf" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ประกันคุณภาพ</a></li>
+                            <li><a href="https://ph03.tci-thaijo.org/index.php/ajsas" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">วารสารวิทยาศาสตร์ฯ (AJSAS)</a></li>
+                            <li><a href="http://www.rmj.uru.ac.th/" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">วารสารคณิตศาสตร์ (RMS)</a></li>
+                            <li><a href="https://sci.uru.ac.th/academic" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ตำแหน่งทางวิชาการ</a></li>
+                        </ul>
+                    </li>
+                    <li class="mobile-nav__item mobile-nav__item--has-sub">
+                        <button type="button" class="mobile-nav__subtoggle mobile-nav__subtoggle--nested" aria-expanded="false" aria-controls="mn-sub-services-units">
+                            <span class="mobile-nav__subtoggle-text">เว็บหน่วยงาน</span>
+                        </button>
+                        <ul class="mobile-nav__sub mobile-nav__sub--nested" id="mn-sub-services-units" hidden>
+                            <li><a href="http://202.29.52.60/~dicenter" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ศูนย์ดิจิทัลเพื่อพัฒนาท้องถิ่น</a></li>
+                            <li><a href="https://www.facebook.com/ScienceRMUURU" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">หน่วยจัดการงานวิจัยและพันธกิจสัมพันธ์</a></li>
+                            <li><a href="https://sci.uru.ac.th/csrm" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ศูนย์ประสานงานโครงการ CSRM</a></li>
+                            <li><a href="http://scirmu.sci.uru.ac.th/" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ศูนย์พลังงานและสิ่งแวดล้อม</a></li>
+                            <li><a href="https://sci.uru.ac.th/scienceweek" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">สัปดาห์วิทยาศาสตร์แห่งชาติ</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="mobile-nav__item mobile-nav__item--has-sub">
+                <button type="button" class="mobile-nav__subtoggle" aria-expanded="false" aria-controls="mn-sub-info">
+                    <span class="mobile-nav__subtoggle-text">บริการสารสนเทศ</span>
+                </button>
+                <ul class="mobile-nav__sub" id="mn-sub-info" hidden>
+                    <?php foreach ($quickLinks as $ql): ?>
+                        <?php $href = $ql['url']; $isExt = (strpos($href, 'http://') === 0 || strpos($href, 'https://') === 0); ?>
+                        <li><a href="<?= esc($href) ?>" class="mobile-nav__sublink" <?= $isExt ? 'target="_blank" rel="noopener noreferrer"' : '' ?>><?= esc($ql['name']) ?></a></li>
+                    <?php endforeach; ?>
+                    <li><a href="<?= base_url('dashboard') ?>" class="mobile-nav__sublink">การจัดการ (Dashboard)</a></li>
+                </ul>
+            </li>
+
+            <li class="mobile-nav__item mobile-nav__item--has-sub">
+                <button type="button" class="mobile-nav__subtoggle" aria-expanded="false" aria-controls="mn-sub-about">
+                    <span class="mobile-nav__subtoggle-text">เกี่ยวกับคณะ</span>
+                </button>
+                <ul class="mobile-nav__sub" id="mn-sub-about" hidden>
+                    <li><a href="<?= base_url('about') ?>" class="mobile-nav__sublink">เกี่ยวกับเรา</a></li>
+                    <li><a href="<?= base_url('contact') ?>" class="mobile-nav__sublink">ติดต่อ</a></li>
+                    <li><a href="<?= base_url('calendar') ?>" class="mobile-nav__sublink">ปฏิทินผู้บริหาร</a></li>
+                </ul>
+            </li>
+
             <li><a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener noreferrer" class="mobile-nav__link">สมัครเรียน</a></li>
             <li class="mobile-nav__divider" role="presentation"></li>
             <?php if (session()->get('admin_logged_in')): ?>
-                <li class="mobile-nav__header-item">บัญชีของฉัน</li>
-                <li><a href="<?= base_url('dashboard') ?>" class="mobile-nav__link" style="padding-left: 2rem;"><?= esc(session()->get('admin_name') ?: session()->get('admin_email')) ?> (Dashboard)</a></li>
-                <li><a href="<?= base_url('admin/logout') ?>" class="mobile-nav__link" style="padding-left: 2rem;">ออกจากระบบ</a></li>
+                <li class="mobile-nav__item mobile-nav__item--has-sub">
+                    <button type="button" class="mobile-nav__subtoggle" aria-expanded="false" aria-controls="mn-sub-account">
+                        <span class="mobile-nav__subtoggle-text">บัญชีของฉัน</span>
+                    </button>
+                    <ul class="mobile-nav__sub" id="mn-sub-account" hidden>
+                        <li><a href="<?= base_url('dashboard') ?>" class="mobile-nav__sublink"><?= esc(session()->get('admin_name') ?: session()->get('admin_email')) ?> (Dashboard)</a></li>
+                        <li><a href="<?= base_url('admin/logout') ?>" class="mobile-nav__sublink">ออกจากระบบ</a></li>
+                    </ul>
+                </li>
             <?php else: ?>
-                <li class="mobile-nav__header-item">เข้าสู่ระบบ</li>
-                <li><a href="<?= base_url('admin/login') ?>" class="mobile-nav__link" style="padding-left: 2rem;">สำหรับอาจารย์/บุคลากร</a></li>
-                <li><a href="<?= base_url('student/login') ?>" class="mobile-nav__link" style="padding-left: 2rem;">สำหรับนักศึกษา</a></li>
+                <li class="mobile-nav__item mobile-nav__item--has-sub">
+                    <button type="button" class="mobile-nav__subtoggle" aria-expanded="false" aria-controls="mn-sub-login">
+                        <span class="mobile-nav__subtoggle-text">เข้าสู่ระบบ</span>
+                    </button>
+                    <ul class="mobile-nav__sub" id="mn-sub-login" hidden>
+                        <li><a href="<?= base_url('admin/login') ?>" class="mobile-nav__sublink">สำหรับอาจารย์/บุคลากร</a></li>
+                        <li><a href="<?= base_url('student/login') ?>" class="mobile-nav__sublink">สำหรับนักศึกษา</a></li>
+                    </ul>
+                </li>
             <?php endif; ?>
         </ul>
     </div>

@@ -174,8 +174,25 @@
 
 @media (max-width: 768px) {
     .hero-carousel__slides {
-        height: 60vh;
-        min-height: 400px;
+        height: min(62vh, 520px);
+        min-height: 280px;
+        max-height: 85dvh;
+    }
+
+    .hero-carousel__slide .hero__subtitle,
+    .hero-carousel__slide .hero__title,
+    .hero-carousel__slide .hero__description {
+        max-width: 100%;
+    }
+
+    .hero-carousel__slide .hero__title {
+        font-size: clamp(1.35rem, 5.5vw, 2rem);
+        padding: 0.55rem 1rem;
+    }
+
+    .hero-carousel__slide .hero__description {
+        font-size: 0.95rem;
+        margin-bottom: 1.25rem;
     }
 
     .hero-carousel__nav {
@@ -198,6 +215,33 @@
     .hero-carousel__dot {
         width: 10px;
         height: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-carousel__slides {
+        min-height: 240px;
+        height: 56vh;
+    }
+
+    .hero-carousel__slide .hero__subtitle {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.9rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .hero-carousel__slide .hero__actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        max-width: 22rem;
+        gap: var(--spacing-3);
+    }
+
+    .hero-carousel__slide .hero__actions .btn {
+        width: 100%;
+        justify-content: center;
     }
 }
 
@@ -662,7 +706,7 @@
 
 @media (max-width: 768px) {
     .programs-carousel-wrapper {
-        padding: 0 2.5rem;
+        padding: 0 2.25rem;
     }
 
     .program-carousel-card {
@@ -695,6 +739,34 @@
     .degree-badge {
         padding: 0.5rem 1rem;
         font-size: 0.875rem;
+    }
+
+    .degree-badges {
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .programs-carousel-wrapper {
+        padding: 0 1rem;
+    }
+
+    .program-carousel-card {
+        flex: 0 0 min(260px, 85vw);
+    }
+
+    .degree-badges {
+        gap: 0.5rem;
+    }
+
+    .degree-badge {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .degree-badge svg {
+        width: 18px;
+        height: 18px;
     }
 }
 
