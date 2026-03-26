@@ -1,5 +1,6 @@
 /* components.css - part of style.css split */
 
+/* ================================
    Responsive Design
    ================================ */
 @media (max-width: 1024px) {
@@ -156,20 +157,25 @@
    ================================ */
 .mobile-nav {
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
-    height: 100%;
+    max-width: 100vw;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
     background-color: var(--color-white);
     z-index: 9999;
     display: flex;
     flex-direction: column;
     padding: var(--spacing-6);
-    padding-top: calc(var(--spacing-6) + env(safe-area-inset-top));
-    padding-bottom: calc(var(--spacing-6) + env(safe-area-inset-bottom));
+    padding-top: calc(var(--spacing-6) + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(var(--spacing-6) + env(safe-area-inset-bottom, 0px));
     transform: translateX(100%);
     transition: transform var(--transition-slow);
     overscroll-behavior: contain;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .mobile-nav.active {
@@ -180,7 +186,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-8);
+    flex-shrink: 0;
+    margin-bottom: var(--spacing-4);
 }
 
 .mobile-nav__close {
@@ -202,7 +209,34 @@
 .mobile-nav__list {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-4);
+    gap: var(--spacing-3);
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    padding-bottom: var(--spacing-4);
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.mobile-nav__header-item {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-gray-500);
+    padding: var(--spacing-2) 0 0;
+    margin-top: var(--spacing-1);
+    list-style: none;
+}
+
+.mobile-nav__header-item:first-child {
+    margin-top: 0;
+    padding-top: 0;
 }
 
 .mobile-nav__link {

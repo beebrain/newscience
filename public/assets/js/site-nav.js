@@ -52,6 +52,10 @@
     menuBtn.setAttribute('aria-expanded', 'true');
     bodyOverflowBeforeMenu = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    var list = mobileNav.querySelector('.mobile-nav__list');
+    if (list) {
+      list.scrollTop = 0;
+    }
   }
 
   function closeMenu() {
