@@ -8,6 +8,11 @@ use App\Models\Edoc\EdocDocumentTagModel;
 
 class GeneralController extends EdocBaseController
 {
+    /**
+     * ค่า user.faculty สำหรับบุคลากรคณะวิทยาศาสตร์และเทคโนโลยี — ต้องตรงกับ option ใน Views/admin/user_faculty/index.php
+     */
+    private const SCIENCE_TECH_FACULTY_LABEL = 'คณะวิทยาศาสตร์และเทคโนโลยี';
+
     protected $edoctitleModel;
     protected $sendmailModel;
     protected $docTagModel;
@@ -60,11 +65,7 @@ class GeneralController extends EdocBaseController
 
         $documentsForEveryone = [];
         foreach ($documents as $document) {
-            if (
-                !empty($document['participant']) &&
-                (strpos($document['participant'], 'ทุกคน') !== false ||
-                    in_array('ทุกคน', array_map('trim', explode(',', $document['participant']))))
-            ) {
+            if ($this->participantHasEveryoneTag($document['participant'] ?? '')) {
                 $documentsForEveryone[] = $document;
             }
         }
@@ -78,7 +79,10 @@ class GeneralController extends EdocBaseController
                 continue;
             }
 
-            $userDocuments = $documentsForEveryone;
+            // Tag "ทุกคน" = แจ้งเฉพาะผู้ที่อยู่คณะวิทยาศาสตร์และเทคโนโลยี
+            $userDocuments = $this->userReceivesEveryoneEdocNotifications($user)
+                ? $documentsForEveryone
+                : [];
 
             foreach ($documents as $document) {
                 if (in_array($document, $documentsForEveryone)) {
@@ -163,11 +167,7 @@ class GeneralController extends EdocBaseController
 
         $documentsForEveryone = [];
         foreach ($documents as $document) {
-            if (
-                !empty($document['participant']) &&
-                (strpos($document['participant'], 'ทุกคน') !== false ||
-                    in_array('ทุกคน', array_map('trim', explode(',', $document['participant']))))
-            ) {
+            if ($this->participantHasEveryoneTag($document['participant'] ?? '')) {
                 $documentsForEveryone[] = $document;
             }
         }
@@ -181,7 +181,9 @@ class GeneralController extends EdocBaseController
                 continue;
             }
 
-            $userDocuments = $documentsForEveryone;
+            $userDocuments = $this->userReceivesEveryoneEdocNotifications($user)
+                ? $documentsForEveryone
+                : [];
 
             foreach ($documents as $document) {
                 if (in_array($document, $documentsForEveryone)) {
@@ -292,6 +294,41 @@ class GeneralController extends EdocBaseController
         }
 
         return $this->response->setJSON($results);
+    }
+
+    /**
+     * participant มีแท็ก "ทุกคน"
+     */
+    private function participantHasEveryoneTag(?string $participant): bool
+    {
+        if ($participant === null || trim($participant) === '') {
+            return false;
+        }
+        if (strpos($participant, 'ทุกคน') !== false) {
+            return true;
+        }
+        $parts = array_map('trim', explode(',', $participant));
+
+        return in_array('ทุกคน', $parts, true);
+    }
+
+    /**
+     * ผู้ใช้ตาราง user ที่ควรได้รับแจ้งเตือนเมื่อเอกสาร Tag = "ทุกคน"
+     * — อิงเฉพาะ user.faculty ที่ระบุในระบบจัดการคณะ (admin/user-faculty) เท่านั้น
+     */
+    private function userReceivesEveryoneEdocNotifications(array $user): bool
+    {
+        $faculty = $this->normalizeFacultyField((string) ($user['faculty'] ?? ''));
+
+        return $faculty !== '' && $faculty === self::SCIENCE_TECH_FACULTY_LABEL;
+    }
+
+    /** จัดรูปแบบข้อความคณะก่อนเทียบ (trim + ยุบช่องว่าง) */
+    private function normalizeFacultyField(string $faculty): string
+    {
+        $faculty = trim($faculty);
+
+        return $faculty === '' ? '' : trim(preg_replace('/\s+/u', ' ', $faculty));
     }
 
     private function generateDocumentAccessToken($user_id, $doc_id)
