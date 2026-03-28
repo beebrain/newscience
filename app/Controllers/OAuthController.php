@@ -125,7 +125,7 @@ class OAuthController extends BaseController
             'attempt_id' => $attemptId,
             'ip' => $ip,
             'auth_url' => $authUrl,
-            'state'    => $state,
+            'state_len'  => strlen($state),
         ]);
 
         return redirect()->to($authUrl);
@@ -151,7 +151,7 @@ class OAuthController extends BaseController
             'attempt_id' => $attemptId,
             'ip'       => $ip,
             'code_len' => is_string($code) ? strlen($code) : 0,
-            'state'    => $state ?? '',
+            'state_len'=> is_string($state) ? strlen($state) : 0,
             'error'    => $error ?? '',
         ]);
 
@@ -174,10 +174,10 @@ class OAuthController extends BaseController
         $savedState = session()->get(self::SESSION_STATE);
         if ($savedState !== null && $state !== null && $state !== $savedState) {
             $this->writeLog('callback_error', 'State mismatch (CSRF?)', [
-                'attempt_id' => $attemptId,
-                'expected' => $savedState,
-                'received' => $state,
-                'ip'       => $ip,
+                'attempt_id'   => $attemptId,
+                'expected_len' => strlen((string) $savedState),
+                'received_len' => strlen((string) ($state ?? '')),
+                'ip'           => $ip,
             ]);
             session()->remove(self::SESSION_STATE);
             session()->remove(self::SESSION_ATTEMPT_ID);
@@ -187,7 +187,7 @@ class OAuthController extends BaseController
         if ($savedState === null) {
             $this->writeLog('callback_state_missing', 'No state found in session, skipping CSRF validation', [
                 'attempt_id' => $attemptId,
-                'received' => $state ?? '',
+                'received_len' => is_string($state) ? strlen($state) : 0,
                 'ip' => $ip,
             ]);
         } else {
@@ -249,18 +249,12 @@ class OAuthController extends BaseController
         $email    = strtolower(trim($portalUser['email'] ?? ''));
         $loginUid = trim($portalUser['login_uid'] ?? $portalUser['username'] ?? $portalUser['code'] ?? '');
 
-        $logUser = $portalUser;
-        foreach (['access_token', 'refresh_token', 'token', 'password'] as $key) {
-            if (isset($logUser[$key])) {
-                $logUser[$key] = '(redacted)';
-            }
-        }
         $this->writeLog('callback_user', 'User info received from Portal', [
             'attempt_id' => $attemptId,
             'email'       => $email,
             'login_uid'   => $loginUid,
             'ip'          => $ip,
-            'user_detail' => $logUser,
+            'user_summary' => $this->sanitizePortalUserForLog($portalUser),
         ]);
 
         // ---- Step 4: แยกประเภทผู้ใช้ ----
@@ -541,6 +535,24 @@ class OAuthController extends BaseController
     // -------------------------------------------------------------------------
     // Log helper
     // -------------------------------------------------------------------------
+
+    /**
+     * สรุปฟิลด์ที่จำเป็นสำหรับ audit — ไม่เก็บ adInfo/accountInfo/personInfo เต็มใน log
+     *
+     * @return array<string, mixed>
+     */
+    private function sanitizePortalUserForLog(array $portalUser): array
+    {
+        $out = [];
+        foreach (['email', 'login_uid', 'username', 'code', 'gf_name', 'gl_name', 'tf_name', 'tl_name', 'title'] as $k) {
+            if (isset($portalUser[$k]) && (string) $portalUser[$k] !== '') {
+                $out[$k] = $portalUser[$k];
+            }
+        }
+        $out['response_top_keys'] = array_keys($portalUser);
+
+        return $out;
+    }
 
     /**
      * เขียน log ลงไฟล์ writable/logs/oauth_login-YYYY-MM-DD.log

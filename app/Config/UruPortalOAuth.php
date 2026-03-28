@@ -9,7 +9,7 @@ use CodeIgniter\Config\BaseConfig;
  *
  * clientId / clientSecret ใช้ชุดเดียว: uruoauth.clientId, uruoauth.clientSecret
  * เลือกชุด path/endpoint ด้วย uruoauth.provider = uruportal | idportal
- * (override URL ต่อ provider ได้ที่ uruoauth.{provider}.loginUrl ฯลฯ ถ้าจำเป็น)
+ * uruoauth.httpVerifySsl = true|false — ตรวจ SSL กับ Portal (ค่าเริ่มต้น true)
  */
 class UruPortalOAuth extends BaseConfig
 {
@@ -47,6 +47,12 @@ class UruPortalOAuth extends BaseConfig
 
     public string $studentPrefix = 'u';
 
+    /**
+     * ตรวจสอบใบรับรอง SSL เมื่อเรียก HTTPS ไป Portal (ควร true บน production)
+     * ถ้า dev บน Windows/XAMPP เจอปัญหา CA ให้ตั้ง uruoauth.httpVerifySsl = false ชั่วคราว
+     */
+    public bool $httpVerifySsl = true;
+
     public function __construct()
     {
         parent::__construct();
@@ -71,6 +77,13 @@ class UruPortalOAuth extends BaseConfig
 
         $enabled       = env('uruoauth.enabled', 'true');
         $this->enabled = ($enabled === 'true' || $enabled === '1' || $enabled === true);
+
+        $verifySsl = env('uruoauth.httpVerifySsl', '');
+        if ($verifySsl === '' || $verifySsl === null) {
+            $this->httpVerifySsl = true;
+        } else {
+            $this->httpVerifySsl = ($verifySsl === 'true' || $verifySsl === '1' || $verifySsl === true);
+        }
 
         if (ENVIRONMENT === 'development') {
             $local = $this->readString('callbackUrlLocal', 'uruoauth.callbackUrlLocal', '');

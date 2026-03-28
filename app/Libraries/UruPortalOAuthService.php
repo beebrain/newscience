@@ -76,26 +76,26 @@ class UruPortalOAuthService
         }
 
         [$status, $body] = $response;
-        $preview = strlen($body) > 300 ? substr($body, 0, 300) . '...' : $body;
-        log_message('info', self::LOG_PREFIX . 'exchangeCodeForToken response status=' . $status . ' body=' . $preview);
+        $safeBody = $this->redactSensitiveHttpBody($body);
+        log_message('info', self::LOG_PREFIX . 'exchangeCodeForToken response status=' . $status . ' body=' . $this->truncateForLog($safeBody));
 
         if ($status !== 200) {
-            log_message('error', self::LOG_PREFIX . 'exchangeCodeForToken non-200 status=' . $status . ' body=' . $body);
+            log_message('error', self::LOG_PREFIX . 'exchangeCodeForToken non-200 status=' . $status . ' body=' . $this->truncateForLog($safeBody));
             $this->setLastError('token_exchange', 'Portal token endpoint returned non-200 status', [
                 'url' => $this->config->tokenUrl,
                 'status' => $status,
-                'body_preview' => $preview,
+                'body_preview' => $this->truncateForLog($safeBody),
             ]);
             return null;
         }
 
         $data = json_decode($body, true);
         if (!is_array($data) || empty($data['access_token'])) {
-            log_message('error', self::LOG_PREFIX . 'exchangeCodeForToken missing access_token in response body=' . $body);
+            log_message('error', self::LOG_PREFIX . 'exchangeCodeForToken missing access_token in response body=' . $this->truncateForLog($safeBody));
             $this->setLastError('token_exchange', 'Token response missing access_token or invalid JSON', [
                 'url' => $this->config->tokenUrl,
                 'status' => $status,
-                'body_preview' => $preview,
+                'body_preview' => $this->truncateForLog($safeBody),
             ]);
             return null;
         }
@@ -130,29 +130,32 @@ class UruPortalOAuthService
         }
 
         [$status, $body] = $response;
-        $preview = strlen($body) > 300 ? substr($body, 0, 300) . '...' : $body;
-        log_message('info', self::LOG_PREFIX . 'fetchUserInfo response status=' . $status . ' body=' . $preview);
+        $topKeys = $this->jsonTopLevelKeys($body);
+        log_message('info', self::LOG_PREFIX . 'fetchUserInfo response status=' . $status . ' body_bytes=' . strlen($body) . ' keys=' . $topKeys);
 
         if ($status !== 200) {
-            log_message('error', self::LOG_PREFIX . 'fetchUserInfo non-200 status=' . $status . ' body=' . $body);
+            $safe = $this->redactUserInfoLikeBody($body);
+            log_message('error', self::LOG_PREFIX . 'fetchUserInfo non-200 status=' . $status . ' body=' . $this->truncateForLog($safe));
             $this->setLastError('userinfo', 'Portal user info endpoint returned non-200 status', [
                 'url' => $this->config->userInfoUrl,
                 'status' => $status,
-                'body_preview' => $preview,
+                'body_preview' => $this->truncateForLog($safe),
             ]);
             return null;
         }
 
         $data = json_decode($body, true);
         if (!is_array($data)) {
-            log_message('error', self::LOG_PREFIX . 'fetchUserInfo response not JSON body=' . $body);
+            log_message('error', self::LOG_PREFIX . 'fetchUserInfo response not JSON body=' . $this->truncateForLog($this->redactUserInfoLikeBody($body)));
             $this->setLastError('userinfo', 'User info response is not valid JSON', [
                 'url' => $this->config->userInfoUrl,
                 'status' => $status,
-                'body_preview' => $preview,
+                'body_preview' => $this->truncateForLog($this->redactUserInfoLikeBody($body)),
             ]);
             return null;
         }
+
+        $data = $this->normalizePortalUserInfo($data);
 
         if (empty($data['email'])) {
             log_message('error', self::LOG_PREFIX . 'fetchUserInfo missing email in response keys=' . implode(',', array_keys($data)));
@@ -164,14 +167,77 @@ class UruPortalOAuthService
             return null;
         }
 
-        $safe = $data;
-        foreach (['access_token', 'refresh_token', 'token', 'password'] as $key) {
-            if (isset($safe[$key])) {
-                $safe[$key] = '(redacted)';
+        log_message('info', self::LOG_PREFIX . 'fetchUserInfo success email=' . ($data['email'] ?? '') . ' login_uid=' . ($data['login_uid'] ?? $data['username'] ?? ''));
+        return $data;
+    }
+
+    /**
+     * แปลงรูปแบบ idportal (/info: adInfo, accountInfo, personInfo) ให้เข้ากับฟิลด์แบบ uruportal (/me)
+     * — email, login_uid/username ที่ OAuthController และ Models ใช้
+     */
+    private function normalizePortalUserInfo(array $data): array
+    {
+        $email = trim((string) ($data['email'] ?? ''));
+        if ($email !== '') {
+            $data['email'] = strtolower($email);
+
+            return $data;
+        }
+
+        $ad = $data['adInfo'] ?? null;
+        if (is_array($ad)) {
+            $fromMail = trim((string) ($ad['mail'] ?? ''));
+            if ($fromMail !== '') {
+                $data['email'] = strtolower($fromMail);
+            } else {
+                $upn = trim((string) ($ad['userPrincipalName'] ?? ''));
+                if ($upn !== '' && str_contains($upn, '@')) {
+                    $data['email'] = strtolower($upn);
+                }
+            }
+
+            $sam = trim((string) ($ad['sAMAccountName'] ?? ''));
+            if ($sam !== '') {
+                if (empty(trim((string) ($data['login_uid'] ?? '')))) {
+                    $data['login_uid'] = $sam;
+                }
+                if (empty(trim((string) ($data['username'] ?? '')))) {
+                    $data['username'] = $sam;
+                }
+            }
+
+            if (empty(trim((string) ($data['gf_name'] ?? ''))) && isset($ad['givenName'])) {
+                $data['gf_name'] = trim((string) $ad['givenName']);
+            }
+            if (empty(trim((string) ($data['gl_name'] ?? ''))) && isset($ad['sn'])) {
+                $data['gl_name'] = trim((string) $ad['sn']);
             }
         }
-        log_message('info', self::LOG_PREFIX . 'fetchUserInfo success email=' . ($data['email'] ?? '') . ' login_uid=' . ($data['login_uid'] ?? $data['username'] ?? ''));
-        log_message('info', self::LOG_PREFIX . 'fetchUserInfo user_details=' . json_encode($safe, JSON_UNESCAPED_UNICODE));
+
+        $acc = $data['accountInfo'] ?? null;
+        if (is_array($acc) && empty(trim((string) ($data['email'] ?? '')))) {
+            $m = trim((string) ($acc['mail'] ?? $acc['email'] ?? $acc['userPrincipalName'] ?? ''));
+            if ($m !== '') {
+                $data['email'] = strtolower($m);
+            }
+        }
+
+        $person = $data['personInfo'] ?? null;
+        if (is_array($person)) {
+            if (empty(trim((string) ($data['gf_name'] ?? '')))) {
+                $data['gf_name'] = trim((string) ($person['engFirstName'] ?? $person['firstname_en'] ?? $person['givenName_en'] ?? ''));
+            }
+            if (empty(trim((string) ($data['gl_name'] ?? '')))) {
+                $data['gl_name'] = trim((string) ($person['engLastName'] ?? $person['lastname_en'] ?? $person['surname_en'] ?? ''));
+            }
+            if (empty(trim((string) ($data['tf_name'] ?? '')))) {
+                $data['tf_name'] = trim((string) ($person['thaiFirstName'] ?? $person['firstname_th'] ?? $person['givenName_th'] ?? ''));
+            }
+            if (empty(trim((string) ($data['tl_name'] ?? '')))) {
+                $data['tl_name'] = trim((string) ($person['thaiLastName'] ?? $person['lastname_th'] ?? $person['surname_th'] ?? ''));
+            }
+        }
+
         return $data;
     }
 
@@ -201,7 +267,7 @@ class UruPortalOAuthService
             $this->setLastError('check', 'Check endpoint returned non-200', [
                 'url' => $url,
                 'status' => $status,
-                'body_preview' => strlen($body) > 300 ? substr($body, 0, 300) . '...' : $body,
+                'body_preview' => $this->truncateForLog($this->redactSensitiveHttpBody($body)),
             ]);
             return null;
         }
@@ -248,25 +314,26 @@ class UruPortalOAuthService
         }
 
         [$status, $body] = $response;
-        log_message('info', self::LOG_PREFIX . 'refreshAccessToken response status=' . $status);
+        $safeBody = $this->redactSensitiveHttpBody($body);
+        log_message('info', self::LOG_PREFIX . 'refreshAccessToken response status=' . $status . ' body=' . $this->truncateForLog($safeBody));
 
         if ($status !== 200) {
-            log_message('error', self::LOG_PREFIX . 'refreshAccessToken non-200 status=' . $status . ' body=' . $body);
+            log_message('error', self::LOG_PREFIX . 'refreshAccessToken non-200 status=' . $status . ' body=' . $this->truncateForLog($safeBody));
             $this->setLastError('refresh_token', 'Refresh token endpoint returned non-200 status', [
                 'url' => $this->config->tokenUrl,
                 'status' => $status,
-                'body_preview' => strlen($body) > 300 ? substr($body, 0, 300) . '...' : $body,
+                'body_preview' => $this->truncateForLog($safeBody),
             ]);
             return null;
         }
 
         $data = json_decode($body, true);
         if (!is_array($data) || empty($data['access_token'])) {
-            log_message('error', self::LOG_PREFIX . 'refreshAccessToken missing access_token body=' . $body);
+            log_message('error', self::LOG_PREFIX . 'refreshAccessToken missing access_token body=' . $this->truncateForLog($safeBody));
             $this->setLastError('refresh_token', 'Refresh token response missing access_token or invalid JSON', [
                 'url' => $this->config->tokenUrl,
                 'status' => $status,
-                'body_preview' => strlen($body) > 300 ? substr($body, 0, 300) . '...' : $body,
+                'body_preview' => $this->truncateForLog($safeBody),
             ]);
             return null;
         }
@@ -332,10 +399,7 @@ class UruPortalOAuthService
                 'timeout'       => $this->config->httpTimeout,
                 'ignore_errors' => true,
             ],
-            'ssl' => [
-                'verify_peer'      => false,
-                'verify_peer_name' => false,
-            ],
+            'ssl' => $this->sslStreamOptions(),
         ];
 
         return $this->doRequest($url, $opts);
@@ -359,13 +423,93 @@ class UruPortalOAuthService
                 'timeout'       => $userInfoTimeout,
                 'ignore_errors' => true,
             ],
-            'ssl' => [
-                'verify_peer'      => false,
-                'verify_peer_name' => false,
-            ],
+            'ssl' => $this->sslStreamOptions(),
         ];
 
         return $this->doRequest($url, $opts);
+    }
+
+    /**
+     * @return array{verify_peer: bool, verify_peer_name: bool}
+     */
+    private function sslStreamOptions(): array
+    {
+        $v = $this->config->httpVerifySsl;
+
+        return [
+            'verify_peer'      => $v,
+            'verify_peer_name' => $v,
+        ];
+    }
+
+    /** ปิดบัง token ใน JSON ของ OAuth / API */
+    private function redactSensitiveHttpBody(string $body): string
+    {
+        $trim = trim($body);
+        if ($trim === '') {
+            return '(empty)';
+        }
+        $decoded = json_decode($trim, true);
+        if (!is_array($decoded)) {
+            return '(non-json, len=' . strlen($body) . ')';
+        }
+        foreach (['access_token', 'refresh_token', 'id_token', 'token'] as $k) {
+            if (!empty($decoded[$k]) && is_string($decoded[$k])) {
+                $decoded[$k] = '[REDACTED]';
+            }
+        }
+
+        return json_encode($decoded, JSON_UNESCAPED_UNICODE) ?: '(encode-failed)';
+    }
+
+    /**
+     * ตัดข้อมูลระบุตัวตนใน /info แบบหยาบๆ สำหรับ log error
+     */
+    private function redactUserInfoLikeBody(string $body): string
+    {
+        $trim = trim($body);
+        if ($trim === '') {
+            return '(empty)';
+        }
+        $decoded = json_decode($trim, true);
+        if (!is_array($decoded)) {
+            return '(non-json, len=' . strlen($body) . ')';
+        }
+        if (isset($decoded['adInfo']) && is_array($decoded['adInfo'])) {
+            $decoded['adInfo'] = ['[REDACTED]' => 'adInfo fields omitted'];
+        }
+        if (isset($decoded['accountInfo']) && is_array($decoded['accountInfo'])) {
+            $decoded['accountInfo'] = ['[REDACTED]' => 'accountInfo omitted'];
+        }
+        if (isset($decoded['personInfo']) && is_array($decoded['personInfo'])) {
+            $decoded['personInfo'] = ['[REDACTED]' => 'personInfo omitted'];
+        }
+        foreach (['access_token', 'refresh_token', 'id_token', 'token', 'password'] as $k) {
+            if (!empty($decoded[$k])) {
+                $decoded[$k] = '[REDACTED]';
+            }
+        }
+
+        return json_encode($decoded, JSON_UNESCAPED_UNICODE) ?: '(encode-failed)';
+    }
+
+    private function jsonTopLevelKeys(string $body): string
+    {
+        $decoded = json_decode(trim($body), true);
+        if (!is_array($decoded)) {
+            return '(n/a)';
+        }
+
+        return implode(',', array_keys($decoded));
+    }
+
+    private function truncateForLog(string $text, int $maxLen = 400): string
+    {
+        if (strlen($text) <= $maxLen) {
+            return $text;
+        }
+
+        return substr($text, 0, $maxLen) . '…(truncated)';
     }
 
     /**
