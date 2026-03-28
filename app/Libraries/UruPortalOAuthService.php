@@ -175,6 +175,46 @@ class UruPortalOAuthService
         return $data;
     }
 
+    /**
+     * ตรวจสอบสถานะล็อกอินกับ Portal (เมื่อมี checkUrl เช่น idportal /check)
+     *
+     * @return array|null JSON decode สำเร็จและ status 200 หรือ null
+     */
+    public function fetchCheckStatus(string $accessToken): ?array
+    {
+        $url = $this->config->checkUrl ?? '';
+        if ($url === '') {
+            return null;
+        }
+
+        $this->clearLastError();
+        log_message('info', self::LOG_PREFIX . 'fetchCheckStatus GET url=' . $url);
+
+        $response = $this->httpGet($url, $accessToken);
+        if ($response === null) {
+            $this->setLastError('check', 'HTTP request failed', ['url' => $url] + $this->lastError);
+            return null;
+        }
+
+        [$status, $body] = $response;
+        if ($status !== 200) {
+            $this->setLastError('check', 'Check endpoint returned non-200', [
+                'url' => $url,
+                'status' => $status,
+                'body_preview' => strlen($body) > 300 ? substr($body, 0, 300) . '...' : $body,
+            ]);
+            return null;
+        }
+
+        $data = json_decode($body, true);
+        if (!is_array($data)) {
+            $this->setLastError('check', 'Check response is not valid JSON', ['url' => $url]);
+            return null;
+        }
+
+        return $data;
+    }
+
     // -------------------------------------------------------------------------
     // Step 4: Refresh access token
     // -------------------------------------------------------------------------

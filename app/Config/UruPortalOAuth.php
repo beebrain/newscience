@@ -5,80 +5,148 @@ namespace Config;
 use CodeIgniter\Config\BaseConfig;
 
 /**
- * URU Portal OAuth 2.0 Config
- * ล็อกอินผ่าน URU Portal (uruportal.uru.ac.th) ด้วย Authorization Code Flow
+ * URU / ID Portal OAuth 2.0 Config — Authorization Code Flow
  *
- * ตั้งค่าใน .env:
- *   uruoauth.clientId       = sci
- *   uruoauth.clientSecret   = secret
- *   uruoauth.callbackUrl    = https://sci.uru.ac.th/index.php/oauth
- *   uruoauth.enabled        = true
+ * clientId / clientSecret ใช้ชุดเดียว: uruoauth.clientId, uruoauth.clientSecret
+ * เลือกชุด path/endpoint ด้วย uruoauth.provider = uruportal | idportal
+ * (override URL ต่อ provider ได้ที่ uruoauth.{provider}.loginUrl ฯลฯ ถ้าจำเป็น)
  */
 class UruPortalOAuth extends BaseConfig
 {
-    /** OAuth client_id ที่ได้รับจาก URU Portal */
+    /** uruportal | idportal */
+    public string $provider = 'uruportal';
+
+    /** OAuth client_id */
     public string $clientId = 'SCI_PLACEHOLDER';
 
     /** OAuth client_secret */
     public string $clientSecret = 'SECRET_PLACEHOLDER';
 
-    /** Callback URL ที่ URU Portal จะ redirect กลับมาพร้อม ?code=xxx */
+    /** Callback URL (?code=...) — ต้องตรงกับที่ลงทะเบียน */
     public string $callbackUrl = 'https://sci.uru.ac.th/index.php/oauth';
 
-    /** URL สำหรับ redirect ผู้ใช้ไปล็อกอินที่ URU Portal */
+    /** Authorization endpoint (GET) */
     public string $loginUrl = 'https://uruportal.uru.ac.th/oauth_login';
 
-    /** URL สำหรับแลก code เป็น access_token (POST) */
+    /** Token endpoint (POST) */
     public string $tokenUrl = 'https://uruportal.uru.ac.th/oauth/token';
 
-    /** URL สำหรับดึงข้อมูลผู้ใช้ปัจจุบัน (GET พร้อม Bearer token) */
+    /** ข้อมูลผู้ใช้ (GET + Bearer) — เช่น /me หรือ /info */
     public string $userInfoUrl = 'https://uruportal.uru.ac.th/me';
 
-    /** เปิดใช้งาน OAuth หรือไม่ */
+    /** ตรวจสอบสถานะล็อกอิน (GET + Bearer) — มีเฉพาะบาง provider เช่น idportal /check */
+    public ?string $checkUrl = null;
+
     public bool $enabled = true;
 
-    /** Timeout (วินาที) สำหรับ HTTP request ไป URU Portal */
     public int $httpTimeout = 15;
 
-    /** Timeout (วินาที) เฉพาะการเรียก GET /me (ถ้าไม่ตั้ง จะใช้ 60 — endpoint /me อาจช้ากว่า /oauth/token) */
     public ?int $userInfoTimeout = 60;
 
-    /** Domain email ของ URU (ใช้ตรวจสอบว่าเป็น user ของ URU) */
     public string $emailDomain = '@live.uru.ac.th';
 
-    /** Prefix ของ student login_uid (นักศึกษาจะมี u นำหน้า เช่น u6512345) */
     public string $studentPrefix = 'u';
 
     public function __construct()
     {
         parent::__construct();
 
-        $this->clientId       = env('uruoauth.clientId', $this->clientId) ?: $this->clientId;
-        $this->clientSecret   = env('uruoauth.clientSecret', $this->clientSecret) ?: $this->clientSecret;
-        $this->callbackUrl    = env('uruoauth.callbackUrl', $this->callbackUrl) ?: $this->callbackUrl;
-        $this->loginUrl       = env('uruoauth.loginUrl', $this->loginUrl) ?: $this->loginUrl;
-        $this->tokenUrl       = env('uruoauth.tokenUrl', $this->tokenUrl) ?: $this->tokenUrl;
-        $this->userInfoUrl    = env('uruoauth.userInfoUrl', $this->userInfoUrl) ?: $this->userInfoUrl;
+        $raw = strtolower((string) env('uruoauth.provider', 'uruportal'));
+        $this->provider = in_array($raw, ['uruportal', 'idportal'], true) ? $raw : 'uruportal';
+
+        $endpoints = self::defaultEndpoints($this->provider);
+
+        $this->clientId     = $this->readGlobalCredential('clientId', $this->clientId);
+        $this->clientSecret = $this->readGlobalCredential('clientSecret', $this->clientSecret);
+        $this->callbackUrl  = $this->readString('callbackUrl', 'uruoauth.callbackUrl', $this->callbackUrl);
+        $this->loginUrl     = $this->readString('loginUrl', 'uruoauth.loginUrl', $endpoints['loginUrl']);
+        $this->tokenUrl     = $this->readString('tokenUrl', 'uruoauth.tokenUrl', $endpoints['tokenUrl']);
+        $this->userInfoUrl  = $this->readString('userInfoUrl', 'uruoauth.userInfoUrl', $endpoints['userInfoUrl']);
+        $this->checkUrl     = $this->readOptionalUrl('checkUrl', 'uruoauth.checkUrl', $endpoints['checkUrl']);
 
         $uiTimeout = env('uruoauth.userInfoTimeout', '');
         if ($uiTimeout !== '' && $uiTimeout !== null) {
             $this->userInfoTimeout = (int) $uiTimeout;
         }
 
-        $enabled = env('uruoauth.enabled', 'true');
+        $enabled       = env('uruoauth.enabled', 'true');
         $this->enabled = ($enabled === 'true' || $enabled === '1' || $enabled === true);
 
-        // ถ้าเป็น development ให้ใช้ callback URL ของ localhost แทน
         if (ENVIRONMENT === 'development') {
-            $localCallback = env('uruoauth.callbackUrlLocal', '');
-            if ($localCallback !== '') {
-                $this->callbackUrl = $localCallback;
+            $local = $this->readString('callbackUrlLocal', 'uruoauth.callbackUrlLocal', '');
+            if ($local !== '') {
+                $this->callbackUrl = $local;
             }
         }
     }
 
     /**
-     * สร้าง Authorization URL สำหรับ redirect ผู้ใช้ไปล็อกอินที่ URU Portal
+     * @return array{loginUrl: string, tokenUrl: string, userInfoUrl: string, checkUrl: ?string}
+     */
+    private static function defaultEndpoints(string $provider): array
+    {
+        if ($provider === 'idportal') {
+            return [
+                'loginUrl'    => 'https://idportal.uru.ac.th/oauth2/authenticate',
+                'tokenUrl'    => 'https://idportal.uru.ac.th/oauth2/access_token',
+                'userInfoUrl' => 'https://idportal.uru.ac.th/info',
+                'checkUrl'    => 'https://idportal.uru.ac.th/check',
+            ];
+        }
+
+        return [
+            'loginUrl'    => 'https://uruportal.uru.ac.th/oauth_login',
+            'tokenUrl'    => 'https://uruportal.uru.ac.th/oauth/token',
+            'userInfoUrl' => 'https://uruportal.uru.ac.th/me',
+            'checkUrl'    => null,
+        ];
+    }
+
+    private function readString(string $key, ?string $legacyKey, string $default): string
+    {
+        $specific = env('uruoauth.' . $this->provider . '.' . $key);
+        if ($specific !== null && $specific !== false && (string) $specific !== '') {
+            return (string) $specific;
+        }
+        if ($legacyKey !== null) {
+            $leg = env($legacyKey);
+            if ($leg !== null && $leg !== false && (string) $leg !== '') {
+                return (string) $leg;
+            }
+        }
+
+        return $default;
+    }
+
+    /** อ่านเฉพาะ uruoauth.{key} — ไม่แยกตาม provider */
+    private function readGlobalCredential(string $key, string $default): string
+    {
+        $v = env('uruoauth.' . $key);
+        if ($v !== null && $v !== false && (string) $v !== '') {
+            return (string) $v;
+        }
+
+        return $default;
+    }
+
+    private function readOptionalUrl(string $key, ?string $legacyKey, ?string $default): ?string
+    {
+        $specific = env('uruoauth.' . $this->provider . '.' . $key);
+        if ($specific !== null && $specific !== false && (string) $specific !== '') {
+            return (string) $specific;
+        }
+        if ($legacyKey !== null) {
+            $leg = env($legacyKey);
+            if ($leg !== null && $leg !== false && (string) $leg !== '') {
+                return (string) $leg;
+            }
+        }
+
+        return $default;
+    }
+
+    /**
+     * สร้าง Authorization URL สำหรับ redirect ผู้ใช้ไปล็อกอินที่ Portal
      */
     public function buildAuthUrl(string $state = ''): string
     {
@@ -90,6 +158,7 @@ class UruPortalOAuth extends BaseConfig
         if ($state !== '') {
             $params['state'] = $state;
         }
+
         return $this->loginUrl . '?' . http_build_query($params);
     }
 }

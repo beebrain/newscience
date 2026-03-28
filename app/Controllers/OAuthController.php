@@ -9,19 +9,21 @@ use App\Models\StudentUserModel;
 use Config\UruPortalOAuth;
 
 /**
- * OAuthController — จัดการ URU Portal OAuth 2.0 Login/Logout
+ * OAuthController — จัดการ URU / ID Portal OAuth 2.0 Login/Logout
+ *
+ * เลือก provider ใน .env: uruoauth.provider = uruportal | idportal
  *
  * Routes:
- *   GET  /oauth/login    → redirect ไป URU Portal
- *   GET  /oauth          → callback จาก URU Portal (รับ ?code=xxx&state=xxx)
+ *   GET  /oauth/login    → redirect ไป Portal
+ *   GET  /oauth          → callback (รับ ?code=xxx&state=xxx)
  *   GET  /oauth/logout   → ออกจากระบบ (ล้าง session)
  *
  * Flow:
  *   1. ผู้ใช้กด "เข้าสู่ระบบด้วย URU Portal" → /oauth/login
- *   2. redirect ไป https://uruportal.uru.ac.th/oauth_login?response_type=code&client_id=sci&...
- *   3. URU Portal redirect กลับมาที่ /oauth?code=xxx&state=xxx
- *   4. แลก code → access_token (POST /oauth/token)
- *   5. ดึงข้อมูลผู้ใช้ (GET /me)
+ *   2. redirect ไป authorize URL (uruportal: oauth_login / idportal: oauth2/authenticate)
+ *   3. Portal redirect กลับมาที่ /oauth?code=xxx&state=xxx
+ *   4. แลก code → access_token (POST token endpoint)
+ *   5. ดึงข้อมูลผู้ใช้ (GET userInfo — เช่น /me หรือ /info)
  *   6. ตรวจสอบว่าเป็นนักศึกษา (login_uid ขึ้นต้น u+ตัวเลข) หรือบุคลากร
  *   7. หา/สร้าง record ในฐานข้อมูล (ใช้ email เป็น key)
  *   8. ตั้ง session แล้ว redirect ไปหน้าที่เหมาะสม
