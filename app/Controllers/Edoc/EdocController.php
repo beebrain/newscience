@@ -36,10 +36,8 @@ class EdocController extends EdocBaseController
             $userModel = new \App\Models\UserModel();
             $user = $userModel->find($this->edocUser['uid']);
 
-            if (empty($user['tf_name']) || empty($user['tl_name'])) {
-                return redirect()->to(base_url('dashboard'))
-                    ->with('error', 'กรุณากรอกข้อมูลชื่อ-นามสกุลก่อนใช้งาน E-Document');
-            }
+            // ตรวจสอบชื่อไทย — ถ้าไม่มีจะแสดง popup ให้กรอก (ไม่ redirect ออก)
+            $needsThaiName = (empty($user['tf_name']) || empty($user['tl_name']));
 
             $papers = $this->edoctitleModel->getsummaryPaper();
 
@@ -57,6 +55,7 @@ class EdocController extends EdocBaseController
                 'isEdocAdmin'    => $this->isEdocAdmin,
                 'availableYears' => $availableYears,
                 'currentYear'    => $currentYear,
+                'needsThaiName'  => $needsThaiName,
             ];
 
             return view('edoc/documents/showEdoc', $data);
@@ -472,6 +471,44 @@ class EdocController extends EdocBaseController
         $out['list'] = $list;
         $out['first'] = $list[0] ?? '';
         return $out;
+    }
+
+    /**
+     * บันทึกชื่อ-นามสกุลภาษาไทย (AJAX จาก popup ในหน้า E-Document)
+     */
+    public function updateThaiName()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON(['status' => 'error', 'message' => 'Invalid request']);
+        }
+
+        $tfName = trim($this->request->getPost('tf_name') ?? '');
+        $tlName = trim($this->request->getPost('tl_name') ?? '');
+
+        if ($tfName === '' || $tlName === '') {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'กรุณากรอกชื่อและนามสกุลภาษาไทย']);
+        }
+
+        // ตรวจสอบว่าเป็นอักษรไทย (อนุญาต ก-๙, ช่องว่าง, .-/)
+        if (!preg_match('/^[\p{Thai}\s.\-\/]+$/u', $tfName) || !preg_match('/^[\p{Thai}\s.\-\/]+$/u', $tlName)) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'กรุณากรอกเป็นภาษาไทยเท่านั้น']);
+        }
+
+        try {
+            $userId = $this->edocUser['uid'];
+            $userModel = new \App\Models\UserModel();
+            $userModel->update($userId, [
+                'tf_name' => $tfName,
+                'tl_name' => $tlName,
+            ]);
+
+            log_message('info', '[EdocController::updateThaiName] Updated Thai name for uid=' . $userId . ' tf_name=' . $tfName . ' tl_name=' . $tlName);
+
+            return $this->response->setJSON(['status' => 'success', 'message' => 'บันทึกชื่อ-นามสกุลเรียบร้อยแล้ว']);
+        } catch (\Exception $e) {
+            log_message('error', '[EdocController::updateThaiName] Error: ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON(['status' => 'error', 'message' => 'เกิดข้อผิดพลาด กรุณาลองใหม่']);
+        }
     }
 
     /**

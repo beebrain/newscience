@@ -249,6 +249,12 @@ class UserModel extends Model
             'tl_name' => trim($portalUser['tl_name'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? $portalUser['thai_lastname'] ?? ''),
         ];
 
+        // Mapping faculty จาก Portal API (ถ้ามี) — ไม่ overwrite ค่าเดิมถ้า Portal ไม่ส่งมา
+        $portalFaculty = trim($portalUser['faculty'] ?? $portalUser['department'] ?? $portalUser['organization'] ?? $portalUser['faculty_name'] ?? '');
+        if ($portalFaculty !== '') {
+            $updateData['faculty'] = $portalFaculty;
+        }
+
         // อัปเดต login_uid เสมอถ้า Portal ส่งมา (รวมถึงกรณี login ครั้งแรกที่ login_uid ยังว่าง)
         if ($loginUid !== '') {
             $updateData['login_uid'] = $loginUid;
@@ -332,6 +338,12 @@ class UserModel extends Model
             'tf_name'   => trim($apiUser['tf_name'] ?? $apiUser['first_name_th'] ?? $apiUser['firstname_th'] ?? $apiUser['thai_name'] ?? $apiUser['th_name'] ?? ''),
             'tl_name'   => trim($apiUser['tl_name'] ?? $apiUser['last_name_th'] ?? $apiUser['lastname_th'] ?? $apiUser['thai_lastname'] ?? ''),
         ];
+
+        // Mapping faculty จาก API (ถ้ามี) — ไม่ overwrite ค่าเดิมถ้า API ไม่ส่งมา
+        $apiFaculty = trim($apiUser['faculty'] ?? $apiUser['department'] ?? $apiUser['organization'] ?? $apiUser['faculty_name'] ?? '');
+        if ($apiFaculty !== '') {
+            $data['faculty'] = $apiFaculty;
+        }
         // ไม่อัปเดต profile_image จาก API (ยกเว้นตามข้อกำหนด)
         if ($user) {
             $onlyAllowed = array_intersect_key($data, array_flip($this->allowedFields));

@@ -62,7 +62,7 @@ $routes->get('/dev/mock-oauth-personnel', 'Dev::mockOAuthPersonnel');
 
 // Admin Auth Routes (no filter)
 $routes->get('/admin/login', 'Admin\Auth::login');
-$routes->post('/admin/login', 'Admin\Auth::attemptLogin');
+$routes->post('/admin/login', 'Admin\Auth::attemptLogin'); // ปิด login email/password — redirect ไป OAuth แทน
 $routes->get('/admin/logout', 'Admin\Auth::logout');
 $routes->get('/admin/clear-session', 'Admin\Auth::clearSession');
 // รับ redirect หลัง logout จาก Edoc — ให้ Edoc ตั้ง redirect หลัง signout มาที่ URL นี้เพื่อเด้งกลับ newScience
@@ -453,6 +453,7 @@ $routes->group('edoc', ['filter' => 'edocauth'], function ($routes) {
     $routes->post('getallviewers', 'Edoc\EdocController::getAllViewers');
     $routes->get('volumes', 'Edoc\EdocController::getVolumes');
     $routes->get('viewPDF/(:any)', 'Edoc\EdocController::viewPDF/$1');
+    $routes->post('update-thai-name', 'Edoc\EdocController::updateThaiName');
 
     // E-Document (Admin)
     $routes->get('admin', 'Edoc\AdminEdocController::index');

@@ -44,6 +44,7 @@
             margin: 0.75rem 0 0.5rem;
             padding: 0 0.25rem;
         }
+
         .dataTables_length select {
             padding: 0.4rem 0.6rem;
             border: 1px solid #e5e7eb;
@@ -75,6 +76,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
         table.dataTable tbody td .doc-participant-chips {
             flex-wrap: nowrap;
             overflow: hidden;
@@ -119,6 +121,7 @@
             border-color: #4f46e5;
             color: white;
         }
+
         .dataTables_info {
             color: #64748b;
             font-size: 0.8125rem;
@@ -142,27 +145,32 @@
             gap: 0.25rem;
             align-items: center;
         }
+
         .doc-chip {
             white-space: nowrap;
             max-width: 10em;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
         .doc-chip-user {
             background: #dbeafe;
             color: #1e40af;
             border: 1px solid #93c5fd;
         }
+
         .doc-chip-everyone {
             background: #fef3c7;
             color: #b45309;
             border: 1px solid #fcd34d;
         }
+
         .doc-chip-owner {
             background: #e0e7ff;
             color: #3730a3;
             border: 1px solid #a5b4fc;
         }
+
         .doc-chip-more {
             background: #f1f5f9;
             color: #64748b;
@@ -174,61 +182,96 @@
         .edoc-input {
             transition: border-color 0.15s, box-shadow 0.15s;
         }
+
         .edoc-btn-secondary {
             background: #4f46e5;
             color: #fff;
             border: 1px solid #4f46e5;
         }
+
         .edoc-btn-secondary:hover {
             background: #4338ca;
             border-color: #4338ca;
             color: #fff;
         }
+
         .edoc-btn-ghost {
             background: transparent;
             color: #6b7280;
             border: 1px solid #e5e7eb;
         }
+
         .edoc-btn-ghost:hover {
             background: #f9fafb;
             color: #374151;
             border-color: #d1d5db;
         }
+
         .edoc-table-card {
             background: #fff;
         }
+
         #fetch_users thead th {
             font-weight: 600;
             font-size: 0.8125rem;
             text-transform: none;
             letter-spacing: 0.01em;
         }
+
         #fetch_users tbody td {
             font-size: 0.875rem;
         }
+
         #fetch_users tbody tr {
             display: table-row;
         }
-        #fetch_users tbody td:nth-child(1) { max-width: 4rem; }
-        #fetch_users tbody td:nth-child(2) { max-width: 8rem; }
-        #fetch_users tbody td:nth-child(3) { max-width: 14rem; }
-        #fetch_users tbody td:nth-child(4) { max-width: 10rem; }
-        #fetch_users tbody td:nth-child(5) { max-width: 8rem; }
-        #fetch_users tbody td:nth-child(6) { max-width: 12rem; }
-        #fetch_users tbody td:nth-child(7) { max-width: 7rem; }
-        #fetch_users tbody td:nth-child(8) { max-width: 4rem; }
+
+        #fetch_users tbody td:nth-child(1) {
+            max-width: 4rem;
+        }
+
+        #fetch_users tbody td:nth-child(2) {
+            max-width: 8rem;
+        }
+
+        #fetch_users tbody td:nth-child(3) {
+            max-width: 14rem;
+        }
+
+        #fetch_users tbody td:nth-child(4) {
+            max-width: 10rem;
+        }
+
+        #fetch_users tbody td:nth-child(5) {
+            max-width: 8rem;
+        }
+
+        #fetch_users tbody td:nth-child(6) {
+            max-width: 12rem;
+        }
+
+        #fetch_users tbody td:nth-child(7) {
+            max-width: 7rem;
+        }
+
+        #fetch_users tbody td:nth-child(8) {
+            max-width: 4rem;
+        }
+
         /* Tab ชนิดหนังสือ */
         .doc-type-tabs .doc-type-tab {
             color: #4b5563;
         }
+
         .doc-type-tabs .doc-type-tab:hover {
             color: #4f46e5;
-            background: rgba(255,255,255,0.8);
+            background: rgba(255, 255, 255, 0.8);
         }
+
         .doc-type-tabs .doc-type-tab.active {
             background: #fff;
             color: #4f46e5;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
         }
 
         .status-report {
@@ -363,6 +406,7 @@
             padding: 0.5rem 1rem;
             vertical-align: middle;
         }
+
         #fetch_users tfoot input {
             width: 100%;
             padding: 0.4rem 0.6rem;
@@ -371,9 +415,11 @@
             font-size: 0.8125rem;
             background: #fff;
         }
+
         #fetch_users tfoot input::placeholder {
             color: #94a3b8;
         }
+
         #fetch_users tfoot input:focus {
             outline: none;
             border-color: #6366f1;
@@ -501,6 +547,47 @@
         </div>
     </div>
 
+    <!-- Modal: กรอกชื่อ-นามสกุลภาษาไทย (บังคับ — ปิดไม่ได้) -->
+    <?php if (!empty($needsThaiName)): ?>
+        <div class="modal fade" id="thaiNameModal" tabindex="-1" aria-labelledby="thaiNameModalLabel" aria-hidden="true"
+            data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 1rem; overflow: hidden;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none;">
+                        <h5 class="modal-title text-white" id="thaiNameModalLabel">
+                            <i class="fas fa-user-edit me-2"></i>กรุณากรอกชื่อ-นามสกุลภาษาไทย
+                        </h5>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-warning mb-3" style="border-radius: 0.75rem;">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            ระบบ E-Document ต้องใช้ชื่อ-นามสกุลภาษาไทยในการเชื่อมโยงเอกสาร กรุณากรอกข้อมูลก่อนใช้งาน
+                        </div>
+                        <div id="thaiNameError" class="alert alert-danger mb-3 d-none" style="border-radius: 0.75rem;"></div>
+                        <div class="mb-3">
+                            <label for="input_tf_name" class="form-label fw-semibold">ชื่อ (ภาษาไทย) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" id="input_tf_name"
+                                placeholder="เช่น สมชาย" value="<?= esc($infoUser['tf_name'] ?? '') ?>"
+                                style="border-radius: 0.75rem;">
+                        </div>
+                        <div class="mb-3">
+                            <label for="input_tl_name" class="form-label fw-semibold">นามสกุล (ภาษาไทย) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" id="input_tl_name"
+                                placeholder="เช่น ใจดี" value="<?= esc($infoUser['tl_name'] ?? '') ?>"
+                                style="border-radius: 0.75rem;">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 px-4 pb-4">
+                        <button type="button" class="btn btn-lg w-100 text-white fw-semibold" id="btnSaveThaiName"
+                            style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 0.75rem;">
+                            <i class="fas fa-save me-1"></i> บันทึก
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <div class="wrapper">
         <!-- Sidebar -->
         <div class="iq-sidebar sidebar-default" id="mainMenu"></div>
@@ -575,104 +662,106 @@
                         </div>
                     </div>
 
-                        <!-- Advanced Search Panel -->
-                        <div id="advanced-search-panel" class="hidden mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                                <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-                                    ค้นหาละเอียด
-                                </h2>
-                                <button type="button" id="btn-close-advanced-search" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm">ปิด</button>
+                    <!-- Advanced Search Panel -->
+                    <div id="advanced-search-panel" class="hidden mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                </svg>
+                                ค้นหาละเอียด
+                            </h2>
+                            <button type="button" id="btn-close-advanced-search" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm">ปิด</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทเอกสาร</label>
+                                <select id="adv-doctype" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                    <option value="">ทุกประเภท</option>
+                                    <option value="หนังสือรับภายใน">หนังสือรับภายใน</option>
+                                    <option value="หนังสือรับภายนอก">หนังสือรับภายนอก</option>
+                                    <option value="หนังสือส่งภายใน">หนังสือส่งภายใน</option>
+                                    <option value="ใบลา">ใบลา</option>
+                                    <option value="คำสั่ง">คำสั่ง</option>
+                                    <option value="ประกาศ">ประกาศ</option>
+                                </select>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทเอกสาร</label>
-                                    <select id="adv-doctype" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                        <option value="">ทุกประเภท</option>
-                                        <option value="หนังสือรับภายใน">หนังสือรับภายใน</option>
-                                        <option value="หนังสือรับภายนอก">หนังสือรับภายนอก</option>
-                                        <option value="หนังสือส่งภายใน">หนังสือส่งภายใน</option>
-                                        <option value="ใบลา">ใบลา</option>
-                                        <option value="คำสั่ง">คำสั่ง</option>
-                                        <option value="ประกาศ">ประกาศ</option>
-                                    </select>
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">ปี</label>
-                                    <select id="adv-year" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                        <option value="">ทุกปี</option>
-                                        <?php if (!empty($availableYears)): ?>
-                                            <?php foreach ($availableYears as $y): ?>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ปี</label>
+                                <select id="adv-year" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                    <option value="">ทุกปี</option>
+                                    <?php if (!empty($availableYears)): ?>
+                                        <?php foreach ($availableYears as $y): ?>
                                             <option value="<?= (int)$y ?>" <?= ($y == ($currentYear ?? (date('Y') + 543))) ? 'selected' : '' ?>><?= (int)$y ?></option>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </select>
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">เล่ม</label>
-                                    <select id="adv-volume" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                        <option value="">ทุกเล่ม</option>
-                                    </select>
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">วันที่เริ่ม</label>
-                                    <input type="date" id="adv-date-from" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">วันที่สิ้นสุด</label>
-                                    <input type="date" id="adv-date-to" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                </div>
-                                <div class="md:col-span-2 flex items-end">
-                                    <button type="button" id="adv-btn-search" class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">ค้นหา</button>
-                                </div>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
-                                <div class="md:col-span-6">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">เลขที่หนังสือ</label>
-                                    <input type="text" id="adv-officeiddoc" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="ส่วนของเลขที่">
-                                </div>
-                                <div class="md:col-span-6">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">เจ้าของเอกสาร</label>
-                                    <input type="text" id="adv-owner" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="ชื่อเจ้าของ">
-                                </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เล่ม</label>
+                                <select id="adv-volume" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                    <option value="">ทุกเล่ม</option>
+                                </select>
                             </div>
-                            <div class="flex flex-wrap gap-2">
-                                <button type="button" id="adv-btn-clear" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-lg">ล้างตัวกรอง</button>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">วันที่เริ่ม</label>
+                                <input type="date" id="adv-date-from" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                             </div>
-                            <div id="advanced-search-badges" class="mt-3 flex flex-wrap gap-2 hidden"></div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">วันที่สิ้นสุด</label>
+                                <input type="date" id="adv-date-to" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            </div>
+                            <div class="md:col-span-2 flex items-end">
+                                <button type="button" id="adv-btn-search" class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">ค้นหา</button>
+                            </div>
                         </div>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+                            <div class="md:col-span-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เลขที่หนังสือ</label>
+                                <input type="text" id="adv-officeiddoc" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="ส่วนของเลขที่">
+                            </div>
+                            <div class="md:col-span-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">เจ้าของเอกสาร</label>
+                                <input type="text" id="adv-owner" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="ชื่อเจ้าของ">
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" id="adv-btn-clear" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-lg">ล้างตัวกรอง</button>
+                        </div>
+                        <div id="advanced-search-badges" class="mt-3 flex flex-wrap gap-2 hidden"></div>
+                    </div>
 
-                        <!-- DataTable Container -->
-                        <div class="edoc-table-card overflow-hidden">
-                            <div class="overflow-x-auto custom-scrollbar">
-                                <table id="fetch_users" class="w-full">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>เลขที่หนังสือ</th>
-                                            <th>ชื่อเรื่อง</th>
-                                            <th>ชนิดเอกสาร</th>
-                                            <th>เจ้าของเอกสาร</th>
-                                            <th>ผู้มีส่วนร่วม</th>
-                                            <th>วันที่ลงหนังสือ</th>
-                                            <th>คำสั่งการ</th>
-                                        </tr>
-                                    </thead>
-                                    <tfoot>
-                                        <tr>
-                                            <th></th>
-                                            <th><input type="text" placeholder="กรอง เลขที่"></th>
-                                            <th><input type="text" placeholder="กรอง ชื่อเรื่อง"></th>
-                                            <th><input type="text" placeholder="กรอง ชนิด"></th>
-                                            <th><input type="text" placeholder="กรอง เจ้าของ"></th>
-                                            <th><input type="text" placeholder="กรอง ผู้มีส่วนร่วม"></th>
-                                            <th><input type="text" placeholder="กรอง วันที่"></th>
-                                            <th><input type="text" placeholder="กรอง คำสั่ง"></th>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
+                    <!-- DataTable Container -->
+                    <div class="edoc-table-card overflow-hidden">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table id="fetch_users" class="w-full">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>เลขที่หนังสือ</th>
+                                        <th>ชื่อเรื่อง</th>
+                                        <th>ชนิดเอกสาร</th>
+                                        <th>เจ้าของเอกสาร</th>
+                                        <th>ผู้มีส่วนร่วม</th>
+                                        <th>วันที่ลงหนังสือ</th>
+                                        <th>คำสั่งการ</th>
+                                    </tr>
+                                </thead>
+                                <tfoot>
+                                    <tr>
+                                        <th></th>
+                                        <th><input type="text" placeholder="กรอง เลขที่"></th>
+                                        <th><input type="text" placeholder="กรอง ชื่อเรื่อง"></th>
+                                        <th><input type="text" placeholder="กรอง ชนิด"></th>
+                                        <th><input type="text" placeholder="กรอง เจ้าของ"></th>
+                                        <th><input type="text" placeholder="กรอง ผู้มีส่วนร่วม"></th>
+                                        <th><input type="text" placeholder="กรอง วันที่"></th>
+                                        <th><input type="text" placeholder="กรอง คำสั่ง"></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -813,6 +902,69 @@
         let table;
 
         $(document).ready(function() {
+            // แสดง Modal กรอกชื่อไทย (ถ้าจำเป็น — ปิดไม่ได้จนกว่าจะบันทึก)
+            <?php if (!empty($needsThaiName)): ?>
+                    (function() {
+                        var thaiNameModal = new bootstrap.Modal(document.getElementById('thaiNameModal'), {
+                            backdrop: 'static',
+                            keyboard: false
+                        });
+                        thaiNameModal.show();
+
+                        $('#btnSaveThaiName').on('click', function() {
+                            var btn = $(this);
+                            var tfName = $.trim($('#input_tf_name').val());
+                            var tlName = $.trim($('#input_tl_name').val());
+                            var $err = $('#thaiNameError');
+
+                            $err.addClass('d-none');
+
+                            if (!tfName || !tlName) {
+                                $err.removeClass('d-none').text('กรุณากรอกทั้งชื่อและนามสกุลภาษาไทย');
+                                return;
+                            }
+                            var thaiPattern = /^[\u0E00-\u0E7F\s.\-\/]+$/;
+                            if (!thaiPattern.test(tfName) || !thaiPattern.test(tlName)) {
+                                $err.removeClass('d-none').text('กรุณากรอกเป็นภาษาไทยเท่านั้น');
+                                return;
+                            }
+
+                            btn.prop('disabled', true).html('<span class="loading-spinner me-2" style="width:16px;height:16px;border-width:2px;"></span> กำลังบันทึก...');
+
+                            $.ajax({
+                                url: "<?= base_url('index.php/edoc/update-thai-name') ?>",
+                                type: 'POST',
+                                data: {
+                                    tf_name: tfName,
+                                    tl_name: tlName
+                                },
+                                dataType: 'json',
+                                success: function(res) {
+                                    if (res.status === 'success') {
+                                        thaiNameModal.hide();
+                                        location.reload();
+                                    } else {
+                                        $err.removeClass('d-none').text(res.message || 'เกิดข้อผิดพลาด');
+                                        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> บันทึก');
+                                    }
+                                },
+                                error: function() {
+                                    $err.removeClass('d-none').text('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
+                                    btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> บันทึก');
+                                }
+                            });
+                        });
+
+                        // Enter key submits
+                        $('#input_tf_name, #input_tl_name').on('keydown', function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                $('#btnSaveThaiName').click();
+                            }
+                        });
+                    })();
+            <?php endif; ?>
+
             // Sync แถบชนิดหนังสือ + ปี กับตัวกรอง (เหมือน Admin) — ใช้ค่าตอนโหลดครั้งแรก
             if ($('#edoc-year-select').length) {
                 var y = $('#edoc-year-select').val();
@@ -890,7 +1042,9 @@
                 "columns": [{
                         "data": "iddoc",
                         "defaultContent": "",
-                        "render": function(data) { return data != null ? data : ''; }
+                        "render": function(data) {
+                            return data != null ? data : '';
+                        }
                     },
                     {
                         "data": "officeiddoc",
@@ -914,7 +1068,9 @@
                     {
                         "data": "doctype",
                         "defaultContent": "",
-                        "render": function(data) { return data != null ? (data + '').replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''; }
+                        "render": function(data) {
+                            return data != null ? (data + '').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
+                        }
                     },
                     {
                         "data": "owner",
@@ -944,7 +1100,9 @@
                                     html += '<span class="status-badge ' + cls + '"' + title + '>' + label + '</span>';
                                 });
                                 if (rest > 0) {
-                                    var fullList = chips.map(function(c) { return (c.name || c.email || ''); }).join('\n');
+                                    var fullList = chips.map(function(c) {
+                                        return (c.name || c.email || '');
+                                    }).join('\n');
                                     html += '<span class="status-badge doc-chip doc-chip-more" title="' + (fullList.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')) + '">+' + rest + ' คน</span>';
                                 }
                                 html += '</div>';
@@ -956,12 +1114,16 @@
                     {
                         "data": "datedoc",
                         "defaultContent": "",
-                        "render": function(data) { return data != null ? formatDateToThai(data) : ''; }
+                        "render": function(data) {
+                            return data != null ? formatDateToThai(data) : '';
+                        }
                     },
                     {
                         "data": "order",
                         "defaultContent": "",
-                        "render": function(data) { return data != null ? data : ''; }
+                        "render": function(data) {
+                            return data != null ? data : '';
+                        }
                     }
                 ],
                 "columnDefs": [{
@@ -1082,7 +1244,9 @@
                 $.ajax({
                     url: "<?php echo base_url('index.php/edoc/volumes'); ?>",
                     type: 'GET',
-                    data: { year: year },
+                    data: {
+                        year: year
+                    },
                     dataType: 'json',
                     success: function(res) {
                         if (res.status === 'success' && res.data) {
@@ -1141,23 +1305,56 @@
                 if ($.trim($('#adv-officeiddoc').val())) n++;
                 return n;
             }
+
             function updateAdvSearchButtonTextUser() {
                 var c = getAdvancedFilterCountUser();
                 $('#btn-advanced-search-text').text(c > 0 ? 'ค้นหาละเอียด (' + c + ')' : 'ค้นหาละเอียด');
             }
+
             function updateAdvFilterBadgesUser() {
                 var labels = [];
-                if ($('#adv-doctype').val()) labels.push({ key: 'doctype', label: 'ประเภท: ' + $('#adv-doctype option:selected').text(), clearId: 'adv-doctype' });
-                if ($('#adv-year').val()) labels.push({ key: 'year', label: 'ปี: ' + $('#adv-year').val(), clearId: 'adv-year' });
-                if ($('#adv-volume').val()) labels.push({ key: 'volume', label: 'เล่ม: ' + $('#adv-volume option:selected').text(), clearId: 'adv-volume' });
-                if ($('#adv-date-from').val()) labels.push({ key: 'date_from', label: 'ตั้งแต่: ' + $('#adv-date-from').val(), clearId: 'adv-date-from' });
-                if ($('#adv-date-to').val()) labels.push({ key: 'date_to', label: 'ถึง: ' + $('#adv-date-to').val(), clearId: 'adv-date-to' });
-                if ($.trim($('#adv-owner').val())) labels.push({ key: 'owner', label: 'เจ้าของ: ' + $('#adv-owner').val(), clearId: 'adv-owner' });
-                if ($.trim($('#adv-officeiddoc').val())) labels.push({ key: 'officeiddoc', label: 'เลขที่: ' + $('#adv-officeiddoc').val(), clearId: 'adv-officeiddoc' });
+                if ($('#adv-doctype').val()) labels.push({
+                    key: 'doctype',
+                    label: 'ประเภท: ' + $('#adv-doctype option:selected').text(),
+                    clearId: 'adv-doctype'
+                });
+                if ($('#adv-year').val()) labels.push({
+                    key: 'year',
+                    label: 'ปี: ' + $('#adv-year').val(),
+                    clearId: 'adv-year'
+                });
+                if ($('#adv-volume').val()) labels.push({
+                    key: 'volume',
+                    label: 'เล่ม: ' + $('#adv-volume option:selected').text(),
+                    clearId: 'adv-volume'
+                });
+                if ($('#adv-date-from').val()) labels.push({
+                    key: 'date_from',
+                    label: 'ตั้งแต่: ' + $('#adv-date-from').val(),
+                    clearId: 'adv-date-from'
+                });
+                if ($('#adv-date-to').val()) labels.push({
+                    key: 'date_to',
+                    label: 'ถึง: ' + $('#adv-date-to').val(),
+                    clearId: 'adv-date-to'
+                });
+                if ($.trim($('#adv-owner').val())) labels.push({
+                    key: 'owner',
+                    label: 'เจ้าของ: ' + $('#adv-owner').val(),
+                    clearId: 'adv-owner'
+                });
+                if ($.trim($('#adv-officeiddoc').val())) labels.push({
+                    key: 'officeiddoc',
+                    label: 'เลขที่: ' + $('#adv-officeiddoc').val(),
+                    clearId: 'adv-officeiddoc'
+                });
 
                 var $c = $('#advanced-search-badges');
                 $c.empty();
-                if (labels.length === 0) { $c.addClass('hidden'); return; }
+                if (labels.length === 0) {
+                    $c.addClass('hidden');
+                    return;
+                }
                 $c.removeClass('hidden');
                 labels.forEach(function(item) {
                     var safeLabel = $('<div>').text(item.label).html();

@@ -530,24 +530,20 @@
                                 <option value="คณะมนุษยศาสตร์และสังคมศาสตร์" <?= $currentFaculty === 'คณะมนุษยศาสตร์และสังคมศาสตร์' ? 'selected' : '' ?>>
                                     คณะมนุษยศาสตร์และสังคมศาสตร์
                                 </option>
-                                <option value="คณะบริหารธุรกิจ" <?= $currentFaculty === 'คณะบริหารธุรกิจ' ? 'selected' : '' ?>>
-                                    คณะบริหารธุรกิจ
-                                </option>
+
                                 <option value="คณะเทคโนโลยีอุตสาหกรรม" <?= $currentFaculty === 'คณะเทคโนโลยีอุตสาหกรรม' ? 'selected' : '' ?>>
                                     คณะเทคโนโลยีอุตสาหกรรม
                                 </option>
                                 <option value="คณะเกษตรศาสตร์" <?= $currentFaculty === 'คณะเกษตรศาสตร์' ? 'selected' : '' ?>>
                                     คณะเกษตรศาสตร์
                                 </option>
-                                <option value="คณะวิทยาการสารสนเทศ" <?= $currentFaculty === 'คณะวิทยาการสารสนเทศ' ? 'selected' : '' ?>>
+                                <option value="คณะวิทยาการจัดการ" <?= $currentFaculty === 'คณะวิทยาการสารสนเทศ' ? 'selected' : '' ?>>
                                     คณะวิทยาการสารสนเทศ
                                 </option>
-                                <option value="คณะการบัญชีและการเงิน" <?= $currentFaculty === 'คณะการบัญชีและการเงิน' ? 'selected' : '' ?>>
-                                    คณะการบัญชีและการเงิน
+                                <option value="คณะครุศาสตร์" <?= $currentFaculty === 'คณะการบัญชีและการเงิน' ? 'selected' : '' ?>>
+                                    คณะครุศาสตร์
                                 </option>
-                                <option value="คณะศิลปกรรมศาสตร์" <?= $currentFaculty === 'คณะศิลปกรรมศาสตร์' ? 'selected' : '' ?>>
-                                    คณะศิลปกรรมศาสตร์
-                                </option>
+
                             </select>
                         </div>
                         <div class="search-box">

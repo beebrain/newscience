@@ -42,90 +42,10 @@ class Auth extends BaseController
      */
     public function attemptLogin()
     {
-        $login = trim($this->request->getPost('login') ?? '');
-        log_message('debug', 'Admin Auth: login attempt, identifier=' . $login);
-
-        // Block student emails from normal user login - redirect to student login
-        if ($this->isStudentEmail($login)) {
-            log_message('debug', 'Admin Auth: student email detected, redirect to student login=' . $login);
-            return redirect()->to(base_url('student/login'))
-                ->with('error', 'กรุณาเข้าสู่ระบบที่หน้า Student Portal');
-        }
-
-        // รับได้ทั้งอีเมลและ login_uid (เช่น admin)
-        $rules = [
-            'login'    => 'required|string',
-            'password' => 'required|min_length[6]'
-        ];
-
-        if (!$this->validate($rules)) {
-            log_message('debug', 'Admin Auth: validation failed. errors=' . json_encode($this->validator->getErrors()));
-            return redirect()->back()
-                ->withInput()
-                ->with('errors', $this->validator->getErrors());
-        }
-
-        $password = $this->request->getPost('password');
-
-        // Find user by email or username (login_uid)
-        $user = $this->userModel->findByIdentifier($login);
-
-        if (!$user || !is_array($user)) {
-            log_message('debug', 'Admin Auth: user not found, identifier=' . $login);
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Invalid email or password.');
-        }
-
-        $uid = $user['uid'] ?? '';
-        log_message('debug', 'Admin Auth: user found uid=' . $uid . ' role=' . ($user['role'] ?? '') . ' active=' . ($user['active'] ?? ''));
-
-        // Check if user is active (ตาราง user ใช้คอลัมน์ active 1=ใช้งาน)
-        $active = (int) ($user['active'] ?? 0);
-        if ($active !== 1) {
-            log_message('debug', 'Admin Auth: user inactive, uid=' . $uid);
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Your account is inactive.');
-        }
-
-        // อนุญาตทั้ง admin และ user — user ไปหน้า Dashboard, admin ไป Admin ได้
-        $role = $user['role'] ?? '';
-        $adminRole = (!empty($user['admin'])) ? 'admin' : $role;
-
-        // Verify password (hash ต้องไม่ว่าง)
-        $storedHash = $user['password'] ?? '';
-        if (!$this->userModel->verifyPassword($password, $storedHash)) {
-            log_message('debug', 'Admin Auth: password verify failed, uid=' . $uid);
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Invalid email or password.');
-        }
-
-        // Set session data (admin_role: ถ้า admin=1 ใช้ 'admin' ไม่ก็ใช้ role — ตาราง user มี role enum user,faculty_admin,super_admin และคอลัมน์ admin)
-        $sessionData = [
-            'admin_logged_in' => true,
-            'admin_id' => $user['uid'],
-            'admin_email' => $user['email'],
-            'admin_name' => $this->userModel->getFullName($user),
-            'admin_role' => $adminRole,
-        ];
-        session()->set($sessionData);
-
-        // Redirect to intended URL or หน้า การจัดการ (Dashboard)
-        $redirectUrl = session()->get('redirect_url') ?? base_url('dashboard');
-        session()->remove('redirect_url');
-
-        log_message('debug', 'Admin Auth: login success uid=' . $uid . ' role=' . $role . ' redirect=' . $redirectUrl);
-
-        // Prepare SSO Auto-Login URLs
-        $ssoUrls = [];
-        if ($ssoUrl = $this->getEdocSsoUrl($user)) $ssoUrls[] = $ssoUrl;
-        if ($ssoUrl = $this->getResearchSsoUrl($user)) $ssoUrls[] = $ssoUrl;
-
-        return redirect()->to($redirectUrl)
-            ->with('success', 'Welcome back, ' . $sessionData['admin_name'] . '!')
-            ->with('sso_autologin_urls', $ssoUrls);
+        // ปิด login email/password — ใช้เฉพาะ URU Portal OAuth
+        log_message('info', 'Admin Auth: attemptLogin blocked — redirecting to OAuth');
+        return redirect()->to(base_url('oauth/login'))
+            ->with('error', 'กรุณาเข้าสู่ระบบผ่าน URU Portal');
     }
 
     /**
