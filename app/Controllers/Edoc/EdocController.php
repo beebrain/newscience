@@ -579,10 +579,19 @@ class EdocController extends EdocBaseController
         try {
             $userId = $this->edocUser['uid'];
             $userModel = new \App\Models\UserModel();
-            $userModel->update($userId, [
+            $ok = $userModel->skipValidation(true)->update($userId, [
                 'tf_name' => $tfName,
                 'tl_name' => $tlName,
             ]);
+
+            $freshUser = $userModel->find($userId);
+            $savedFirst = trim((string) ($freshUser['tf_name'] ?? ''));
+            $savedLast = trim((string) ($freshUser['tl_name'] ?? ''));
+
+            if (!$ok || $savedFirst !== $tfName || $savedLast !== $tlName) {
+                log_message('error', '[EdocController::updateThaiName] Persist check failed for uid=' . $userId . ' saved_tf_name=' . $savedFirst . ' saved_tl_name=' . $savedLast);
+                return $this->response->setStatusCode(500)->setJSON(['status' => 'error', 'message' => 'บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่']);
+            }
 
             log_message('info', '[EdocController::updateThaiName] Updated Thai name for uid=' . $userId . ' tf_name=' . $tfName . ' tl_name=' . $tlName);
 

@@ -249,6 +249,13 @@ class UserModel extends Model
             'tl_name' => trim($portalUser['tl_name'] ?? $portalUser['last_name_th'] ?? $portalUser['lastname_th'] ?? $portalUser['thai_lastname'] ?? ''),
         ];
 
+        if ($updateData['tf_name'] === '') {
+            unset($updateData['tf_name']);
+        }
+        if ($updateData['tl_name'] === '') {
+            unset($updateData['tl_name']);
+        }
+
         // Mapping faculty จาก Portal API (ถ้ามี) — ไม่ overwrite ค่าเดิมถ้า Portal ไม่ส่งมา
         $portalFaculty = trim($portalUser['faculty'] ?? $portalUser['department'] ?? $portalUser['organization'] ?? $portalUser['faculty_name'] ?? '');
         if ($portalFaculty !== '') {
@@ -338,6 +345,13 @@ class UserModel extends Model
             'tf_name'   => trim($apiUser['tf_name'] ?? $apiUser['first_name_th'] ?? $apiUser['firstname_th'] ?? $apiUser['thai_name'] ?? $apiUser['th_name'] ?? ''),
             'tl_name'   => trim($apiUser['tl_name'] ?? $apiUser['last_name_th'] ?? $apiUser['lastname_th'] ?? $apiUser['thai_lastname'] ?? ''),
         ];
+
+        if ($data['tf_name'] === '') {
+            unset($data['tf_name']);
+        }
+        if ($data['tl_name'] === '') {
+            unset($data['tl_name']);
+        }
 
         // Mapping faculty จาก API (ถ้ามี) — ไม่ overwrite ค่าเดิมถ้า API ไม่ส่งมา
         $apiFaculty = trim($apiUser['faculty'] ?? $apiUser['department'] ?? $apiUser['organization'] ?? $apiUser['faculty_name'] ?? '');
