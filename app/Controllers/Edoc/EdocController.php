@@ -16,6 +16,108 @@ class EdocController extends EdocBaseController
     protected $docTagModel;
     protected $volumeModel;
 
+    private function normalizeProfileImageUrl(?string $path): string
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return '';
+        }
+
+        if (preg_match('#^https?://#i', $path)) {
+            return $path;
+        }
+
+        return base_url(ltrim($path, '/'));
+    }
+
+    private function getUserMetaByEmails(array $emails): array
+    {
+        $emails = array_values(array_unique(array_filter(array_map(static function ($email) {
+            return strtolower(trim((string) $email));
+        }, $emails))));
+
+        if (empty($emails)) {
+            return [];
+        }
+
+        $userModel = new \App\Models\UserModel();
+        $builder = $userModel->select('email, tf_name, tl_name, gf_name, gl_name, profile_image, profile_picture');
+        $builder->groupStart();
+        foreach ($emails as $index => $email) {
+            if ($index === 0) {
+                $builder->where('LOWER(email)', $email);
+            } else {
+                $builder->orWhere('LOWER(email)', $email);
+            }
+        }
+        $builder->groupEnd();
+        $rows = $builder->findAll();
+
+        $meta = [];
+        foreach ($rows as $row) {
+            $email = strtolower(trim((string) ($row['email'] ?? '')));
+            if ($email === '') {
+                continue;
+            }
+
+            $thaiName = trim((string) (($row['tf_name'] ?? '') . ' ' . ($row['tl_name'] ?? '')));
+            $engName = trim((string) (($row['gf_name'] ?? '') . ' ' . ($row['gl_name'] ?? '')));
+            $meta[$email] = [
+                'name' => $thaiName !== '' ? $thaiName : ($engName !== '' ? $engName : $email),
+                'image' => $this->normalizeProfileImageUrl($row['profile_image'] ?? $row['profile_picture'] ?? ''),
+            ];
+        }
+
+        return $meta;
+    }
+
+    private function buildParticipantChips(?string $participantRaw, array $emailToName = [], array $emailToMeta = []): array
+    {
+        $chips = [];
+        if ($participantRaw === '' || $participantRaw === null) {
+            return $chips;
+        }
+
+        $parts = array_map('trim', explode(',', (string) $participantRaw));
+        foreach ($parts as $part) {
+            if ($part === '') {
+                continue;
+            }
+            if ($part === 'ทุกคน') {
+                $chips[] = ['email' => 'ทุกคน', 'name' => 'ทุกคน', 'image' => ''];
+                continue;
+            }
+
+            $key = strtolower($part);
+            $meta = $emailToMeta[$key] ?? [];
+            $chips[] = [
+                'email' => $part,
+                'name'  => $meta['name'] ?? ($emailToName[$key] ?? $part),
+                'image' => $meta['image'] ?? '',
+            ];
+        }
+
+        return $chips;
+    }
+
+    private function buildOwnerChip(?string $ownerRaw, array $emailToMeta = []): array
+    {
+        $ownerRaw = trim((string) $ownerRaw);
+        if ($ownerRaw === '') {
+            return ['label' => '', 'image' => ''];
+        }
+
+        $key = strtolower($ownerRaw);
+        if (isset($emailToMeta[$key])) {
+            return [
+                'label' => $emailToMeta[$key]['name'] ?? $ownerRaw,
+                'image' => $emailToMeta[$key]['image'] ?? '',
+            ];
+        }
+
+        return ['label' => $ownerRaw, 'image' => ''];
+    }
+
     public function __construct()
     {
         $this->edoctagModel = new EdoctagModel();
@@ -106,28 +208,18 @@ class EdocController extends EdocBaseController
             $result['fileaddress_list'] = $parsed['list'];
 
             $participantRaw = $result['participant'] ?? '';
-            $result['participant_chips'] = [];
-            if ($participantRaw !== '' && $participantRaw !== null) {
-                $parts = array_map('trim', explode(',', $participantRaw));
-                $emails = array_filter($parts, function ($p) {
-                    return $p !== '' && $p !== 'ทุกคน';
-                });
-                $emailToName = $this->docTagModel->getDisplayNamesByEmails(array_map('strtolower', $emails));
-                foreach ($parts as $part) {
-                    if ($part === '') {
-                        continue;
-                    }
-                    if ($part === 'ทุกคน') {
-                        $result['participant_chips'][] = ['email' => 'ทุกคน', 'name' => 'ทุกคน'];
-                        continue;
-                    }
-                    $key = strtolower($part);
-                    $result['participant_chips'][] = [
-                        'email' => $part,
-                        'name'  => $emailToName[$key] ?? $part
-                    ];
-                }
+            $parts = $participantRaw !== '' && $participantRaw !== null ? array_map('trim', explode(',', $participantRaw)) : [];
+            $emails = array_filter($parts, static function ($p) {
+                return $p !== '' && $p !== 'ทุกคน' && strpos($p, '@') !== false;
+            });
+            $ownerRaw = trim((string) ($result['owner'] ?? ''));
+            if ($ownerRaw !== '' && strpos($ownerRaw, '@') !== false) {
+                $emails[] = $ownerRaw;
             }
+            $emailToName = $this->docTagModel->getDisplayNamesByEmails(array_map('strtolower', $emails));
+            $emailToMeta = $this->getUserMetaByEmails($emails);
+            $result['participant_chips'] = $this->buildParticipantChips($participantRaw, $emailToName, $emailToMeta);
+            $result['owner_chip'] = $this->buildOwnerChip($ownerRaw, $emailToMeta);
 
             $this->documentViews->recordView($iddoc, $userId);
 
@@ -293,36 +385,25 @@ class EdocController extends EdocBaseController
             if ($p !== '' && $p !== null) {
                 $parts = array_map('trim', explode(',', (string) $p));
                 foreach ($parts as $part) {
-                    if ($part !== '' && $part !== 'ทุกคน') {
+                    if ($part !== '' && $part !== 'ทุกคน' && strpos($part, '@') !== false) {
                         $allEmails[] = strtolower($part);
                     }
                 }
             }
+            $owner = trim((string) ($row['owner'] ?? ''));
+            if ($owner !== '' && strpos($owner, '@') !== false) {
+                $allEmails[] = strtolower($owner);
+            }
         }
         $allEmails = array_unique($allEmails);
         $emailToName = $this->docTagModel->getDisplayNamesByEmails(array_values($allEmails));
+        $emailToMeta = $this->getUserMetaByEmails($allEmails);
 
-        $data = array_map(function ($row) use ($emailToName) {
+        $data = array_map(function ($row) use ($emailToName, $emailToMeta) {
             $idLink = "<a href='#' onclick=\"info('{$row['iddoc']}')\">";
             $participantRaw = $row['participant'] ?? '';
-            $participantChips = [];
-            if ($participantRaw !== '' && $participantRaw !== null) {
-                $parts = array_map('trim', explode(',', (string) $participantRaw));
-                foreach ($parts as $part) {
-                    if ($part === '') {
-                        continue;
-                    }
-                    if ($part === 'ทุกคน') {
-                        $participantChips[] = ['email' => 'ทุกคน', 'name' => 'ทุกคน'];
-                        continue;
-                    }
-                    $key = strtolower($part);
-                    $participantChips[] = [
-                        'email' => $part,
-                        'name'  => $emailToName[$key] ?? $part
-                    ];
-                }
-            }
+            $participantChips = $this->buildParticipantChips($participantRaw, $emailToName, $emailToMeta);
+            $ownerChip = $this->buildOwnerChip($row['owner'] ?? '', $emailToMeta);
             return [
                 'iddoc' => $row['iddoc'],
                 'officeiddoc' => $idLink . $row['officeiddoc'] . '</a>',
@@ -331,6 +412,7 @@ class EdocController extends EdocBaseController
                 'participant' => (string)$row['participant'],
                 'participant_chips' => $participantChips,
                 'owner' => $row['owner'],
+                'owner_chip' => $ownerChip,
                 'order' => $row['order'],
                 'datedoc' => $row['datedoc']
             ];

@@ -29,6 +29,60 @@
     <style>
         body {
             font-family: 'Sarabun', sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(212, 175, 55, 0.15), transparent 24%),
+                linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+            color: #191c1d;
+        }
+
+        .vault-shell {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .vault-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            border: 1px solid rgba(208, 197, 175, 0.45);
+            background: linear-gradient(135deg, rgba(115, 92, 0, 0.96) 0%, rgba(212, 175, 55, 0.92) 100%);
+            box-shadow: 0 20px 60px rgba(115, 92, 0, 0.16);
+        }
+
+        .vault-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.24), transparent 28%);
+            pointer-events: none;
+        }
+
+        .vault-stat-card {
+            border-radius: 1.25rem;
+            padding: 1rem 1.1rem;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: #fff;
+        }
+
+        .vault-stat-label {
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            opacity: 0.84;
+            font-weight: 700;
+        }
+
+        .vault-stat-value {
+            font-size: 1.85rem;
+            line-height: 1.1;
+            font-weight: 800;
+        }
+
+        .edoc-surface {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
         }
 
         /* Custom DataTables Styling */
@@ -176,6 +230,207 @@
             color: #64748b;
             border: 1px dashed #94a3b8;
             cursor: help;
+        }
+
+        .doc-owner-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        .doc-owner-avatar,
+        .doc-avatar-stack__item,
+        .detail-person-chip__avatar {
+            object-fit: cover;
+            border-radius: 9999px;
+            flex-shrink: 0;
+        }
+
+        .doc-owner-avatar {
+            width: 2rem;
+            height: 2rem;
+            border: 2px solid #fff;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+        }
+
+        .doc-owner-label {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .doc-avatar-stack {
+            display: inline-flex;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .doc-avatar-stack__item,
+        .doc-avatar-stack__fallback,
+        .doc-avatar-stack__more {
+            width: 1.85rem;
+            height: 1.85rem;
+            margin-left: -0.45rem;
+            border: 2px solid #fff;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.10);
+        }
+
+        .doc-avatar-stack__item:first-child,
+        .doc-avatar-stack__fallback:first-child,
+        .doc-avatar-stack__more:first-child {
+            margin-left: 0;
+        }
+
+        .doc-avatar-stack__fallback,
+        .doc-avatar-stack__more {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .doc-avatar-stack__fallback {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .doc-avatar-stack__more {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .doc-contributor-meta {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            margin-left: 0.75rem;
+        }
+
+        .doc-contributor-meta__count {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #334155;
+            line-height: 1.2;
+        }
+
+        .doc-contributor-meta__names {
+            font-size: 0.72rem;
+            color: #64748b;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 13rem;
+        }
+
+        .desktop-table-shell {
+            display: block;
+        }
+
+        .mobile-doc-list {
+            display: none;
+            padding: 1rem;
+            gap: 0.9rem;
+        }
+
+        .mobile-doc-card {
+            border-radius: 1.2rem;
+            border: 1px solid #e2e8f0;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+            padding: 1rem;
+        }
+
+        .mobile-doc-card__id {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border-radius: 9999px;
+            background: rgba(212, 175, 55, 0.15);
+            color: #735c00;
+            padding: 0.28rem 0.65rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .mobile-doc-card__title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.45;
+        }
+
+        .mobile-doc-card__meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .mobile-doc-card__footer {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.85rem;
+            margin-top: 0.95rem;
+        }
+
+        .mobile-doc-card__label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #94a3b8;
+            margin-bottom: 0.35rem;
+        }
+
+        .mobile-doc-empty {
+            display: none;
+            margin: 1rem;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            border: 1px dashed #cbd5e1;
+            background: #f8fafc;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .detail-owner-block,
+        .detail-participant-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .detail-person-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            border-radius: 9999px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            padding: 0.4rem 0.8rem 0.4rem 0.4rem;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+            max-width: 100%;
+        }
+
+        .detail-person-chip__avatar {
+            width: 2rem;
+            height: 2rem;
+            border: 2px solid #fff;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.10);
+        }
+
+        .detail-person-chip__name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1e293b;
         }
 
         /* Toolbar controls */
@@ -534,11 +789,28 @@
             .content-page {
                 padding: 0.5rem;
             }
+
+            .desktop-table-shell {
+                display: none;
+            }
+
+            .mobile-doc-list {
+                display: grid;
+            }
+
+            .mobile-doc-empty {
+                display: block;
+            }
+
+            .dataTables_length,
+            #fetch_users tfoot {
+                display: none;
+            }
         }
     </style>
 </head>
 
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+<body class="min-h-screen">
     <!-- Loading overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg p-6 flex items-center">
@@ -594,15 +866,32 @@
 
         <!-- Main Content -->
         <div class="content-page">
-            <div class="container-fluid p-4 md:p-6">
-                <!-- Header: ชื่อหน้า + คำอธิบายสั้น -->
-                <div class="mb-6">
-                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">ระบบจัดการเอกสาร</h1>
-                    <p class="text-gray-500 mt-1 text-sm md:text-base">ติดตามและจัดการเอกสารทั้งหมดของคุณ</p>
+            <div class="container-fluid p-4 md:p-6 vault-shell space-y-6">
+                <div class="vault-hero p-5 md:p-7 text-white">
+                    <div class="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                        <div class="max-w-3xl">
+                            <div class="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/90">E-Document Workspace</div>
+                            <h1 class="mt-4 text-3xl md:text-4xl font-extrabold tracking-tight">ระบบจัดการเอกสาร</h1>
+                            <p class="mt-2 text-sm md:text-base text-white/85">ติดตามเอกสาร, ผู้เกี่ยวข้อง และดูรายละเอียดเอกสารได้จากหน้าจอเดียว รองรับทั้ง Desktop และ Mobile</p>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:w-auto lg:min-w-[420px]">
+                            <div class="vault-stat-card">
+                                <div class="vault-stat-label">Document Types</div>
+                                <div class="vault-stat-value">7</div>
+                            </div>
+                            <div class="vault-stat-card">
+                                <div class="vault-stat-label">Visible Years</div>
+                                <div class="vault-stat-value"><?= count($availableYears ?? []) ?></div>
+                            </div>
+                            <div class="vault-stat-card">
+                                <div class="vault-stat-label">Current Year</div>
+                                <div class="vault-stat-value"><?= esc((string) ($currentYear ?? '')) ?></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Card หลัก: Toolbar + ตาราง -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
+                <div class="edoc-surface rounded-2xl overflow-hidden">
                     <!-- Toolbar: ค้นหา + ชนิดหนังสือ + ปี + ปุ่ม -->
                     <div class="p-4 md:p-5 border-b border-gray-100 bg-gray-50/50">
                         <div class="flex flex-col gap-4">
@@ -613,7 +902,7 @@
                                             <i class="fas fa-search text-sm"></i>
                                         </span>
                                         <input type="text" id="globalSearch" placeholder="ค้นหาเอกสาร..."
-                                            class="edoc-input w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                                            class="edoc-input w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
                                     </div>
                                     <button type="button" id="btn-advanced-search" class="edoc-btn-secondary inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl whitespace-nowrap">
                                         <i class="fas fa-sliders-h"></i>
@@ -731,8 +1020,11 @@
                         <div id="advanced-search-badges" class="mt-3 flex flex-wrap gap-2 hidden"></div>
                     </div>
 
+                    <div id="mobileDocEmpty" class="mobile-doc-empty hidden">ไม่พบรายการเอกสารตามตัวกรองที่เลือก</div>
+                    <div id="mobileDocList" class="mobile-doc-list"></div>
+
                     <!-- DataTable Container -->
-                    <div class="edoc-table-card overflow-hidden">
+                    <div class="edoc-table-card overflow-hidden desktop-table-shell">
                         <div class="overflow-x-auto custom-scrollbar">
                             <table id="fetch_users" class="w-full">
                                 <thead>
@@ -881,6 +1173,7 @@
             // Force close all modals - simple and reliable
             $('.modal').each(function() {
                 $(this).removeClass('show');
+
                 $(this).hide();
                 $(this).attr('aria-hidden', 'true');
                 $(this).removeAttr('aria-modal');
@@ -894,6 +1187,126 @@
             $('body').removeClass('modal-open');
             $('body').css('overflow', '');
             $('body').css('padding-right', '');
+        }
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function buildAvatarFallback(name) {
+            var text = $.trim(name || 'U');
+            return escapeHtml(text ? text.charAt(0).toUpperCase() : 'U');
+        }
+
+        function buildAvatarImage(image, name, className) {
+            var safeName = escapeHtml(name || 'User');
+            if (image) {
+                var safeImage = escapeHtml(image);
+                var fallbackUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name || 'User') + '&background=735c00&color=fff&size=64';
+                return '<img src="' + safeImage + '" alt="' + safeName + '" class="' + className + '" onerror="this.onerror=null;this.src=\'' + fallbackUrl + '\'">';
+            }
+            return '<span class="doc-avatar-stack__fallback ' + className + '">' + buildAvatarFallback(name) + '</span>';
+        }
+
+        function renderOwnerInline(label, image) {
+            var safeLabel = escapeHtml(label || '-');
+            var avatar = buildAvatarImage(image || '', label || 'User', 'doc-owner-avatar');
+            return '<div class="doc-owner-inline" title="' + safeLabel + '">' + avatar + '<span class="doc-owner-label">' + safeLabel + '</span></div>';
+        }
+
+        function renderParticipantStack(chips, maxVisible) {
+            if (!chips || !chips.length) {
+                return '<span class="text-slate-400">-</span>';
+            }
+            maxVisible = maxVisible || 3;
+            var show = chips.slice(0, maxVisible);
+            var rest = chips.length - show.length;
+            var names = chips.map(function(chip) {
+                return chip.name || chip.email || '';
+            }).filter(Boolean);
+            var html = '<div class="flex items-center min-w-0">';
+            html += '<div class="doc-avatar-stack" title="' + escapeHtml(names.join(', ')) + '">';
+            show.forEach(function(chip) {
+                if (chip.email === 'ทุกคน') {
+                    html += '<span class="doc-avatar-stack__more">All</span>';
+                } else {
+                    html += buildAvatarImage(chip.image || '', chip.name || chip.email || 'U', 'doc-avatar-stack__item');
+                }
+            });
+            if (rest > 0) {
+                html += '<span class="doc-avatar-stack__more">+' + rest + '</span>';
+            }
+            html += '</div>';
+            html += '<div class="doc-contributor-meta">';
+            html += '<span class="doc-contributor-meta__count">' + names.length + ' ผู้มีส่วนร่วม</span>';
+            html += '<span class="doc-contributor-meta__names">' + escapeHtml(names.join(', ')) + '</span>';
+            html += '</div>';
+            html += '</div>';
+            return html;
+        }
+
+        function renderDetailPeople(chips) {
+            if (!chips || !chips.length) {
+                return '<span class="text-slate-400">-</span>';
+            }
+            return '<div class="detail-participant-list">' + chips.map(function(chip) {
+                var label = escapeHtml(chip.name || chip.email || '-');
+                if (chip.email === 'ทุกคน') {
+                    return '<span class="status-badge doc-chip doc-chip-everyone">ทุกคน</span>';
+                }
+                var avatar = buildAvatarImage(chip.image || '', chip.name || chip.email || 'U', 'detail-person-chip__avatar');
+                return '<span class="detail-person-chip" title="' + label + '">' + avatar + '<span class="detail-person-chip__name">' + label + '</span></span>';
+            }).join('') + '</div>';
+        }
+
+        function renderMobileDocumentCards(api) {
+            var rows = api.rows({
+                page: 'current'
+            }).data().toArray();
+            var $list = $('#mobileDocList');
+            var $empty = $('#mobileDocEmpty');
+            $list.empty();
+
+            if (!rows.length) {
+                $empty.removeClass('hidden');
+                return;
+            }
+
+            $empty.addClass('hidden');
+            rows.forEach(function(row) {
+                var owner = row.owner_chip || {
+                    label: row.owner || '-',
+                    image: ''
+                };
+                var dateLabel = row.datedoc ? formatDateToThai(row.datedoc) : '-';
+                var participantHtml = renderParticipantStack(row.participant_chips || [], 4);
+                var officeId = $('<div>').html(row.officeiddoc || '-').text();
+                var title = $('<div>').html(row.title || '-').text();
+                var orderText = row.order ? escapeHtml(row.order) : 'ไม่มีคำสั่งการ';
+                var card = '' +
+                    '<button type="button" class="mobile-doc-card text-start w-full" onclick="info(\'' + escapeHtml(row.iddoc) + '\')">' +
+                    '<div class="flex items-start justify-between gap-3">' +
+                    '<span class="mobile-doc-card__id"><i class="fas fa-file-alt"></i>' + escapeHtml(officeId) + '</span>' +
+                    '<span class="status-badge ' + escapeHtml(getBadgeClass(row.doctype || '')) + '">' + escapeHtml(row.doctype || '-') + '</span>' +
+                    '</div>' +
+                    '<div class="mt-3 mobile-doc-card__title">' + escapeHtml(title) + '</div>' +
+                    '<div class="mobile-doc-card__meta mt-2">' +
+                    '<span><i class="far fa-calendar-alt me-1"></i>' + escapeHtml(dateLabel) + '</span>' +
+                    '<span class="w-1 h-1 rounded-full bg-slate-300 inline-block"></span>' +
+                    '<span>' + orderText + '</span>' +
+                    '</div>' +
+                    '<div class="mobile-doc-card__footer">' +
+                    '<div><div class="mobile-doc-card__label">เจ้าของเอกสาร</div>' + renderOwnerInline(owner.label || row.owner || '-', owner.image || '') + '</div>' +
+                    '<div><div class="mobile-doc-card__label">ผู้มีส่วนร่วม</div>' + participantHtml + '</div>' +
+                    '</div>' +
+                    '</button>';
+                $list.append(card);
+            });
         }
 
         // Sidebar not used in newScience integration
@@ -974,7 +1387,7 @@
             if ($('.doc-type-tab.active').length) {
                 $('#adv-doctype').val($('.doc-type-tab.active').data('doctype') || '');
             }
-            var table = $('#fetch_users').DataTable({
+            table = $('#fetch_users').DataTable({
                 "processing": true,
                 "serverSide": true,
                 "stateSave": true,
@@ -1077,8 +1490,11 @@
                         "defaultContent": "",
                         "render": function(data, type, row) {
                             if (type === 'display' && data) {
-                                var label = (data + '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                                return '<span class="doc-chip doc-chip-owner status-badge" title="เจ้าของเอกสาร">' + label + '</span>';
+                                var owner = row.owner_chip || {
+                                    label: data || '',
+                                    image: ''
+                                };
+                                return renderOwnerInline(owner.label || data || '', owner.image || '');
                             }
                             return data || '';
                         }
@@ -1088,25 +1504,7 @@
                         "defaultContent": "",
                         "render": function(data, type, row) {
                             if (type === 'display' && row.participant_chips && row.participant_chips.length) {
-                                var chips = row.participant_chips;
-                                var maxChips = 3;
-                                var show = chips.slice(0, maxChips);
-                                var rest = chips.length - maxChips;
-                                var html = '<div class="doc-participant-chips flex flex-wrap gap-1">';
-                                show.forEach(function(chip) {
-                                    var label = (chip.name || chip.email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                                    var title = (chip.email && chip.email !== chip.name) ? (' title="' + (chip.email || '').replace(/"/g, '&quot;') + '"') : '';
-                                    var cls = chip.email === 'ทุกคน' ? 'doc-chip doc-chip-everyone' : 'doc-chip doc-chip-user';
-                                    html += '<span class="status-badge ' + cls + '"' + title + '>' + label + '</span>';
-                                });
-                                if (rest > 0) {
-                                    var fullList = chips.map(function(c) {
-                                        return (c.name || c.email || '');
-                                    }).join('\n');
-                                    html += '<span class="status-badge doc-chip doc-chip-more" title="' + (fullList.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')) + '">+' + rest + ' คน</span>';
-                                }
-                                html += '</div>';
-                                return html;
+                                return renderParticipantStack(row.participant_chips, 3);
                             }
                             return (data || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                         }
@@ -1127,11 +1525,12 @@
                     }
                 ],
                 "columnDefs": [{
-                        targets: [6, 5],
+                        targets: [6],
                         render: function(data, type, row) {
                             return type === 'display' && data && data.length > 10 ?
                                 data.substr(0, 15) + '…' :
                                 data;
+
                         }
                     },
                     {
@@ -1160,6 +1559,7 @@
                     });
                 },
                 "drawCallback": function(settings) {
+                    renderMobileDocumentCards(this.api());
                     if (typeof updateAdvFilterBadgesUser === 'function') updateAdvFilterBadgesUser();
                     if (typeof updateAdvSearchButtonTextUser === 'function') updateAdvSearchButtonTextUser();
                 },
@@ -1483,25 +1883,20 @@
                         $('#msg_title').text(result_data.title || '-');
                         $('#msg_doctype').text(result_data.doctype || '-');
                         if (result_data.owner) {
-                            var ownerLabel = (result_data.owner + '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                            $('#msg_owner').html('<span class="doc-chip doc-chip-owner status-badge" title="เจ้าของเอกสาร">' + ownerLabel + '</span>');
+                            var ownerData = result_data.owner_chip || {
+                                label: result_data.owner || '',
+                                image: ''
+                            };
+                            $('#msg_owner').html('<div class="detail-owner-block">' + renderOwnerInline(ownerData.label || result_data.owner || '', ownerData.image || '') + '</div>');
                         } else {
                             $('#msg_owner').text('-');
                         }
                         if (result_data.participant_chips && result_data.participant_chips.length) {
-                            var chips = result_data.participant_chips;
-                            var chipHtml = '<div class="doc-participant-chips flex flex-wrap gap-1">';
-                            chips.forEach(function(chip) {
-                                var label = (chip.name || chip.email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                                var title = (chip.email && chip.email !== chip.name) ? (' title="' + (chip.email || '').replace(/"/g, '&quot;') + '"') : '';
-                                var cls = chip.email === 'ทุกคน' ? 'doc-chip doc-chip-everyone' : 'doc-chip doc-chip-user';
-                                chipHtml += '<span class="status-badge ' + cls + '"' + title + '>' + label + '</span>';
-                            });
-                            chipHtml += '</div>';
-                            $('#msg_participant').html(chipHtml);
+                            $('#msg_participant').html(renderDetailPeople(result_data.participant_chips));
                         } else {
                             $('#msg_participant').text(result_data.participant || '-');
                         }
+
                         $('#msg_order').text(result_data.order || '-');
                         $('#msg_docdate').text(result_data.datedoc ? formatDateToThai(result_data.datedoc) : '-');
 
