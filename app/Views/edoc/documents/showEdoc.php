@@ -355,6 +355,9 @@
             padding: 0.28rem 0.65rem;
             font-size: 0.72rem;
             font-weight: 700;
+            max-width: 100%;
+            white-space: normal;
+            overflow-wrap: anywhere;
         }
 
         .mobile-doc-card__title {
@@ -362,6 +365,9 @@
             font-weight: 700;
             color: #0f172a;
             line-height: 1.45;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         .mobile-doc-card__meta {
@@ -389,6 +395,21 @@
             margin-bottom: 0.35rem;
         }
 
+        .mobile-doc-card .doc-owner-inline,
+        .mobile-doc-card .doc-contributor-meta {
+            width: 100%;
+        }
+
+        .mobile-doc-card .doc-owner-label,
+        .mobile-doc-card .doc-contributor-meta__names {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            max-width: 100%;
+        }
+
         .mobile-doc-empty {
             display: none;
             margin: 1rem;
@@ -398,6 +419,46 @@
             background: #f8fafc;
             text-align: center;
             color: #64748b;
+        }
+
+        .mobile-doc-info {
+            display: none;
+            padding: 0 1rem 0.75rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .mobile-doc-pagination {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0 1rem 1rem;
+        }
+
+        .mobile-doc-pagination__button {
+            border: 1px solid #d1d5db;
+            background: #fff;
+            color: #334155;
+            min-width: 2.35rem;
+            height: 2.35rem;
+            border-radius: 0.8rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            padding: 0 0.75rem;
+        }
+
+        .mobile-doc-pagination__button.is-active {
+            background: #4f46e5;
+            color: #fff;
+            border-color: #4f46e5;
+        }
+
+        .mobile-doc-pagination__button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
         }
 
         .detail-owner-block,
@@ -798,6 +859,14 @@
                 display: grid;
             }
 
+            .mobile-doc-info {
+                display: block;
+            }
+
+            .mobile-doc-pagination {
+                display: flex;
+            }
+
             .mobile-doc-empty {
                 display: block;
             }
@@ -1022,6 +1091,8 @@
 
                     <div id="mobileDocEmpty" class="mobile-doc-empty hidden">ไม่พบรายการเอกสารตามตัวกรองที่เลือก</div>
                     <div id="mobileDocList" class="mobile-doc-list"></div>
+                    <div id="mobileDocInfo" class="mobile-doc-info"></div>
+                    <div id="mobileDocPagination" class="mobile-doc-pagination"></div>
 
                     <!-- DataTable Container -->
                     <div class="edoc-table-card overflow-hidden desktop-table-shell">
@@ -1270,14 +1341,18 @@
             }).data().toArray();
             var $list = $('#mobileDocList');
             var $empty = $('#mobileDocEmpty');
+            var $info = $('#mobileDocInfo');
             $list.empty();
 
             if (!rows.length) {
                 $empty.removeClass('hidden');
+                $info.text('');
                 return;
             }
 
             $empty.addClass('hidden');
+            var pageInfo = api.page.info();
+            $info.text('แสดง ' + (pageInfo.start + 1) + ' - ' + pageInfo.end + ' จาก ' + pageInfo.recordsDisplay + ' รายการ');
             rows.forEach(function(row) {
                 var owner = row.owner_chip || {
                     label: row.owner || '-',
@@ -1307,6 +1382,29 @@
                     '</button>';
                 $list.append(card);
             });
+        }
+
+        function renderMobilePagination(api) {
+            var info = api.page.info();
+            var $pagination = $('#mobileDocPagination');
+            $pagination.empty();
+
+            if (!info || info.pages <= 1) {
+                return;
+            }
+
+            var currentPage = info.page;
+            var totalPages = info.pages;
+            var pages = [currentPage];
+
+            if (currentPage - 1 >= 0) pages.unshift(currentPage - 1);
+            if (currentPage + 1 < totalPages) pages.push(currentPage + 1);
+
+            $pagination.append('<button type="button" class="mobile-doc-pagination__button" data-page="prev"' + (currentPage === 0 ? ' disabled' : '') + '>ก่อน</button>');
+            pages.forEach(function(pageIndex) {
+                $pagination.append('<button type="button" class="mobile-doc-pagination__button ' + (pageIndex === currentPage ? 'is-active' : '') + '" data-page="' + pageIndex + '">' + (pageIndex + 1) + '</button>');
+            });
+            $pagination.append('<button type="button" class="mobile-doc-pagination__button" data-page="next"' + (currentPage >= totalPages - 1 ? ' disabled' : '') + '>ถัดไป</button>');
         }
 
         // Sidebar not used in newScience integration
@@ -1560,6 +1658,7 @@
                 },
                 "drawCallback": function(settings) {
                     renderMobileDocumentCards(this.api());
+                    renderMobilePagination(this.api());
                     if (typeof updateAdvFilterBadgesUser === 'function') updateAdvFilterBadgesUser();
                     if (typeof updateAdvSearchButtonTextUser === 'function') updateAdvSearchButtonTextUser();
                 },
@@ -1772,6 +1871,18 @@
 
             $(document).on('click', '[data-bs-dismiss="modal"]', function() {
                 closeModal();
+            });
+
+            $(document).on('click', '#mobileDocPagination [data-page]', function() {
+                if (!table) return;
+                var page = $(this).data('page');
+                if (page === 'prev') {
+                    table.page('previous').draw('page');
+                } else if (page === 'next') {
+                    table.page('next').draw('page');
+                } else {
+                    table.page(parseInt(page, 10)).draw('page');
+                }
             });
 
         });
