@@ -21,6 +21,11 @@
 $p = $profile ?? [];
 $role = $p['role'] ?? 'user';
 $canManageEvaluate = $can_manage_evaluate ?? false;
+$dashUid = (int) ($p['uid'] ?? 0);
+$showProgramAdminQuick = $dashUid > 0 && \App\Libraries\AccessControl::hasAccess($dashUid, 'program_admin');
+$statsOverviewGridClass = $showProgramAdminQuick
+    ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8'
+    : 'grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8';
 ?>
 
 <div class="font-sarabun" style="margin: -1rem; padding: 1.5rem;">
@@ -48,7 +53,7 @@ $canManageEvaluate = $can_manage_evaluate ?? false;
     </div>
 
     <!-- Stats Overview -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="<?= esc($statsOverviewGridClass, 'attr') ?>">
         <div class="bg-white rounded-xl border border-gray-200 p-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -60,6 +65,19 @@ $canManageEvaluate = $can_manage_evaluate ?? false;
                 </div>
             </div>
         </div>
+        <?php if ($showProgramAdminQuick): ?>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500">เว็บหลักสูตร</div>
+                    <a href="<?= base_url('program-admin') ?>" class="text-sm font-semibold text-gray-800 hover:text-violet-600 transition-colors">แก้ไขเว็บ &rarr;</a>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
         <div class="bg-white rounded-xl border border-gray-200 p-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">

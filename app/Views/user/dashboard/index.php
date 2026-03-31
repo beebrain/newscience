@@ -6,6 +6,11 @@ $p = $profile ?? [];
 $role = $p['role'] ?? 'user';
 $isAdmin = in_array($role, ['admin', 'editor', 'super_admin', 'faculty_admin'], true);
 $canManageEvaluate = $can_manage_evaluate ?? false;
+$dashUid = (int) ($p['uid'] ?? 0);
+$showProgramAdminQuick = $dashUid > 0 && \App\Libraries\AccessControl::hasAccess($dashUid, 'program_admin');
+$quickSystemsGridClass = $showProgramAdminQuick
+    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4'
+    : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4';
 ?>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
@@ -42,7 +47,7 @@ $canManageEvaluate = $can_manage_evaluate ?? false;
             <h2 class="text-lg font-bold text-gray-800">ระบบในเว็บไซต์</h2>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="<?= esc($quickSystemsGridClass, 'attr') ?>">
             <!-- E-Document -->
             <a href="<?= base_url('edoc') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all duration-200">
                 <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -52,6 +57,18 @@ $canManageEvaluate = $can_manage_evaluate ?? false;
                 <div class="text-sm text-gray-500 mt-1">รับ-ส่งหนังสือราชการ</div>
                 <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>
+
+            <?php if ($showProgramAdminQuick): ?>
+            <!-- แก้ไขเว็บหลักสูตร (สไตล์เดียวกับ e-Doc) -->
+            <a href="<?= base_url('program-admin') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-violet-200 hover:-translate-y-1 transition-all duration-200">
+                <div class="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+                </div>
+                <div class="font-semibold text-gray-800 group-hover:text-violet-600 transition-colors">แก้ไขเว็บหลักสูตร</div>
+                <div class="text-sm text-gray-500 mt-1">จัดการเนื้อหาเว็บหลักสูตร</div>
+                <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-violet-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+            <?php endif; ?>
 
             <!-- ตารางคุมสอบ -->
             <a href="<?= base_url('exam') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-orange-200 hover:-translate-y-1 transition-all duration-200">
