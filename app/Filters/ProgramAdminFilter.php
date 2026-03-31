@@ -35,13 +35,6 @@ class ProgramAdminFilter implements FilterInterface
         }
 
         $isProgramAdmin = \App\Libraries\AccessControl::hasAccess((int) $user['uid'], 'program_admin');
-        if (!$isProgramAdmin && in_array($userRole, ['super_admin', 'admin'], true)) {
-            $isProgramAdmin = true;
-        }
-        if (!$isProgramAdmin && ($userRole === 'faculty_admin' || $userRole === 'faculty' || $userRole === 'admin')) {
-            $personnelProgramModel = new \App\Models\PersonnelProgramModel();
-            $isProgramAdmin = $personnelProgramModel->personnelHasChairRole($user['uid']);
-        }
         if (!$isProgramAdmin) {
             return redirect()->to(base_url('/dashboard'))->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตร');
         }

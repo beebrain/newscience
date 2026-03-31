@@ -38,6 +38,11 @@ class AccessControl
             return true;
         }
 
+        // program_admin: แอดมิน + สิทธิ์ระบบ + บุคลากรที่สังกัดหลักสูตร (personnel_programs)
+        if ($systemSlug === 'program_admin') {
+            return ProgramAdminAccess::canAccessProgramAdminArea($uid, $user);
+        }
+
         // admin_core: faculty_admin, admin, editor เข้าได้โดยอัตโนมัติ (สิทธิ์เทียบเท่า Admin ด้านเนื้อหา)
         // ทำให้เข้าได้: ประกาศข่าว, องค์กร, หลักสูตร, Hero Slides, Events, จัดการดาวน์โหลดคณะ, ประกาศด่วนป๊อปอัป
         if ($systemSlug === 'admin_core' && in_array($user['role'], ['faculty_admin', 'admin', 'editor'], true)) {
