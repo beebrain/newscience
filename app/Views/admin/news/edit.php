@@ -94,6 +94,20 @@
                         <?php endif; ?>
                     </div>
                 </div>
+                <?php
+                $publishedAtInput = old('published_at');
+                if ($publishedAtInput === null || $publishedAtInput === '') {
+                    $pat = $news['published_at'] ?? '';
+                    $publishedAtInput = ($pat !== '' && ($news['status'] ?? '') === 'published')
+                        ? date('Y-m-d\TH:i', strtotime($pat))
+                        : '';
+                }
+                ?>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="published_at" class="form-label">วันและเวลาประกาศ</label>
+                    <input type="datetime-local" id="published_at" name="published_at" class="form-control" value="<?= esc($publishedAtInput) ?>" style="max-width: 22rem;">
+                    <p class="form-hint">ใช้เมื่อสถานะเป็น <strong>เผยแพร่</strong> — แก้ได้เพื่อย้อนวันประกาศบนหน้าเว็บ</p>
+                </div>
             </section>
 
             <section class="form-section">

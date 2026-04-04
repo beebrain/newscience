@@ -75,6 +75,11 @@
                         <?php endif; ?>
                     </div>
                 </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="published_at" class="form-label">วันและเวลาประกาศ</label>
+                    <input type="datetime-local" id="published_at" name="published_at" class="form-control" value="<?= esc(old('published_at') ?? '') ?>" style="max-width: 22rem;">
+                    <p class="form-hint">ใช้เมื่อสถานะเป็น <strong>เผยแพร่</strong> — ว่างไว้ = ใช้เวลาปัจจุบันตอนบันทึก</p>
+                </div>
             </section>
 
             <section class="form-section">

@@ -266,16 +266,19 @@ class Pages extends BaseController
     {
         $siteInfo = $this->siteSettingModel->getAll();
 
-        // Get all published news with pagination
-        $perPage = 12;
         $newsModel = new NewsModel();
-        $allNews = $newsModel->getPublished(100); // Get all news
+        $dateFilter = $this->request->getGet('date');
+        $dateFilter = is_string($dateFilter) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFilter) ? $dateFilter : null;
+        $allNews = $dateFilter !== null
+            ? $newsModel->getPublishedOnDate($dateFilter, 100)
+            : $newsModel->getPublished(100);
 
         $data = array_merge($this->getCommonData(), [
             'page_title' => 'ข่าวสาร | ' . ($siteInfo['site_name_th'] ?? 'News'),
             'meta_description' => 'ข่าวสารและประกาศล่าสุดจากคณะวิทยาศาสตร์และเทคโนโลยี',
             'active_page' => 'news',
             'news_items' => $allNews,
+            'news_filter_date' => $dateFilter,
         ]);
 
         return view('pages/news', $data);
@@ -286,12 +289,16 @@ class Pages extends BaseController
         $siteInfo = $this->siteSettingModel->getAll();
 
         if (!$id || !is_numeric($id)) {
-            return redirect()->to('/news');
+            return redirect()->to(base_url('news'));
         }
 
         $newsItem = $this->newsModel->find($id);
 
         if (!$newsItem) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        if (($newsItem['status'] ?? '') !== 'published') {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
 

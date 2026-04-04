@@ -700,11 +700,12 @@ class Api extends BaseController
         try {
             $db = \Config\Database::connect();
             if ($db->tableExists('news_tags') && $db->tableExists('news_news_tags')) {
-                $newsRows = $newsModel->getPublishedByTag('program_' . $id, 6, 0);
+                $newsRows = $newsModel->getPublishedByTag('program_' . $id, 1, 0);
                 foreach ($newsRows as $n) {
+                    $nid = (int) ($n['id'] ?? 0);
                     $img = $this->formatFeaturedImageThumb($n['featured_image'] ?? '');
                     $news[] = [
-                        'id'         => (int) ($n['id'] ?? 0),
+                        'id'         => $nid,
                         'title'      => $n['title'] ?? '',
                         'title_th'   => $n['title'] ?? '',
                         'excerpt'    => $n['excerpt'] ?? mb_substr(strip_tags($n['content'] ?? ''), 0, 150) . '...',
@@ -712,6 +713,7 @@ class Api extends BaseController
                         'thumbnail'  => $img,
                         'date'       => isset($n['published_at']) ? date('d/m/Y', strtotime($n['published_at'])) : '',
                         'created_at' => $n['published_at'] ?? $n['created_at'] ?? '',
+                        'url'        => base_url('news/' . $nid),
                     ];
                 }
             }

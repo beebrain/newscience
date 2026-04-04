@@ -291,15 +291,36 @@
         $grid.html('<p class="text-muted" style="grid-column:1/-1;text-align:center;padding:2rem;">ยังไม่มีข่าวสาร</p>');
     }
 
+    function resolvePublicBaseUrl() {
+        var b = (window.BASE_URL || '').trim().replace(/\/+$/, '');
+        if (b) {
+            return b;
+        }
+        var baseEl = document.querySelector('base[href]');
+        if (baseEl && baseEl.getAttribute('href')) {
+            var href = baseEl.getAttribute('href');
+            try {
+                var u = new URL(href, window.location.href);
+                return (u.origin + u.pathname).replace(/\/+$/, '');
+            } catch (e) { /* ignore */ }
+        }
+        var path = window.location.pathname || '';
+        var programIdx = path.indexOf('/program');
+        if (programIdx > 0) {
+            return window.location.origin + path.substring(0, programIdx).replace(/\/+$/, '');
+        }
+        return window.location.origin + path.replace(/\/[^/]+\/?$/, '').replace(/\/+$/, '') || window.location.origin;
+    }
+
     function renderNewsCards($grid, items) {
         $grid.empty();
-        var baseUrl = (window.BASE_URL || '').replace(/\/$/, '');
+        var baseUrl = resolvePublicBaseUrl();
         $.each(items, function (i, item) {
             var imgSrc = item.image_url || item.thumbnail || '';
             var imgHtml = imgSrc
                 ? '<div class="news-card__image"><img src="' + escAttr(imgSrc) + '" alt=""></div>'
                 : '';
-            var link = item.url || (baseUrl + '/news/' + item.id);
+            var link = item.url || (baseUrl + '/news/' + encodeURIComponent(String(item.id)));
             var html = '<a href="' + escAttr(link) + '" class="news-card" style="text-decoration:none;color:inherit;">' +
                 imgHtml +
                 '<div class="news-card__content">' +

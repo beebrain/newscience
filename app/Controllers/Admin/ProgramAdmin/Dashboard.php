@@ -813,15 +813,21 @@ class Dashboard extends BaseController
         $slug = $this->newsModel->generateSlug($title);
         $displayAsEvent = $this->request->getPost('display_as_event');
         $displayAsEvent = ($displayAsEvent === '1' || $displayAsEvent === 1) ? 1 : 0;
+        $postStatus = $this->request->getPost('status');
+        $parsedPublished = NewsModel::publishedAtFromUserInput($this->request->getPost('published_at'));
+        $publishedAt = null;
+        if ($postStatus === 'published') {
+            $publishedAt = $parsedPublished ?? date('Y-m-d H:i:s');
+        }
         $newsData = [
             'title' => $title,
             'slug' => $slug,
             'content' => $this->request->getPost('content'),
             'excerpt' => $this->request->getPost('excerpt'),
-            'status' => $this->request->getPost('status'),
+            'status' => $postStatus,
             'display_as_event' => $displayAsEvent,
             'author_id' => session()->get('admin_id'),
-            'published_at' => $this->request->getPost('status') === 'published' ? date('Y-m-d H:i:s') : null,
+            'published_at' => $publishedAt,
         ];
         $newsId = $this->newsModel->insert($newsData);
         if (!$newsId) {

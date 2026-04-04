@@ -45,6 +45,44 @@ class NewsModel extends Model
     }
 
     /**
+     * ข่าวที่เผยแพร่แล้ว โดยวันที่ประกาศ (DATE(published_at)) ตรงกับ $dateYmd (รูปแบบ Y-m-d)
+     */
+    public function getPublishedOnDate(string $dateYmd, int $limit = 100, int $offset = 0): array
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateYmd)) {
+            return [];
+        }
+
+        return $this->where('status', 'published')
+            ->where('DATE(published_at)', $dateYmd)
+            ->orderBy('published_at', 'DESC')
+            ->findAll($limit, $offset);
+    }
+
+    /**
+     * แปลงค่าจาก input datetime-local (หรือสตริงใกล้เคียง) เป็น Y-m-d H:i:s — คืน null ถ้าว่าง
+     */
+    public static function publishedAtFromUserInput(?string $input): ?string
+    {
+        if ($input === null) {
+            return null;
+        }
+        $input = trim(str_replace('T', ' ', $input));
+        if ($input === '') {
+            return null;
+        }
+        if (preg_match('/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}$/', $input)) {
+            return $input . ':00';
+        }
+        if (preg_match('/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$/', $input)) {
+            return $input;
+        }
+        $ts = strtotime($input);
+
+        return $ts ? date('Y-m-d H:i:s', $ts) : null;
+    }
+
+    /**
      * Get published news marked as "Event ที่จะเกิดขึ้น" (display_as_event=1), upcoming only (published_at >= today).
      * Used to merge with events table in API events/upcoming.
      */

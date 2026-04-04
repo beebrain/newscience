@@ -588,6 +588,11 @@
                                             <span>แสดงข่าวนี้เป็น <strong>"กิจกรรมที่จะเกิดขึ้น"</strong> (Upcoming Event)</span>
                                         </label>
                                     </div>
+                                    <div class="form-group" style="flex: 1 1 100%; margin-bottom: 0;">
+                                        <label for="program_news_published_at" class="form-label">วันและเวลาประกาศ</label>
+                                        <input type="datetime-local" id="program_news_published_at" name="published_at" class="form-control" style="max-width: 22rem;">
+                                        <div class="file-upload-info">เมื่อเผยแพร่ — ว่าง = ใช้เวลาปัจจุบัน</div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="news-card" style="margin-bottom: 2rem;">

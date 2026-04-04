@@ -17,12 +17,31 @@
 <!-- News List Section -->
 <section class="section">
     <div class="container container--narrow">
+        <?php
+        $filterDate = $news_filter_date ?? null;
+        ?>
+        <div class="news-page-filter" style="margin-bottom: 1.75rem; padding: 1rem 1.25rem; background: var(--color-gray-50, #f9fafb); border: 1px solid var(--color-gray-200, #e5e7eb); border-radius: var(--radius-lg, 12px); display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1rem;">
+            <form method="get" action="<?= base_url('news') ?>" class="news-page-filter__form" style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem 1rem;">
+                <div>
+                    <label for="news-filter-date" class="form-label" style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--color-gray-700, #374151);">เลือกวันที่ประกาศ</label>
+                    <input type="date" id="news-filter-date" name="date" value="<?= esc($filterDate ?? '') ?>" class="form-control" style="min-height: 2.5rem; padding: 0.35rem 0.75rem; border: 1px solid var(--color-gray-300); border-radius: 8px; font-size: 1rem;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; background: var(--color-primary, #ca8a04); color: #fff;">กรองตามวันที่</button>
+                <?php if (!empty($filterDate)): ?>
+                    <a href="<?= base_url('news') ?>" class="btn btn-outline" style="padding: 0.5rem 1rem; border-radius: 8px; font-weight: 500; text-decoration: none; border: 1px solid var(--color-gray-300); color: var(--color-gray-700); background: #fff;">ล้างตัวกรอง</a>
+                <?php endif; ?>
+            </form>
+            <?php if (!empty($filterDate)): ?>
+                <p style="margin: 0; font-size: 0.875rem; color: var(--color-gray-600); width: 100%;">แสดงเฉพาะข่าวที่ประกาศในวันที่ <strong><?= esc($filterDate) ?></strong></p>
+            <?php endif; ?>
+        </div>
+
         <?php if (!empty($news_items)): ?>
             <?php helper('program_upload'); ?>
             <div class="news-grid">
                 <?php foreach ($news_items as $index => $news): ?>
                     <article class="news-card animate-on-scroll <?= $index < 2 ? 'news-card--featured' : '' ?>">
-                        <a href="<?= base_url('news/' . esc($news['id'])) ?>" class="news-card__wrap" aria-label="อ่านข่าว: <?= esc($news['title']) ?>">
+                        <a href="<?= base_url('news/' . (int) ($news['id'] ?? 0)) ?>" class="news-card__wrap" aria-label="อ่านข่าว: <?= esc($news['title']) ?>">
                             <div class="news-card__image">
                                 <?php if (!empty($news['featured_image'])): ?>
                                     <img src="<?= featured_image_serve_url($news['featured_image'], true) ?>" alt="<?= esc($news['title']) ?>" loading="lazy">

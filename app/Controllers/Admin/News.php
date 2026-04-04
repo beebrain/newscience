@@ -114,16 +114,22 @@ class News extends BaseController
         $facebookUrl = trim((string) $this->request->getPost('facebook_url'));
         $displayAsEvent = $this->request->getPost('display_as_event');
         $displayAsEvent = ($displayAsEvent === '1' || $displayAsEvent === 1) ? 1 : 0;
+        $postStatus = $this->request->getPost('status');
+        $parsedPublished = NewsModel::publishedAtFromUserInput($this->request->getPost('published_at'));
+        $publishedAt = null;
+        if ($postStatus === 'published') {
+            $publishedAt = $parsedPublished ?? date('Y-m-d H:i:s');
+        }
         $newsData = [
             'title' => $title,
             'slug' => $slug,
             'content' => $this->request->getPost('content'),
             'excerpt' => $this->request->getPost('excerpt'),
-            'status' => $this->request->getPost('status'),
+            'status' => $postStatus,
             'display_as_event' => $displayAsEvent,
             'facebook_url' => $facebookUrl !== '' ? $facebookUrl : null,
             'author_id' => session()->get('admin_id'),
-            'published_at' => $this->request->getPost('status') === 'published' ? date('Y-m-d H:i:s') : null
+            'published_at' => $publishedAt,
         ];
 
         $newsId = $this->newsModel->insert($newsData);
@@ -313,20 +319,27 @@ class News extends BaseController
         $facebookUrl = trim((string) $this->request->getPost('facebook_url'));
         $displayAsEvent = $this->request->getPost('display_as_event');
         $displayAsEvent = ($displayAsEvent === '1' || $displayAsEvent === 1) ? 1 : 0;
+        $postStatus = $this->request->getPost('status');
         $newsData = [
             'id' => $id, // จำเป็นสำหรับ validation rule is_unique[news.slug,id,{id}]
             'title' => $title,
             'slug' => $slug,
             'content' => $this->request->getPost('content'),
             'excerpt' => $this->request->getPost('excerpt'),
-            'status' => $this->request->getPost('status'),
+            'status' => $postStatus,
             'display_as_event' => $displayAsEvent,
             'facebook_url' => $facebookUrl !== '' ? $facebookUrl : null,
         ];
 
-        // Set published_at if publishing for first time
-        if ($this->request->getPost('status') === 'published' && $news['status'] !== 'published') {
-            $newsData['published_at'] = date('Y-m-d H:i:s');
+        if ($postStatus === 'published') {
+            $parsedPublished = NewsModel::publishedAtFromUserInput($this->request->getPost('published_at'));
+            if ($parsedPublished !== null) {
+                $newsData['published_at'] = $parsedPublished;
+            } elseif (($news['status'] ?? '') !== 'published') {
+                $newsData['published_at'] = date('Y-m-d H:i:s');
+            }
+        } else {
+            $newsData['published_at'] = null;
         }
 
         // Handle featured image — ตั้งชื่อเป็นรหัสข่าว (id)
