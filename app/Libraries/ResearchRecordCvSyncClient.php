@@ -6,7 +6,7 @@ use Config\ResearchApi;
 use Config\ResearchRecordSync;
 
 /**
- * HTTP client เรียก Research Record sync API
+ * HTTP client เรียก Research Record sync API — ใช้หลักสำหรับดึงข้อมูลจาก RR ลง newScience (GET bundle / publications)
  */
 class ResearchRecordCvSyncClient
 {
@@ -28,6 +28,9 @@ class ResearchRecordCvSyncClient
         $researchApi = config(ResearchApi::class);
         if ($researchApi->baseUrl === '') {
             return ['success' => false, 'error' => 'NOT_CONFIGURED', 'message' => 'ตั้ง RESEARCH_API_BASE_URL ใน .env'];
+        }
+        if ($researchApi->apiKey === '') {
+            return ['success' => false, 'error' => 'NOT_CONFIGURED', 'message' => 'ตั้ง RESEARCH_API_KEY ใน .env'];
         }
 
         $url = self::buildUrl('cv-bundle-by-email', $canonicalEmail);
@@ -78,6 +81,9 @@ class ResearchRecordCvSyncClient
         $researchApi = config(ResearchApi::class);
         if ($researchApi->baseUrl === '') {
             return ['success' => false, 'error' => 'NOT_CONFIGURED', 'message' => 'ตั้ง RESEARCH_API_BASE_URL ใน .env'];
+        }
+        if ($researchApi->apiKey === '') {
+            return ['success' => false, 'error' => 'NOT_CONFIGURED', 'message' => 'ตั้ง RESEARCH_API_KEY ใน .env'];
         }
 
         $url    = self::buildUrl($path, $canonicalEmail);

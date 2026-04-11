@@ -8,6 +8,12 @@ use App\Models\PersonnelModel;
 
 /**
  * เปรียบเทียบ bundle และเขียนกลับ newScience
+ *
+ * แผนการดึงจาก RR (ลดการบันทึกซ้ำ):
+ * - CV จาก `cv-bundle`: pull แบบแทนที่ทั้งชุดต่อ personnel — สะท้อน RR ล่าสุด ไม่สะสมแถวซ้ำหลายเวอร์ชัน
+ * - ผลงานตีพิมพ์: จับคู่ด้วย `metadata.sync_external_key` / `metadata.rr_publication_id`; ถ้า fingerprint
+ *   ของข้อมูลจาก RR (`rr_pull_fingerprint`) เท่ากับที่เก็บไว้แล้ว จะข้าม (ไม่อัปเดต DB)
+ * - ประวัติ: `cv_sync_log` + content_hash จาก API
  */
 class ResearchRecordCvSyncMerge
 {
@@ -183,18 +189,39 @@ class ResearchRecordCvSyncMerge
     }
 
     /**
+     * Fingerprint ของรายการผลงานจาก RR — ถ้าเท่ากับที่เก็บใน metadata แล้ว จะไม่อัปเดตแถว (ไม่บันทึกซ้ำ)
+     */
+    private static function publicationRrFingerprint(array $pub): string
+    {
+        $parts = [
+            (string) ($pub['rr_publication_id'] ?? ''),
+            strtolower(trim((string) ($pub['title'] ?? ''))),
+            (string) ($pub['publication_year'] ?? ''),
+            strtolower(trim((string) ($pub['doi'] ?? ''))),
+            (string) ($pub['publication_type'] ?? ''),
+            (string) ($pub['source'] ?? ''),
+        ];
+
+        return hash('sha256', implode("\x1e", $parts));
+    }
+
+    /**
      * @param list<array<string,mixed>> $publications
      * @param array<string,string>      $decisions pub key => rr|skip
+     *
+     * @return array{inserted:int, updated:int, skipped_unchanged:int}
      */
-    public static function applyPublicationsToCvEntries(int $personnelId, array $publications, array $decisions): int
+    public static function applyPublicationsToCvEntries(int $personnelId, array $publications, array $decisions): array
     {
+        $stats = ['inserted' => 0, 'updated' => 0, 'skipped_unchanged' => 0];
+
         if ($publications === []) {
-            return 0;
+            return $stats;
         }
 
         $cvSectionModel = new CvSectionModel();
         if (!$cvSectionModel->db->tableExists('cv_sections')) {
-            return 0;
+            return $stats;
         }
 
         $section = $cvSectionModel->where('personnel_id', $personnelId)
@@ -220,7 +247,20 @@ class ResearchRecordCvSyncMerge
 
         $sectionId    = (int) ($section['id'] ?? 0);
         $cvEntryModel = new CvEntryModel();
-        $count        = 0;
+
+        $byRrId = [];
+        $byKey  = [];
+        foreach ($cvEntryModel->where('section_id', $sectionId)->findAll() as $row) {
+            $m = CvEntryModel::decodeMetadata($row['metadata'] ?? null);
+            $rid = (int) ($m['rr_publication_id'] ?? 0);
+            if ($rid > 0) {
+                $byRrId[$rid] = $row;
+            }
+            $ek = (string) ($m['sync_external_key'] ?? '');
+            if ($ek !== '') {
+                $byKey[$ek] = $row;
+            }
+        }
 
         foreach ($publications as $pub) {
             if (!is_array($pub)) {
@@ -234,25 +274,30 @@ class ResearchRecordCvSyncMerge
                 continue;
             }
 
+            $rrPid = (int) ($pub['rr_publication_id'] ?? 0);
             $existing = null;
-            foreach ($cvEntryModel->where('section_id', $sectionId)->findAll() as $row) {
-                $m = CvEntryModel::decodeMetadata($row['metadata'] ?? null);
-                if (($m['rr_publication_id'] ?? null) == ($pub['rr_publication_id'] ?? null)
-                    && ($pub['rr_publication_id'] ?? 0) > 0) {
-                    $existing = $row;
-                    break;
-                }
-                if (($m['sync_external_key'] ?? '') === $key) {
-                    $existing = $row;
-                    break;
+            if ($rrPid > 0 && isset($byRrId[$rrPid])) {
+                $existing = $byRrId[$rrPid];
+            } elseif (isset($byKey[$key])) {
+                $existing = $byKey[$key];
+            }
+
+            $fingerprint = self::publicationRrFingerprint($pub);
+            if ($existing !== null) {
+                $prevMeta = CvEntryModel::decodeMetadata($existing['metadata'] ?? null);
+                if (($prevMeta['rr_pull_fingerprint'] ?? '') === $fingerprint) {
+                    $stats['skipped_unchanged']++;
+
+                    continue;
                 }
             }
 
             $meta = [
-                'source'              => 'research_record',
-                'sync_external_key'   => $key,
-                'rr_publication_id'     => $pub['rr_publication_id'] ?? null,
-                'doi'                   => $pub['doi'] ?? null,
+                'source'                => 'research_record',
+                'sync_external_key'     => $key,
+                'rr_publication_id'       => $pub['rr_publication_id'] ?? null,
+                'doi'                     => $pub['doi'] ?? null,
+                'rr_pull_fingerprint'     => $fingerprint,
             ];
             $title = mb_substr((string) ($pub['title'] ?? ''), 0, 500);
             $year  = $pub['publication_year'] ?? null;
@@ -270,21 +315,31 @@ class ResearchRecordCvSyncMerge
                 'end_date'          => null,
                 'is_current'        => 0,
                 'description'       => $desc !== '' ? $desc : null,
-                'metadata'          => json_encode(array_filter($meta), JSON_UNESCAPED_UNICODE),
+                'metadata'          => json_encode(array_filter($meta, static fn ($v) => $v !== null && $v !== ''), JSON_UNESCAPED_UNICODE),
                 'visible_on_public' => 1,
             ];
 
             if ($existing !== null) {
                 $rowData['sort_order'] = (int) ($existing['sort_order'] ?? 0);
                 $cvEntryModel->update((int) $existing['id'], $rowData);
+                $stats['updated']++;
             } else {
                 $rowData['sort_order'] = $cvEntryModel->nextSortOrder($sectionId);
                 $cvEntryModel->insert($rowData);
+                $newId = (int) $cvEntryModel->getInsertID();
+                $stats['inserted']++;
+                $newRow = $cvEntryModel->find($newId);
+                if (is_array($newRow)) {
+                    $rid = (int) ($pub['rr_publication_id'] ?? 0);
+                    if ($rid > 0) {
+                        $byRrId[$rid] = $newRow;
+                    }
+                    $byKey[$key] = $newRow;
+                }
             }
-            $count++;
         }
 
-        return $count;
+        return $stats;
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Controllers\User;
 use App\Controllers\BaseController;
 use App\Libraries\CvBundleCanonical;
 use App\Libraries\CvProfile;
+use App\Libraries\ResearchRecordCvPull;
 use App\Libraries\ResearchRecordCvSyncClient;
 use App\Libraries\ResearchRecordCvSyncMerge;
 use App\Models\CvSyncLogModel;
@@ -40,14 +41,7 @@ class ResearchRecordSync extends BaseController
 
     private function canonicalEmailForPerson(array $person): string
     {
-        if (!empty($person['user_email'])) {
-            return CvProfile::normalizeEmail((string) $person['user_email']);
-        }
-        if (!empty($person['email'])) {
-            return CvProfile::normalizeEmail((string) $person['email']);
-        }
-
-        return $this->sessionEmail();
+        return ResearchRecordCvPull::canonicalEmailForPerson($person);
     }
 
     public function index()
@@ -62,13 +56,12 @@ class ResearchRecordSync extends BaseController
         }
 
         $researchApi = config(ResearchApi::class);
-        $configured  = $researchApi->baseUrl !== '';
 
         return view('user/profile/research_record_sync', [
-            'page_title'  => 'ซิงค์กับ Research Record',
+            'page_title'  => 'ดึง CV จาก Research Record → newScience',
             'person'      => $person,
             'sync_email'  => $this->canonicalEmailForPerson($person),
-            'api_configured' => $configured,
+            'api_configured' => $researchApi->syncConfigured(),
         ]);
     }
 
@@ -177,7 +170,7 @@ class ResearchRecordSync extends BaseController
             $merged = ResearchRecordCvSyncMerge::mergedCvBundle($choiceMap, $nsBundle, $rrBundle, $email);
             ResearchRecordCvSyncMerge::replaceNewScienceCvFromBundle($personnelId, $merged);
 
-            $pubCount = 0;
+            $pubStats = ['inserted' => 0, 'updated' => 0, 'skipped_unchanged' => 0];
             if (!empty($input['publications']) && is_array($input['publications'])) {
                 $pubDecisions = [];
                 foreach ($input['publication_choices'] ?? [] as $pc) {
@@ -185,7 +178,7 @@ class ResearchRecordSync extends BaseController
                         $pubDecisions[(string) $pc['id']] = (string) $pc['choice'];
                     }
                 }
-                $pubCount = ResearchRecordCvSyncMerge::applyPublicationsToCvEntries($personnelId, $input['publications'], $pubDecisions);
+                $pubStats = ResearchRecordCvSyncMerge::applyPublicationsToCvEntries($personnelId, $input['publications'], $pubDecisions);
             }
 
             $log = new CvSyncLogModel();
@@ -195,16 +188,32 @@ class ResearchRecordSync extends BaseController
                     'direction'         => 'apply_merged_to_ns',
                     'ns_content_hash'   => $nsBundle['content_hash'] ?? null,
                     'rr_content_hash'   => $rrBundle['content_hash'] ?? null,
-                    'decisions_json'    => json_encode(['decisions' => $decisions, 'orcid' => $choiceMap['orcid'] ?? null], JSON_UNESCAPED_UNICODE),
+                    'decisions_json'    => json_encode([
+                        'decisions'          => $decisions,
+                        'orcid'              => $choiceMap['orcid'] ?? null,
+                        'publications_stats' => $pubStats,
+                    ], JSON_UNESCAPED_UNICODE),
                     'created_at'        => date('Y-m-d H:i:s'),
                 ]);
             }
 
+            $pubChanged = $pubStats['inserted'] + $pubStats['updated'];
+            $msg        = 'บันทึกการซิงค์ลง newScience เรียบร้อย';
+            if ($pubChanged > 0 || $pubStats['skipped_unchanged'] > 0) {
+                $msg .= sprintf(
+                    ' (ผลงาน: เพิ่ม %d, อัปเดต %d, ข้ามที่ข้อมูลเท่าเดิม %d)',
+                    $pubStats['inserted'],
+                    $pubStats['updated'],
+                    $pubStats['skipped_unchanged']
+                );
+            }
+
             return $this->response->setJSON([
                 'success'            => true,
-                'message'            => 'บันทึกการซิงค์ลง newScience เรียบร้อย',
+                'message'            => $msg,
                 'merged_hash'        => $merged['content_hash'] ?? '',
-                'publications_saved' => $pubCount,
+                'publications_saved' => $pubChanged,
+                'publications_stats' => $pubStats,
             ]);
         } catch (\Throwable $e) {
             log_message('error', 'ResearchRecordSync::apply ' . $e->getMessage());
@@ -225,33 +234,22 @@ class ResearchRecordSync extends BaseController
         }
 
         $personnelId = (int) ($person['id'] ?? 0);
-        $email       = $this->canonicalEmailForPerson($person);
+        $email        = $this->canonicalEmailForPerson($person);
+        $result       = ResearchRecordCvPull::run($personnelId, $email, ResearchRecordCvPull::TRIGGER_MANUAL);
 
-        $nsBundle = CvBundleCanonical::buildFromNewScience($personnelId, $email);
-        $rr       = ResearchRecordCvSyncClient::fetchCvBundle($email);
-        if (!$rr['success'] || empty($rr['bundle'])) {
-            return $this->response->setJSON(['success' => false, 'message' => $rr['message'] ?? 'ดึงจาก RR ไม่สำเร็จ']);
+        if (! $result['success']) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => $result['message'] ?? 'ดึงจาก RR ไม่สำเร็จ',
+            ]);
         }
 
-        try {
-            ResearchRecordCvSyncMerge::replaceNewScienceCvFromBundle($personnelId, $rr['bundle']);
-
-            $log = new CvSyncLogModel();
-            if ($log->db->tableExists('cv_sync_log')) {
-                $log->insert([
-                    'personnel_id'    => $personnelId,
-                    'direction'       => 'pull_all_rr_to_ns',
-                    'ns_content_hash' => $nsBundle['content_hash'] ?? null,
-                    'rr_content_hash' => $rr['bundle']['content_hash'] ?? null,
-                    'decisions_json'  => null,
-                    'created_at'      => date('Y-m-d H:i:s'),
-                ]);
-            }
-
-            return $this->response->setJSON(['success' => true, 'message' => 'แทนที่ CV บน newScience ด้วยข้อมูลจาก Research Record แล้ว']);
-        } catch (\Throwable $e) {
-            return $this->response->setJSON(['success' => false, 'message' => $e->getMessage()]);
-        }
+        return $this->response->setJSON([
+            'success'            => true,
+            'message'            => $result['message'] ?? '',
+            'publications_saved' => $result['publications_saved'] ?? 0,
+            'publications_stats' => $result['publications_stats'] ?? [],
+        ]);
     }
 
     public function pushAll()

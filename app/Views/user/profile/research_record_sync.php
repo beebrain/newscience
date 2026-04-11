@@ -9,10 +9,10 @@ $email = $sync_email ?? '';
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <div class="flex items-center gap-2 mb-1">
-                <div class="w-1 h-6 bg-slate-600 rounded-full"></div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-800">ซิงค์ CV กับ Research Record</h1>
+                <div class="w-1 h-6 bg-emerald-600 rounded-full"></div>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-800">ดึงจาก Research Record → newScience</h1>
             </div>
-            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — เลือกฝั่งที่ชนะต่อแถวแล้วบันทึกลง newScience หรือใช้ดึง/ส่งทั้งหมด</p>
+            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — <strong class="text-gray-700">แนวหลัก:</strong> ดึง snapshot CV และผลงานจาก RR ลง newScience ปุ่มเปรียบเทียบใช้เมื่อต้องการเลือกทีละแถว การส่งกลับไป RR เป็นทางเลือกเสริม</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="<?= base_url('dashboard/profile') ?>" class="text-sm px-3 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">โปรไฟล์</a>
@@ -29,11 +29,23 @@ $email = $sync_email ?? '';
     <?php endif; ?>
 
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4">
-        <div class="flex flex-wrap gap-2">
-            <button type="button" id="rrsync-btn-compare" class="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-50" <?= $apiOk ? '' : 'disabled' ?>>โหลดเปรียบเทียบ</button>
-            <button type="button" id="rrsync-btn-pull" class="px-4 py-2 rounded-lg border border-amber-500 text-amber-800 text-sm font-semibold hover:bg-amber-50 disabled:opacity-50" <?= $apiOk ? '' : 'disabled' ?>>ดึงทั้งหมดจาก RR → NS</button>
-            <button type="button" id="rrsync-btn-push" class="px-4 py-2 rounded-lg border border-blue-600 text-blue-800 text-sm font-semibold hover:bg-blue-50 disabled:opacity-50" <?= $apiOk ? '' : 'disabled' ?>>ส่งทั้งหมดจาก NS → RR</button>
+        <?php if ($apiOk): ?>
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-950">
+                <p class="font-semibold mb-1">แนวทางหลัก: Research Record → newScience</p>
+                <p class="text-emerald-900/90">กด <strong>ดึงทั้งหมดจาก RR → NS</strong> เพื่อแทนที่ CV บน newScience ด้วยข้อมูลล่าสุดจาก RR และนำเข้าผลงานตีพิมพ์ (รายการที่ข้อมูลเท่าเดิมจะไม่เขียนทับซ้ำ)</p>
+            </div>
+        <?php endif; ?>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="rrsync-btn-pull" class="px-4 py-2.5 rounded-lg bg-emerald-700 text-white text-sm font-semibold hover:bg-emerald-800 disabled:opacity-50 shadow-sm" <?= $apiOk ? '' : 'disabled' ?>>ดึงทั้งหมดจาก RR → NS</button>
+            <button type="button" id="rrsync-btn-compare" class="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50" <?= $apiOk ? '' : 'disabled' ?>>เปรียบเทียบแล้วเลือกรายแถว</button>
         </div>
+
+        <div class="rounded-lg border border-dashed border-gray-200 bg-gray-50/60 px-4 py-3">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">ทางเลือกเสริม — ส่งจาก newScience ไป RR</p>
+            <button type="button" id="rrsync-btn-push" class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-white disabled:opacity-50" <?= $apiOk ? '' : 'disabled' ?>>ส่งทั้งหมด NS → RR</button>
+        </div>
+
         <p id="rrsync-status" class="text-sm text-gray-600"></p>
 
         <div id="rrsync-orcid-row" class="hidden border-t border-gray-100 pt-4">
@@ -58,11 +70,11 @@ $email = $sync_email ?? '';
         </div>
 
         <div id="rrsync-pub-wrap" class="hidden border-t border-gray-100 pt-4">
-            <p class="text-xs font-semibold text-gray-500 uppercase mb-2">ผลงานตีพิมพ์ (นำเข้าเป็นรายการ CV ใต้หัวข้อ research)</p>
+            <p class="text-xs font-semibold text-gray-500 uppercase mb-2">ผลงานจาก RR (เลือกนำเข้าเป็นรายการ CV ใต้หัวข้อ research)</p>
             <div id="rrsync-pub-list" class="max-h-48 overflow-y-auto text-sm space-y-1"></div>
         </div>
 
-        <button type="button" id="rrsync-btn-apply" class="hidden px-5 py-2.5 rounded-lg bg-yellow-500 text-gray-900 font-semibold hover:bg-yellow-600">บันทึกการเลือกลง newScience</button>
+        <button type="button" id="rrsync-btn-apply" class="hidden px-5 py-2.5 rounded-lg bg-amber-500 text-gray-900 font-semibold hover:bg-amber-600">บันทึกการเลือกลง newScience (รวมผลงานจาก RR ที่ติ๊ก)</button>
     </div>
 </div>
 <?= $this->endSection() ?>
@@ -81,7 +93,7 @@ $email = $sync_email ?? '';
         if (row.kind === 'publication') return 'rr';
         if (row.has_rr && !row.has_ns) return 'rr';
         if (row.has_ns && !row.has_rr) return 'ns';
-        return 'ns';
+        return 'rr';
     }
 
     function renderTable() {
@@ -175,7 +187,7 @@ $email = $sync_email ?? '';
     });
 
     document.getElementById('rrsync-btn-pull') && document.getElementById('rrsync-btn-pull').addEventListener('click', async function () {
-        if (!confirm('แทนที่ CV ทั้งหมดบน newScience ด้วยข้อมูลจาก Research Record?')) return;
+        if (!confirm('แทนที่ CV ทั้งหมดบน newScience ด้วยข้อมูลจาก Research Record และนำเข้าผลงานตีพิมพ์จาก RR (ถ้ามี)?')) return;
         setStatus('กำลังดึง…');
         var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/pull-all') ?>', {});
         setStatus(data.message || (data.success ? 'สำเร็จ' : 'ผิดพลาด'));

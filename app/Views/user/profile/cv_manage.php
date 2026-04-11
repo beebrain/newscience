@@ -23,12 +23,23 @@ helper(['form', 'security']);
 
 <?= $this->section('content') ?>
 <?php
-$cvSections = $cv_sections ?? [];
-$csrfName   = csrf_token();
-$csrfHash   = csrf_hash();
+$cvSections                 = $cv_sections ?? [];
+$csrfName                   = csrf_token();
+$csrfHash                   = csrf_hash();
+$research_sync_configured   = $research_sync_configured ?? false;
+$rr_sync_notice             = $rr_sync_notice ?? null;
 ?>
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <?php if (is_array($rr_sync_notice) && ! empty($rr_sync_notice['text'])): ?>
+        <div class="rounded-xl px-4 py-3 text-sm border <?= ($rr_sync_notice['type'] ?? '') === 'success' ? 'bg-emerald-50 text-emerald-900 border-emerald-200' : 'bg-amber-50 text-amber-900 border-amber-200' ?>">
+            <p class="font-semibold"><?= esc($rr_sync_notice['text']) ?></p>
+            <?php if (! empty($rr_sync_notice['detail'])): ?>
+                <p class="mt-1 text-xs opacity-90"><?= esc($rr_sync_notice['detail']) ?></p>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
 
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -38,9 +49,18 @@ $csrfHash   = csrf_hash();
             </div>
             <p class="text-sm text-gray-500 ml-3">แบบเดียวกับ Research Record — หัวข้อกำหนดเอง ลากเรียงได้ รายการมีองค์กร สถานที่ วันที่</p>
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-2 items-center">
             <a href="<?= base_url('dashboard/profile') ?>" class="text-sm px-3 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">โปรไฟล์</a>
-            <a href="<?= base_url('dashboard/profile/research-record-sync') ?>" class="text-sm px-3 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50">ซิงค์ RR</a>
+            <?php if ($research_sync_configured): ?>
+                <form method="post" action="<?= base_url('dashboard/profile/cv/sync-from-rr') ?>" class="inline"
+                      onsubmit="return confirm('ดึง CV และผลงานจาก Research Record มาแทนที่ข้อมูลใน newScience ตอนนี้?');">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="text-sm px-3 py-2 rounded-lg bg-emerald-700 text-white font-semibold hover:bg-emerald-800">
+                        ดึงจาก RR ตอนนี้
+                    </button>
+                </form>
+            <?php endif; ?>
+            <a href="<?= base_url('dashboard/profile/research-record-sync') ?>" class="text-sm px-3 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50">เปรียบเทียบ / ดึงแบบละเอียด</a>
             <?php
             $pubEmail = '';
             $p = $person ?? [];

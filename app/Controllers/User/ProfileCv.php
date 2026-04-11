@@ -5,10 +5,13 @@ namespace App\Controllers\User;
 use App\Controllers\BaseController;
 use App\Libraries\CvProfile;
 use App\Libraries\OrcidPublicRecord;
+use App\Libraries\ResearchRecordCvPull;
 use App\Libraries\StaffImageUpload;
 use App\Models\CvEntryModel;
 use App\Models\CvSectionModel;
 use App\Models\PersonnelModel;
+use Config\ResearchApi;
+use Config\ResearchRecordSync as ResearchRecordSyncConfig;
 
 /**
  * จัดการ CV แบบ researchRecord: cv_sections + cv_entries (ผูก personnel + email)
@@ -128,15 +131,80 @@ class ProfileCv extends BaseController
             return redirect()->to(base_url('dashboard/profile'))->with('error', 'ระบบ CV ยังไม่พร้อม — รัน php spark migrate');
         }
 
+        $researchApi              = config(ResearchApi::class);
+        $researchSyncConfigured   = $researchApi->syncConfigured();
+        $rrSyncNotice             = null;
+
+        if ($researchSyncConfigured) {
+            $syncCfg = config(ResearchRecordSyncConfig::class);
+            $trigger = ResearchRecordCvPull::shouldAutoPull($personnelId, $syncCfg->autoPullMaxAgeDays);
+            if ($trigger !== false) {
+                $canonical = ResearchRecordCvPull::canonicalEmailForPerson($person);
+                $pullRes     = ResearchRecordCvPull::run($personnelId, $canonical, $trigger);
+                if ($pullRes['success']) {
+                    $rrSyncNotice = [
+                        'type' => 'success',
+                        'text' => $trigger === ResearchRecordCvPull::TRIGGER_AUTO_EMPTY
+                            ? 'ดึง CV จาก Research Record ลง newScience อัตโนมัติแล้ว (ยังไม่มีข้อมูลในระบบ)'
+                            : 'อัปเดต CV จาก Research Record อัตโนมัติแล้ว (ครั้งดึงล่าสุดเกิน ' . $syncCfg->autoPullMaxAgeDays . ' วัน)',
+                        'detail' => $pullRes['message'] ?? '',
+                    ];
+                } else {
+                    $rrSyncNotice = [
+                        'type'   => 'warning',
+                        'text'   => 'ดึงจาก Research Record อัตโนมัติไม่สำเร็จ',
+                        'detail' => $pullRes['message'] ?? '',
+                    ];
+                }
+            }
+        }
+
         $cvSections = $this->loadCvSectionsWithEntries($personnelId);
         $personnelModel = new PersonnelModel();
 
         return view('user/profile/cv_manage', [
-            'page_title'          => 'จัดการ CV',
-            'person'              => $person,
-            'cv_sections'         => $cvSections,
-            'cv_photo_supported'  => $personnelModel->db->fieldExists('cv_profile_image', 'personnel'),
+            'page_title'                 => 'จัดการ CV',
+            'person'                     => $person,
+            'cv_sections'                => $cvSections,
+            'cv_photo_supported'         => $personnelModel->db->fieldExists('cv_profile_image', 'personnel'),
+            'research_sync_configured'   => $researchSyncConfigured,
+            'rr_sync_notice'             => $rrSyncNotice,
         ]);
+    }
+
+    /**
+     * POST — ดึง CV + ผลงานจาก Research Record ลง newScience (manual)
+     */
+    public function syncFromResearchRecord()
+    {
+        if (! $this->request->is('post')) {
+            return redirect()->to(base_url('dashboard/profile/cv'));
+        }
+
+        $personnelId = $this->personnelIdOrRedirect();
+        if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $personnelId;
+        }
+
+        $personnelModel = new PersonnelModel();
+        $person          = $personnelModel->find($personnelId);
+        if ($person === null) {
+            return redirect()->to(base_url('dashboard/profile'))->with('error', 'ไม่พบข้อมูลบุคลากร');
+        }
+
+        $researchApi = config(ResearchApi::class);
+        if (! $researchApi->syncConfigured()) {
+            return redirect()->back()->with('error', 'ยังไม่ได้ตั้งค่า Research API ใน .env (RESEARCH_API_BASE_URL, RESEARCH_API_KEY)');
+        }
+
+        $canonical = ResearchRecordCvPull::canonicalEmailForPerson($person);
+        $result    = ResearchRecordCvPull::run($personnelId, $canonical, ResearchRecordCvPull::TRIGGER_MANUAL);
+
+        if ($result['success']) {
+            return redirect()->back()->with('success', $result['message'] ?? 'ดึงจาก Research Record เรียบร้อย');
+        }
+
+        return redirect()->back()->with('error', $result['message'] ?? 'ดึงจาก Research Record ไม่สำเร็จ');
     }
 
     /**

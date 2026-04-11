@@ -11,7 +11,7 @@ use Config\ResearchApi;
  *
  * Requires in .env:
  *   RESEARCH_API_BASE_URL  = base URL of research record app (no trailing slash)
- *   RESEARCH_API_KEY       = API key (default: URU_RESEARCH)
+ *   RESEARCH_API_KEY       = API key (required; ต้องตรงกับฝั่ง Research Record)
  *   RESEARCH_API_FACULTY_ID or RESEARCH_API_FACULTY_CODE = faculty identifier
  */
 class FacultyPersonnelController extends BaseController

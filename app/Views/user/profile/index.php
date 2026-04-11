@@ -42,7 +42,7 @@ $publicCvUrl = $public_cv_url ?? null;
                 <a href="<?= base_url('dashboard/profile/research-record-sync') ?>"
                    class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800 font-semibold hover:bg-gray-50 transition-colors mb-3">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    ซิงค์ CV กับ Research Record
+                    ดึง CV จาก Research Record → newScience
                 </a>
                 <a href="<?= base_url('dashboard/profile/cv') ?>"
                    class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold transition-colors mb-3">
