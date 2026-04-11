@@ -34,10 +34,18 @@ class ResearchRecordCvPull
     }
 
     /**
-     * ไม่มี section หรือทุก section ไม่มี entry
+     * ยังไม่เคยดึงจาก RR สำเร็จ (ไม่มีแถว pull ใน cv_sync_log) และใน NS ไม่มี CV จริงๆ
+     * (ไม่มี section หรือทุก section ไม่มี entry)
+     *
+     * ถ้าเคยดึงจาก RR แล้ว แม้ผู้ใช้จะลบหัวข้อทั้งหมด จะไม่ถือว่าเป็น "initial" — จะไม่ดึงอัตโนมัติจนกว่าจะ stale ตามเวลา
+     * หรือผู้ใช้กดดึงเอง
      */
     public static function needsInitialPull(int $personnelId): bool
     {
+        if (self::lastSuccessfulRrPullAt($personnelId) !== null) {
+            return false;
+        }
+
         $sectionModel = new CvSectionModel();
         if (! $sectionModel->db->tableExists('cv_sections')) {
             return false;

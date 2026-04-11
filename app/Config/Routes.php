@@ -90,6 +90,7 @@ $routes->get('/dashboard/profile/cv', 'User\ProfileCv::cv', ['filter' => 'logged
 $routes->post('/dashboard/profile/cv/sync-from-rr', 'User\ProfileCv::syncFromResearchRecord', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/photo', 'User\ProfileCv::saveCvPhoto', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/photo/remove', 'User\ProfileCv::removeCvPhoto', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/narrative', 'User\ProfileCv::saveCvNarrative', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/section/save', 'User\ProfileCv::saveCvSection', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/section/reorder', 'User\ProfileCv::reorderCvSections', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/section/toggle/(:num)', 'User\ProfileCv::toggleCvSectionPublic/$1', ['filter' => 'loggedin']);
@@ -97,6 +98,7 @@ $routes->post('/dashboard/profile/cv/section/delete/(:num)', 'User\ProfileCv::de
 $routes->post('/dashboard/profile/cv/entry/save', 'User\ProfileCv::saveCvEntry', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/cv/entry/(:num)', 'User\ProfileCv::getCvEntry/$1', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/entry/delete/(:num)', 'User\ProfileCv::deleteCvEntry/$1', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/entry/toggle/(:num)', 'User\ProfileCv::toggleCvEntryPublic/$1', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/entry/reorder', 'User\ProfileCv::reorderCvEntries', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/orcid/import', 'User\ProfileCv::importOrcidCv', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/research-record-sync', 'User\ResearchRecordSync::index', ['filter' => 'loggedin']);

@@ -4,6 +4,7 @@ namespace App\Controllers\User;
 
 use App\Controllers\BaseController;
 use App\Libraries\CvProfile;
+use App\Libraries\RrPublicationType;
 use App\Libraries\OrcidPublicRecord;
 use App\Libraries\ResearchRecordCvPull;
 use App\Libraries\StaffImageUpload;
@@ -72,9 +73,7 @@ class ProfileCv extends BaseController
 
         foreach ($sections as &$section) {
             $entries = $cvEntryModel->where('section_id', (int) $section['id'])
-                ->orderBy('sort_order', 'ASC')
-                ->orderBy('start_date', 'DESC')
-                ->orderBy('id', 'ASC')
+                ->orderedForCvDisplay()
                 ->findAll();
             foreach ($entries as &$entry) {
                 $entry['metadata_array'] = CvEntryModel::decodeMetadata($entry['metadata'] ?? null);
@@ -131,18 +130,27 @@ class ProfileCv extends BaseController
             return redirect()->to(base_url('dashboard/profile'))->with('error', 'ระบบ CV ยังไม่พร้อม — รัน php spark migrate');
         }
 
-        $researchApi              = config(ResearchApi::class);
-        $researchSyncConfigured   = $researchApi->syncConfigured();
-        $rrSyncNotice             = null;
+        $researchApi            = config(ResearchApi::class);
+        $researchSyncConfigured = $researchApi->syncConfigured();
+        $syncCfg                = config(ResearchRecordSyncConfig::class);
+        $rrSyncNotice           = null;
+        $rrLastPullFormatted    = null;
 
         if ($researchSyncConfigured) {
-            $syncCfg = config(ResearchRecordSyncConfig::class);
+            $lastPull = ResearchRecordCvPull::lastSuccessfulRrPullAt($personnelId);
+            if ($lastPull !== null) {
+                $rrLastPullFormatted = $lastPull->format('d/m/Y H:i');
+            }
+        }
+
+        if ($researchSyncConfigured) {
             $trigger = ResearchRecordCvPull::shouldAutoPull($personnelId, $syncCfg->autoPullMaxAgeDays);
             if ($trigger !== false) {
                 $canonical = ResearchRecordCvPull::canonicalEmailForPerson($person);
                 $pullRes     = ResearchRecordCvPull::run($personnelId, $canonical, $trigger);
                 if ($pullRes['success']) {
-                    $rrSyncNotice = [
+                    $rrLastPullFormatted = (new \DateTimeImmutable())->format('d/m/Y H:i');
+                    $rrSyncNotice        = [
                         'type' => 'success',
                         'text' => $trigger === ResearchRecordCvPull::TRIGGER_AUTO_EMPTY
                             ? 'ดึง CV จาก Research Record ลง newScience อัตโนมัติแล้ว (ยังไม่มีข้อมูลในระบบ)'
@@ -161,6 +169,11 @@ class ProfileCv extends BaseController
 
         $cvSections = $this->loadCvSectionsWithEntries($personnelId);
         $personnelModel = new PersonnelModel();
+        helper('cv');
+
+        $tabRaw = strtolower((string) $this->request->getGet('tab'));
+        $cvEditTabs = ['narrative', 'photo', 'orcid', 'sections'];
+        $cvEditActiveTab = in_array($tabRaw, $cvEditTabs, true) ? $tabRaw : 'narrative';
 
         return view('user/profile/cv_manage', [
             'page_title'                 => 'จัดการ CV',
@@ -169,7 +182,44 @@ class ProfileCv extends BaseController
             'cv_photo_supported'         => $personnelModel->db->fieldExists('cv_profile_image', 'personnel'),
             'research_sync_configured'   => $researchSyncConfigured,
             'rr_sync_notice'             => $rrSyncNotice,
+            'rr_last_pull_at'            => $rrLastPullFormatted,
+            'rr_auto_pull_max_age_days'  => $researchSyncConfigured ? $syncCfg->autoPullMaxAgeDays : null,
+            'cv_edit_active_tab'         => $cvEditActiveTab,
         ]);
+    }
+
+    /**
+     * POST — บันทึกข้อความแนะนำ / การศึกษา (สรุป) / ความเชี่ยวชาญ (personnel) สำหรับหน้า CV สาธารณะ
+     */
+    public function saveCvNarrative()
+    {
+        if (! $this->request->is('post')) {
+            return redirect()->to(base_url('dashboard/profile/cv'));
+        }
+
+        $personnelId = $this->personnelIdOrRedirect();
+        if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $personnelId;
+        }
+
+        $rules = [
+            'bio'       => 'permit_empty|string|max_length[20000]',
+            'education' => 'permit_empty|string|max_length[20000]',
+            'expertise' => 'permit_empty|string|max_length[5000]',
+        ];
+
+        if (! $this->validate($rules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        $personnelModel = new PersonnelModel();
+        $personnelModel->update($personnelId, [
+            'bio'       => (string) $this->request->getPost('bio'),
+            'education' => (string) $this->request->getPost('education'),
+            'expertise' => (string) $this->request->getPost('expertise'),
+        ]);
+
+        return redirect()->back()->with('success', 'บันทึกการแนะนำข้อมูลและความเชี่ยวชาญแล้ว');
     }
 
     /**
@@ -356,10 +406,47 @@ class ProfileCv extends BaseController
         $new = empty($section['visible_on_public']) ? 1 : 0;
         $cvSectionModel->update($sectionId, ['visible_on_public' => $new]);
 
+        if ($new === 0) {
+            $cvEntryModel = new CvEntryModel();
+            $cvEntryModel->where('section_id', $sectionId)->update(null, ['visible_on_public' => 0]);
+        }
+
         return $this->response->setJSON([
-            'success' => true,
+            'success'             => true,
+            'visible_on_public'   => $new,
+            'entries_set_private' => $new === 0,
+            'message'             => $new
+                ? 'แสดงในหน้าสาธารณะแล้ว'
+                : 'ซ่อนหัวข้อจากหน้าสาธารณะ และปิดการแสดงสาธารณะของรายการย่อยทั้งหมดในหัวข้อนี้แล้ว',
+        ]);
+    }
+
+    public function toggleCvEntryPublic(int $entryId)
+    {
+        $personnelId = $this->personnelIdOrRedirect();
+        if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $cvEntryModel   = new CvEntryModel();
+        $entry          = $cvEntryModel->find($entryId);
+        if (!$entry) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบรายการ']);
+        }
+
+        $cvSectionModel = new CvSectionModel();
+        $section        = $cvSectionModel->find((int) $entry['section_id']);
+        if (!$section || (int) $section['personnel_id'] !== $personnelId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์แก้ไขรายการนี้']);
+        }
+
+        $new = empty($entry['visible_on_public']) ? 1 : 0;
+        $cvEntryModel->update($entryId, ['visible_on_public' => $new]);
+
+        return $this->response->setJSON([
+            'success'           => true,
             'visible_on_public' => $new,
-            'message' => $new ? 'แสดงในหน้าสาธารณะแล้ว' : 'ซ่อนจากหน้าสาธารณะแล้ว',
+            'message'           => $new ? 'แสดงรายการนี้ในหน้าสาธารณะแล้ว' : 'ซ่อนรายการนี้จากหน้าสาธารณะแล้ว',
         ]);
     }
 
@@ -486,6 +573,19 @@ class ProfileCv extends BaseController
         } else {
             unset($meta['amount']);
         }
+
+        $secType = (string) ($section['type'] ?? '');
+        if (in_array($secType, ['research', 'articles'], true)) {
+            $ptype = trim((string) $this->request->getPost('publication_type'));
+            if ($ptype === '') {
+                unset($meta['rr_publication_type']);
+            } elseif (RrPublicationType::isValidPublicationTypeCode($ptype)) {
+                $meta['rr_publication_type'] = mb_substr($ptype, 0, 80);
+            }
+        } else {
+            unset($meta['rr_publication_type']);
+        }
+
         $metadataJson = $meta !== [] ? json_encode($meta, JSON_UNESCAPED_UNICODE) : null;
 
         $postSort = (int) ($this->request->getPost('entry_sort_order') ?? 0);
@@ -563,6 +663,7 @@ class ProfileCv extends BaseController
 
         $entry['metadata_array'] = CvEntryModel::decodeMetadata($entry['metadata'] ?? null);
         $entry['entry_url']      = (string) ($entry['metadata_array']['url'] ?? $entry['metadata_array']['legacy_url'] ?? '');
+        $entry['publication_type'] = (string) ($entry['metadata_array']['rr_publication_type'] ?? '');
         foreach (['start_date', 'end_date'] as $df) {
             if (!empty($entry[$df]) && strlen((string) $entry[$df]) > 10) {
                 $entry[$df] = substr((string) $entry[$df], 0, 10);

@@ -63,9 +63,7 @@ class PersonnelCvController extends BaseController
             foreach ($sections as $section) {
                 $entries = $cvEntryModel->where('section_id', (int) $section['id'])
                     ->where('visible_on_public', 1)
-                    ->orderBy('sort_order', 'ASC')
-                    ->orderBy('start_date', 'DESC')
-                    ->orderBy('id', 'ASC')
+                    ->orderedForCvDisplay()
                     ->findAll();
 
                 if ($entries === []) {
@@ -84,6 +82,8 @@ class PersonnelCvController extends BaseController
                 ];
             }
         }
+
+        helper('cv');
 
         $data = [
             'settings'         => $settings,

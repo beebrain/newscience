@@ -292,19 +292,18 @@ class ResearchRecordCvSyncMerge
                 }
             }
 
-            $meta = [
-                'source'                => 'research_record',
-                'sync_external_key'     => $key,
-                'rr_publication_id'       => $pub['rr_publication_id'] ?? null,
-                'doi'                     => $pub['doi'] ?? null,
-                'rr_pull_fingerprint'     => $fingerprint,
+            $pubTypeRaw = trim((string) ($pub['publication_type'] ?? ''));
+            $meta       = [
+                'source'              => 'research_record',
+                'sync_external_key'   => $key,
+                'rr_publication_id'   => $pub['rr_publication_id'] ?? null,
+                'doi'                   => $pub['doi'] ?? null,
+                'rr_pull_fingerprint'   => $fingerprint,
+                'rr_publication_type'   => $pubTypeRaw !== '' ? $pubTypeRaw : null,
             ];
             $title = mb_substr((string) ($pub['title'] ?? ''), 0, 500);
             $year  = $pub['publication_year'] ?? null;
-            $desc  = trim(implode("\n", array_filter([
-                ($pub['publication_type'] ?? '') !== '' ? 'ประเภท: ' . $pub['publication_type'] : '',
-                ($pub['source'] ?? '') !== '' ? 'แหล่ง: ' . $pub['source'] : '',
-            ])));
+            $desc  = trim((string) ($pub['source'] ?? '') !== '' ? 'แหล่ง: ' . trim((string) $pub['source']) : '');
 
             $rowData = [
                 'section_id'        => $sectionId,
@@ -482,8 +481,15 @@ class ResearchRecordCvSyncMerge
         if ($e === null) {
             return '—';
         }
+        $meta = $e['metadata'] ?? [];
+        $pt   = '';
+        if (is_array($meta) && ! empty($meta['rr_publication_type'])) {
+            $pt = RrPublicationType::labelTh((string) $meta['rr_publication_type']);
+        }
 
-        return trim(($e['title'] ?? '') . ' | ' . ($e['organization'] ?? '') . ' | ' . (string) ($e['start_date'] ?? ''));
+        $base = trim(($e['title'] ?? '') . ' | ' . ($e['organization'] ?? '') . ' | ' . (string) ($e['start_date'] ?? ''));
+
+        return $pt !== '' ? $base . ' | ประเภท: ' . $pt : $base;
     }
 
     /**
