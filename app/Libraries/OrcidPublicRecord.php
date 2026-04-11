@@ -2,8 +2,6 @@
 
 namespace App\Libraries;
 
-use Config\Services;
-
 /**
  * อ่านข้อมูลสาธารณะจาก ORCID Public API v3.0 (ไม่ต้อง OAuth)
  *
@@ -36,11 +34,10 @@ class OrcidPublicRecord
         $url = 'https://pub.orcid.org/v3.0/' . rawurlencode($orcidId);
 
         try {
-            $client = Services::curlrequest([
+            $response = HttpTransport::get($url, [
                 'timeout'     => 30,
                 'http_errors' => false,
-            ]);
-            $response = $client->get($url, [
+            ], [
                 'headers' => [
                     'Accept' => 'application/json',
                 ],

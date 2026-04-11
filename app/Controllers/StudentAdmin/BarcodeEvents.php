@@ -119,6 +119,9 @@ class BarcodeEvents extends BaseController
             $headers['ngrok-skip-browser-warning'] = 'true';
         }
         try {
+            if (! \App\Libraries\HttpTransport::curlAvailable()) {
+                return ['success' => false, 'codes' => [], 'error' => 'เซิร์ฟเวอร์ไม่มี PHP extension curl — เปิดใช้ php-curl หรือใช้นำเข้าแบบ CSV/TXT/JSON แทน'];
+            }
             $client = \Config\Services::curlrequest();
             $response = $client->request('POST', $config->url, [
                 'multipart' => $multipart,
@@ -315,13 +318,12 @@ class BarcodeEvents extends BaseController
             $n8n = config(N8n::class);
             if ($n8n->enabled && $n8n->baseUrl !== '' && $n8n->webhookPath !== '') {
                 $url = rtrim($n8n->baseUrl, '/') . '/' . ltrim($n8n->webhookPath, '/');
-                $client = \Config\Services::curlrequest();
                 $opts = ['timeout' => 10];
                 if ($n8n->apiKey !== '') {
                     $opts['headers'] = ['Authorization' => 'Bearer ' . $n8n->apiKey];
                 }
                 try {
-                    $response = $client->get($url, $opts);
+                    $response = \App\Libraries\HttpTransport::get($url, ['timeout' => 10], $opts);
                     if ($response->getStatusCode() === 200) {
                         $body = $response->getBody();
                         $decoded = json_decode($body, true);

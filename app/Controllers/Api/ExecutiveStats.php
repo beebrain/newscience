@@ -19,6 +19,7 @@ use App\Models\BarcodeEventModel;
 use App\Models\BarcodeModel;
 use App\Models\Edoc\EdoctitleModel;
 use App\Models\PageViewModel;
+use App\Libraries\HttpTransport;
 use CodeIgniter\API\ResponseTrait;
 use Config\ResearchApi;
 
@@ -758,7 +759,6 @@ class ExecutiveStats extends BaseController
 
         $allPublications = [];
         $countByEmail = [];
-        $client = service('curlrequest', ['timeout' => 8]);
 
         foreach ($personnelWithEmail as $p) {
             $email = $p['user_email'];
@@ -767,7 +767,7 @@ class ExecutiveStats extends BaseController
             }
             $url = $researchApi->baseUrl . '/api/public/publications-by-email?' . http_build_query(['email' => $email]);
             try {
-                $response = $client->get($url, [
+                $response = HttpTransport::get($url, ['timeout' => 8], [
                     'headers' => [
                         'X-API-KEY' => $researchApi->apiKey,
                         'Accept' => 'application/json',

@@ -32,8 +32,7 @@ class FacultyPersonnelApi
 
         $url = $researchApi->baseUrl . '/api/public/faculty-personnel?' . http_build_query($query);
 
-        $client   = service('curlrequest', ['timeout' => 10]);
-        $response = $client->get($url, [
+        $response = HttpTransport::get($url, ['timeout' => 10], [
             'headers' => [
                 'X-API-KEY' => $researchApi->apiKey,
                 'Accept'    => 'application/json',

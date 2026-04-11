@@ -34,10 +34,9 @@ class ResearchRecordCvSyncClient
         }
 
         $url = self::buildUrl('cv-bundle-by-email', $canonicalEmail);
-        $client = service('curlrequest', ['timeout' => 60]);
 
         try {
-            $response = $client->post($url, [
+            $response = HttpTransport::post($url, ['timeout' => 60], [
                 'headers' => [
                     'X-API-KEY'    => $researchApi->apiKey,
                     'Accept'       => 'application/json',
@@ -86,11 +85,10 @@ class ResearchRecordCvSyncClient
             return ['success' => false, 'error' => 'NOT_CONFIGURED', 'message' => 'ตั้ง RESEARCH_API_KEY ใน .env'];
         }
 
-        $url    = self::buildUrl($path, $canonicalEmail);
-        $client = service('curlrequest', ['timeout' => 45]);
+        $url = self::buildUrl($path, $canonicalEmail);
 
         try {
-            $response = $client->get($url, [
+            $response = HttpTransport::get($url, ['timeout' => 45], [
                 'headers' => [
                     'X-API-KEY' => $researchApi->apiKey,
                     'Accept'    => 'application/json',
