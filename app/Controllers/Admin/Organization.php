@@ -10,6 +10,7 @@ use App\Models\OrganizationUnitModel;
 use App\Models\UserModel;
 use App\Libraries\SeedEnsure;
 use App\Libraries\OrganizationRoles;
+use App\Libraries\StaffImageUpload;
 use CodeIgniter\Database\Exceptions\DataException;
 
 class Organization extends BaseController
@@ -455,59 +456,6 @@ class Organization extends BaseController
         return $options;
     }
 
-    /** โฟลเดอร์อัปโหลดรูปบุคลากร (อยู่ใต้ writable) */
-    private static function staffUploadPath(): string
-    {
-        return rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'staff';
-    }
-
-    /** บันทึก path รูปที่อัปโหลด (เช่น staff/filename.jpg) หรือ null */
-    private function handleStaffImageUpload(): ?string
-    {
-        // LOG: Start upload process
-        log_message('info', 'Organization::handleStaffImageUpload called');
-
-        $file = $this->request->getFile('image');
-        if (!$file || !$file->isValid() || $file->getError() === UPLOAD_ERR_NO_FILE) {
-            log_message('info', 'No valid file uploaded or upload error: ' . ($file ? $file->getError() : 'No file object'));
-            return null;
-        }
-        $validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!in_array($file->getMimeType(), $validTypes)) {
-            log_message('error', 'Invalid mime type: ' . $file->getMimeType());
-            return null;
-        }
-        if ($file->getSize() > 20 * 1024 * 1024) {
-            log_message('error', 'File too large: ' . $file->getSize());
-            return null; // max 20MB
-        }
-        $dir = self::staffUploadPath();
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        $newName = $file->getRandomName();
-        $file->move($dir, $newName);
-
-        $fullPath = $dir . DIRECTORY_SEPARATOR . $newName;
-        $maxBytes = 1 * 1024 * 1024; // 1 MB
-        if (is_file($fullPath) && filesize($fullPath) > $maxBytes) {
-            helper('image');
-            if (resize_image_to_max_bytes($fullPath, $maxBytes)) {
-                log_message('info', 'Profile image resized to under 1 MB: ' . $newName);
-            }
-        }
-
-        // สร้าง thumbnail สำหรับแสดงในรายการ/ตาราง (โหลดเร็ว)
-        helper('image');
-        if (create_staff_thumbnail($fullPath)) {
-            log_message('info', 'Staff thumbnail created: ' . $newName);
-        }
-
-        $relativePath = 'staff/' . $newName;
-        log_message('info', 'File uploaded successfully to: ' . $relativePath . ' (Saved in: ' . $dir . ')');
-        return $relativePath;
-    }
-
     /**
      * บันทึกรูปโปรไฟล์ลงตาราง user (profile_picture หรือ profile_image) เพื่อให้ข้อมูลเดียวกันทุกที่เมื่อ user อัปโหลดรูป
      */
@@ -519,33 +467,6 @@ class Organization extends BaseController
             return;
         }
         $this->userModel->update($userUid, [$col => $relativePath]);
-    }
-
-    /** ลบไฟล์รูปจาก path แบบ relative (staff/filename) ถ้ามี รวม thumbnail ด้วย */
-    private static function deleteStaffImageFile(string $relativePath): void
-    {
-        if ($relativePath === '' || strpos($relativePath, 'staff/') !== 0) {
-            return;
-        }
-        $fn = basename($relativePath);
-        $dir = self::staffUploadPath();
-        $path = $dir . DIRECTORY_SEPARATOR . $fn;
-        $thumbPath = $dir . DIRECTORY_SEPARATOR . 'thumbs' . DIRECTORY_SEPARATOR . $fn;
-        if (is_file($path)) {
-            @unlink($path);
-        }
-        if (is_file($thumbPath)) {
-            @unlink($thumbPath);
-        }
-        $publicDir = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'staff';
-        $publicPath = $publicDir . DIRECTORY_SEPARATOR . $fn;
-        if (is_file($publicPath)) {
-            @unlink($publicPath);
-        }
-        $publicThumb = $publicDir . DIRECTORY_SEPARATOR . 'thumbs' . DIRECTORY_SEPARATOR . $fn;
-        if (is_file($publicThumb)) {
-            @unlink($publicThumb);
-        }
     }
 
     /**
@@ -675,7 +596,7 @@ class Organization extends BaseController
 
         // รูปโปรไฟล์เก็บในตาราง user เท่านั้น (ไม่ใช้ personnel.image)
         // CHANGE: Allow saving to personnel.image if user_uid is null
-        $imagePath = $this->handleStaffImageUpload();
+        $imagePath = StaffImageUpload::handleUpload($this->request->getFile('image'));
         if ($imagePath !== null) {
             if ($userUid !== null && (int) $userUid > 0) {
                 log_message('info', 'Saving profile image to USER table (uid=' . $userUid . '): ' . $imagePath);
@@ -924,18 +845,18 @@ class Organization extends BaseController
 
         // รูปโปรไฟล์เก็บในตาราง user เท่านั้น (ไม่ใช้ personnel.image)
         // CHANGE: Allow saving to personnel.image if user_uid is null
-        $imagePath = $this->handleStaffImageUpload();
+        $imagePath = StaffImageUpload::handleUpload($this->request->getFile('image'));
         if ($imagePath !== null) {
             if ($userUidForValidation > 0 && $linkedUser) {
                 log_message('info', 'Updating profile image in USER table (uid=' . $userUidForValidation . '): ' . $imagePath);
                 $oldImage = trim($linkedUser['profile_picture'] ?? $linkedUser['profile_image'] ?? '');
-                self::deleteStaffImageFile($oldImage);
+                StaffImageUpload::deleteStaffImageFile($oldImage);
                 $this->saveUserProfileImage($userUidForValidation, $imagePath);
             } else {
                 // Save to personnel table
                 log_message('info', 'Updating profile image in PERSONNEL table (id=' . $id . '): ' . $imagePath);
                 $oldImage = trim($person['image'] ?? '');
-                self::deleteStaffImageFile($oldImage);
+                StaffImageUpload::deleteStaffImageFile($oldImage);
                 $updateData['image'] = $imagePath;
             }
         } else {

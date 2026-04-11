@@ -113,33 +113,16 @@
                     </div>
 
                     <div style="text-align: center;">
-                        <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;" onchange="previewImage(this)">
+                        <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;">
                         <div style="margin-bottom: 0.75rem;">
                             <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('image').click()">
                                 <span>เลือกรูปภาพ</span>
                             </button>
                         </div>
-                        <div style="font-size: 0.8rem; color: #64748b;">รองรับ JPG, PNG, GIF, WebP (ไม่เกิน 5MB)</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">รองรับ JPG, PNG, GIF, WebP — เลือกแล้วจะเปิดหน้าตัดภาพเป็นสี่เหลี่ยมจัตุรัส (แสดงเป็นวงกลม)</div>
                     </div>
                 </div>
             </div>
-
-            <script>
-                function previewImage(input) {
-                    if (input.files && input.files[0]) {
-                        var reader = new FileReader();
-                        reader.onload = function(e) {
-                            var img = document.getElementById('preview-image');
-                            img.style.opacity = '0';
-                            setTimeout(function() {
-                                img.src = e.target.result;
-                                img.style.opacity = '1';
-                            }, 200);
-                        }
-                        reader.readAsDataURL(input.files[0]);
-                    }
-                }
-            </script>
 
             <h3 style="font-size: 1rem; margin-bottom: 1rem; color: var(--color-gray-700);">ชื่อ-นามสกุล</h3>
             <p style="font-size: 0.85rem; color: var(--color-gray-500); margin: -0.5rem 0 0.5rem;">ถ้าเลือกผู้ใช้จากตาราง user ด้านบน ชื่อจะดึงจาก user ให้อัตโนมัติ — ไม่ต้องกรอกซ้ำ</p>
@@ -344,6 +327,9 @@
         </form>
     </div>
 </div>
+
+<?= view('admin/organization/partials/staff_profile_photo_crop') ?>
+<?= view('admin/organization/partials/staff_profile_photo_crop_script') ?>
 
 <script>
     var programsForChair = <?= json_encode(array_values(array_map(function ($p) {

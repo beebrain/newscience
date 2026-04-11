@@ -85,6 +85,24 @@ $routes->get('/oauth/logout', 'OAuthController::logout');
 // หน้า Dashboard ผู้ใช้งาน — หลัง login มาที่หน้านี้ (ทุก role); หน้าตาเหมือน Admin, เมนู Edoc + หน้าการจัดการงานวิจัย; หน้าแรก = ข้อมูลผู้ใช้คนนั้น
 $routes->get('/dashboard', 'User\Dashboard::index', ['filter' => 'loggedin']);
 $routes->get('/dashboard/calendar', 'User\CalendarController::index', ['filter' => 'loggedin']);
+$routes->get('/dashboard/profile', 'User\ProfileCv::index', ['filter' => 'loggedin']);
+$routes->get('/dashboard/profile/cv', 'User\ProfileCv::cv', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/photo', 'User\ProfileCv::saveCvPhoto', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/photo/remove', 'User\ProfileCv::removeCvPhoto', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/section/save', 'User\ProfileCv::saveCvSection', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/section/reorder', 'User\ProfileCv::reorderCvSections', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/section/toggle/(:num)', 'User\ProfileCv::toggleCvSectionPublic/$1', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/section/delete/(:num)', 'User\ProfileCv::deleteCvSection/$1', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/entry/save', 'User\ProfileCv::saveCvEntry', ['filter' => 'loggedin']);
+$routes->get('/dashboard/profile/cv/entry/(:num)', 'User\ProfileCv::getCvEntry/$1', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/entry/delete/(:num)', 'User\ProfileCv::deleteCvEntry/$1', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/entry/reorder', 'User\ProfileCv::reorderCvEntries', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/orcid/import', 'User\ProfileCv::importOrcidCv', ['filter' => 'loggedin']);
+$routes->get('/dashboard/profile/research-record-sync', 'User\ResearchRecordSync::index', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/research-record-sync/compare', 'User\ResearchRecordSync::compare', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/research-record-sync/apply', 'User\ResearchRecordSync::apply', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/research-record-sync/pull-all', 'User\ResearchRecordSync::pullAll', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/research-record-sync/push-all', 'User\ResearchRecordSync::pushAll', ['filter' => 'loggedin']);
 $routes->get('/go-research-record', 'Admin\Auth::goResearchRecord', ['filter' => 'loggedin']);
 
 // Teaching evaluation (ประเมินผลการสอน) — lecture submit + admin ต้อง login; แบบฟอร์มผู้ประเมินเข้าจาก link
