@@ -89,11 +89,68 @@ $expertise = trim($p['expertise'] ?? '');
       </div>
       <?php endif; ?>
 
-      <!-- Placeholder สำหรับ Publications (Phase 2: AJAX) -->
+      <?php
+      $cvSections = $cv_sections ?? [];
+      foreach ($cvSections as $block):
+          $blabel = $block['title'] ?? '';
+          $bitems = $block['entries'] ?? [];
+      ?>
       <div style="grid-column: 1 / -1;">
-        <h2 style="font-size: 0.85rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">ผลงานวิจัย / Publications</h2>
-        <p style="font-size: 0.85rem; color: #94a3b8; font-style: italic;">กำลังพัฒนา — จะเชื่อมต่อ API เร็วๆ นี้</p>
+        <h2 style="font-size: 0.85rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;"><?= esc($blabel) ?></h2>
+        <div style="overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; color: #334155;">
+            <thead>
+              <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                <th style="text-align: center; padding: 0.65rem 0.75rem; font-size: 0.75rem; font-weight: 600; color: #64748b; width: 2.5rem;">#</th>
+                <th style="text-align: left; padding: 0.65rem 0.75rem; font-size: 0.75rem; font-weight: 600; color: #64748b;">หัวข้อ</th>
+                <th style="text-align: left; padding: 0.65rem 0.75rem; font-size: 0.75rem; font-weight: 600; color: #64748b; min-width: 8rem;">หน่วยงาน / สถานที่</th>
+                <th style="text-align: left; padding: 0.65rem 0.75rem; font-size: 0.75rem; font-weight: 600; color: #64748b; min-width: 6rem;">ช่วงเวลา</th>
+                <th style="text-align: left; padding: 0.65rem 0.75rem; font-size: 0.75rem; font-weight: 600; color: #64748b;">รายละเอียด</th>
+                <th style="text-align: left; padding: 0.65rem 0.75rem; font-size: 0.75rem; font-weight: 600; color: #64748b; min-width: 4rem;">ลิงก์</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              $ti = 0;
+              foreach ($bitems as $it):
+                  $ti++;
+                  $meta = $it['metadata_array'] ?? [];
+                  $link = (string) ($meta['url'] ?? $meta['legacy_url'] ?? '');
+                  $sd = !empty($it['start_date']) ? substr((string) $it['start_date'], 0, 10) : '';
+                  $ed = !empty($it['end_date']) ? substr((string) $it['end_date'], 0, 10) : '';
+                  $period = '';
+                  if ($sd !== '') {
+                      $period = $sd;
+                      if ($ed !== '') {
+                          $period .= ' – ' . $ed;
+                      } elseif (!empty($it['is_current'])) {
+                          $period .= ' – ปัจจุบัน';
+                      }
+                  }
+                  $org = trim((string) ($it['organization'] ?? ''));
+                  $loc = trim((string) ($it['location'] ?? ''));
+                  $orgLoc = $org === '' ? $loc : ($loc === '' ? $org : $org . ' · ' . $loc);
+              ?>
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="text-align: center; padding: 0.65rem 0.75rem; color: #94a3b8; vertical-align: top;"><?= $ti ?></td>
+                  <td style="padding: 0.65rem 0.75rem; font-weight: 600; vertical-align: top;"><?= esc($it['title'] ?? '') ?></td>
+                  <td style="padding: 0.65rem 0.75rem; vertical-align: top; font-size: 0.85rem;"><?= $orgLoc !== '' ? esc($orgLoc) : '<span style="color:#cbd5e1;">—</span>' ?></td>
+                  <td style="padding: 0.65rem 0.75rem; vertical-align: top; font-size: 0.85rem;"><?= $period !== '' ? esc($period) : '<span style="color:#cbd5e1;">—</span>' ?></td>
+                  <td style="padding: 0.65rem 0.75rem; line-height: 1.5; white-space: pre-line; vertical-align: top;"><?= !empty($it['description']) ? esc($it['description']) : '<span style="color:#cbd5e1;">—</span>' ?></td>
+                  <td style="padding: 0.65rem 0.75rem; vertical-align: top; word-break: break-all;">
+                    <?php if ($link !== ''): ?>
+                      <a href="<?= esc($link, 'attr') ?>" style="font-size: 0.85rem; color: #2563eb;" target="_blank" rel="noopener noreferrer">ลิงก์</a>
+                    <?php else: ?>
+                      <span style="color: #cbd5e1;">—</span>
+                    <?php endif; ?>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
       </div>
+      <?php endforeach; ?>
 
     </div>
 

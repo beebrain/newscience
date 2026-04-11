@@ -61,18 +61,25 @@ $isAdmin = in_array($userRole, ['admin', 'editor', 'super_admin', 'faculty_admin
                     </div>
                 </a>
 
+                <?php
+                $currentUri = uri_string();
+                $navItems = [
+                    ['url' => 'dashboard', 'label' => 'หน้าหลัก', 'icon' => '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'],
+                    ['url' => 'dashboard/profile', 'label' => 'โปรไฟล์', 'icon' => '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>'],
+                    ['url' => 'edoc', 'label' => 'E-Document', 'icon' => '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>'],
+                    ['url' => 'evaluate', 'label' => 'ประเมินการสอน', 'icon' => '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>'],
+                    ['url' => 'exam', 'label' => 'ตารางสอบ', 'icon' => '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'],
+                ];
+                ?>
                 <!-- Desktop Nav -->
                 <nav class="hidden md:flex items-center gap-1">
                     <?php
-                    $currentUri = uri_string();
-                    $navItems = [
-                        ['url' => 'dashboard', 'label' => 'หน้าหลัก', 'icon' => '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'],
-                        ['url' => 'edoc', 'label' => 'E-Document', 'icon' => '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>'],
-                        ['url' => 'evaluate', 'label' => 'ประเมินการสอน', 'icon' => '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>'],
-                        ['url' => 'exam', 'label' => 'ตารางสอบ', 'icon' => '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'],
-                    ];
                     foreach ($navItems as $item):
-                        $isActive = ($currentUri === $item['url'] || strpos($currentUri, $item['url'] . '/') === 0);
+                        if ($item['url'] === 'dashboard') {
+                            $isActive = ($currentUri === 'dashboard');
+                        } else {
+                            $isActive = ($currentUri === $item['url'] || strpos($currentUri, $item['url'] . '/') === 0);
+                        }
                     ?>
                         <a href="<?= base_url($item['url']) ?>"
                            class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors <?= $isActive ? 'bg-yellow-50 text-yellow-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800' ?>">
@@ -141,7 +148,11 @@ $isAdmin = in_array($userRole, ['admin', 'editor', 'super_admin', 'faculty_admin
         <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white">
             <div class="px-4 py-3 space-y-1">
                 <?php foreach ($navItems as $item):
-                    $isActive = ($currentUri === $item['url'] || strpos($currentUri, $item['url'] . '/') === 0);
+                    if ($item['url'] === 'dashboard') {
+                        $isActive = ($currentUri === 'dashboard');
+                    } else {
+                        $isActive = ($currentUri === $item['url'] || strpos($currentUri, $item['url'] . '/') === 0);
+                    }
                 ?>
                     <a href="<?= base_url($item['url']) ?>"
                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium <?= $isActive ? 'bg-yellow-50 text-yellow-700' : 'text-gray-600 hover:bg-gray-50' ?>">

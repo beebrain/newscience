@@ -24,8 +24,8 @@ $canManageEvaluate = $can_manage_evaluate ?? false;
 $dashUid = (int) ($p['uid'] ?? 0);
 $showProgramAdminQuick = $dashUid > 0 && \App\Libraries\AccessControl::hasAccess($dashUid, 'program_admin');
 $statsOverviewGridClass = $showProgramAdminQuick
-    ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8'
-    : 'grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8';
+    ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8'
+    : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8';
 ?>
 
 <div class="font-sarabun" style="margin: -1rem; padding: 1.5rem;">
@@ -62,6 +62,17 @@ $statsOverviewGridClass = $showProgramAdminQuick
                 <div>
                     <div class="text-xs text-gray-500">E-Document</div>
                     <a href="<?= base_url('edoc') ?>" class="text-sm font-semibold text-gray-800 hover:text-blue-600 transition-colors">เข้าสู่ระบบ &rarr;</a>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500">โปรไฟล์ / CV</div>
+                    <a href="<?= base_url('dashboard/profile') ?>" class="text-sm font-semibold text-gray-800 hover:text-teal-600 transition-colors">จัดการประวัติ &rarr;</a>
                 </div>
             </div>
         </div>

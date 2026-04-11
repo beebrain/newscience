@@ -9,8 +9,8 @@ $canManageEvaluate = $can_manage_evaluate ?? false;
 $dashUid = (int) ($p['uid'] ?? 0);
 $showProgramAdminQuick = $dashUid > 0 && \App\Libraries\AccessControl::hasAccess($dashUid, 'program_admin');
 $quickSystemsGridClass = $showProgramAdminQuick
-    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4'
-    : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4';
+    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4'
+    : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4';
 ?>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
@@ -48,6 +48,16 @@ $quickSystemsGridClass = $showProgramAdminQuick
         </div>
 
         <div class="<?= esc($quickSystemsGridClass, 'attr') ?>">
+            <!-- โปรไฟล์ / จัดการ CV -->
+            <a href="<?= base_url('dashboard/profile') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-teal-200 hover:-translate-y-1 transition-all duration-200">
+                <div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div class="font-semibold text-gray-800 group-hover:text-teal-600 transition-colors">โปรไฟล์ / ประวัติ</div>
+                <div class="text-sm text-gray-500 mt-1">จัดการ CV สาธารณะ</div>
+                <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-teal-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+
             <!-- E-Document -->
             <a href="<?= base_url('edoc') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all duration-200">
                 <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
