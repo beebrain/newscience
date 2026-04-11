@@ -39,10 +39,12 @@ class CvEntryModel extends Model
 
     /**
      * ลำดับแสดงรายการ CV: วันที่ตีพิมพ์/เริ่มล่าสุดก่อน แล้วตาม sort_order (ใช้จัดลำดับภายในวันเดียวกัน)
+     *
+     * ห้ามใช้ NULLIF(..., '') กับคอลัมน์ DATE — MySQL strict จะ error "Incorrect DATE value: ''"
      */
     public function orderedForCvDisplay(): self
     {
-        $expr = "COALESCE(NULLIF(NULLIF(start_date, ''), '0000-00-00'), NULLIF(NULLIF(end_date, ''), '0000-00-00'), '1900-01-01')";
+        $expr = "COALESCE(NULLIF(start_date, '0000-00-00'), NULLIF(end_date, '0000-00-00'), '1900-01-01')";
 
         return $this->orderBy($expr, 'DESC', false)
             ->orderBy('sort_order', 'ASC')
