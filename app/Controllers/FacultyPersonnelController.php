@@ -39,15 +39,18 @@ class FacultyPersonnelController extends BaseController
                     ->setJSON([
                         'success' => false,
                         'error'   => 'NOT_CONFIGURED',
-                        'message' => 'Research API is not configured. Set RESEARCH_API_BASE_URL and RESEARCH_API_FACULTY_ID or RESEARCH_API_FACULTY_CODE in .env',
+                        'message' => 'ยังไม่ได้ตั้งค่า API กบศสำหรับ ' . ResearchApi::FACULTY_NAME_TH . ' — ตั้ง RESEARCH_API_BASE_URL และ RESEARCH_API_KEY ใน .env (และ RESEARCH_API_FACULTY_ID หรือ RESEARCH_API_FACULTY_CODE หากไม่ใช้ค่าเริ่มต้น)',
+                        'faculty' => ResearchApi::FACULTY_NAME_TH,
                     ]);
             }
+
             return $this->response
                 ->setStatusCode(502)
                 ->setJSON([
                     'success' => false,
                     'error'   => 'EXTERNAL_API_ERROR',
-                    'message' => 'Could not fetch faculty personnel from external API',
+                    'message' => 'ดึงรายชื่อบุคลากร ' . ResearchApi::FACULTY_NAME_TH . ' จากระบบกบศไม่สำเร็จ — ตรวจ URL, API Key และรหัสคณะ (เช่น request faculty_id / faculty_code ฝั่งกบศ)',
+                    'faculty' => ResearchApi::FACULTY_NAME_TH,
                 ]);
         }
 

@@ -114,7 +114,7 @@ class FacultyPersonnelApi
             return $out;
         }
         if (! $researchApi->isConfigured()) {
-            $out['message'] = 'ตั้ง RESEARCH_API_FACULTY_ID หรือ RESEARCH_API_FACULTY_CODE ไม่ครบ';
+            $out['message'] = 'ตั้งค่า API ไม่ครบสำหรับ ' . \Config\ResearchApi::FACULTY_NAME_TH . ' (RESEARCH_API_BASE_URL / RESEARCH_API_KEY)';
 
             return $out;
         }

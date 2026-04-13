@@ -23,7 +23,7 @@ $email = $sync_email ?? '';
     <?php if (!$apiOk): ?>
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-amber-900 text-sm">
             <p class="font-semibold mb-2">ยังไม่ได้ตั้งค่า Research API</p>
-            <p>ตั้งค่าใน <code class="bg-amber-100 px-1 rounded">.env</code>: <code class="bg-amber-100 px-1 rounded">RESEARCH_API_BASE_URL</code> (URL ฐานของ กบศ), <code class="bg-amber-100 px-1 rounded">RESEARCH_API_KEY</code>, และ faculty id/code ตาม <code class="bg-amber-100 px-1 rounded">ResearchApi</code></p>
+            <p>ตั้งค่าใน <code class="bg-amber-100 px-1 rounded">.env</code> สำหรับ <strong class="text-amber-950">คณะวิทยาศาสตร์และเทคโนโลยี</strong>: <code class="bg-amber-100 px-1 rounded">RESEARCH_API_BASE_URL</code> (URL ฐานของ กบศ), <code class="bg-amber-100 px-1 rounded">RESEARCH_API_KEY</code> — ถ้าไม่ได้ตั้ง <code class="bg-amber-100 px-1 rounded">RESEARCH_API_FACULTY_ID</code> / <code class="bg-amber-100 px-1 rounded">RESEARCH_API_FACULTY_CODE</code> ระบบจะใช้รหัสคณะเริ่มต้นของคณะนี้ (ดู <code class="bg-amber-100 px-1 rounded">ResearchApi</code>)</p>
             <p class="mt-2">แนะนำให้ตั้ง <code class="bg-amber-100 px-1 rounded">RESEARCH_SYNC_HMAC_SECRET</code> ให้ตรงกับฝั่ง กบศ (<code class="bg-amber-100 px-1 rounded">RESEARCH_SYNC_HMAC_SECRET</code>) เพื่อลงนามพารามิเตอร์ email+exp</p>
         </div>
     <?php endif; ?>
