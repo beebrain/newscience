@@ -11,21 +11,39 @@ use CodeIgniter\CLI\CLI;
 use Config\ResearchApi;
 
 /**
- * ดึง CV/ผลงานจาก กบศ ลงฐานข้อมูลคณะ — จำกัดเฉพาะอีเมลที่ปรากฏในรายชื่อบุคลากรคณะจาก API faculty-personnel
- * (อิง RESEARCH_API_FACULTY_ID / RESEARCH_API_FACULTY_CODE เดียวกับหน้าเว็บคณะ)
+ * ดึง CV/ผลงานจาก กบศ ลงฐานข้อมูลคณะ
+ *
+ * การเชื่อมบุคลากร newScience กับรายชื่อจาก API ใช้ **อีเมล (normalize: lowercase + trim) เท่านั้น**
+ * — ไม่ใช้ uid, login, หรือรหัสอื่นเป็นตัวจับคู่
+ *
+ * @see PersonnelModel::findByEmail()
  */
 class PullFacultyCvFromResearch extends BaseCommand
 {
+    /** ฟิลด์ JSON ที่ยอมรับเป็น “อีเมลสำหรับเชื่อม” (อ่านแบบไม่สนตัวพิมพ์ของชื่อคีย์) */
+    private const EMAIL_LINK_FIELD_KEYS = [
+        'email',
+        'user_email',
+        'work_email',
+        'institutional_email',
+        'contact_email',
+        'workEmail',
+        'primary_email',
+        'secondary_email',
+        'academic_email',
+        'office_email',
+    ];
+
     protected $group       = 'Research';
     protected $name        = 'research:pull-faculty-cv';
-    protected $description = 'ดึง CV จาก กบศ ลง newScience เฉพาะบุคลากรในรายชื่อคณะ (faculty-personnel API)';
+    protected $description = 'ดึง CV จาก กบศ (เชื่อมบุคลากรด้วยอีเมลเท่านั้น — รายชื่อคณะจาก faculty-personnel API)';
 
     protected $usage = 'research:pull-faculty-cv [--list] [--all] [--email=you@faculty]';
 
     protected $arguments = [
-        '--list'   => 'แสดงรายชื่อจาก API ที่จับคู่กับ personnel ในระบบ (และรายการที่ยังไม่มี personnel)',
-        '--all'    => 'ดึง CV ให้ทุกคนที่มี personnel และอยู่ในรายชื่อคณะ',
-        '--email=' => 'ดึงหนึ่งคน — อีเมลต้องอยู่ในรายชื่อคณะจาก API เท่านั้น',
+        '--list'   => 'แสดงรายชื่อจาก API จับคู่กับ personnel ด้วยอีเมล (และคนที่ยังไม่มี personnel)',
+        '--all'    => 'ดึงให้ทุกคนที่มี personnel และอีเมลอยู่ในรายชื่อคณะจาก API',
+        '--email=' => 'ดึงหนึ่งคน — อีเมลต้องอยู่ในรายชื่อคณะจาก API (ใช้จับคู่กับ personnel เท่านั้น)',
     ];
 
     public function run(array $params)
@@ -42,9 +60,27 @@ class PullFacultyCvFromResearch extends BaseCommand
             return;
         }
 
+        $verbose = CLI::getOption('verbose') !== null;
+
         $payload = FacultyPersonnelApi::fetch();
-        if ($payload === null || empty($payload['personnel']) || ! is_array($payload['personnel'])) {
-            CLI::error('เรียก faculty-personnel API ไม่สำเร็จหรือไม่มีรายชื่อบุคลากร');
+        if ($payload === null) {
+            CLI::error('เรียก faculty-personnel ไม่สำเร็จ (ค่าตอบกลับ null)');
+            $diag = FacultyPersonnelApi::fetchWithDiagnostics();
+            CLI::write('URL: ' . ($diag['url'] ?? ''), 'light_gray');
+            CLI::write('HTTP: ' . ($diag['http_code'] ?? 0) . ' — ' . ($diag['message'] ?? ''), 'yellow');
+            if (($diag['body_preview'] ?? '') !== '') {
+                CLI::write('ตัวอย่าง body: ' . $diag['body_preview'], 'dark_gray');
+            }
+
+            return;
+        }
+
+        $personnelList = isset($payload['personnel']) && is_array($payload['personnel']) ? $payload['personnel'] : [];
+        if ($personnelList === []) {
+            CLI::error('API ส่งสำเร็จแต่รายการบุคลากรว่าง (personnel ว่างหลัง normalize)');
+            if ($verbose && is_array($payload)) {
+                CLI::write('คีย์ระดับบนสุดของ JSON: ' . implode(', ', array_keys($payload)), 'light_gray');
+            }
 
             return;
         }
@@ -54,8 +90,18 @@ class PullFacultyCvFromResearch extends BaseCommand
             $facultyLabel = trim((string) ($payload['faculty']['name_th'] ?? $payload['faculty']['name'] ?? ''));
         }
 
-        $byEmail = $this->uniqueFacultyRowsByEmail($payload['personnel']);
+        $byEmail = $this->uniqueFacultyRowsByEmail($personnelList);
         $totalApi = count($byEmail);
+
+        if ($totalApi === 0) {
+            CLI::error('มีแถวจาก API ' . count($personnelList) . ' แต่ไม่มีฟิลด์อีเมลสำหรับเชื่อม (ต้องมีคีย์เช่น email, user_email ใน JSON)');
+            if ($verbose) {
+                $first = $personnelList[0] ?? [];
+                CLI::write('คีย์ของแถวแรก: ' . (is_array($first) ? implode(', ', array_keys($first)) : '(ไม่ใช่ array)'), 'light_gray');
+            }
+
+            return;
+        }
 
         $listMode = CLI::getOption('list') !== null;
         $allMode  = CLI::getOption('all') !== null;
@@ -67,7 +113,8 @@ class PullFacultyCvFromResearch extends BaseCommand
         if (! $listMode && ! $allMode && $oneEmail === '') {
             CLI::write('คำสั่ง: ' . $this->name, 'yellow');
             CLI::newLine();
-            CLI::write('ดึงข้อมูล CV จาก กบศ ลงฐานข้อมูลคณะ โดยยึดรายชื่อจาก API เดียวกับหน้าเว็บ (faculty-personnel)', 'white');
+            CLI::write('ดึงข้อมูล CV จาก กบศ ลงฐานข้อมูลคณะ — รายชื่อจาก faculty-personnel API', 'white');
+            CLI::write('การเชื่อมกับ personnel ใน newScience: ใช้เฉพาะอีเมล (lowercase + trim) — ไม่ใช้ uid/login', 'light_gray');
             if ($facultyLabel !== '') {
                 CLI::write('คณะ (จาก API): ' . $facultyLabel, 'light_gray');
             }
@@ -77,6 +124,7 @@ class PullFacultyCvFromResearch extends BaseCommand
             CLI::write('  --list              แสดงรายชื่อและสถานะจับคู่ personnel', 'light_gray');
             CLI::write('  --all               ดึงให้ทุกคนที่มี personnel ในระบบ', 'light_gray');
             CLI::write('  --email=a@b.c       ดึงหนึ่งคน (อีเมลต้องอยู่ในรายชื่อคณะจาก API)', 'light_gray');
+            CLI::write('  --verbose           แสดงคีย์ JSON เมื่อจับอีเมลไม่ได้', 'light_gray');
             CLI::newLine();
 
             return;
@@ -85,6 +133,7 @@ class PullFacultyCvFromResearch extends BaseCommand
         $personnelModel = new PersonnelModel();
         $resolved       = [];
         foreach ($byEmail as $email => $apiRow) {
+            // จับคู่กับตาราง personnel เฉพาะด้วยอีเมล (user_email / personnel.email / user.email ตาม Model)
             $person = $personnelModel->findByEmail($email);
             $resolved[] = [
                 'email'         => $email,
@@ -103,7 +152,7 @@ class PullFacultyCvFromResearch extends BaseCommand
 
         if ($oneEmail !== '') {
             if (! isset($byEmail[$oneEmail])) {
-                CLI::error('อีเมลนี้ไม่อยู่ในรายชื่อบุคลากรคณะจาก API — ไม่ดึง (กันดึงนอกขอบเขตคณะ)');
+                CLI::error('อีเมลนี้ไม่อยู่ในรายชื่อคณะจาก API (จับคู่ด้วยอีเมลเท่านั้น) — ไม่ดึง');
 
                 return;
             }
@@ -147,9 +196,11 @@ class PullFacultyCvFromResearch extends BaseCommand
     }
 
     /**
+     * รวมแถวจาก API ต่อหนึ่งอีเมล (คีย์หลักสำหรับเชื่อมกับ newScience)
+     *
      * @param list<array<string,mixed>> $personnelList
      *
-     * @return array<string, array<string, mixed>> email => first API row
+     * @return array<string, array<string, mixed>> normalized_email => first API row
      */
     private function uniqueFacultyRowsByEmail(array $personnelList): array
     {
@@ -158,7 +209,7 @@ class PullFacultyCvFromResearch extends BaseCommand
             if (! is_array($person)) {
                 continue;
             }
-            $email = $this->emailFromApiPerson($person);
+            $email = $this->emailFromApiPerson($person, 0);
             if ($email === '') {
                 continue;
             }
@@ -171,14 +222,50 @@ class PullFacultyCvFromResearch extends BaseCommand
     }
 
     /**
+     * อีเมลสำหรับเชื่อมกับ personnel — อ่านเฉพาะจากฟิลด์ที่ชื่อชัดว่าเป็นอีเมล (+ วัตถุย่อยที่มักมี email)
+     * ไม่สแกนค่า string ทั่วทั้งแถว เพื่อไม่ให้ไปจับคู่ผิดกับข้อความอื่นที่มี @
+     *
      * @param array<string, mixed> $person
      */
-    private function emailFromApiPerson(array $person): string
+    private function emailFromApiPerson(array $person, int $depth = 0): string
     {
-        foreach (['email', 'work_email', 'institutional_email', 'user_email'] as $key) {
-            $raw = trim((string) ($person[$key] ?? ''));
-            if ($raw !== '') {
+        if ($depth > 6) {
+            return '';
+        }
+
+        foreach (self::EMAIL_LINK_FIELD_KEYS as $key) {
+            $raw = $this->stringFromPersonCaseInsensitive($person, $key);
+            if ($raw === '') {
+                continue;
+            }
+            if (filter_var($raw, FILTER_VALIDATE_EMAIL)) {
                 return CvProfile::normalizeEmail($raw);
+            }
+        }
+
+        foreach (['user', 'profile', 'person', 'teacher', 'account'] as $nest) {
+            if (! empty($person[$nest]) && is_array($person[$nest])) {
+                $inner = $this->emailFromApiPerson($person[$nest], $depth + 1);
+                if ($inner !== '') {
+                    return $inner;
+                }
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @param array<string, mixed> $person
+     */
+    private function stringFromPersonCaseInsensitive(array $person, string $wantKey): string
+    {
+        foreach ($person as $k => $v) {
+            if (! is_string($k) || ! is_string($v)) {
+                continue;
+            }
+            if (strcasecmp($k, $wantKey) === 0) {
+                return trim($v);
             }
         }
 
@@ -190,12 +277,14 @@ class PullFacultyCvFromResearch extends BaseCommand
      */
     private function displayNameFromApiPerson(array $person): string
     {
-        $name = trim((string) ($person['name'] ?? ''));
-        if ($name !== '') {
-            return $name;
+        foreach (['name', 'name_thai', 'name_th', 'display_name', 'full_name'] as $k) {
+            $name = trim((string) ($person[$k] ?? ''));
+            if ($name !== '') {
+                return $name;
+            }
         }
         $title = trim((string) ($person['academic_title'] ?? ''));
-        $rest  = trim((string) ($person['name_th'] ?? $person['display_name'] ?? ''));
+        $rest  = trim((string) ($person['name_english'] ?? $person['name_en'] ?? ''));
 
         return trim($title . ' ' . $rest);
     }
@@ -206,6 +295,7 @@ class PullFacultyCvFromResearch extends BaseCommand
     private function printList(array $resolved, string $facultyLabel, int $totalApi): void
     {
         CLI::write('=== รายชื่อบุคลากรคณะ (จาก faculty-personnel API) ===', 'cyan');
+        CLI::write('เชื่อมกับ newScience: อีเมลเท่านั้น (normalize) — PersonnelModel::findByEmail', 'light_gray');
         if ($facultyLabel !== '') {
             CLI::write('คณะ: ' . $facultyLabel, 'white');
         }

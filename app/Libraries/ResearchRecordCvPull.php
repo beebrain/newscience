@@ -10,6 +10,8 @@ use DateTimeInterface;
 
 /**
  * ดึง CV + ผลงานจาก กบศ ลง ฐานข้อมูลคณะ (ใช้ร่วมกับ pull-all, auto บนหน้าแก้ไข CV, manual)
+ *
+ * การเรียก API กบศใช้ **อีเมลที่ normalize แล้ว** เป็นตัวระบุบุคคล (canonical) — ไม่ใช้ uid เป็นหลัก
  */
 class ResearchRecordCvPull
 {
