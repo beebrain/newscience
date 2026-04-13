@@ -7,7 +7,7 @@ use Config\ResearchApi;
 
 /**
  * Controller for fetching faculty personnel from the external Research Record API
- * (คณะวิทยาศาสตร์และเทคโนโลยี) – see doc_api.rd
+ * — see doc_api.rd
  *
  * Requires in .env:
  *   RESEARCH_API_BASE_URL  = base URL of research record app (no trailing slash)
@@ -39,19 +39,32 @@ class FacultyPersonnelController extends BaseController
                     ->setJSON([
                         'success' => false,
                         'error'   => 'NOT_CONFIGURED',
-                        'message' => 'ยังไม่ได้ตั้งค่า API กบศสำหรับ ' . ResearchApi::FACULTY_NAME_TH . ' — ตั้ง RESEARCH_API_BASE_URL และ RESEARCH_API_KEY ใน .env (และ RESEARCH_API_FACULTY_ID หรือ RESEARCH_API_FACULTY_CODE หากไม่ใช้ค่าเริ่มต้น)',
-                        'faculty' => ResearchApi::FACULTY_NAME_TH,
+                        'message' => 'ยังไม่ได้ตั้งค่า API กบศ — ตั้ง RESEARCH_API_BASE_URL, RESEARCH_API_KEY และอย่างใดอย่างหนึ่งของ RESEARCH_API_FACULTY_ID / RESEARCH_API_FACULTY_CODE ใน .env',
                     ]);
             }
 
-            return $this->response
-                ->setStatusCode(502)
-                ->setJSON([
-                    'success' => false,
-                    'error'   => 'EXTERNAL_API_ERROR',
-                    'message' => 'ดึงรายชื่อบุคลากร ' . ResearchApi::FACULTY_NAME_TH . ' จากระบบกบศไม่สำเร็จ — ตรวจ URL, API Key และรหัสคณะ (เช่น request faculty_id / faculty_code ฝั่งกบศ)',
-                    'faculty' => ResearchApi::FACULTY_NAME_TH,
-                ]);
+            $fail    = FacultyPersonnelApi::getLastFetchFailure();
+            $decoded = is_array($fail['decoded'] ?? null) ? $fail['decoded'] : null;
+            $expl    = FacultyPersonnelApi::explainFacultyApiBody($decoded);
+            $apiErr  = $expl['code'];
+
+            $status = 502;
+            if ($apiErr === 'FACULTY_NOT_FOUND' || $apiErr === 'MISSING_PARAMETER') {
+                $status = 404;
+            }
+
+            $payload = [
+                'success'       => false,
+                'error'         => $apiErr !== '' ? $apiErr : 'EXTERNAL_API_ERROR',
+                'message'       => $expl['message_th'],
+                'request_query' => is_array($fail['query'] ?? null) ? $fail['query'] : null,
+                'http_code'     => $fail['http_code'] ?? null,
+            ];
+            if ($expl['message_en'] !== '') {
+                $payload['message_en'] = $expl['message_en'];
+            }
+
+            return $this->response->setStatusCode($status)->setJSON($payload);
         }
 
         return $this->response->setJSON($data);

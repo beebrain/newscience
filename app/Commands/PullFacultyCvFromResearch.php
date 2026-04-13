@@ -55,7 +55,7 @@ class PullFacultyCvFromResearch extends BaseCommand
             return;
         }
         if (! $researchApi->isConfigured()) {
-            CLI::error('ตั้งค่า API กบศไม่ครบสำหรับ ' . ResearchApi::FACULTY_NAME_TH . ' — ต้องมี RESEARCH_API_BASE_URL และ RESEARCH_API_KEY ใน .env');
+            CLI::error('ตั้งค่าไม่ครบ — ตั้ง RESEARCH_API_FACULTY_ID หรือ RESEARCH_API_FACULTY_CODE ใน .env ให้ตรงกับคณะในระบบกบศ');
 
             return;
         }

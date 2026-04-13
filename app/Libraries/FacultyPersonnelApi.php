@@ -13,6 +13,53 @@ use Config\ResearchApi;
  */
 class FacultyPersonnelApi
 {
+    /** ครั้งล่าสุดที่เรียก fetch() แล้วไม่สำเร็จ (ให้ Controller/CLI อ่านข้อความจากกบศ) */
+    private static ?array $lastFetchFailure = null;
+
+    /**
+     * @return array{http_code: int, query: array<string, scalar>, decoded: ?array<string, mixed>, body_snippet: string}|null
+     */
+    public static function getLastFetchFailure(): ?array
+    {
+        return self::$lastFetchFailure;
+    }
+
+    /**
+     * แปลง error จาก JSON กบศเป็นข้อความภาษาไทยสำหรับผู้ดูแลระบบ
+     *
+     * @param array<string, mixed>|null $decoded
+     *
+     * @return array{code: string, message_th: string, message_en: string}
+     */
+    public static function explainFacultyApiBody(?array $decoded): array
+    {
+        $code = is_array($decoded) ? trim((string) ($decoded['error'] ?? '')) : '';
+        $en   = is_array($decoded) ? trim((string) ($decoded['message'] ?? '')) : '';
+
+        if ($code === 'FACULTY_NOT_FOUND') {
+            return [
+                'code'       => $code,
+                'message_th' => 'ระบบกบศไม่พบคณะที่ส่งไป (FACULTY_NOT_FOUND) — ตั้ง RESEARCH_API_FACULTY_ID หรือ RESEARCH_API_FACULTY_CODE ใน .env ให้ตรงกับรหัสคณะใน Research Record',
+                'message_en' => $en,
+            ];
+        }
+
+        if ($code === 'MISSING_PARAMETER' || str_contains(strtolower($en), 'faculty')) {
+            return [
+                'code'       => $code !== '' ? $code : 'MISSING_PARAMETER',
+                'message_th' => 'กบศต้องการรหัสคณะ (faculty_id หรือ faculty_code) — ตั้ง RESEARCH_API_FACULTY_ID หรือ RESEARCH_API_FACULTY_CODE ใน .env'
+                    . ($en !== '' ? ' — ' . $en : ''),
+                'message_en' => $en,
+            ];
+        }
+
+        return [
+            'code'       => $code !== '' ? $code : 'EXTERNAL_API_ERROR',
+            'message_th' => $en !== '' ? ('กบศตอบ: ' . $en) : 'เรียก API faculty-personnel ไม่สำเร็จ',
+            'message_en' => $en,
+        ];
+    }
+
     /**
      * ดึงรายการบุคลากรจาก payload หลายรูปแบบ (บางเวอร์ชัน API ใช้คีย์อื่นนอกจาก personnel)
      *
@@ -50,6 +97,8 @@ class FacultyPersonnelApi
      */
     public static function fetch(): ?array
     {
+        self::$lastFetchFailure = null;
+
         $researchApi = config(ResearchApi::class);
 
         if (! $researchApi->isConfigured()) {
@@ -74,6 +123,12 @@ class FacultyPersonnelApi
             ]);
         } catch (\Throwable $e) {
             log_message('error', 'FacultyPersonnelApi::fetch HTTP error: ' . $e->getMessage());
+            self::$lastFetchFailure = [
+                'http_code'    => 0,
+                'query'        => $query,
+                'decoded'      => null,
+                'body_snippet' => $e->getMessage(),
+            ];
 
             return null;
         }
@@ -82,10 +137,25 @@ class FacultyPersonnelApi
         $body       = $response->getBody();
         $data       = json_decode($body, true);
 
+        $failure = [
+            'http_code'    => $statusCode,
+            'query'        => $query,
+            'decoded'      => is_array($data) ? $data : null,
+            'body_snippet' => mb_substr(trim($body), 0, 500),
+        ];
+
         if ($statusCode >= 200 && $statusCode < 300 && is_array($data) && ! empty($data['success'])) {
             $data['personnel'] = self::normalizePersonnelListFromPayload($data);
 
             return $data;
+        }
+
+        self::$lastFetchFailure = $failure;
+        if (is_array($data) && ! empty($data['error'])) {
+            log_message(
+                'warning',
+                'FacultyPersonnelApi::fetch ' . (string) ($data['error'] ?? '') . ': ' . (string) ($data['message'] ?? '')
+            );
         }
 
         return null;
@@ -114,7 +184,11 @@ class FacultyPersonnelApi
             return $out;
         }
         if (! $researchApi->isConfigured()) {
-            $out['message'] = 'ตั้งค่า API ไม่ครบสำหรับ ' . \Config\ResearchApi::FACULTY_NAME_TH . ' (RESEARCH_API_BASE_URL / RESEARCH_API_KEY)';
+            if (! $researchApi->syncConfigured()) {
+                $out['message'] = 'ตั้ง RESEARCH_API_BASE_URL และ RESEARCH_API_KEY ไม่ครบ';
+            } else {
+                $out['message'] = 'ตั้ง RESEARCH_API_FACULTY_ID หรือ RESEARCH_API_FACULTY_CODE ใน .env';
+            }
 
             return $out;
         }
@@ -154,7 +228,9 @@ class FacultyPersonnelApi
 
         $out['data'] = $data;
         if (empty($data['success'])) {
-            $out['message'] = 'API ส่ง success=false หรือไม่มี success (HTTP ' . $out['http_code'] . ')';
+            $expl             = self::explainFacultyApiBody($data);
+            $out['message']   = $expl['message_th'];
+            $out['api_error'] = $expl['code'];
 
             return $out;
         }
