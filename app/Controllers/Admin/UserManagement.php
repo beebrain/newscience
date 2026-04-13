@@ -166,7 +166,7 @@ class UserManagement extends BaseController
         foreach ($students as $student) {
             $studentProgramId = $student['program_id'] ?? null;
             $program = $studentProgramId ? $this->programModel->find($studentProgramId) : null;
-            $isActive = (int) ($student['active'] ?? 0) === 1;
+            $st = $student['status'] ?? 'active';
             $formattedStudents[] = [
                 'id' => (int)($student['id'] ?? 0),
                 'login_uid' => $student['login_uid'] ?? '',
@@ -177,8 +177,8 @@ class UserManagement extends BaseController
                 'display_name' => $this->studentUserModel->getFullName($student),
                 'role' => $student['role'] ?? 'student',
                 'program_id' => (int)($student['program_id'] ?? 0),
-                'program_name' => $program['name_th'] ?? $program['name'] ?? null,
-                'status' => $isActive ? 'active' : 'inactive',
+                'program_name' => $program['name_th'] ?? $program['name_en'] ?? null,
+                'status' => $st,
                 'created_at' => $student['created_at'] ?? null,
             ];
         }
@@ -457,8 +457,13 @@ class UserManagement extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการนักศึกษานี้']);
         }
 
+        if (($student['status'] ?? '') === 'pending') {
+            return $this->response->setJSON(['success' => false, 'message' => 'บัญชีสถานะรอเปิดจาก Portal — ใช้ปุ่มนี้สลับ active/inactive ไม่ได้']);
+        }
+
         if ($this->studentUserModel->toggleStatus($id)) {
-            $newStatus = $student['status'] === 'active' ? 'inactive' : 'active';
+            $prev = $student['status'] ?? 'active';
+            $newStatus = $prev === 'active' ? 'inactive' : 'active';
             return $this->response->setJSON(['success' => true, 'message' => "เปลี่ยนสถานะเป็น {$newStatus} สำเร็จ"]);
         }
 

@@ -24,7 +24,7 @@ use App\Libraries\AccessControl;
  * - admin/downloads -> admin_downloads (หรือ admin_core)
  * - admin/users -> user_management
  * - admin/settings -> site_settings
- * - admin/cert-templates, cert-events, certificates -> ecert
+ * - admin/cert-events -> ecert
  */
 class AdminSystemAccessFilter implements FilterInterface
 {
@@ -40,9 +40,7 @@ class AdminSystemAccessFilter implements FilterInterface
         'academic-services' => 'academic_service',  // ข้อมูลการบริการวิชาการ (หรือ admin_core)
         'users'          => 'user_management',
         'settings'       => 'site_settings',
-        'cert-templates' => 'ecert',
         'cert-events'    => 'ecert',
-        'certificates'   => 'ecert',
         'calendar'       => 'calendar',   // ปฏิทินนัดหมายกิจกรรมผู้บริหาร
         'exam'           => 'exam_admin', // จัดการตารางคุมสอบ
     ];

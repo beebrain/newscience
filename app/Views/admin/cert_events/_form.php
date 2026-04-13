@@ -1,16 +1,16 @@
 <?php
 /**
  * Cert Event Form Partial - Used in modals
- * 
+ *
  * @var array|null $event Event data for editing (null for create)
- * @var array $templates Available templates
  * @var array $signers Available signers
  */
 $isEdit = isset($event) && $event;
+$cb = $cert_base ?? rtrim(base_url('admin/cert-events'), '/');
 ?>
 <form id="certEventForm" 
       method="post" 
-      action="<?= $isEdit ? base_url('admin/cert-events/' . $event['id'] . '/update') : base_url('admin/cert-events/store') ?>"
+      action="<?= $isEdit ? esc($cb) . '/' . (int) $event['id'] . '/update' : esc($cb) . '/store' ?>"
       data-ajax="true"
       data-modal="certEventModal"
       data-reload="true"
@@ -62,27 +62,15 @@ $isEdit = isset($event) && $event;
         </div>
     </div>
     
-    <div class="form-group" style="margin-bottom: 1rem;">
-        <label for="template_id">เทมเพลตใบรับรอง <span class="text-danger">*</span></label>
-        <select id="template_id" name="template_id" class="form-control" required>
-            <option value="">เลือกเทมเพลต</option>
-            <?php foreach ($templates as $template): ?>
-                <option value="<?= $template['id'] ?>" 
-                        <?= ($event['template_id'] ?? old('template_id')) == $template['id'] ? 'selected' : '' ?>>
-                    <?= esc($template['name_th']) ?> 
-                    (<?= $template['level'] === 'program' ? 'ระดับหลักสูตร' : 'ระดับคณะ' ?>)
-                </option>
-            <?php endforeach; ?>
-        </select>
-        <small class="form-text text-muted">
-            เลือกเทมเพลตที่จะใช้ในการออกใบรับรองสำหรับกิจกรรมนี้
-        </small>
-    </div>
-    
+    <p class="form-text text-muted" style="margin-bottom: 1rem; font-size: 13px;">
+        ใบรับรองแต่ละกิจกรรมใช้<strong>ไฟล์รูปหรือ PDF ของใบรับรอง</strong>ที่อัปโหลดในหน้าแก้ไขกิจกรรม (ไม่ใช้เทมเพลตจากระบบ)
+        — หลังสร้างกิจกรรมแล้วให้เปิดเมนู «ดู» หรือ «แก้ไข» เพื่ออัปโหลดไฟล์ก่อนออกใบ
+    </p>
+
     <div class="form-group" style="margin-bottom: 1rem;">
         <label for="signer_id">ผู้ลงนามในใบรับรอง</label>
         <select id="signer_id" name="signer_id" class="form-control">
-            <option value="">ไม่ระบุ (ใช้ค่าเริ่มต้นจากเทมเพลต)</option>
+            <option value="">ไม่ระบุ (ไม่แสดงลายเซ็น)</option>
             <?php foreach ($signers as $signer): ?>
                 <option value="<?= $signer['uid'] ?>" 
                         <?= ($event['signer_id'] ?? old('signer_id')) == $signer['uid'] ? 'selected' : '' ?>>

@@ -1,5 +1,5 @@
-<?php $cb = $cert_base ?? rtrim(base_url('admin/cert-events'), '/'); ?>
-<?= $this->extend('admin/layouts/admin_layout') ?>
+<?php $cb = $cert_base ?? rtrim(base_url('dashboard/cert-events'), '/'); ?>
+<?= $this->extend('layouts/user_layout') ?>
 
 <?= $this->section('content') ?>
 <div class="card">
@@ -63,7 +63,7 @@
             <div class="form-group">
                 <label>ไฟล์ใบรับรองของกิจกรรม (PDF / JPG / PNG)</label>
                 <input type="file" name="background_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                <small class="form-text text-muted">จำเป็นต้องมีไฟล์นี้ก่อนกดออกใบ — ระบบจะวางชื่อและ QR ทับไฟล์นี้</small>
+                <small class="form-text text-muted">จำเป็นต้องมีไฟล์นี้ก่อนกดออกใบ</small>
                 <?php if (! empty($event['background_file'])): ?>
                     <div style="margin-top:0.5rem;font-size:12px;">ปัจจุบัน: <?= esc($event['background_kind'] ?? '') ?> — <?= esc($event['background_file']) ?></div>
                 <?php endif; ?>

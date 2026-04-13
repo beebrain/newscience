@@ -53,14 +53,12 @@ class Certificate extends BaseController
             ->select('cert_event_recipients.*, 
                 cert_events.title as event_title,
                 cert_events.event_date,
-                cert_templates.name_th as template_name,
                 certificates.certificate_no,
                 certificates.pdf_path,
                 certificates.verification_token,
                 certificates.issued_date,
                 certificates.download_count')
             ->join('cert_events', 'cert_events.id = cert_event_recipients.event_id')
-            ->join('cert_templates', 'cert_templates.id = cert_events.template_id', 'left')
             ->join('certificates', 'certificates.id = cert_event_recipients.certificate_id', 'left')
             ->where('cert_event_recipients.id', $id)
             ->where('cert_event_recipients.student_id', $studentId)

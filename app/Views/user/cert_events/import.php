@@ -1,5 +1,5 @@
-<?php $cb = $cert_base ?? rtrim(base_url('admin/cert-events'), '/'); ?>
-<?= $this->extend('admin/layouts/admin_layout') ?>
+<?php $cb = $cert_base ?? rtrim(base_url('dashboard/cert-events'), '/'); ?>
+<?= $this->extend('layouts/user_layout') ?>
 
 <?= $this->section('content') ?>
 <div class="card">

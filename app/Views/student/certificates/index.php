@@ -46,8 +46,6 @@
                         <tr>
                             <td>
                                 <strong><?= esc($cert['event_title']) ?></strong>
-                                <br>
-                                <small style="color: #666;"><?= esc($cert['template_name'] ?? '-') ?></small>
                             </td>
                             <td><?= $cert['event_date'] ? date('d/m/Y', strtotime($cert['event_date'])) : '-' ?></td>
                             <td>

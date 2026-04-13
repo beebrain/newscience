@@ -42,8 +42,7 @@ class CertRequestModel extends Model
      */
     public function getByStudent(int $studentId, int $limit = 50): array
     {
-        return $this->select('cert_requests.*, cert_templates.name_th as template_name')
-            ->join('cert_templates', 'cert_templates.id = cert_requests.template_id', 'left')
+        return $this->select('cert_requests.*, cert_requests.purpose as template_name')
             ->where('cert_requests.student_id', $studentId)
             ->orderBy('cert_requests.id', 'DESC')
             ->findAll($limit);
@@ -62,8 +61,7 @@ class CertRequestModel extends Model
 
     public function findForStudent(int $requestId, int $studentId): ?array
     {
-        return $this->select('cert_requests.*, cert_templates.name_th as template_name')
-            ->join('cert_templates', 'cert_templates.id = cert_requests.template_id', 'left')
+        return $this->select('cert_requests.*, cert_requests.purpose as template_name')
             ->where('cert_requests.id', $requestId)
             ->where('cert_requests.student_id', $studentId)
             ->first();

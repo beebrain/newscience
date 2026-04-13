@@ -364,7 +364,7 @@ use App\Libraries\AccessControl; ?>
                             </svg>
                         </button>
                         <div class="submenu-items">
-                            <a href="<?= base_url('admin/cert-events') ?>" class="<?= (strpos(uri_string(), 'admin/cert-events') === 0) ? 'active' : '' ?>">
+                            <a href="<?= base_url('admin/cert-events') ?>" class="<?= (strpos(uri_string(), 'admin/cert-events') === 0 && strpos(uri_string(), 'issued-report') === false) ? 'active' : '' ?>">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                                     <line x1="16" y1="2" x2="16" y2="6" />
@@ -373,40 +373,11 @@ use App\Libraries\AccessControl; ?>
                                 </svg>
                                 กิจกรรม/อบรม
                             </a>
-                            <a href="<?= base_url('admin/cert-templates') ?>" class="<?= (strpos(uri_string(), 'admin/cert-templates') === 0) ? 'active' : '' ?>">
+                            <a href="<?= base_url('admin/cert-events/issued-report') ?>" class="<?= (strpos(uri_string(), 'admin/cert-events/issued-report') !== false) ? 'active' : '' ?>">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                                    <polyline points="14 2 14 8 20 8" />
-                                    <line x1="16" y1="13" x2="8" y2="13" />
-                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                    <path d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
                                 </svg>
-                                เทมเพลตใบรับรอง
-                            </a>
-                            <a href="<?= base_url('admin/certificates') ?>" class="<?= (strpos(uri_string(), 'admin/certificates') === 0) ? 'active' : '' ?>">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                คำขอใบรับรอง (เดิม)
-                            </a>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($sidebarAdminId && AccessControl::hasAccess($sid, 'cert_approve')): ?>
-                    <div class="sidebar-submenu" data-submenu="cert_approve">
-                        <button type="button" class="submenu-header" aria-expanded="false">
-                            <span>อนุมัติใบรับรอง</span>
-                            <svg class="submenu-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <polyline points="6 9 12 15 18 9" />
-                            </svg>
-                        </button>
-                        <div class="submenu-items">
-                            <a href="<?= base_url('approve/certificates') ?>" class="<?= (strpos(uri_string(), 'approve') === 0) ? 'active' : '' ?>">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path d="M9 12l2 2 4-4" />
-                                    <circle cx="12" cy="12" r="10" />
-                                </svg>
-                                อนุมัติใบรับรอง
+                                รายงานใบที่ออกแล้ว
                             </a>
                         </div>
                     </div>
@@ -430,6 +401,14 @@ use App\Libraries\AccessControl; ?>
                                         <path d="M16 3.13a4 4 0 010 7.75" />
                                     </svg>
                                     จัดการผู้ใช้
+                                </a>
+                                <a href="<?= base_url('admin/club-representatives') ?>" class="<?= (uri_string() == 'admin/club-representatives' || strpos(uri_string(), 'admin/club-representatives') === 0) ? 'active' : '' ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                        <circle cx="9" cy="7" r="4" />
+                                        <path d="M22 11l-3-3m0 0l-3 3m3-3v12" />
+                                    </svg>
+                                    ตัวแทนสโมสรนักศึกษา
                                 </a>
                                 <a href="<?= base_url('admin/user-faculty') ?>" class="<?= (uri_string() == 'admin/user-faculty' || strpos(uri_string(), 'admin/user-faculty') === 0) ? 'active' : '' ?>">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

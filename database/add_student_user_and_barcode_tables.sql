@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS `student_user` (
     `thai_lastname` VARCHAR(255) DEFAULT NULL COMMENT 'นามสกุล (ไทย)',
     `profile_image` VARCHAR(255) DEFAULT NULL,
     `role` ENUM('student', 'club') DEFAULT 'student' COMMENT 'student=นักศึกษา, club=นักศึกษาสโมสร',
-    `status` ENUM('active', 'inactive') DEFAULT 'active',
+    `status` ENUM('active', 'inactive', 'pending') DEFAULT 'active' COMMENT 'pending=รอเปิดจาก Portal ครั้งแรก',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),

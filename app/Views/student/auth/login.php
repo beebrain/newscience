@@ -392,7 +392,7 @@
             $uruOAuth = config(\Config\UruPortalOAuth::class);
             if ($uruOAuth->enabled):
             ?>
-                <a href="<?= base_url('oauth/login') ?>" class="btn-portal">
+                <a href="<?= base_url('oauth/login?intent=student') ?>" class="btn-portal">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
                         <polyline points="10 17 15 12 10 7"></polyline>
@@ -429,6 +429,12 @@
             <div class="back">
                 <a href="<?= base_url() ?>">← กลับหน้าแรก</a>
             </div>
+
+            <?php if (defined('ENVIRONMENT') && ENVIRONMENT === 'development'): ?>
+                <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+                    <a href="<?= base_url('dev/student-test') ?>" style="color: var(--primary);">ทดสอบ (dev): บัญชี dummy u59/u69</a>
+                </p>
+            <?php endif; ?>
 
             <div class="features">
                 <span>E-Certificate</span>

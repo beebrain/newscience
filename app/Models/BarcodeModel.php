@@ -91,6 +91,52 @@ class BarcodeModel extends Model
     }
 
     /**
+     * หยิบบาร์โค้ดว่างแถวแรกของ event แล้วผูกกับนักศึกษา + ตั้ง claimed_at ใน transaction (กันชนกันพร้อมกัน)
+     *
+     * @return int|null barcode id ที่ได้ หรือ null ถ้าไม่มีว่าง / ชนกัน
+     */
+    public function assignAndClaimFirstAvailableAtomic(int $barcodeEventId, int $studentUserId): ?int
+    {
+        $db = $this->db;
+        $db->transStart();
+        try {
+            $sql = "SELECT `id` FROM `{$this->table}` WHERE `barcode_event_id` = ? AND `student_user_id` IS NULL ORDER BY `id` ASC LIMIT 1 FOR UPDATE";
+            $row = $db->query($sql, [$barcodeEventId])->getRowArray();
+            if (! $row) {
+                $db->transRollback();
+
+                return null;
+            }
+            $id = (int) $row['id'];
+            $now = date('Y-m-d H:i:s');
+            $db->table($this->table)
+                ->where('id', $id)
+                ->where('student_user_id', null)
+                ->update([
+                    'student_user_id' => $studentUserId,
+                    'assigned_at'     => $now,
+                    'claimed_at'      => $now,
+                ]);
+            if ($db->affectedRows() < 1) {
+                $db->transRollback();
+
+                return null;
+            }
+            $db->transComplete();
+            if (! $db->transStatus()) {
+                return null;
+            }
+
+            return $id;
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'BarcodeModel::assignAndClaimFirstAvailableAtomic: ' . $e->getMessage());
+
+            return null;
+        }
+    }
+
+    /**
      * Delete a barcode by id; returns true if deleted (and belonged to given event)
      */
     public function deleteBarcode(int $barcodeId, int $barcodeEventId): bool

@@ -92,6 +92,24 @@ class Certificate extends BaseConfig
     public int $maxImportSize = 2 * 1024 * 1024;         // 2 MB
     public int $maxSignatureSize = 1 * 1024 * 1024;      // 1 MB
 
+    /**
+     * เคยใช้จำกัดหน่วยงานของผู้จัด — ปัจจุบันการเข้า Dashboard ใช้สิทธิ์จาก session แทน (เก็บไว้เพื่อความเข้ากันได้)
+     *
+     * @var list<int>
+     */
+    public array $organizerOrgUnitIds = [];
+
+    /**
+     * โฟลเดอร์เก็บพื้นหลังกิจกรรม (relative จาก ROOTPATH writable)
+     */
+    public string $eventBackgroundUploadPath = ROOTPATH . 'writable/uploads/cert_system/event_backgrounds/';
+
+    /**
+     * ค่าเริ่มต้น overlay เมื่อกิจกรรมไม่ใช้ cert_templates (ตำแหน่ง mm บนหน้า A4 แนวตั้ง)
+     * แก้ได้ผ่าน env cert.eventDefaultLayoutJson (string JSON เต็ม)
+     */
+    public string $eventCertificateDefaultLayoutJson = '{"field_mapping":{"student_name":{"x":90,"y":145,"font_size":22},"purpose":{"x":90,"y":168,"font_size":14}},"signature_x":150,"signature_y":200,"qr_x":18,"qr_y":262,"qr_size":22}';
+
     public function __construct()
     {
         parent::__construct();
@@ -108,5 +126,20 @@ class Certificate extends BaseConfig
         $this->notifyStaffOnRequest = (bool) env('cert.notifyStaff', $this->notifyStaffOnRequest);
         $this->notifyStudentOnStatusChange = (bool) env('cert.notifyStudent', $this->notifyStudentOnStatusChange);
         $this->notifyApproverOnPending = (bool) env('cert.notifyApprover', $this->notifyApproverOnPending);
+
+        $orgIds = env('cert.organizerOrgUnitIds', '');
+        if (is_string($orgIds) && trim($orgIds) !== '') {
+            $this->organizerOrgUnitIds = array_values(array_filter(array_map(
+                static fn ($v) => (int) trim((string) $v),
+                explode(',', $orgIds)
+            ), static fn (int $v) => $v > 0));
+        }
+
+        $this->eventBackgroundUploadPath = rtrim(env('cert.eventBackgroundPath', $this->eventBackgroundUploadPath), '/\\') . DIRECTORY_SEPARATOR;
+
+        $layoutEnv = env('cert.eventDefaultLayoutJson', '');
+        if (is_string($layoutEnv) && trim($layoutEnv) !== '') {
+            $this->eventCertificateDefaultLayoutJson = $layoutEnv;
+        }
     }
 }

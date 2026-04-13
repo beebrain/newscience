@@ -59,6 +59,11 @@ $routes->get('/dev/test-content-builder', 'Dev::testContentBuilder');
 // Mock URU Portal OAuth (ทดสอบ OAuth flow โดยไม่ต้องผ่าน Portal จริง)
 $routes->get('/dev/mock-oauth-student', 'Dev::mockOAuthStudent');
 $routes->get('/dev/mock-oauth-personnel', 'Dev::mockOAuthPersonnel');
+// นักศึกษา dummy สำหรับทดสอบ (u59=สโมสร, u69=นักศึกษาปกติ) — ENVIRONMENT === development เท่านั้น
+$routes->get('/dev/student-test', 'Dev::studentTest');
+$routes->get('/dev/seed-student-dummies', 'Dev::seedStudentDummies');
+$routes->get('/dev/login-dummy-club', 'Dev::loginDummyStudentClub');
+$routes->get('/dev/login-dummy-student', 'Dev::loginDummyStudentRegular');
 
 // Admin Auth Routes (no filter)
 $routes->get('/admin/login', 'Admin\Auth::login');
@@ -107,6 +112,24 @@ $routes->post('/dashboard/profile/research-record-sync/apply', 'User\ResearchRec
 $routes->post('/dashboard/profile/research-record-sync/pull-all', 'User\ResearchRecordSync::pullAll', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/research-record-sync/push-all', 'User\ResearchRecordSync::pushAll', ['filter' => 'loggedin']);
 $routes->get('/go-research-record', 'Admin\Auth::goResearchRecord', ['filter' => 'loggedin']);
+
+// E-Certificate กิจกรรม (อาจารย์/บุคลากร — Dashboard)
+$routes->group('dashboard/cert-events', ['filter' => 'certorganizer'], static function ($routes) {
+    $routes->get('/', 'User\CertEvents::index');
+    $routes->get('issued-report', 'User\CertEvents::issuedReport');
+    $routes->get('create', 'User\CertEvents::create');
+    $routes->post('store', 'User\CertEvents::store');
+    $routes->get('(:num)', 'User\CertEvents::show/$1');
+    $routes->get('(:num)/edit', 'User\CertEvents::edit/$1');
+    $routes->post('(:num)/update', 'User\CertEvents::update/$1');
+    $routes->get('(:num)/delete', 'User\CertEvents::delete/$1');
+    $routes->post('(:num)/add-recipient', 'User\CertEvents::addRecipient/$1');
+    $routes->get('recipient/(:num)/remove', 'User\CertEvents::removeRecipient/$1');
+    $routes->get('(:num)/import', 'User\CertEvents::importForm/$1');
+    $routes->post('(:num)/import', 'User\CertEvents::processImport/$1');
+    $routes->get('(:num)/export', 'User\CertEvents::exportRecipients/$1');
+    $routes->get('(:num)/issue', 'User\CertEvents::issueCertificates/$1');
+});
 
 // Teaching evaluation (ประเมินผลการสอน) — lecture submit + admin ต้อง login; แบบฟอร์มผู้ประเมินเข้าจาก link
 $routes->group('evaluate', ['filter' => 'loggedin'], static function ($routes) {
@@ -167,6 +190,7 @@ $routes->get('/student/logout', 'Student\Auth::logout');
 $routes->get('/student', 'Student\Dashboard::index', ['filter' => 'studentauth']);
 $routes->get('/student/dashboard', 'Student\Dashboard::index', ['filter' => 'studentauth']);
 $routes->get('/student/barcodes', 'Student\Dashboard::barcodes', ['filter' => 'studentauth']);
+$routes->get('/student/barcodes/event/(:num)', 'Student\Dashboard::barcodeEvent/$1', ['filter' => 'studentauth']);
 $routes->post('/student/barcodes/claim/(:num)', 'Student\Dashboard::claimBarcode/$1', ['filter' => 'studentauth']);
 $routes->post('/student/barcodes/claim-from-event/(:num)', 'Student\Dashboard::claimFromEvent/$1', ['filter' => 'studentauth']);
 $routes->get('/student/events', 'Student\Dashboard::events', ['filter' => 'studentauth']);
@@ -180,6 +204,12 @@ $routes->group('student-admin', ['filter' => 'studentadmin'], function ($routes)
     $routes->get('barcode-events', 'StudentAdmin\BarcodeEvents::index');
     $routes->get('barcode-events/create', 'StudentAdmin\BarcodeEvents::create');
     $routes->post('barcode-events/store', 'StudentAdmin\BarcodeEvents::store');
+    // Ajax (ต้องอยู่ก่อน route barcode-events/(:num) เพื่อไม่ให้ถูกจับเป็น id)
+    $routes->get('barcode-events/ajax/events-table', 'StudentAdmin\BarcodeEvents::ajaxEventsTable');
+    $routes->get('barcode-events/ajax/event/(:num)', 'StudentAdmin\BarcodeEvents::ajaxEventDetail/$1');
+    $routes->get('barcode-events/ajax/barcodes/(:num)', 'StudentAdmin\BarcodeEvents::ajaxBarcodes/$1');
+    $routes->get('barcode-events/ajax/eligibles-data/(:num)', 'StudentAdmin\BarcodeEvents::ajaxEligiblesData/$1');
+    $routes->post('barcode-events/ajax/delete-event/(:num)', 'StudentAdmin\BarcodeEvents::ajaxDeleteEvent/$1');
     $routes->get('barcode-events/(:num)', 'StudentAdmin\BarcodeEvents::show/$1');
     $routes->get('barcode-events/edit/(:num)', 'StudentAdmin\BarcodeEvents::edit/$1');
     $routes->post('barcode-events/update/(:num)', 'StudentAdmin\BarcodeEvents::update/$1');
@@ -203,6 +233,10 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
 
     // จัดการผู้ใช้ (Super_admin และ Faculty_admin)
     $routes->get('users', 'Admin\UserManagement::index');
+
+    // ตัวแทนนักศึกษาสโมสร (faculty_admin / admin ในหลักสูตร)
+    $routes->get('club-representatives', 'Admin\ClubRepresentatives::index');
+    $routes->post('club-representatives/set-role', 'Admin\ClubRepresentatives::setClubRole');
 
     // AJAX endpoints for user management
     $routes->get('users/get-users', 'Admin\UserManagement::getUsers');
@@ -263,20 +297,8 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->get('urgent-popups/delete/(:num)', 'Admin\UrgentPopups::delete/$1');
     $routes->post('urgent-popups/toggle-active/(:num)', 'Admin\UrgentPopups::toggleActive/$1');
 
-    // Certificate Templates Management
-    $routes->get('cert-templates', 'Admin\CertTemplates::index');
-    $routes->get('cert-templates/create', 'Admin\CertTemplates::create');
-    $routes->post('cert-templates/store', 'Admin\CertTemplates::store');
-    $routes->get('cert-templates/edit/(:num)', 'Admin\CertTemplates::edit/$1');
-    $routes->post('cert-templates/update/(:num)', 'Admin\CertTemplates::update/$1');
-    $routes->get('cert-templates/delete/(:num)', 'Admin\CertTemplates::delete/$1');
-
-    // Certificate Template Preview (AJAX)
-    $routes->post('cert-templates/preview-upload', 'Admin\CertTemplatePreview::uploadPreview');
-    $routes->post('cert-templates/extract-text', 'Admin\CertTemplatePreview::extractText');
-    $routes->post('cert-templates/clear-temp', 'Admin\CertTemplatePreview::clearTemp');
-
-    // Certificate Events (กิจกรรม/อบรมที่จะออก Certificate - ระบบใหม่)
+    // Certificate Events (กิจกรรม/อบรมที่จะออก Certificate)
+    $routes->get('cert-events/issued-report', 'Admin\CertEvents::issuedReport');
     $routes->get('cert-events', 'Admin\CertEvents::index');
     $routes->get('cert-events/create', 'Admin\CertEvents::create');
     $routes->post('cert-events/store', 'Admin\CertEvents::store');
@@ -290,13 +312,6 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->post('cert-events/(:num)/import', 'Admin\CertEvents::processImport/$1');
     $routes->get('cert-events/(:num)/export', 'Admin\CertEvents::exportRecipients/$1');
     $routes->get('cert-events/(:num)/issue', 'Admin\CertEvents::issueCertificates/$1');
-
-    // Certificates Management (Staff verification - ระบบเดิม เก็บไว้สำหรับ backward compat)
-    $routes->get('certificates', 'Admin\Certificates::index');
-    $routes->get('certificates/pending', 'Admin\Certificates::pending');
-    $routes->get('certificates/(:num)', 'Admin\Certificates::show/$1');
-    $routes->post('certificates/verify/(:num)', 'Admin\Certificates::verify/$1');
-    $routes->post('certificates/reject/(:num)', 'Admin\Certificates::reject/$1');
 
     // Events (กิจกรรมที่จะมาถึง)
     $routes->get('events', 'Admin\Events::index');
@@ -343,15 +358,6 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
 
     // ไป Research Record โดยไม่ต้อง login ซ้ำ (ส่ง signed token จาก email)
     $routes->get('go-research-record', 'Admin\Auth::goResearchRecord');
-});
-
-// Approver Routes (Program Chairs & Dean)
-$routes->group('approve', ['filter' => 'certapprover'], function ($routes) {
-    $routes->get('certificates', 'Approve\Certificate::index');
-    $routes->get('certificates/history', 'Approve\Certificate::history');
-    $routes->get('certificates/(:num)', 'Approve\Certificate::show/$1');
-    $routes->post('certificates/approve/(:num)', 'Approve\Certificate::approve/$1');
-    $routes->post('certificates/reject/(:num)', 'Approve\Certificate::reject/$1');
 });
 
 // Public Certificate Verification (no login required)

@@ -37,6 +37,36 @@ class BarcodeEventModel extends Model
     }
 
     /**
+     * กิจกรรมที่นักศึกษาเห็นใน Portal (ไม่รวมฉบับร่าง)
+     */
+    public function getVisibleForStudentPortal(): array
+    {
+        return $this->whereIn('status', ['active', 'closed'])
+            ->orderBy('event_date', 'DESC')
+            ->orderBy('id', 'DESC')
+            ->findAll();
+    }
+
+    /**
+     * @param int[] $ids
+     * @return array<int, array> id => row
+     */
+    public function getKeyedByIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if ($ids === []) {
+            return [];
+        }
+        $rows = $this->whereIn('id', $ids)->findAll();
+        $out = [];
+        foreach ($rows as $row) {
+            $out[(int) ($row['id'] ?? 0)] = $row;
+        }
+
+        return $out;
+    }
+
+    /**
      * Get event with counts: total barcodes, assigned count, claimed count, eligibles count
      */
     public function getWithCounts(int $id): ?array

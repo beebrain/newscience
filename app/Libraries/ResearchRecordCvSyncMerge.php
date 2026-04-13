@@ -223,6 +223,9 @@ class ResearchRecordCvSyncMerge
         if (!$cvSectionModel->db->tableExists('cv_sections')) {
             return $stats;
         }
+        if (! CvEntryModel::isTablePresent($cvSectionModel->db)) {
+            return $stats;
+        }
 
         $section = $cvSectionModel->where('personnel_id', $personnelId)
             ->groupStart()
@@ -347,6 +350,10 @@ class ResearchRecordCvSyncMerge
     public static function replaceNewScienceCvFromBundle(int $personnelId, array $bundle): void
     {
         $db           = \Config\Database::connect();
+        if (! $db->tableExists('cv_sections') || ! CvEntryModel::isTablePresent($db)) {
+            throw new \RuntimeException('CV schema incomplete — run php spark migrate (cv_sections and cv_entries required)');
+        }
+
         $sectionModel = new CvSectionModel();
         $entryModel   = new CvEntryModel();
 

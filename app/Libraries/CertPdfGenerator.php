@@ -4,7 +4,6 @@ namespace App\Libraries;
 
 use Config\Certificate as CertificateConfig;
 use setasign\Fpdi\Fpdi;
-use TCPDF;
 
 class CertPdfGenerator
 {
@@ -13,16 +12,59 @@ class CertPdfGenerator
 
     public function __construct()
     {
-        $this->config = config(CertificateConfig::class);
+        $this->config      = config(CertificateConfig::class);
         $this->qrGenerator = new CertQrGenerator();
     }
 
-    public function generate(array $request, array $template, array $student, string $verificationToken, ?string $signatureImagePath = null): ?string
-    {
+    /**
+     * @param array      $request         request_number, purpose
+     * @param array      $template        row from cert_templates
+     * @param array      $student         tf_name, tl_name, ...
+     * @param array|null $event           row from cert_events (optional background_file, background_kind, layout_json)
+     */
+    public function generate(
+        array $request,
+        array $template,
+        array $student,
+        string $verificationToken,
+        ?string $signatureImagePath = null,
+        ?array $event = null
+    ): ?string {
+        $effective = $this->effectiveTemplateForEvent($template, $event ?? []);
+
+        $bgKind = isset($event['background_kind']) ? strtolower((string) $event['background_kind']) : '';
+        $bgFile = isset($event['background_file']) ? trim((string) $event['background_file']) : '';
+
+        if ($bgKind !== '' && $bgFile !== '') {
+            $absBg = $this->resolveEventBackgroundPath($bgFile);
+            if ($absBg && is_file($absBg)) {
+                if ($bgKind === 'image') {
+                    return $this->generateWithImageBackground(
+                        $absBg,
+                        $request,
+                        $effective,
+                        $student,
+                        $verificationToken,
+                        $signatureImagePath
+                    );
+                }
+                if ($bgKind === 'pdf') {
+                    return $this->generateWithPdfBackground(
+                        $absBg,
+                        $request,
+                        $effective,
+                        $student,
+                        $verificationToken,
+                        $signatureImagePath
+                    );
+                }
+            }
+        }
+
         $pdf = new Fpdi();
 
         $templatePath = $this->resolveTemplatePath($template['template_file']);
-        if (!$templatePath || !file_exists($templatePath)) {
+        if (! $templatePath || ! file_exists($templatePath)) {
             return null;
         }
 
@@ -31,36 +73,147 @@ class CertPdfGenerator
         $pdf->AddPage();
         $pdf->useTemplate($tplId);
 
-        $fieldMapping = json_decode($template['field_mapping'] ?? '{}', true);
+        $this->drawOverlays($pdf, $effective, $student, $request, $verificationToken, $signatureImagePath);
 
-        foreach ($fieldMapping as $field => $config) {
-            $value = $this->getFieldValue($field, $student, $request);
+        return $this->writeOutputPdf($pdf, $request['request_number'] ?? 'CERT');
+    }
+
+    public function hashFile(string $filepath): string
+    {
+        return hash_file('sha256', $filepath);
+    }
+
+    /**
+     * @param array $template base cert_templates row
+     * @param array $event    cert_events row (may contain layout_json)
+     *
+     * @return array merged row (field_mapping as JSON string for decode in drawOverlays)
+     */
+    public function effectiveTemplateForEvent(array $template, array $event): array
+    {
+        $out = $template;
+        $raw = $event['layout_json'] ?? null;
+        if (! is_string($raw) || trim($raw) === '') {
+            return $out;
+        }
+        $layout = json_decode($raw, true);
+        if (! is_array($layout)) {
+            return $out;
+        }
+        if (! empty($layout['field_mapping']) && is_array($layout['field_mapping'])) {
+            $out['field_mapping'] = json_encode($layout['field_mapping'], JSON_UNESCAPED_UNICODE);
+        }
+        foreach (['signature_x', 'signature_y', 'qr_x', 'qr_y', 'qr_size'] as $k) {
+            if (isset($layout[$k])) {
+                $out[$k] = $layout[$k];
+            }
+        }
+
+        return $out;
+    }
+
+    protected function generateWithPdfBackground(
+        string $absolutePdfPath,
+        array $request,
+        array $effective,
+        array $student,
+        string $verificationToken,
+        ?string $signatureImagePath
+    ): ?string {
+        $pdf = new Fpdi();
+        try {
+            $pdf->setSourceFile($absolutePdfPath);
+            $tplId = $pdf->importPage(1);
+            $pdf->AddPage();
+            $pdf->useTemplate($tplId);
+        } catch (\Throwable $e) {
+            log_message('error', 'CertPdfGenerator PDF background: ' . $e->getMessage());
+
+            return null;
+        }
+
+        $this->drawOverlays($pdf, $effective, $student, $request, $verificationToken, $signatureImagePath);
+
+        return $this->writeOutputPdf($pdf, $request['request_number'] ?? 'CERT');
+    }
+
+    protected function generateWithImageBackground(
+        string $absoluteImagePath,
+        array $request,
+        array $effective,
+        array $student,
+        string $verificationToken,
+        ?string $signatureImagePath
+    ): ?string {
+        $pdf = new Fpdi();
+        $pdf->AddPage();
+        $pdf->Image($absoluteImagePath, 0, 0, 210, 297, '', '', '', false, 300, '', false, false, 0, true);
+
+        $this->drawOverlays($pdf, $effective, $student, $request, $verificationToken, $signatureImagePath);
+
+        return $this->writeOutputPdf($pdf, $request['request_number'] ?? 'CERT');
+    }
+
+    protected function drawOverlays(
+        Fpdi $pdf,
+        array $effective,
+        array $student,
+        array $request,
+        string $verificationToken,
+        ?string $signatureImagePath
+    ): void {
+        $fieldMapping = json_decode($effective['field_mapping'] ?? '{}', true);
+        if (! is_array($fieldMapping)) {
+            $fieldMapping = [];
+        }
+
+        foreach ($fieldMapping as $field => $cfg) {
+            if (! is_array($cfg)) {
+                continue;
+            }
+            $value = $this->getFieldValue((string) $field, $student, $request);
             if ($value !== null) {
-                $pdf->SetFont('THSarabun', '', $config['font_size'] ?? 16);
-                $pdf->SetXY($config['x'], $config['y']);
+                $pdf->SetFont('THSarabun', '', $cfg['font_size'] ?? 16);
+                $pdf->SetXY((float) ($cfg['x'] ?? 0), (float) ($cfg['y'] ?? 0));
                 $pdf->Cell(0, 0, $value, 0, 0, 'L');
             }
         }
 
         if ($signatureImagePath && file_exists($signatureImagePath)) {
-            $pdf->Image($signatureImagePath, $template['signature_x'], $template['signature_y'], 50, 25, 'PNG');
+            $pdf->Image(
+                $signatureImagePath,
+                (float) ($effective['signature_x'] ?? 0),
+                (float) ($effective['signature_y'] ?? 0),
+                50,
+                25,
+                'PNG'
+            );
         }
 
-        $qrSvg = $this->qrGenerator->generate($verificationToken, (int) $template['qr_size']);
+        $qrSvg = $this->qrGenerator->generate($verificationToken, (int) ($effective['qr_size'] ?? 40));
         $qrPath = $this->saveTempQr($qrSvg, $verificationToken);
         if ($qrPath) {
-            $pdf->Image($qrPath, $template['qr_x'], $template['qr_y'], $template['qr_size'], $template['qr_size'], 'PNG');
+            $pdf->Image(
+                $qrPath,
+                (float) ($effective['qr_x'] ?? 0),
+                (float) ($effective['qr_y'] ?? 0),
+                (float) ($effective['qr_size'] ?? 40),
+                (float) ($effective['qr_size'] ?? 40),
+                'PNG'
+            );
             @unlink($qrPath);
         }
+    }
 
-        // Generate output path with year-based organization
-        $dateStr = date('Ymd_His');
-        $filename = 'CERT_' . $request['request_number'] . '_' . $dateStr . '.pdf';
-        $year = date('Y');
+    protected function writeOutputPdf(Fpdi $pdf, string $requestNumber): string
+    {
+        $dateStr   = date('Ymd_His');
+        $filename  = 'CERT_' . preg_replace('/[^A-Za-z0-9._-]+/', '_', $requestNumber) . '_' . $dateStr . '.pdf';
+        $year      = date('Y');
         $outputDir = rtrim($this->config->certificateOutputPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $year;
         $outputPath = $outputDir . DIRECTORY_SEPARATOR . $filename;
 
-        if (!is_dir($outputDir)) {
+        if (! is_dir($outputDir)) {
             mkdir($outputDir, 0775, true);
         }
 
@@ -69,31 +222,37 @@ class CertPdfGenerator
         return 'uploads/cert_system/certificates/' . $year . '/' . $filename;
     }
 
-    public function hashFile(string $filepath): string
+    protected function resolveEventBackgroundPath(string $relative): ?string
     {
-        return hash_file('sha256', $filepath);
+        $relative = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, trim($relative));
+        if ($relative === '') {
+            return null;
+        }
+        if (str_starts_with($relative, 'writable' . DIRECTORY_SEPARATOR) || str_starts_with($relative, 'writable/')) {
+            return ROOTPATH . ltrim(str_replace('/', DIRECTORY_SEPARATOR, $relative), DIRECTORY_SEPARATOR);
+        }
+
+        return null;
     }
 
     protected function resolveTemplatePath(?string $relative): ?string
     {
-        if (!$relative) {
+        if (! $relative) {
             return null;
         }
 
-        // New path structure: uploads/cert_system/templates/YYYY/filename.pdf
         if (str_starts_with($relative, 'uploads/cert_system/')) {
-            return FCPATH . $relative;
+            return FCPATH . str_replace('/', DIRECTORY_SEPARATOR, $relative);
         }
 
-        // Legacy path support: uploads/cert_templates/filename.pdf
         if (str_starts_with($relative, 'uploads/cert_templates/')) {
-            $year = date('Y');
+            $year     = date('Y');
             $filename = basename($relative);
-            $newPath = $this->config->templateUploadPath . $year . '/' . $filename;
+            $newPath  = $this->config->templateUploadPath . $year . '/' . $filename;
             if (file_exists($newPath)) {
                 return $newPath;
             }
-            // Fallback to legacy location
+
             return FCPATH . $relative;
         }
 
@@ -103,30 +262,25 @@ class CertPdfGenerator
     protected function getFieldValue(string $field, array $student, array $request): ?string
     {
         $map = [
-            'student_name'    => ($student['tf_name'] ?? '') . ' ' . ($student['tl_name'] ?? ''),
-            'student_id'      => $student['login_uid'] ?? '',
-            'program_name'    => $this->resolveProgramName($student),
-            'request_number'  => $request['request_number'] ?? '',
-            'purpose'         => $request['purpose'] ?? '',
-            'date'            => date('d/m/Y'),
-            'date_thai'       => $this->formatThaiDate(),
+            'student_name'   => trim(($student['tf_name'] ?? '') . ' ' . ($student['tl_name'] ?? '')),
+            'student_id'     => $student['login_uid'] ?? '',
+            'program_name'   => $this->resolveProgramName($student),
+            'request_number' => $request['request_number'] ?? '',
+            'purpose'        => $request['purpose'] ?? '',
+            'date'           => date('d/m/Y'),
+            'date_thai'      => $this->formatThaiDate(),
         ];
+
         return $map[$field] ?? null;
     }
 
-    /**
-     * Resolve program name from student data
-     * Uses program_name if available, otherwise looks up from program_id
-     */
     protected function resolveProgramName(array $student): string
     {
-        // If program_name is already provided (e.g., from CSV import extra_data)
-        if (!empty($student['program_name'])) {
+        if (! empty($student['program_name'])) {
             return $student['program_name'];
         }
 
-        // If we have program_id, look up the name from database
-        if (!empty($student['program_id'])) {
+        if (! empty($student['program_id'])) {
             try {
                 $db = \Config\Database::connect();
                 $program = $db->table('programs')
@@ -135,7 +289,7 @@ class CertPdfGenerator
                     ->get()
                     ->getRow();
 
-                if ($program && !empty($program->name_th)) {
+                if ($program && ! empty($program->name_th)) {
                     return $program->name_th;
                 }
             } catch (\Exception $e) {
@@ -152,19 +306,20 @@ class CertPdfGenerator
         $d = (int) date('j');
         $m = $months[(int) date('n') - 1];
         $y = (int) date('Y') + 543;
+
         return "{$d} {$m} {$y}";
     }
 
     protected function saveTempQr(string $svgContent, string $token): ?string
     {
         $tmpDir = sys_get_temp_dir();
-        $path = $tmpDir . DIRECTORY_SEPARATOR . 'qr_' . $token . '.png';
+        $path   = $tmpDir . DIRECTORY_SEPARATOR . 'qr_' . $token . '.png';
 
         $dom = new \DOMDocument();
         $dom->loadXML($svgContent);
 
-        $svg = $dom->documentElement;
-        $width = $svg->getAttribute('width') ?: 200;
+        $svg    = $dom->documentElement;
+        $width  = $svg->getAttribute('width') ?: 200;
         $height = $svg->getAttribute('height') ?: 200;
 
         $image = imagecreatetruecolor((int) $width, (int) $height);

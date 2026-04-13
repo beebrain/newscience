@@ -1,5 +1,5 @@
-<?php $cb = $cert_base ?? rtrim(base_url('admin/cert-events'), '/'); ?>
-<?= $this->extend('admin/layouts/admin_layout') ?>
+<?php $cb = $cert_base ?? rtrim(base_url('dashboard/cert-events'), '/'); ?>
+<?= $this->extend('layouts/user_layout') ?>
 
 <?= $this->section('content') ?>
 <div class="card">
@@ -63,12 +63,12 @@
                 <label>ไฟล์ใบรับรองของกิจกรรม (PDF / JPG / PNG)</label>
                 <input type="file" name="background_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
                 <small class="form-text text-muted">
-                    ระบบจะวางชื่อ วัตถุประสงค์ QR และลายเซ็นทับ<strong>ไฟล์นี้</strong> — แนะนำอัปโหลดตอนสร้างหรือที่หน้าแก้ไขก่อนออกใบ
+                    ระบบจะวางชื่อและ QR ทับไฟล์นี้ — แนะนำอัปโหลดตอนสร้างหรือที่หน้าแก้ไขก่อนออกใบ
                 </small>
             </div>
 
             <div class="form-group">
-                <label>layout_json (ปรับตำแหน่งข้อความ — ไม่บังคับ)</label>
+                <label>layout_json (ปรับตำแหน่ง — ไม่บังคับ)</label>
                 <textarea name="layout_json" class="form-control" rows="4" placeholder='{"field_mapping":{"student_name":{"x":90,"y":145,"font_size":22}},...}'><?= esc(old('layout_json')) ?></textarea>
             </div>
 

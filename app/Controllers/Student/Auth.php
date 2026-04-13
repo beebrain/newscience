@@ -55,7 +55,13 @@ class Auth extends BaseController
                 ->with('error', 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
         }
 
-        if (($user['status'] ?? '') !== 'active') {
+        $st = $user['status'] ?? 'active';
+        if ($st === 'pending') {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'บัญชียังไม่พร้อม — กรุณาเข้าสู่ระบบด้วย URU Portal ครั้งแรกเพื่อเปิดใช้งาน');
+        }
+        if ($st !== 'active') {
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'บัญชีนี้ถูกปิดใช้งาน');

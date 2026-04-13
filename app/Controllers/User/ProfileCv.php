@@ -65,6 +65,9 @@ class ProfileCv extends BaseController
         if (!$cvSectionModel->db->tableExists('cv_sections')) {
             return [];
         }
+        if (! CvEntryModel::isTablePresent($cvSectionModel->db)) {
+            return [];
+        }
 
         $sections = $cvSectionModel->where('personnel_id', $personnelId)
             ->orderBy('sort_order', 'ASC')
@@ -127,7 +130,10 @@ class ProfileCv extends BaseController
         $personnelId = (int) $person['id'];
         $cvSectionModel = new CvSectionModel();
         if (!$cvSectionModel->db->tableExists('cv_sections')) {
-            return redirect()->to(base_url('dashboard/profile'))->with('error', 'ระบบ CV ยังไม่พร้อม — รัน php spark migrate');
+            return redirect()->to(base_url('dashboard/profile'))->with('error', 'ระบบ CV ยังไม่พร้อม — รัน php spark migrate (ต้องมีตาราง cv_sections)');
+        }
+        if (! CvEntryModel::isTablePresent($cvSectionModel->db)) {
+            return redirect()->to(base_url('dashboard/profile'))->with('error', 'ระบบ CV ยังไม่ครบ — รัน php spark migrate (ต้องมีตาราง cv_entries)');
         }
 
         $researchApi            = config(ResearchApi::class);
@@ -406,7 +412,7 @@ class ProfileCv extends BaseController
         $new = empty($section['visible_on_public']) ? 1 : 0;
         $cvSectionModel->update($sectionId, ['visible_on_public' => $new]);
 
-        if ($new === 0) {
+        if ($new === 0 && CvEntryModel::isTablePresent($cvSectionModel->db)) {
             $cvEntryModel = new CvEntryModel();
             $cvEntryModel->where('section_id', $sectionId)->update(null, ['visible_on_public' => 0]);
         }
@@ -426,6 +432,10 @@ class ProfileCv extends BaseController
         $personnelId = $this->personnelIdOrRedirect();
         if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
             return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        if (! CvEntryModel::isTablePresent()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ระบบ CV ยังไม่ครบ — รัน php spark migrate (ต้องมีตาราง cv_entries)']);
         }
 
         $cvEntryModel   = new CvEntryModel();
@@ -463,7 +473,9 @@ class ProfileCv extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบหัวข้อ']);
         }
 
-        (new CvEntryModel())->where('section_id', $sectionId)->delete();
+        if (CvEntryModel::isTablePresent($cvSectionModel->db)) {
+            (new CvEntryModel())->where('section_id', $sectionId)->delete();
+        }
         $cvSectionModel->delete($sectionId);
 
         return $this->response->setJSON(['success' => true, 'message' => 'ลบหัวข้อเรียบร้อยแล้ว']);
@@ -477,6 +489,10 @@ class ProfileCv extends BaseController
         }
 
         try {
+            if (! CvEntryModel::isTablePresent()) {
+                return $this->response->setJSON(['success' => false, 'message' => 'ระบบ CV ยังไม่ครบ — รัน php spark migrate (ต้องมีตาราง cv_entries)']);
+            }
+
             $sectionId = (int) $this->request->getPost('section_id');
             $order     = json_decode((string) $this->request->getPost('order'), true);
             if ($sectionId <= 0 || empty($order) || !is_array($order)) {
@@ -530,6 +546,10 @@ class ProfileCv extends BaseController
         $section        = $cvSectionModel->find($sectionId);
         if (!$section || (int) $section['personnel_id'] !== $personnelId) {
             return $this->ajaxOrRedirectError('ไม่สามารถเข้าถึงหัวข้อได้');
+        }
+
+        if (! CvEntryModel::isTablePresent()) {
+            return $this->ajaxOrRedirectError('ระบบ CV ยังไม่ครบ — รัน php spark migrate (ต้องมีตาราง cv_entries)');
         }
 
         $title = trim((string) $this->request->getPost('entry_title'));
@@ -649,6 +669,10 @@ class ProfileCv extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Entry ID required']);
         }
 
+        if (! CvEntryModel::isTablePresent()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ระบบ CV ยังไม่ครบ — รัน php spark migrate (ต้องมีตาราง cv_entries)']);
+        }
+
         $cvEntryModel = new CvEntryModel();
         $entry        = $cvEntryModel->find($entryId);
         if (!$entry) {
@@ -686,6 +710,10 @@ class ProfileCv extends BaseController
 
         if (!$entryId) {
             return $this->ajaxOrRedirectError('ไม่พบรายการที่ต้องการลบ');
+        }
+
+        if (! CvEntryModel::isTablePresent()) {
+            return $this->ajaxOrRedirectError('ระบบ CV ยังไม่ครบ — รัน php spark migrate (ต้องมีตาราง cv_entries)');
         }
 
         $cvEntryModel = new CvEntryModel();
@@ -732,7 +760,10 @@ class ProfileCv extends BaseController
 
         $cvSectionModel = new CvSectionModel();
         if (!$cvSectionModel->db->tableExists('cv_sections')) {
-            return $this->response->setJSON(['success' => false, 'message' => 'ระบบ CV ยังไม่พร้อม — รัน php spark migrate']);
+            return $this->response->setJSON(['success' => false, 'message' => 'ระบบ CV ยังไม่พร้อม — รัน php spark migrate (ต้องมีตาราง cv_sections)']);
+        }
+        if (! CvEntryModel::isTablePresent($cvSectionModel->db)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ระบบ CV ยังไม่ครบ — รัน php spark migrate (ต้องมีตาราง cv_entries)']);
         }
 
         $orcidRaw = trim((string) $this->request->getPost('orcid_id'));

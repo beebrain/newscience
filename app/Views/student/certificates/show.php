@@ -50,10 +50,6 @@
                     <td><?= $recipient['event_date'] ? date('d/m/Y', strtotime($recipient['event_date'])) : '-' ?></td>
                 </tr>
                 <tr>
-                    <td>เทมเพลต</td>
-                    <td><?= esc($recipient['template_name'] ?? '-') ?></td>
-                </tr>
-                <tr>
                     <td>สถานะ</td>
                     <td>
                         <?php if ($recipient['status'] === 'issued'): ?>

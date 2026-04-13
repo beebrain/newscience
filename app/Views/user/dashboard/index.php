@@ -8,9 +8,8 @@ $isAdmin = in_array($role, ['admin', 'editor', 'super_admin', 'faculty_admin'], 
 $canManageEvaluate = $can_manage_evaluate ?? false;
 $dashUid = (int) ($p['uid'] ?? 0);
 $showProgramAdminQuick = $dashUid > 0 && \App\Libraries\AccessControl::hasAccess($dashUid, 'program_admin');
-$quickSystemsGridClass = $showProgramAdminQuick
-    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4'
-    : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4';
+$showCertQuick         = \App\Libraries\CertOrganizerAccess::currentMayOrganize();
+$quickSystemsGridClass = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4';
 ?>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
@@ -57,6 +56,18 @@ $quickSystemsGridClass = $showProgramAdminQuick
                 <div class="text-sm text-gray-500 mt-1">จัดการ CV สาธารณะ</div>
                 <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-teal-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </a>
+
+            <?php if ($showCertQuick): ?>
+            <!-- E-Certificate กิจกรรม / ออกใบ -->
+            <a href="<?= base_url('dashboard/cert-events') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-amber-200 hover:-translate-y-1 transition-all duration-200">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+                </div>
+                <div class="font-semibold text-gray-800 group-hover:text-amber-600 transition-colors">ใบรับรอง (E-Cert)</div>
+                <div class="text-sm text-gray-500 mt-1">สร้างกิจกรรมและออกใบให้ผู้เข้าร่วม</div>
+                <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+            <?php endif; ?>
 
             <!-- E-Document -->
             <a href="<?= base_url('edoc') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all duration-200">

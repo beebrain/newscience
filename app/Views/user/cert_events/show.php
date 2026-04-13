@@ -1,6 +1,18 @@
-<?= $this->extend('admin/layouts/admin_layout') ?>
+<?= $this->extend('layouts/user_layout') ?>
+
+<?= $this->section('styles') ?>
+<style>
+.form-control { width: 100%; max-width: 100%; padding: 0.5rem 0.65rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 14px; }
+.btn { display: inline-block; padding: 0.4rem 0.85rem; border-radius: 0.375rem; font-size: 14px; text-decoration: none; border: none; cursor: pointer; }
+.btn-primary { background: #eab308; color: #111827; font-weight: 600; }
+.btn-secondary { background: #e5e7eb; color: #374151; }
+.btn-danger { background: #dc2626; color: #fff; }
+.btn-sm { padding: 0.25rem 0.5rem; font-size: 12px; }
+</style>
+<?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
 <div class="card">
     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
@@ -10,7 +22,7 @@
                 <?php if (! empty($event['background_file'])): ?>
                     ไฟล์ใบรับรอง: <?= esc($event['background_kind'] ?? '') ?> — <?= esc($event['background_file']) ?>
                 <?php else: ?>
-                    <span style="color:#b45309;">ยังไม่มีไฟล์ใบรับรอง (อัปโหลดที่แก้ไขก่อนออกใบ)</span>
+                    <span style="color:#b45309;">ยังไม่มีไฟล์ใบรับรอง</span>
                 <?php endif; ?>
             </small>
         </div>
@@ -256,4 +268,5 @@
         color: white;
     }
 </style>
+</div>
 <?= $this->endSection() ?>

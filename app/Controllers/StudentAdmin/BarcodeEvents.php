@@ -7,8 +7,9 @@ use App\Models\BarcodeEventModel;
 use App\Models\BarcodeModel;
 use App\Models\BarcodeEventEligibleModel;
 use App\Models\StudentUserModel;
-use Config\N8n;
 use Config\BarcodeExtractApi;
+use Config\N8n;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class BarcodeEvents extends BaseController
 {
@@ -150,7 +151,7 @@ class BarcodeEvents extends BaseController
             return ['success' => false, 'codes' => [], 'error' => 'ไม่มีไฟล์หรือไฟล์ไม่ถูกต้อง'];
         }
         $ext = strtolower($file->getClientExtension());
-        $content = $file->getString();
+        $content = in_array($ext, ['xlsx', 'xls'], true) ? '' : $file->getString();
         $codes = [];
         if ($ext === 'json') {
             $decoded = json_decode($content, true);
@@ -164,6 +165,26 @@ class BarcodeEvents extends BaseController
                 $cols = str_getcsv($line);
                 $codes[] = isset($cols[0]) ? trim($cols[0]) : '';
             }
+        } elseif (in_array($ext, ['xlsx', 'xls'], true)) {
+            try {
+                $path = $file->getTempName();
+                if ($path === '' || ! is_readable($path)) {
+                    return ['success' => false, 'codes' => [], 'error' => 'อ่านไฟล์ Excel ไม่ได้'];
+                }
+                $spreadsheet = IOFactory::load($path);
+                $sheet       = $spreadsheet->getActiveSheet();
+                $highestRow  = (int) $sheet->getHighestRow();
+                $max         = min(max($highestRow, 1), 50000);
+                for ($r = 1; $r <= $max; $r++) {
+                    $val = $sheet->getCell('A' . $r)->getValue();
+                    if ($val === null || $val === '') {
+                        continue;
+                    }
+                    $codes[] = is_string($val) ? trim($val) : (string) $val;
+                }
+            } catch (\Throwable $e) {
+                return ['success' => false, 'codes' => [], 'error' => 'อ่าน Excel ไม่สำเร็จ: ' . $e->getMessage()];
+            }
         } else {
             $lines = preg_split('/\r\n|\r|\n/', $content, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($lines as $line) {
@@ -174,6 +195,65 @@ class BarcodeEvents extends BaseController
             return is_string($c) ? trim($c) : (string) $c;
         }, $codes)));
         return ['success' => true, 'codes' => $codes];
+    }
+
+    /**
+     * ผู้มีสิทธิ์แต่ละคนกับบาร์โค้ดที่ผูก และกรณีผูกกับคนที่ไม่อยู่ในรายการผู้มีสิทธิ์
+     *
+     * @return array{eligible_pairings: list<array>, other_assignments: list<array>, pairings_truncated: bool}
+     */
+    private function buildEligibleBarcodePairings(int $eventId): array
+    {
+        $limitEligibles = 500;
+        $eligibles      = $this->eligibleModel->getEligiblesWithStudents($eventId);
+        $truncated      = count($eligibles) > $limitEligibles;
+        if ($truncated) {
+            $eligibles = array_slice($eligibles, 0, $limitEligibles);
+        }
+        $barcodes  = $this->barcodeModel->getByEvent($eventId, false);
+        $byStudent = [];
+        foreach ($barcodes as $b) {
+            $sid = (int) ($b['student_user_id'] ?? 0);
+            if ($sid <= 0) {
+                continue;
+            }
+            if (! isset($byStudent[$sid])) {
+                $byStudent[$sid] = [];
+            }
+            $byStudent[$sid][] = [
+                'code'        => (string) ($b['code'] ?? ''),
+                'assigned_at' => $b['assigned_at'] ?? null,
+                'claimed_at'  => $b['claimed_at'] ?? null,
+            ];
+        }
+        $rows = [];
+        foreach ($eligibles as $e) {
+            $sid = (int) ($e['student_user_id'] ?? 0);
+            $rows[] = [
+                'student_user_id' => $sid,
+                'display_name'    => (string) ($e['student_display_name'] ?? ''),
+                'email'           => (string) ($e['student']['email'] ?? ''),
+                'barcodes'        => $byStudent[$sid] ?? [],
+            ];
+            unset($byStudent[$sid]);
+        }
+        $other = [];
+        foreach ($byStudent as $sid => $codes) {
+            $st = $this->studentUserModel->find($sid);
+            $other[] = [
+                'student_user_id' => $sid,
+                'display_name'    => $st ? $this->studentUserModel->getFullName($st) : ('ID ' . $sid),
+                'email'           => $st ? (string) ($st['email'] ?? '') : '',
+                'note'            => 'ไม่อยู่ในรายการผู้มีสิทธิ์ของ Event นี้',
+                'barcodes'        => $codes,
+            ];
+        }
+
+        return [
+            'eligible_pairings'  => $rows,
+            'other_assignments'  => $other,
+            'pairings_truncated' => $truncated,
+        ];
     }
 
     public function index()
@@ -311,6 +391,9 @@ class BarcodeEvents extends BaseController
     {
         $event = $this->barcodeEventModel->find($id);
         if (!$event) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'error' => 'ไม่พบ Event']);
+            }
             return redirect()->to(base_url('student-admin/barcode-events'))->with('error', 'ไม่พบ Event');
         }
         $codes = $this->parseBarcodeInput($this->request->getPost('json_barcodes'));
@@ -336,6 +419,12 @@ class BarcodeEvents extends BaseController
                         }
                     }
                 } catch (\Throwable $e) {
+                    if ($this->request->isAJAX()) {
+                        return $this->response->setJSON([
+                            'success' => false,
+                            'error'   => 'เรียก N8n ไม่สำเร็จ: ' . $e->getMessage(),
+                        ]);
+                    }
                     return redirect()->to(base_url('student-admin/barcode-events/' . $id))
                         ->with('error', 'เรียก N8n ไม่สำเร็จ: ' . $e->getMessage());
                 }
@@ -352,6 +441,18 @@ class BarcodeEvents extends BaseController
         if (!empty($result['errors'])) {
             $msg .= '. ข้อผิดพลาด: ' . implode('; ', array_slice($result['errors'], 0, 5));
         }
+        if ($this->request->isAJAX()) {
+            $eventAfter = $this->barcodeEventModel->getWithCounts((int) $id);
+
+            return $this->response->setJSON([
+                'success'    => true,
+                'message'    => $msg,
+                'inserted'   => $result['inserted'],
+                'skipped'    => $result['skipped'],
+                'errors'     => $result['errors'] ?? [],
+                'event'      => $eventAfter,
+            ]);
+        }
         return redirect()->to(base_url('student-admin/barcode-events/' . $id))->with('success', $msg);
     }
 
@@ -362,6 +463,9 @@ class BarcodeEvents extends BaseController
     {
         $event = $this->barcodeEventModel->find($id);
         if (!$event) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'error' => 'ไม่พบ Event']);
+            }
             return redirect()->to(base_url('student-admin/barcode-events'))->with('error', 'ไม่พบ Event');
         }
         $file = $this->request->getFile('barcode_file');
@@ -370,7 +474,20 @@ class BarcodeEvents extends BaseController
             ? $this->callBarcodeExtractApi($file)
             : $this->parseBarcodeFile($file);
         if (!$result['success']) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'error'   => $result['error'] ?? 'อ่านไฟล์ไม่สำเร็จ',
+                ]);
+            }
             return redirect()->to(base_url('student-admin/barcode-events/' . $id))->with('error', $result['error'] ?? 'อ่านไฟล์ไม่สำเร็จ');
+        }
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'ได้ ' . count($result['codes']) . ' รหัส — ตรวจสอบแล้วกดนำเข้า',
+                'codes'   => $result['codes'],
+            ]);
         }
         session()->setFlashdata('barcode_prefill', $result['codes']);
         return redirect()->to(base_url('student-admin/barcode-events/' . $id))->with('success', 'ได้ ' . count($result['codes']) . ' รหัส — ตรวจสอบด้านล่างแล้วกดนำเข้า');
@@ -383,10 +500,23 @@ class BarcodeEvents extends BaseController
     {
         $event = $this->barcodeEventModel->find($eventId);
         if (!$event) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'error' => 'ไม่พบ Event']);
+            }
             return redirect()->to(base_url('student-admin/barcode-events'))->with('error', 'ไม่พบ Event');
         }
         if ($this->barcodeModel->deleteBarcode((int) $barcodeId, (int) $eventId)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'ลบบาร์โค้ดแล้ว',
+                    'event'   => $this->barcodeEventModel->getWithCounts((int) $eventId),
+                ]);
+            }
             return redirect()->back()->with('success', 'ลบบาร์โค้ดแล้ว');
+        }
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => false, 'error' => 'ลบไม่สำเร็จหรือบาร์โค้ดไม่ใช่ของ Event นี้']);
         }
         return redirect()->back()->with('error', 'ลบไม่สำเร็จหรือบาร์โค้ดไม่ใช่ของ Event นี้');
     }
@@ -398,13 +528,26 @@ class BarcodeEvents extends BaseController
     {
         $event = $this->barcodeEventModel->find($eventId);
         if (!$event) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'error' => 'ไม่พบ Event']);
+            }
             return redirect()->to(base_url('student-admin/barcode-events'))->with('error', 'ไม่พบ Event');
         }
         $barcode = $this->barcodeModel->find($barcodeId);
         if (!$barcode || (int) $barcode['barcode_event_id'] !== (int) $eventId) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'error' => 'บาร์โค้ดไม่ถูกต้อง']);
+            }
             return redirect()->back()->with('error', 'บาร์โค้ดไม่ถูกต้อง');
         }
         $this->barcodeModel->unassignFromStudent((int) $barcodeId);
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'ยกเลิกการผูกบาร์โค้ดแล้ว',
+                'event'   => $this->barcodeEventModel->getWithCounts((int) $eventId),
+            ]);
+        }
         return redirect()->back()->with('success', 'ยกเลิกการผูกบาร์โค้ดแล้ว');
     }
 
@@ -415,9 +558,15 @@ class BarcodeEvents extends BaseController
     {
         $event = $this->barcodeEventModel->getWithCounts((int) $id);
         if (!$event) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'error' => 'ไม่พบ Event']);
+            }
             return redirect()->to(base_url('student-admin/barcode-events'))->with('error', 'ไม่พบ Event');
         }
         if ((int) ($event['barcode_total'] ?? 0) === 0) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'error' => 'กรุณาเพิ่มบาร์โค้ดใน Event นี้ก่อน จึงจะเพิ่มผู้มีสิทธิ์ได้']);
+            }
             return redirect()->back()->with('error', 'กรุณาเพิ่มบาร์โค้ดใน Event นี้ก่อน จึงจะเพิ่มผู้มีสิทธิ์ได้');
         }
         $by = $this->request->getPost('by');
@@ -426,15 +575,23 @@ class BarcodeEvents extends BaseController
             $emailsRaw = $this->request->getPost('emails');
             $emails = array_filter(array_map('trim', preg_split('/[\r\n,]+/', $emailsRaw ?? '', -1, PREG_SPLIT_NO_EMPTY)));
             $added = 0;
+            $invitedNew = 0;
             $notFound = [];
             $existingIds = $this->eligibleModel->getEligibleStudentIds((int) $id);
             foreach ($emails as $email) {
-                $email = filter_var($email, FILTER_VALIDATE_EMAIL) ?: $email;
+                $email = strtolower(trim((string) $email));
+                $email = filter_var($email, FILTER_VALIDATE_EMAIL) ?: '';
                 if ($email === '') {
                     continue;
                 }
                 $student = $this->studentUserModel->findByEmail($email);
-                if (!$student) {
+                if (! $student) {
+                    $student = $this->studentUserModel->createPendingInviteByEmail($email);
+                    if ($student) {
+                        $invitedNew++;
+                    }
+                }
+                if (! $student) {
                     $notFound[] = $email;
                     continue;
                 }
@@ -447,20 +604,43 @@ class BarcodeEvents extends BaseController
                 $added++;
             }
             $msg = 'เพิ่มจาก Email ได้ ' . $added . ' คน';
+            if ($invitedNew > 0) {
+                $msg .= ' (สร้างบัญชีรอเปิดจาก Portal: ' . $invitedNew . ' อีเมล)';
+            }
             if (!empty($notFound)) {
-                $msg .= '. ไม่พบในระบบ: ' . implode(', ', array_slice($notFound, 0, 10));
+                $msg .= '. ไม่สามารถสร้าง/เพิ่ม: ' . implode(', ', array_slice($notFound, 0, 10));
                 if (count($notFound) > 10) {
                     $msg .= ' …';
                 }
+            }
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success'     => $added > 0,
+                    'message'     => $msg,
+                    'added'       => $added,
+                    'invited_new' => $invitedNew,
+                    'not_found'   => $notFound,
+                    'event'       => $this->barcodeEventModel->getWithCounts((int) $id),
+                ]);
             }
             return redirect()->back()->with($added > 0 ? 'success' : 'error', $msg);
         }
 
         $studentUserId = (int) $this->request->getPost('student_user_id');
         if (!$studentUserId) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'error' => 'กรุณาเลือกนักศึกษาหรือกรอก Email']);
+            }
             return redirect()->back()->with('error', 'กรุณาเลือกนักศึกษาหรือกรอก Email');
         }
         $this->eligibleModel->addEligible((int) $id, $studentUserId);
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'เพิ่มผู้มีสิทธิ์แล้ว',
+                'event'   => $this->barcodeEventModel->getWithCounts((int) $id),
+            ]);
+        }
         return redirect()->back()->with('success', 'เพิ่มผู้มีสิทธิ์แล้ว');
     }
 
@@ -476,7 +656,15 @@ class BarcodeEvents extends BaseController
             $this->barcodeModel->unassignFromStudent((int) $b['id']);
         }
         $this->eligibleModel->removeEligible($eventId, $sid);
-        return redirect()->back()->with('success', 'ลบออกจากรายการมีสิทธิ์แล้ว' . (count($barcodes) > 0 ? ' และยกเลิกการผูกบาร์โค้ดแล้ว' : ''));
+        $msg = 'ลบออกจากรายการมีสิทธิ์แล้ว' . (count($barcodes) > 0 ? ' และยกเลิกการผูกบาร์โค้ดแล้ว' : '');
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => $msg,
+                'event'   => $this->barcodeEventModel->getWithCounts($eventId),
+            ]);
+        }
+        return redirect()->back()->with('success', $msg);
     }
 
     /**
@@ -502,5 +690,127 @@ class BarcodeEvents extends BaseController
             'existing_ids' => $existingIds,
         ];
         return view('student_admin/barcode_events/eligibles', $data);
+    }
+
+    /**
+     * Ajax: ตาราง events + ตัวเลข (รีเฟรชหน้ารายการโดยไม่ reload)
+     */
+    public function ajaxEventsTable()
+    {
+        $events     = $this->barcodeEventModel->getAllOrdered();
+        $withCounts = [];
+        foreach ($events as $e) {
+            $row = $this->barcodeEventModel->getWithCounts((int) $e['id']);
+            if ($row !== null) {
+                $withCounts[] = $row;
+            }
+        }
+
+        return $this->response->setJSON(['success' => true, 'events' => $withCounts]);
+    }
+
+    /**
+     * Ajax: รายละเอียด event สำหรับ modal ดู
+     */
+    public function ajaxEventDetail($id)
+    {
+        $event = $this->barcodeEventModel->getWithCounts((int) $id);
+        if (! $event) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'error' => 'ไม่พบ Event']);
+        }
+        $pairings = $this->buildEligibleBarcodePairings((int) $id);
+
+        return $this->response->setJSON([
+            'success'            => true,
+            'event'              => $event,
+            'eligible_pairings'  => $pairings['eligible_pairings'],
+            'other_assignments'  => $pairings['other_assignments'],
+            'pairings_truncated' => $pairings['pairings_truncated'],
+        ]);
+    }
+
+    /**
+     * Ajax: รายการบาร์โค้ด (จำกัดจำนวนเพื่อ payload)
+     */
+    public function ajaxBarcodes($id)
+    {
+        $event = $this->barcodeEventModel->find($id);
+        if (! $event) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'error' => 'ไม่พบ Event']);
+        }
+        $barcodes = $this->barcodeModel->getByEvent((int) $id, false);
+        $total    = count($barcodes);
+        $limit    = 500;
+        $slice    = array_slice($barcodes, 0, $limit);
+
+        return $this->response->setJSON([
+            'success'    => true,
+            'barcodes'   => $slice,
+            'total'      => $total,
+            'truncated'  => $total > $limit,
+            'event'      => $this->barcodeEventModel->getWithCounts((int) $id),
+        ]);
+    }
+
+    /**
+     * Ajax: ผู้มีสิทธิ์ + รายชื่อนักศึกษาที่ยังเพิ่มได้
+     */
+    public function ajaxEligiblesData($id)
+    {
+        $event = $this->barcodeEventModel->getWithCounts((int) $id);
+        if (! $event) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'error' => 'ไม่พบ Event']);
+        }
+        if ((int) ($event['barcode_total'] ?? 0) === 0) {
+            return $this->response->setJSON([
+                'success' => false,
+                'error'   => 'กรุณาเพิ่มบาร์โค้ดใน Event นี้ก่อน จึงจะเพิ่มผู้มีสิทธิ์ได้',
+                'event'   => $event,
+            ]);
+        }
+        $eligibles    = $this->eligibleModel->getEligiblesWithStudents((int) $id);
+        $eligibleRows = [];
+        foreach ($eligibles as $e) {
+            $eligibleRows[] = [
+                'student_user_id' => (int) ($e['student_user_id'] ?? 0),
+                'email'           => $e['student']['email'] ?? '',
+                'display_name'    => $e['student_display_name'] ?? '',
+            ];
+        }
+        $existingIds  = array_map('intval', array_column($eligibles, 'student_user_id'));
+        $studentsRaw  = $this->studentUserModel->getListForDropdown();
+        $studentsJson = [];
+        foreach ($studentsRaw as $s) {
+            if (! in_array((int) ($s['id'] ?? 0), $existingIds, true)) {
+                $studentsJson[] = [
+                    'id'            => (int) ($s['id'] ?? 0),
+                    'email'         => $s['email'] ?? '',
+                    'display_name'  => $this->studentUserModel->getFullName($s),
+                ];
+            }
+        }
+
+        return $this->response->setJSON([
+            'success'    => true,
+            'event'      => $event,
+            'eligibles'  => $eligibleRows,
+            'students'   => $studentsJson,
+        ]);
+    }
+
+    /**
+     * Ajax: ลบ Event ทั้งก้อน
+     */
+    public function ajaxDeleteEvent($id)
+    {
+        if (! $this->request->isAJAX()) {
+            return redirect()->to(base_url('student-admin/barcode-events'))->with('error', 'ใช้เฉพาะ Ajax');
+        }
+        if (! $this->barcodeEventModel->find($id)) {
+            return $this->response->setJSON(['success' => false, 'error' => 'ไม่พบ Event']);
+        }
+        $this->barcodeEventModel->delete($id);
+
+        return $this->response->setJSON(['success' => true, 'message' => 'ลบ Event แล้ว']);
     }
 }

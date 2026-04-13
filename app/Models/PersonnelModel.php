@@ -236,6 +236,21 @@ class PersonnelModel extends Model
     }
 
     /**
+     * บุคลากร active ที่ผูก user_email แบบ normalize (lowercase + trim) — ใช้สิทธิ์ E-Certificate organizer
+     */
+    public function findActiveByUserEmailNormalized(string $email): ?array
+    {
+        $email = strtolower(trim($email));
+        if ($email === '') {
+            return null;
+        }
+
+        return $this->where('status', 'active')
+            ->where('LOWER(TRIM(user_email))', $email)
+            ->first();
+    }
+
+    /**
      * Find personnel by user_uid (legacy) — แปลงเป็น email แล้วเรียก findByUserEmail
      */
     public function findByUserUid($userUid)

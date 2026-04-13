@@ -53,7 +53,7 @@ class PersonnelCvController extends BaseController
         $cvSectionModel = new CvSectionModel();
         $cvEntryModel = new CvEntryModel();
 
-        if ($personnelId > 0 && $cvSectionModel->db->tableExists('cv_sections')) {
+        if ($personnelId > 0 && $cvSectionModel->db->tableExists('cv_sections') && CvEntryModel::isTablePresent($cvSectionModel->db)) {
             $sections = $cvSectionModel->where('personnel_id', $personnelId)
                 ->where('visible_on_public', 1)
                 ->orderBy('sort_order', 'ASC')

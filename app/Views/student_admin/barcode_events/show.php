@@ -29,7 +29,7 @@
                 <?= csrf_field() ?>
                 <div class="form-group" style="margin-bottom: 0.75rem;">
                     <label for="barcode_file" class="form-label">เลือกไฟล์</label>
-                    <input type="file" id="barcode_file" name="barcode_file" class="form-control" accept=".pdf,.txt,.csv,.json,application/pdf,text/plain,text/csv,application/json" style="max-width: 400px;">
+                    <input type="file" id="barcode_file" name="barcode_file" class="form-control" accept=".pdf,.txt,.csv,.json,.xlsx,.xls,application/pdf,text/plain,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style="max-width: 400px;">
                 </div>
                 <button type="submit" class="btn btn-primary">อัปโหลดและถอดข้อมูล</button>
             </form>

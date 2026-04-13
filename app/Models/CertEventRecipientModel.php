@@ -22,6 +22,8 @@ class CertEventRecipientModel extends Model
         'certificate_id',
         'status',
         'error_message',
+        'email_sent_at',
+        'email_error',
     ];
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
@@ -78,14 +80,12 @@ class CertEventRecipientModel extends Model
         return $this->select('cert_event_recipients.*, 
             cert_events.title as event_title,
             cert_events.event_date,
-            cert_templates.name_th as template_name,
             certificates.certificate_no,
             certificates.pdf_path,
             certificates.verification_token,
             certificates.issued_date,
             certificates.download_count')
             ->join('cert_events', 'cert_events.id = cert_event_recipients.event_id')
-            ->join('cert_templates', 'cert_templates.id = cert_events.template_id', 'left')
             ->join('certificates', 'certificates.id = cert_event_recipients.certificate_id', 'left')
             ->where('cert_event_recipients.student_id', $studentId)
             ->orderBy('cert_event_recipients.created_at', 'DESC')
@@ -133,5 +133,28 @@ class CertEventRecipientModel extends Model
         return $this->where('event_id', $eventId)
             ->where('status', $status)
             ->countAllResults();
+    }
+
+    /**
+     * รายงานใบที่ออกแล้วทั้งระบบ (สำหรับระดับคณะ)
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function getIssuedReportRows(int $limit = 500): array
+    {
+        return $this->db->table('cert_event_recipients cer')
+            ->select('cer.id as recipient_id, cer.recipient_name, cer.recipient_email, cer.status as recipient_status,
+                cer.email_sent_at, cer.email_error,
+                ce.id as event_id, ce.title as event_title, ce.event_date, ce.created_by,
+                c.certificate_no, c.pdf_path, c.verification_token, c.issued_date,
+                u.tf_name as creator_tf_name, u.tl_name as creator_tl_name, u.email as creator_email')
+            ->join('cert_events ce', 'ce.id = cer.event_id')
+            ->join('certificates c', 'c.id = cer.certificate_id')
+            ->join('user u', 'u.uid = ce.created_by', 'left')
+            ->where('cer.status', 'issued')
+            ->orderBy('c.issued_date', 'DESC')
+            ->limit($limit)
+            ->get()
+            ->getResultArray();
     }
 }

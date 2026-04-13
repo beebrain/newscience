@@ -4,15 +4,21 @@
 <div class="card">
     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
         <h2 style="margin: 0;">จัดการกิจกรรมใบรับรอง</h2>
-        <button type="button" class="btn btn-primary" onclick="openModal('certEventModal')">
-            + สร้างกิจกรรมใหม่
-        </button>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <a href="<?= esc($cert_base) ?>/issued-report" class="btn btn-secondary">รายงานใบที่ออกแล้ว</a>
+            <button type="button" class="btn btn-primary" onclick="openModal('certEventModal')">
+                + สร้างกิจกรรมใหม่
+            </button>
+        </div>
     </div>
 
     <div class="card-body">
         <!-- Filter -->
         <div style="margin-bottom: 1rem;">
-            <form method="get" style="display: flex; gap: 0.5rem; align-items: center;">
+            <form method="get" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <label>ผู้สร้าง (uid):</label>
+                <input type="number" name="created_by" class="form-control" style="width: 120px;" value="<?= esc($filter_creator ?? '') ?>" placeholder="ทั้งหมด">
+                <button type="submit" class="btn btn-secondary btn-sm">กรอง</button>
                 <label>สถานะ:</label>
                 <select name="status" class="form-control" style="width: auto;" onchange="this.form.submit()">
                     <option value="">ทั้งหมด</option>
@@ -31,6 +37,7 @@
                 <thead>
                     <tr style="background: #f8f9fa;">
                         <th style="padding: 0.75rem; text-align: left;">กิจกรรม</th>
+                        <th style="padding: 0.75rem; text-align: left;">ผู้สร้าง</th>
                         <th style="padding: 0.75rem; text-align: center;">วันที่</th>
                         <th style="padding: 0.75rem; text-align: center;">สถานะ</th>
                         <th style="padding: 0.75rem; text-align: center;">ผู้รับ</th>
@@ -44,7 +51,22 @@
                             <td style="padding: 0.75rem;">
                                 <strong><?= esc($event['title']) ?></strong>
                                 <br>
-                                <small style="color: #666;"><?= esc($event['template_name'] ?? '-') ?></small>
+                                <small style="color: #666;">
+                                    <?php if (! empty($event['background_file'])): ?>
+                                        <?= esc(($event['background_kind'] ?? '') . ' · มีไฟล์ใบรับรอง') ?>
+                                    <?php else: ?>
+                                        <span style="color:#b45309;">ยังไม่มีไฟล์ใบรับรอง</span>
+                                    <?php endif; ?>
+                                </small>
+                            </td>
+                            <td style="padding: 0.75rem; font-size: 12px; color: #444;">
+                                <?php
+                                $cn = trim(($event['creator_tf_name'] ?? '') . ' ' . ($event['creator_tl_name'] ?? ''));
+                                echo esc($cn !== '' ? $cn : ($event['creator_email'] ?? '-'));
+                                ?>
+                                <?php if (! empty($event['created_by'])): ?>
+                                    <br><small class="text-muted">uid: <?= (int) $event['created_by'] ?></small>
+                                <?php endif; ?>
                             </td>
                             <td style="padding: 0.75rem; text-align: center;">
                                 <?= $event['event_date'] ? date('d/m/Y', strtotime($event['event_date'])) : '-' ?>
@@ -62,7 +84,7 @@
                             </td>
                             <td style="padding: 0.75rem; text-align: center;">
                                 <div class="action-buttons" style="display: flex; gap: 0.5rem; justify-content: center;">
-                                    <a href="<?= base_url('admin/cert-events/' . $event['id']) ?>" class="btn btn-sm btn-primary">ดู</a>
+                                    <a href="<?= esc($cert_base) ?>/<?= (int) $event['id'] ?>" class="btn btn-sm btn-primary">ดู</a>
                                     <button type="button"
                                         class="btn btn-sm btn-secondary"
                                         onclick="editEvent(<?= $event['id'] ?>)">
@@ -90,8 +112,8 @@
     'size' => 'lg',
     'content' => view('admin/cert_events/_form', [
         'event' => null,
-        'templates' => $templates ?? [],
-        'signers' => $signers ?? []
+        'signers' => $signers ?? [],
+        'cert_base' => $cert_base,
     ]),
     'footer' => '
         <button type="button" class="btn btn-secondary" onclick="closeModal(\'certEventModal\')">ยกเลิก</button>
@@ -107,8 +129,7 @@
     'content' => '<p id="deleteConfirmText">คุณแน่ใจหรือไม่ที่จะลบกิจกรรมนี้?</p>',
     'footer' => '
         <button type="button" class="btn btn-secondary" onclick="closeModal(\'deleteConfirmModal\')">ยกเลิก</button>
-        <form id="deleteForm" method="post" data-ajax="true" data-reload="true" style="display: inline;">
-            ' . csrf_field() . '
+        <form id="deleteForm" method="get" data-ajax="true" data-reload="true" style="display: inline;">
             <button type="submit" class="btn btn-danger">ยืนยันลบ</button>
         </form>
     '
@@ -143,7 +164,7 @@ function getStatusLabel($status): string
     // Edit event - load data and open modal
     async function editEvent(eventId) {
         try {
-            const response = await fetch(`<?= base_url('admin/cert-events/') ?>${eventId}/edit?ajax=1`, {
+            const response = await fetch(`<?= esc($cert_base, 'js') ?>/${eventId}/edit?ajax=1`, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
                 }
@@ -156,14 +177,13 @@ function getStatusLabel($status): string
 
                 // Update form action
                 const form = document.getElementById('certEventForm');
-                form.action = `<?= base_url('admin/cert-events/') ?>${eventId}/update`;
+                form.action = `<?= esc($cert_base, 'js') ?>/${eventId}/update`;
 
                 // Populate form fields
                 form.querySelector('[name="title"]').value = data.event.title || '';
                 form.querySelector('[name="description"]').value = data.event.description || '';
                 form.querySelector('[name="event_date"]').value = data.event.event_date || '';
                 form.querySelector('[name="status"]').value = data.event.status || 'draft';
-                form.querySelector('[name="template_id"]').value = data.event.template_id || '';
                 form.querySelector('[name="signer_id"]').value = data.event.signer_id || '';
 
                 openModal('certEventModal');
@@ -181,7 +201,7 @@ function getStatusLabel($status): string
         document.getElementById('deleteConfirmText').textContent = `คุณแน่ใจหรือไม่ที่จะลบกิจกรรม "${eventTitle}"?`;
 
         const form = document.getElementById('deleteForm');
-        form.action = `<?= base_url('admin/cert-events/') ?>${eventId}/delete`;
+        form.action = `<?= esc($cert_base, 'js') ?>/${eventId}/delete`;
 
         openModal('deleteConfirmModal');
     }
@@ -190,7 +210,7 @@ function getStatusLabel($status): string
     document.getElementById('certEventModal')?.addEventListener('modal:close', function() {
         const form = document.getElementById('certEventForm');
         form.reset();
-        form.action = '<?= base_url('admin/cert-events/store') ?>';
+        form.action = '<?= esc($cert_base, 'js') ?>/store';
         document.querySelector('#certEventModal .modal-title').textContent = 'สร้างกิจกรรมใหม่';
     });
 </script>

@@ -26,6 +26,18 @@ class CvEntryModel extends Model
         'visible_on_public',
     ];
 
+    /**
+     * ตาราง cv_entries ถูกสร้างจาก migration แล้วหรือไม่
+     *
+     * @param \CodeIgniter\Database\BaseConnection|null $db
+     */
+    public static function isTablePresent($db = null): bool
+    {
+        $db ??= \Config\Database::connect();
+
+        return $db->tableExists('cv_entries');
+    }
+
     public function nextSortOrder(int $sectionId): int
     {
         $row = $this->builder()
@@ -40,11 +52,14 @@ class CvEntryModel extends Model
     /**
      * ลำดับแสดงรายการ CV: วันที่ตีพิมพ์/เริ่มล่าสุดก่อน แล้วตาม sort_order (ใช้จัดลำดับภายในวันเดียวกัน)
      *
-     * ห้ามใช้ NULLIF(..., '') กับคอลัมน์ DATE — MySQL strict จะ error "Incorrect DATE value: ''"
+     * ห้ามใช้ '0000-00-00' หรือ '' ในนิพจน์กับ DATE — MySQL strict (NO_ZERO_DATE) จะ error
      */
     public function orderedForCvDisplay(): self
     {
-        $expr = "COALESCE(NULLIF(start_date, '0000-00-00'), NULLIF(end_date, '0000-00-00'), '1900-01-01')";
+        $expr = '(CASE '
+            . 'WHEN start_date IS NOT NULL AND start_date >= \'1000-01-01\' THEN start_date '
+            . 'WHEN end_date IS NOT NULL AND end_date >= \'1000-01-01\' THEN end_date '
+            . "ELSE '1900-01-01' END)";
 
         return $this->orderBy($expr, 'DESC', false)
             ->orderBy('sort_order', 'ASC')

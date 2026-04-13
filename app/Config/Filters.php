@@ -37,6 +37,7 @@ class Filters extends BaseFilters
         'adminauth'     => \App\Filters\AdminAuthFilter::class,
         'adminsystemaccess' => \App\Filters\AdminSystemAccessFilter::class,
         'loggedin'      => \App\Filters\LoggedInFilter::class,
+        'certorganizer' => \App\Filters\CertOrganizerFilter::class,
         'studentauth'   => \App\Filters\StudentAuthFilter::class,
         'studentadmin'  => \App\Filters\StudentAdminFilter::class,
         'programadmin'  => \App\Filters\ProgramAdminFilter::class,

@@ -39,6 +39,8 @@ class OAuthController extends BaseController
     private const LOG_FILE      = 'oauth_login';
     private const SESSION_STATE = 'uru_oauth_state';
     private const SESSION_ATTEMPT_ID = 'uru_oauth_attempt_id';
+    /** เก็บว่าเริ่ม OAuth จากหน้านักศึกษา (redirect error กลับ /student/login) */
+    private const SESSION_OAUTH_INTENT = 'oauth_intent';
 
     public function __construct()
     {
@@ -64,7 +66,12 @@ class OAuthController extends BaseController
             $this->writeLog('login_disabled', 'OAuth disabled', [
                 'ip' => $ip,
             ]);
-            return redirect()->to(base_url('admin/login'))
+            $intentGet = $this->request->getGet('intent');
+            $target = (is_string($intentGet) && trim($intentGet) === 'student')
+                ? base_url('student/login')
+                : base_url('admin/login');
+
+            return redirect()->to($target)
                 ->with('error', 'การเข้าสู่ระบบผ่าน URU Portal ยังไม่เปิดใช้งาน');
         }
 
@@ -90,6 +97,13 @@ class OAuthController extends BaseController
 
         $attemptId = $this->generateAttemptId();
         session()->set(self::SESSION_ATTEMPT_ID, $attemptId);
+
+        $intent = $this->request->getGet('intent');
+        if (is_string($intent) && trim($intent) === 'student') {
+            session()->set(self::SESSION_OAUTH_INTENT, 'student');
+        } else {
+            session()->remove(self::SESSION_OAUTH_INTENT);
+        }
 
         $this->writeLog('login_start', 'Portal login requested', [
             'attempt_id' => $attemptId,
@@ -159,14 +173,14 @@ class OAuthController extends BaseController
         if ($error !== null && $error !== '') {
             $errDesc = $this->request->getGet('error_description') ?? $error;
             $this->writeLog('callback_error', 'Portal returned error', ['attempt_id' => $attemptId, 'error' => $error, 'description' => $errDesc, 'ip' => $ip]);
-            return redirect()->to(base_url('admin/login'))
+            return redirect()->to($this->oauthFailureRedirectUrl())
                 ->with('error', 'เข้าสู่ระบบไม่สำเร็จ: ' . $errDesc);
         }
 
         // ตรวจสอบ code
         if (!$code || !is_string($code) || trim($code) === '') {
             $this->writeLog('callback_error', 'Missing code parameter', ['attempt_id' => $attemptId, 'ip' => $ip]);
-            return redirect()->to(base_url('admin/login'))
+            return redirect()->to($this->oauthFailureRedirectUrl())
                 ->with('error', 'ไม่ได้รับรหัสจาก URU Portal กรุณาลองใหม่อีกครั้ง');
         }
 
@@ -181,7 +195,7 @@ class OAuthController extends BaseController
             ]);
             session()->remove(self::SESSION_STATE);
             session()->remove(self::SESSION_ATTEMPT_ID);
-            return redirect()->to(base_url('admin/login'))
+            return redirect()->to($this->oauthFailureRedirectUrl())
                 ->with('error', 'คำขอไม่ถูกต้อง (state mismatch) กรุณาลองใหม่อีกครั้ง');
         }
         if ($savedState === null) {
@@ -212,7 +226,7 @@ class OAuthController extends BaseController
                 'reason' => $this->oauthService->getLastError(),
             ]);
             session()->remove(self::SESSION_ATTEMPT_ID);
-            return redirect()->to(base_url('admin/login'))
+            return redirect()->to($this->oauthFailureRedirectUrl())
                 ->with('error', 'ไม่สามารถแลกรหัสกับ URU Portal ได้ กรุณาลองใหม่อีกครั้ง');
         }
 
@@ -242,7 +256,7 @@ class OAuthController extends BaseController
                 'reason' => $this->oauthService->getLastError(),
             ]);
             session()->remove(self::SESSION_ATTEMPT_ID);
-            return redirect()->to(base_url('admin/login'))
+            return redirect()->to($this->oauthFailureRedirectUrl())
                 ->with('error', 'ไม่สามารถดึงข้อมูลผู้ใช้จาก URU Portal ได้ กรุณาลองใหม่อีกครั้ง');
         }
 
@@ -372,11 +386,17 @@ class OAuthController extends BaseController
             'ip' => $ip,
         ]);
 
-        if (($student['status'] ?? '') !== 'active') {
+        if (($student['status'] ?? '') === 'inactive') {
             $this->writeLog('student_inactive', 'Student account inactive', ['attempt_id' => $attemptId, 'email' => $email, 'id' => $student['id'], 'status' => $student['status'] ?? '', 'ip' => $ip]);
             session()->remove(self::SESSION_ATTEMPT_ID);
             return redirect()->to(base_url('student/login'))
                 ->with('error', 'บัญชีนักศึกษาของคุณถูกปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ');
+        }
+        if (($student['status'] ?? '') === 'pending') {
+            $this->writeLog('student_still_pending', 'Student still pending after Portal sync', ['attempt_id' => $attemptId, 'email' => $email, 'id' => $student['id'], 'ip' => $ip]);
+            session()->remove(self::SESSION_ATTEMPT_ID);
+            return redirect()->to(base_url('student/login'))
+                ->with('error', 'บัญชียังไม่พร้อม กรุณาติดต่อผู้ดูแลระบบ (สถานะ pending)');
         }
 
         $isNew = (trim($student['login_uid'] ?? '') === '' || $student['login_uid'] === $loginUid) &&
@@ -425,6 +445,7 @@ class OAuthController extends BaseController
             'ip' => $ip,
         ]);
         session()->remove(self::SESSION_ATTEMPT_ID);
+        session()->remove(self::SESSION_OAUTH_INTENT);
 
         return redirect()->to($redirectUrl)->with('success', 'เข้าสู่ระบบสำเร็จ ยินดีต้อนรับ ' . $this->studentModel->getFullName($student));
     }
@@ -528,6 +549,7 @@ class OAuthController extends BaseController
             'ip' => $ip,
         ]);
         session()->remove(self::SESSION_ATTEMPT_ID);
+        session()->remove(self::SESSION_OAUTH_INTENT);
 
         return redirect()->to($redirectUrl)->with('success', 'เข้าสู่ระบบสำเร็จ ยินดีต้อนรับ ' . $this->userModel->getFullName($user));
     }
@@ -535,6 +557,17 @@ class OAuthController extends BaseController
     // -------------------------------------------------------------------------
     // Log helper
     // -------------------------------------------------------------------------
+
+    /**
+     * URL สำหรับ redirect เมื่อ OAuth ล้มเหลว — นักศึกษาใช้ /student/login
+     */
+    private function oauthFailureRedirectUrl(): string
+    {
+        $intent = session()->get(self::SESSION_OAUTH_INTENT);
+        session()->remove(self::SESSION_OAUTH_INTENT);
+
+        return ($intent === 'student') ? base_url('student/login') : base_url('admin/login');
+    }
 
     /**
      * สรุปฟิลด์ที่จำเป็นสำหรับ audit — ไม่เก็บ adInfo/accountInfo/personInfo เต็มใน log

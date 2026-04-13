@@ -103,10 +103,13 @@ class CvBundleCanonical
 
         foreach ($sections as $section) {
             $sid = (int) $section['id'];
-            $entries = $cvEntryModel->where('section_id', $sid)
-                ->orderBy('sort_order', 'ASC')
-                ->orderBy('id', 'ASC')
-                ->findAll();
+            $entries = [];
+            if (CvEntryModel::isTablePresent($cvSectionModel->db)) {
+                $entries = $cvEntryModel->where('section_id', $sid)
+                    ->orderBy('sort_order', 'ASC')
+                    ->orderBy('id', 'ASC')
+                    ->findAll();
+            }
 
             $secKey = self::sectionExternalKey($section);
             $entryRows = [];

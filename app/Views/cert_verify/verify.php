@@ -67,7 +67,7 @@
         <?php if ($is_valid): ?>
             <div class="cert-info">
                 <div class="cert-info-row"><span class="cert-info-label">เลขที่ใบรับรอง</span><span class="cert-info-value"><?= esc($certificate['certificate_no']) ?></span></div>
-                <div class="cert-info-row"><span class="cert-info-label">ประเภท</span><span class="cert-info-value"><?= esc($template['name_th'] ?? '-') ?></span></div>
+                <div class="cert-info-row"><span class="cert-info-label">กิจกรรม / รายการ</span><span class="cert-info-value"><?= esc($cert_display ?? '-') ?></span></div>
                 <div class="cert-info-row"><span class="cert-info-label">วันที่ออก</span><span class="cert-info-value"><?= esc(date('d/m/Y', strtotime($certificate['issued_date']))) ?></span></div>
                 <?php if ($signer): ?>
                     <div class="cert-info-row"><span class="cert-info-label">ผู้ลงนาม</span><span class="cert-info-value"><?= esc(($signer['tf_name'] ?? '') . ' ' . ($signer['tl_name'] ?? '')) ?></span></div>

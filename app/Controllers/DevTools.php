@@ -79,7 +79,7 @@ class DevTools extends BaseController
         ]);
 
         $uid = $user['uid'] ?? $userId;
-        return redirect()->to(base_url('admin/certificates'))
+        return redirect()->to(base_url('admin/cert-events'))
             ->with('success', '[DEV] Logged in as Staff UID: ' . $uid);
     }
 
@@ -109,8 +109,8 @@ class DevTools extends BaseController
         ]);
 
         $uid = $user['uid'] ?? $userId;
-        return redirect()->to(base_url('approve/certificates'))
-            ->with('success', '[DEV] Logged in as ' . ucfirst($type) . ' UID: ' . $uid);
+        return redirect()->to(base_url('admin/cert-events'))
+            ->with('success', '[DEV] Logged in as ' . ucfirst($type) . ' UID: ' . $uid . ' (เส้นทางอนุมัติใบรับรองถูกปิดใช้งาน — ใช้กิจกรรม E-Certificate แทน)');
     }
 
     /**

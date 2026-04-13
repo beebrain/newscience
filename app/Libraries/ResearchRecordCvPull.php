@@ -56,6 +56,10 @@ class ResearchRecordCvPull
             return true;
         }
 
+        if (! CvEntryModel::isTablePresent($sectionModel->db)) {
+            return false;
+        }
+
         $entryModel = new CvEntryModel();
         foreach ($sections as $sec) {
             $n = $entryModel->where('section_id', (int) $sec['id'])->countAllResults();
@@ -124,6 +128,15 @@ class ResearchRecordCvPull
      */
     public static function run(int $personnelId, string $canonicalEmail, string $trigger): array
     {
+        $db = \Config\Database::connect();
+        if (! $db->tableExists('cv_sections') || ! CvEntryModel::isTablePresent($db)) {
+            return [
+                'success' => false,
+                'message' => 'ระบบ CV ยังไม่ครบ — รัน php spark migrate (ต้องมีตาราง cv_sections และ cv_entries)',
+                'error'   => 'SCHEMA_MISSING',
+            ];
+        }
+
         $nsBundle = CvBundleCanonical::buildFromNewScience($personnelId, $canonicalEmail);
         $rr       = ResearchRecordCvSyncClient::fetchCvBundle($canonicalEmail);
         if (! $rr['success'] || empty($rr['bundle'])) {
