@@ -188,17 +188,29 @@ $email = $sync_email ?? '';
 
     document.getElementById('rrsync-btn-pull') && document.getElementById('rrsync-btn-pull').addEventListener('click', async function () {
         if (!confirm('แทนที่ CV ทั้งหมดบน ฐานข้อมูลคณะ ด้วยข้อมูลจาก กบศ และนำเข้าผลงานตีพิมพ์จาก กบศ (ถ้ามี)?')) return;
+        var btn = this;
         setStatus('กำลังดึง…');
-        var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/pull-all') ?>', {});
-        setStatus(data.message || (data.success ? 'สำเร็จ' : 'ผิดพลาด'));
-        if (data.success) location.reload();
+        btn.disabled = true;
+        try {
+            var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/pull-all') ?>', {});
+            setStatus(data.message || (data.success ? 'สำเร็จ' : 'ผิดพลาด'));
+            if (data.success) location.reload();
+        } finally {
+            btn.disabled = false;
+        }
     });
 
     document.getElementById('rrsync-btn-push') && document.getElementById('rrsync-btn-push').addEventListener('click', async function () {
         if (!confirm('แทนที่ CV ทั้งหมดบน กบศ ด้วยข้อมูลจาก ฐานข้อมูลคณะ?')) return;
+        var btn = this;
         setStatus('กำลังส่ง…');
-        var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/push-all') ?>', {});
-        setStatus(data.message || (data.success ? 'สำเร็จ' : 'ผิดพลาด'));
+        btn.disabled = true;
+        try {
+            var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/push-all') ?>', {});
+            setStatus(data.message || (data.success ? 'สำเร็จ' : 'ผิดพลาด'));
+        } finally {
+            btn.disabled = false;
+        }
     });
 
     document.getElementById('rrsync-btn-apply') && document.getElementById('rrsync-btn-apply').addEventListener('click', async function () {
@@ -215,17 +227,23 @@ $email = $sync_email ?? '';
         document.querySelectorAll('.rrsync-pub-imp').forEach(function (cb) {
             pubChoices.push({ id: cb.getAttribute('data-pub-id'), choice: cb.checked ? 'rr' : 'skip' });
         });
+        var applyBtn = this;
+        applyBtn.disabled = true;
         setStatus('กำลังบันทึก…');
-        var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/apply') ?>', {
-            ns_bundle: state.ns_bundle,
-            rr_bundle: state.rr_bundle,
-            decisions: decisions,
-            orcid_choice: orcidEl ? orcidEl.value : 'ns',
-            publications: state.publications,
-            publication_choices: pubChoices
-        });
-        setStatus(data.message || '');
-        if (data.success) location.reload();
+        try {
+            var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/apply') ?>', {
+                ns_bundle: state.ns_bundle,
+                rr_bundle: state.rr_bundle,
+                decisions: decisions,
+                orcid_choice: orcidEl ? orcidEl.value : 'ns',
+                publications: state.publications,
+                publication_choices: pubChoices
+            });
+            setStatus(data.message || '');
+            if (data.success) location.reload();
+        } finally {
+            applyBtn.disabled = false;
+        }
     });
 })();
 </script>

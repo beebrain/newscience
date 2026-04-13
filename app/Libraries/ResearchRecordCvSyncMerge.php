@@ -18,6 +18,97 @@ use App\Models\PersonnelModel;
 class ResearchRecordCvSyncMerge
 {
     /**
+     * รวมหัวข้อ research/articles ที่ซ้ำเป็นหัวข้อเดียว แล้วลบ cv_entries ที่เป็นผลงานเดียวกันซ้ำ
+     * (กันหน้า CV สาธารณะแสดงบล็อกซ้ำ — มักเกิดจาก bundle กบศ มีหลาย section ประเภทเดียวกัน หรือการกดดึงซ้อน)
+     */
+    public static function normalizePublicationSectionsForPerson(int $personnelId): void
+    {
+        $db = \Config\Database::connect();
+        if (! $db->tableExists('cv_sections') || ! CvEntryModel::isTablePresent($db)) {
+            return;
+        }
+
+        $cvSectionModel = new CvSectionModel();
+        $sections      = $cvSectionModel->where('personnel_id', $personnelId)
+            ->whereIn('type', ['research', 'articles'])
+            ->orderBy('sort_order', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+
+        if ($sections === []) {
+            return;
+        }
+
+        $primaryId = (int) ($sections[0]['id'] ?? 0);
+        if ($primaryId <= 0) {
+            return;
+        }
+
+        $db->transStart();
+        try {
+            for ($i = 1, $n = count($sections); $i < $n; $i++) {
+                $dupId = (int) ($sections[$i]['id'] ?? 0);
+                if ($dupId <= 0) {
+                    continue;
+                }
+                $db->table('cv_entries')->where('section_id', $dupId)->update(['section_id' => $primaryId]);
+                $cvSectionModel->delete($dupId, true);
+            }
+
+            self::dedupePublicationEntriesInSection($primaryId);
+            $db->transComplete();
+            if ($db->transStatus() === false) {
+                log_message('error', 'normalizePublicationSectionsForPerson: transaction failed for personnel ' . $personnelId);
+            }
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'normalizePublicationSectionsForPerson: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ลบรายการซ้ำในหัวข้อผลงานเดียว — จับคู่ตาม rr_publication_id, sync_external_key, หรือชื่อ+วันที่+องค์กร
+     */
+    public static function dedupePublicationEntriesInSection(int $sectionId): void
+    {
+        if ($sectionId <= 0) {
+            return;
+        }
+
+        $cvEntryModel = new CvEntryModel();
+        $rows         = $cvEntryModel->where('section_id', $sectionId)->orderBy('id', 'ASC')->findAll();
+        if ($rows === []) {
+            return;
+        }
+
+        $seen = [];
+        foreach ($rows as $row) {
+            $id   = (int) ($row['id'] ?? 0);
+            $meta = CvEntryModel::decodeMetadata($row['metadata'] ?? null);
+            $rid  = (int) ($meta['rr_publication_id'] ?? 0);
+            $ek   = trim((string) ($meta['sync_external_key'] ?? ''));
+            $doi  = strtolower(trim((string) ($meta['doi'] ?? '')));
+
+            if ($rid > 0) {
+                $key = 'rid:' . $rid;
+            } elseif ($ek !== '') {
+                $key = 'ek:' . $ek;
+            } else {
+                $t   = strtolower(trim((string) ($row['title'] ?? '')));
+                $sd  = trim((string) ($row['start_date'] ?? ''));
+                $org = strtolower(trim((string) ($row['organization'] ?? '')));
+                $key = 'tp:' . hash('sha256', $t . "\x1e" . $sd . "\x1e" . $org . "\x1e" . $doi);
+            }
+
+            if (isset($seen[$key])) {
+                $cvEntryModel->delete($id, true);
+            } else {
+                $seen[$key] = true;
+            }
+        }
+    }
+
+    /**
      * @param array<string,mixed> $nsBundle
      * @param array<string,mixed> $rrBundle
      *
@@ -215,10 +306,6 @@ class ResearchRecordCvSyncMerge
     {
         $stats = ['inserted' => 0, 'updated' => 0, 'skipped_unchanged' => 0];
 
-        if ($publications === []) {
-            return $stats;
-        }
-
         $cvSectionModel = new CvSectionModel();
         if (!$cvSectionModel->db->tableExists('cv_sections')) {
             return $stats;
@@ -340,6 +427,8 @@ class ResearchRecordCvSyncMerge
                 }
             }
         }
+
+        self::normalizePublicationSectionsForPerson($personnelId);
 
         return $stats;
     }

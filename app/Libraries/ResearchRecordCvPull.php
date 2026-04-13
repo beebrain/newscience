@@ -147,6 +147,23 @@ class ResearchRecordCvPull
             ];
         }
 
+        $lockDb      = $db;
+        $lockHeld    = false;
+        $lockName    = 'ns_cvrr_' . $personnelId;
+        $driver      = $lockDb->DBDriver;
+        $supportsLock = ($driver === 'MySQLi' || $driver === 'MySQL') && strlen($lockName) <= 64;
+        if ($supportsLock) {
+            $got = $lockDb->query('SELECT GET_LOCK(?, 30) AS got', [$lockName])->getRowArray();
+            if ((int) ($got['got'] ?? 0) !== 1) {
+                return [
+                    'success' => false,
+                    'message' => 'มีการดึง CV อยู่แล้ว กรุณารอสักครู่แล้วลองใหม่ (ไม่ต้องกดซ้ำ)',
+                    'error'   => 'BUSY',
+                ];
+            }
+            $lockHeld = true;
+        }
+
         try {
             ResearchRecordCvSyncMerge::replaceNewScienceCvFromBundle($personnelId, $rr['bundle']);
 
@@ -158,6 +175,8 @@ class ResearchRecordCvPull
                     $pubRes['publications'],
                     []
                 );
+            } else {
+                ResearchRecordCvSyncMerge::normalizePublicationSectionsForPerson($personnelId);
             }
 
             $log = new CvSyncLogModel();
@@ -205,6 +224,10 @@ class ResearchRecordCvPull
                 'message' => $e->getMessage(),
                 'error'   => 'EXCEPTION',
             ];
+        } finally {
+            if ($lockHeld) {
+                $lockDb->query('SELECT RELEASE_LOCK(?) AS rel', [$lockName]);
+            }
         }
     }
 }

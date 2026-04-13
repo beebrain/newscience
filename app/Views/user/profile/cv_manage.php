@@ -476,7 +476,7 @@ $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
                         <?php if ($research_sync_configured): ?>
                             <div class="flex flex-wrap items-stretch gap-2 shrink-0">
                                 <form method="post" action="<?= base_url('dashboard/profile/cv/sync-from-rr') ?>" class="inline-flex"
-                                      onsubmit="return confirm('ดึง CV และผลงานจาก กบศ มาแทนที่ข้อมูลใน ฐานข้อมูลคณะ ตอนนี้?');">
+                                      onsubmit="if (!confirm('ดึง CV และผลงานจาก กบศ มาแทนที่ข้อมูลใน ฐานข้อมูลคณะ ตอนนี้?')) return false; var b=this.querySelector('button[type=submit]'); if (b.dataset.busy==='1') return false; b.dataset.busy='1'; b.disabled=true; return true;">
                                     <?= csrf_field() ?>
                                     <button type="submit"
                                             class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-[6px] bg-emerald-600 text-white font-semibold shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors">
