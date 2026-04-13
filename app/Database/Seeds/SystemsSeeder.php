@@ -82,8 +82,8 @@ class SystemsSeeder extends Seeder
             [
                 'slug'        => 'research_record',
                 'name_th'     => 'จัดการงานวิจัย',
-                'name_en'     => 'Research Record',
-                'description' => 'ลิงก์ไปยังระบบ Research Record',
+                'name_en'     => 'Research (กบศ)',
+                'description' => 'ลิงก์ไปยังระบบ กบศ',
                 'sort_order'  => 11,
             ],
             [

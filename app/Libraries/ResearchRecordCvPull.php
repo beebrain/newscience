@@ -9,7 +9,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 
 /**
- * ดึง CV + ผลงานจาก Research Record ลง newScience (ใช้ร่วมกับ pull-all, auto บนหน้าแก้ไข CV, manual)
+ * ดึง CV + ผลงานจาก กบศ ลง ฐานข้อมูลคณะ (ใช้ร่วมกับ pull-all, auto บนหน้าแก้ไข CV, manual)
  */
 class ResearchRecordCvPull
 {
@@ -142,7 +142,7 @@ class ResearchRecordCvPull
         if (! $rr['success'] || empty($rr['bundle'])) {
             return [
                 'success' => false,
-                'message' => $rr['message'] ?? 'ดึงจาก RR ไม่สำเร็จ',
+                'message' => $rr['message'] ?? 'ดึงจาก กบศ ไม่สำเร็จ',
                 'error'   => $rr['error'] ?? 'FETCH_FAILED',
             ];
         }
@@ -176,7 +176,7 @@ class ResearchRecordCvPull
             }
 
             $pubChanged = $pubStats['inserted'] + $pubStats['updated'];
-            $msg        = 'แทนที่ CV บน newScience ด้วยข้อมูลจาก Research Record แล้ว';
+            $msg        = 'แทนที่ CV บน ฐานข้อมูลคณะ ด้วยข้อมูลจาก กบศ แล้ว';
             if ($pubChanged > 0) {
                 $msg .= sprintf(
                     ' (ผลงาน: เพิ่ม %d, อัปเดต %d',

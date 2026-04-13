@@ -10,9 +10,9 @@ $email = $sync_email ?? '';
         <div>
             <div class="flex items-center gap-2 mb-1">
                 <div class="w-1 h-6 bg-emerald-600 rounded-full"></div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-800">ดึงจาก Research Record → newScience</h1>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-800">ดึงจาก กบศ → ฐานข้อมูลคณะ</h1>
             </div>
-            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — <strong class="text-gray-700">แนวหลัก:</strong> ดึง snapshot CV และผลงานจาก RR ลง newScience ปุ่มเปรียบเทียบใช้เมื่อต้องการเลือกทีละแถว การส่งกลับไป RR เป็นทางเลือกเสริม</p>
+            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — <strong class="text-gray-700">แนวหลัก:</strong> ดึง snapshot CV และผลงานจาก กบศ ลง ฐานข้อมูลคณะ ปุ่มเปรียบเทียบใช้เมื่อต้องการเลือกทีละแถว การส่งกลับไป กบศ เป็นทางเลือกเสริม</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="<?= base_url('dashboard/profile') ?>" class="text-sm px-3 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">โปรไฟล์</a>
@@ -23,35 +23,35 @@ $email = $sync_email ?? '';
     <?php if (!$apiOk): ?>
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-amber-900 text-sm">
             <p class="font-semibold mb-2">ยังไม่ได้ตั้งค่า Research API</p>
-            <p>ตั้งค่าใน <code class="bg-amber-100 px-1 rounded">.env</code>: <code class="bg-amber-100 px-1 rounded">RESEARCH_API_BASE_URL</code> (URL ฐานของ Research Record), <code class="bg-amber-100 px-1 rounded">RESEARCH_API_KEY</code>, และ faculty id/code ตาม <code class="bg-amber-100 px-1 rounded">ResearchApi</code></p>
-            <p class="mt-2">แนะนำให้ตั้ง <code class="bg-amber-100 px-1 rounded">RESEARCH_SYNC_HMAC_SECRET</code> ให้ตรงกับฝั่ง Research Record (<code class="bg-amber-100 px-1 rounded">RESEARCH_SYNC_HMAC_SECRET</code>) เพื่อลงนามพารามิเตอร์ email+exp</p>
+            <p>ตั้งค่าใน <code class="bg-amber-100 px-1 rounded">.env</code>: <code class="bg-amber-100 px-1 rounded">RESEARCH_API_BASE_URL</code> (URL ฐานของ กบศ), <code class="bg-amber-100 px-1 rounded">RESEARCH_API_KEY</code>, และ faculty id/code ตาม <code class="bg-amber-100 px-1 rounded">ResearchApi</code></p>
+            <p class="mt-2">แนะนำให้ตั้ง <code class="bg-amber-100 px-1 rounded">RESEARCH_SYNC_HMAC_SECRET</code> ให้ตรงกับฝั่ง กบศ (<code class="bg-amber-100 px-1 rounded">RESEARCH_SYNC_HMAC_SECRET</code>) เพื่อลงนามพารามิเตอร์ email+exp</p>
         </div>
     <?php endif; ?>
 
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4">
         <?php if ($apiOk): ?>
             <div class="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-950">
-                <p class="font-semibold mb-1">แนวทางหลัก: Research Record → newScience</p>
-                <p class="text-emerald-900/90">กด <strong>ดึงทั้งหมดจาก RR → NS</strong> เพื่อแทนที่ CV บน newScience ด้วยข้อมูลล่าสุดจาก RR และนำเข้าผลงานตีพิมพ์ (รายการที่ข้อมูลเท่าเดิมจะไม่เขียนทับซ้ำ)</p>
+                <p class="font-semibold mb-1">แนวทางหลัก: กบศ → ฐานข้อมูลคณะ</p>
+                <p class="text-emerald-900/90">กด <strong>ดึงทั้งหมดจาก กบศ → ฐานข้อมูลคณะ</strong> เพื่อแทนที่ CV บน ฐานข้อมูลคณะ ด้วยข้อมูลล่าสุดจาก กบศ และนำเข้าผลงานตีพิมพ์ (รายการที่ข้อมูลเท่าเดิมจะไม่เขียนทับซ้ำ)</p>
             </div>
         <?php endif; ?>
 
         <div class="flex flex-wrap items-center gap-2">
-            <button type="button" id="rrsync-btn-pull" class="px-4 py-2.5 rounded-lg bg-emerald-700 text-white text-sm font-semibold hover:bg-emerald-800 disabled:opacity-50 shadow-sm" <?= $apiOk ? '' : 'disabled' ?>>ดึงทั้งหมดจาก RR → NS</button>
+            <button type="button" id="rrsync-btn-pull" class="px-4 py-2.5 rounded-lg bg-emerald-700 text-white text-sm font-semibold hover:bg-emerald-800 disabled:opacity-50 shadow-sm" <?= $apiOk ? '' : 'disabled' ?>>ดึงทั้งหมดจาก กบศ → ฐานข้อมูลคณะ</button>
             <button type="button" id="rrsync-btn-compare" class="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50" <?= $apiOk ? '' : 'disabled' ?>>เปรียบเทียบแล้วเลือกรายแถว</button>
         </div>
 
         <div class="rounded-lg border border-dashed border-gray-200 bg-gray-50/60 px-4 py-3">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">ทางเลือกเสริม — ส่งจาก newScience ไป RR</p>
-            <button type="button" id="rrsync-btn-push" class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-white disabled:opacity-50" <?= $apiOk ? '' : 'disabled' ?>>ส่งทั้งหมด NS → RR</button>
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">ทางเลือกเสริม — ส่งจาก ฐานข้อมูลคณะ ไป กบศ</p>
+            <button type="button" id="rrsync-btn-push" class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-white disabled:opacity-50" <?= $apiOk ? '' : 'disabled' ?>>ส่งทั้งหมด ฐานข้อมูลคณะ → กบศ</button>
         </div>
 
         <p id="rrsync-status" class="text-sm text-gray-600"></p>
 
         <div id="rrsync-orcid-row" class="hidden border-t border-gray-100 pt-4">
             <p class="text-xs font-semibold text-gray-500 uppercase mb-2">ORCID iD หลังรวม</p>
-            <label class="inline-flex items-center gap-2 mr-6 text-sm"><input type="radio" name="orcid_choice" value="ns" checked> ใช้จาก newScience</label>
-            <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="orcid_choice" value="rr"> ใช้จาก Research Record</label>
+            <label class="inline-flex items-center gap-2 mr-6 text-sm"><input type="radio" name="orcid_choice" value="ns" checked> ใช้จาก ฐานข้อมูลคณะ</label>
+            <label class="inline-flex items-center gap-2 text-sm"><input type="radio" name="orcid_choice" value="rr"> ใช้จาก กบศ</label>
         </div>
 
         <div id="rrsync-table-wrap" class="hidden overflow-x-auto border border-gray-200 rounded-xl">
@@ -60,8 +60,8 @@ $email = $sync_email ?? '';
                     <tr>
                         <th class="px-3 py-2 font-semibold text-gray-600">ประเภท</th>
                         <th class="px-3 py-2 font-semibold text-gray-600">หัวข้อ</th>
-                        <th class="px-3 py-2 font-semibold text-gray-600">newScience</th>
-                        <th class="px-3 py-2 font-semibold text-gray-600">Research Record</th>
+                        <th class="px-3 py-2 font-semibold text-gray-600">ฐานข้อมูลคณะ</th>
+                        <th class="px-3 py-2 font-semibold text-gray-600">กบศ</th>
                         <th class="px-3 py-2 font-semibold text-gray-600">ใช้ฝั่ง</th>
                     </tr>
                 </thead>
@@ -70,11 +70,11 @@ $email = $sync_email ?? '';
         </div>
 
         <div id="rrsync-pub-wrap" class="hidden border-t border-gray-100 pt-4">
-            <p class="text-xs font-semibold text-gray-500 uppercase mb-2">ผลงานจาก RR (เลือกนำเข้าเป็นรายการ CV ใต้หัวข้อ research)</p>
+            <p class="text-xs font-semibold text-gray-500 uppercase mb-2">ผลงานจาก กบศ (เลือกนำเข้าเป็นรายการ CV ใต้หัวข้อ research)</p>
             <div id="rrsync-pub-list" class="max-h-48 overflow-y-auto text-sm space-y-1"></div>
         </div>
 
-        <button type="button" id="rrsync-btn-apply" class="hidden px-5 py-2.5 rounded-lg bg-amber-500 text-gray-900 font-semibold hover:bg-amber-600">บันทึกการเลือกลง newScience (รวมผลงานจาก RR ที่ติ๊ก)</button>
+        <button type="button" id="rrsync-btn-apply" class="hidden px-5 py-2.5 rounded-lg bg-amber-500 text-gray-900 font-semibold hover:bg-amber-600">บันทึกการเลือกลง ฐานข้อมูลคณะ (รวมผลงานจาก กบศ ที่ติ๊ก)</button>
     </div>
 </div>
 <?= $this->endSection() ?>
@@ -110,7 +110,7 @@ $email = $sync_email ?? '';
             var sel = document.createElement('select');
             sel.className = 'border border-gray-200 rounded-lg px-2 py-1 text-sm rrsync-choice';
             sel.dataset.id = row.id;
-            [['ns', 'newScience'], ['rr', 'Research Record'], ['skip', 'ข้าม (ไม่รวม)']].forEach(function (opt) {
+            [['ns', 'ฐานข้อมูลคณะ'], ['rr', 'กบศ'], ['skip', 'ข้าม (ไม่รวม)']].forEach(function (opt) {
                 var o = document.createElement('option');
                 o.value = opt[0];
                 o.textContent = opt[1];
@@ -181,13 +181,13 @@ $email = $sync_email ?? '';
         state.rr_bundle = data.rr_bundle;
         state.merge_rows = data.merge_rows || [];
         state.publications = data.publications || [];
-        setStatus('NS hash: ' + (data.ns_hash || '').substring(0, 12) + '… | RR hash: ' + (data.rr_hash || '').substring(0, 12) + '…');
+        setStatus('แฮช ฐานข้อมูลคณะ: ' + (data.ns_hash || '').substring(0, 12) + '… | แฮช กบศ: ' + (data.rr_hash || '').substring(0, 12) + '…');
         renderTable();
         renderPubs();
     });
 
     document.getElementById('rrsync-btn-pull') && document.getElementById('rrsync-btn-pull').addEventListener('click', async function () {
-        if (!confirm('แทนที่ CV ทั้งหมดบน newScience ด้วยข้อมูลจาก Research Record และนำเข้าผลงานตีพิมพ์จาก RR (ถ้ามี)?')) return;
+        if (!confirm('แทนที่ CV ทั้งหมดบน ฐานข้อมูลคณะ ด้วยข้อมูลจาก กบศ และนำเข้าผลงานตีพิมพ์จาก กบศ (ถ้ามี)?')) return;
         setStatus('กำลังดึง…');
         var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/pull-all') ?>', {});
         setStatus(data.message || (data.success ? 'สำเร็จ' : 'ผิดพลาด'));
@@ -195,7 +195,7 @@ $email = $sync_email ?? '';
     });
 
     document.getElementById('rrsync-btn-push') && document.getElementById('rrsync-btn-push').addEventListener('click', async function () {
-        if (!confirm('แทนที่ CV ทั้งหมดบน Research Record ด้วยข้อมูลจาก newScience?')) return;
+        if (!confirm('แทนที่ CV ทั้งหมดบน กบศ ด้วยข้อมูลจาก ฐานข้อมูลคณะ?')) return;
         setStatus('กำลังส่ง…');
         var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/push-all') ?>', {});
         setStatus(data.message || (data.success ? 'สำเร็จ' : 'ผิดพลาด'));

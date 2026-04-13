@@ -452,18 +452,18 @@ $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
                         <div class="min-w-0">
                             <p class="cv-edit-stitch-kicker mb-1">แก้ไขประวัติในระบบ</p>
                             <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">จัดการ CV</h1>
-                            <p class="text-sm text-slate-600 mt-2 leading-relaxed max-w-3xl">แบบเดียวกับ Research Record — หัวข้อกำหนดเอง ลากเรียงได้ รายการมีองค์กร สถานที่ วันที่</p>
+                            <p class="text-sm text-slate-600 mt-2 leading-relaxed max-w-3xl">แบบเดียวกับ กบศ — หัวข้อกำหนดเอง ลากเรียงได้ รายการมีองค์กร สถานที่ วันที่</p>
                             <?php if ($research_sync_configured): ?>
                                 <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
                                     <?php if ($rr_last_pull_at !== null && $rr_last_pull_at !== ''): ?>
                                         <span class="inline-flex items-center gap-1.5">
                                             <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true"></span>
-                                            ดึงจาก Research Record ล่าสุด: <strong class="font-medium text-slate-700"><?= esc($rr_last_pull_at) ?></strong>
+                                            ดึงจาก กบศ ล่าสุด: <strong class="font-medium text-slate-700"><?= esc($rr_last_pull_at) ?></strong>
                                         </span>
                                     <?php else: ?>
                                         <span class="inline-flex items-center gap-1.5">
                                             <span class="h-1.5 w-1.5 rounded-full bg-slate-300 shrink-0" aria-hidden="true"></span>
-                                            ยังไม่มีประวัติดึงจาก Research Record ในหน้านี้
+                                            ยังไม่มีประวัติดึงจาก กบศ ในหน้านี้
                                         </span>
                                     <?php endif; ?>
                                     <?php if ($rr_auto_pull_max_age_days !== null): ?>
@@ -476,12 +476,12 @@ $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
                         <?php if ($research_sync_configured): ?>
                             <div class="flex flex-wrap items-stretch gap-2 shrink-0">
                                 <form method="post" action="<?= base_url('dashboard/profile/cv/sync-from-rr') ?>" class="inline-flex"
-                                      onsubmit="return confirm('ดึง CV และผลงานจาก Research Record มาแทนที่ข้อมูลใน newScience ตอนนี้?');">
+                                      onsubmit="return confirm('ดึง CV และผลงานจาก กบศ มาแทนที่ข้อมูลใน ฐานข้อมูลคณะ ตอนนี้?');">
                                     <?= csrf_field() ?>
                                     <button type="submit"
                                             class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-[6px] bg-emerald-600 text-white font-semibold shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors">
                                         <svg class="w-4 h-4 shrink-0 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                        ดึงจาก RR ตอนนี้
+                                        ดึงจาก กบศ ตอนนี้
                                     </button>
                                 </form>
                                 <a href="<?= base_url('dashboard/profile/research-record-sync') ?>"
@@ -885,7 +885,7 @@ $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
                             </div>
                             <div id="cv-m-pubtype-wrap" class="hidden rounded-lg border border-slate-200 bg-slate-50 p-3 sm:p-4">
                                 <label for="cv-m-pubtype" class="cv-edit-modal-label">ประเภทผลงานเผยแพร่</label>
-                                <p class="text-xs text-slate-600 mb-2 leading-relaxed">สำหรับหัวข้อ <strong class="text-slate-800">งานวิจัย / บทความ</strong> — รหัสเดียวกับ Research Record (<code class="text-[11px] bg-white px-1.5 py-0.5 rounded border border-slate-200 font-mono">publication_type</code>)</p>
+                                <p class="text-xs text-slate-600 mb-2 leading-relaxed">สำหรับหัวข้อ <strong class="text-slate-800">งานวิจัย / บทความ</strong> — รหัสเดียวกับ กบศ (<code class="text-[11px] bg-white px-1.5 py-0.5 rounded border border-slate-200 font-mono">publication_type</code>)</p>
                                 <select name="publication_type" id="cv-m-pubtype" disabled class="cv-edit-modal-select disabled:bg-slate-100 disabled:text-slate-500">
                                     <option value="">— ไม่ระบุ —</option>
                                     <?php foreach (\App\Libraries\RrPublicationType::selectOptionGroups() as $groupLabel => $groupOpts): ?>
@@ -1155,7 +1155,7 @@ $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
             if (pv && !Array.from(pubSel.options).some(function (o) { return o.value === pv; })) {
                 var opt = document.createElement('option');
                 opt.value = pv;
-                opt.textContent = 'จาก RR / ระบบ: ' + pv;
+                opt.textContent = 'จาก กบศ / ระบบ: ' + pv;
                 opt.setAttribute('data-temp-option', '1');
                 pubSel.appendChild(opt);
             }

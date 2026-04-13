@@ -239,7 +239,7 @@ class ResearchRecordCvSyncMerge
             $cvSectionModel->insert([
                 'personnel_id'      => $personnelId,
                 'type'              => 'research',
-                'title'             => 'ผลงานตีพิมพ์ (จาก Research Record)',
+                'title'             => 'ผลงานตีพิมพ์ (จาก กบศ)',
                 'description'       => null,
                 'sort_order'        => $cvSectionModel->nextSortOrder($personnelId),
                 'is_default'        => 0,

@@ -58,7 +58,7 @@ class ResearchRecordSync extends BaseController
         $researchApi = config(ResearchApi::class);
 
         return view('user/profile/research_record_sync', [
-            'page_title'  => 'ดึง CV จาก Research Record → newScience',
+            'page_title'  => 'ดึง CV จาก กบศ → ฐานข้อมูลคณะ',
             'person'      => $person,
             'sync_email'  => $this->canonicalEmailForPerson($person),
             'api_configured' => $researchApi->syncConfigured(),
@@ -85,7 +85,7 @@ class ResearchRecordSync extends BaseController
         if (!$rr['success']) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => $rr['message'] ?? 'ดึงข้อมูลจาก Research Record ไม่สำเร็จ',
+                'message' => $rr['message'] ?? 'ดึงข้อมูลจาก กบศ ไม่สำเร็จ',
                 'error'   => $rr['error'] ?? null,
             ]);
         }
@@ -198,7 +198,7 @@ class ResearchRecordSync extends BaseController
             }
 
             $pubChanged = $pubStats['inserted'] + $pubStats['updated'];
-            $msg        = 'บันทึกการซิงค์ลง newScience เรียบร้อย';
+            $msg        = 'บันทึกการซิงค์ลง ฐานข้อมูลคณะ เรียบร้อย';
             if ($pubChanged > 0 || $pubStats['skipped_unchanged'] > 0) {
                 $msg .= sprintf(
                     ' (ผลงาน: เพิ่ม %d, อัปเดต %d, ข้ามที่ข้อมูลเท่าเดิม %d)',
@@ -240,7 +240,7 @@ class ResearchRecordSync extends BaseController
         if (! $result['success']) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => $result['message'] ?? 'ดึงจาก RR ไม่สำเร็จ',
+                'message' => $result['message'] ?? 'ดึงจาก กบศ ไม่สำเร็จ',
             ]);
         }
 
@@ -269,7 +269,7 @@ class ResearchRecordSync extends BaseController
         $bundle = CvBundleCanonical::buildFromNewScience($personnelId, $email);
         $rr     = ResearchRecordCvSyncClient::pushCvBundle($email, $bundle);
         if (!$rr['success']) {
-            return $this->response->setJSON(['success' => false, 'message' => $rr['message'] ?? 'ส่งไป RR ไม่สำเร็จ']);
+            return $this->response->setJSON(['success' => false, 'message' => $rr['message'] ?? 'ส่งไป กบศ ไม่สำเร็จ']);
         }
 
         $log = new CvSyncLogModel();
@@ -287,7 +287,7 @@ class ResearchRecordSync extends BaseController
 
         return $this->response->setJSON([
             'success' => true,
-            'message' => 'ส่ง CV จาก newScience ไปแทนที่ใน Research Record แล้ว',
+            'message' => 'ส่ง CV จาก ฐานข้อมูลคณะ ไปแทนที่ใน กบศ แล้ว',
         ]);
     }
 }

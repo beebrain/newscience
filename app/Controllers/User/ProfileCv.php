@@ -159,14 +159,14 @@ class ProfileCv extends BaseController
                     $rrSyncNotice        = [
                         'type' => 'success',
                         'text' => $trigger === ResearchRecordCvPull::TRIGGER_AUTO_EMPTY
-                            ? 'ดึง CV จาก Research Record ลง newScience อัตโนมัติแล้ว (ยังไม่มีข้อมูลในระบบ)'
-                            : 'อัปเดต CV จาก Research Record อัตโนมัติแล้ว (ครั้งดึงล่าสุดเกิน ' . $syncCfg->autoPullMaxAgeDays . ' วัน)',
+                            ? 'ดึง CV จาก กบศ ลง ฐานข้อมูลคณะ อัตโนมัติแล้ว (ยังไม่มีข้อมูลในระบบ)'
+                            : 'อัปเดต CV จาก กบศ อัตโนมัติแล้ว (ครั้งดึงล่าสุดเกิน ' . $syncCfg->autoPullMaxAgeDays . ' วัน)',
                         'detail' => $pullRes['message'] ?? '',
                     ];
                 } else {
                     $rrSyncNotice = [
                         'type'   => 'warning',
-                        'text'   => 'ดึงจาก Research Record อัตโนมัติไม่สำเร็จ',
+                        'text'   => 'ดึงจาก กบศ อัตโนมัติไม่สำเร็จ',
                         'detail' => $pullRes['message'] ?? '',
                     ];
                 }
@@ -229,7 +229,7 @@ class ProfileCv extends BaseController
     }
 
     /**
-     * POST — ดึง CV + ผลงานจาก Research Record ลง newScience (manual)
+     * POST — ดึง CV + ผลงานจาก กบศ ลง ฐานข้อมูลคณะ (manual)
      */
     public function syncFromResearchRecord()
     {
@@ -257,10 +257,10 @@ class ProfileCv extends BaseController
         $result    = ResearchRecordCvPull::run($personnelId, $canonical, ResearchRecordCvPull::TRIGGER_MANUAL);
 
         if ($result['success']) {
-            return redirect()->back()->with('success', $result['message'] ?? 'ดึงจาก Research Record เรียบร้อย');
+            return redirect()->back()->with('success', $result['message'] ?? 'ดึงจาก กบศ เรียบร้อย');
         }
 
-        return redirect()->back()->with('error', $result['message'] ?? 'ดึงจาก Research Record ไม่สำเร็จ');
+        return redirect()->back()->with('error', $result['message'] ?? 'ดึงจาก กบศ ไม่สำเร็จ');
     }
 
     /**
