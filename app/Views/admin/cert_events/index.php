@@ -6,6 +6,7 @@
         <h2 style="margin: 0;">จัดการกิจกรรมใบรับรอง</h2>
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
             <a href="<?= esc($cert_base) ?>/issued-report" class="btn btn-secondary">รายงานใบที่ออกแล้ว</a>
+            <a href="<?= esc($cert_base) ?>/create" class="btn btn-outline-primary">สร้างแบบเต็ม (แนบไฟล์ใหญ่)</a>
             <button type="button" class="btn btn-primary" onclick="openModal('certEventModal')">
                 + สร้างกิจกรรมใหม่
             </button>
@@ -186,6 +187,23 @@ function getStatusLabel($status): string
                 form.querySelector('[name="status"]').value = data.event.status || 'draft';
                 form.querySelector('[name="signer_id"]').value = data.event.signer_id || '';
 
+                const layoutEl = form.querySelector('[name="layout_json"]');
+                if (layoutEl) {
+                    layoutEl.value = data.event.layout_json || '';
+                }
+                const bgFile = form.querySelector('[name="background_file"]');
+                if (bgFile) {
+                    bgFile.value = '';
+                }
+                const bgHint = document.getElementById('certEventBgHint');
+                if (bgHint) {
+                    const bf = data.event.background_file || '';
+                    const bk = data.event.background_kind || '';
+                    bgHint.textContent = bf
+                        ? `ไฟล์ปัจจุบัน: ${bk} — ${bf} (เลือกไฟล์ใหม่เพื่อแทนที่)`
+                        : 'ยังไม่มีไฟล์ — โปรดเลือกรูปหรือ PDF แม่แบบใบรับรอง';
+                }
+
                 openModal('certEventModal');
             } else {
                 AjaxForm.showToast(data.message || 'ไม่สามารถโหลดข้อมูลได้', 'error');
@@ -212,6 +230,14 @@ function getStatusLabel($status): string
         form.reset();
         form.action = '<?= esc($cert_base, 'js') ?>/store';
         document.querySelector('#certEventModal .modal-title').textContent = 'สร้างกิจกรรมใหม่';
+        const bgHint = document.getElementById('certEventBgHint');
+        if (bgHint) {
+            bgHint.textContent = 'ยังไม่มีไฟล์ — แนะนำแนบตอนสร้างหรือแก้ไขก่อนกดออกใบ';
+        }
+        const layoutEl = form.querySelector('[name="layout_json"]');
+        if (layoutEl) {
+            layoutEl.value = '';
+        }
     });
 </script>
 

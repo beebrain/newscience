@@ -31,6 +31,20 @@
                 <textarea name="description" class="form-control" rows="4"><?= esc(old('description', $event['description'])) ?></textarea>
             </div>
 
+            <div style="margin-bottom: 1.25rem; padding: 1rem; border: 1px solid #f59e0b; border-radius: 0.5rem; background: #fffbeb;">
+                <strong style="display:block; margin-bottom: 0.35rem; color: #92400e;">แนบแม่แบบใบรับรอง (รูปหรือ PDF)</strong>
+                <p style="margin: 0 0 0.75rem; font-size: 13px; color: #78350f; line-height: 1.5;">
+                    อัปโหลดไฟล์<strong> JPG / PNG / PDF</strong> ของใบรับรองที่ออกแบบแล้ว — ระบบจะซ้อนชื่อและ QR บนไฟล์นี้
+                </p>
+                <label style="font-weight: 600;">เปลี่ยนไฟล์แม่แบบ (ถ้าต้องการ)</label>
+                <input type="file" name="background_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" style="margin-top:0.25rem;">
+                <?php if (! empty($event['background_file'])): ?>
+                    <small class="form-text text-muted" style="display:block;margin-top:0.5rem;">ปัจจุบัน: <?= esc($event['background_kind'] ?? '') ?> — <?= esc($event['background_file']) ?></small>
+                <?php else: ?>
+                    <small class="form-text text-muted" style="display:block;margin-top:0.5rem;color:#b45309;">ยังไม่มีไฟล์ — ต้องอัปโหลดก่อนออกใบ</small>
+                <?php endif; ?>
+            </div>
+
             <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label>วันที่จัดกิจกรรม</label>
@@ -58,15 +72,6 @@
                         </option>
                     <?php endforeach; ?>
                 </select>
-            </div>
-
-            <div class="form-group">
-                <label>ไฟล์ใบรับรองของกิจกรรม (PDF / JPG / PNG)</label>
-                <input type="file" name="background_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                <small class="form-text text-muted">จำเป็นต้องมีไฟล์นี้ก่อนกดออกใบ</small>
-                <?php if (! empty($event['background_file'])): ?>
-                    <div style="margin-top:0.5rem;font-size:12px;">ปัจจุบัน: <?= esc($event['background_kind'] ?? '') ?> — <?= esc($event['background_file']) ?></div>
-                <?php endif; ?>
             </div>
 
             <div class="form-group">

@@ -32,6 +32,15 @@
                 <textarea name="description" class="form-control" rows="4"><?= esc(old('description')) ?></textarea>
             </div>
 
+            <div style="margin-bottom: 1.25rem; padding: 1rem; border: 1px solid #f59e0b; border-radius: 0.5rem; background: #fffbeb;">
+                <strong style="display:block; margin-bottom: 0.35rem; color: #92400e;">แนบแม่แบบใบรับรอง (รูปหรือ PDF)</strong>
+                <p style="margin: 0 0 0.75rem; font-size: 13px; color: #78350f; line-height: 1.5;">
+                    อัปโหลดไฟล์<strong> JPG / PNG / PDF</strong> ที่เป็นแบบใบรับรองจริง — ระบบจะซ้อนชื่อและ QR บนไฟล์นี้ ไม่ใช้เทมเพลตจากระบบ
+                </p>
+                <label style="font-weight: 600;">เลือกไฟล์ <small style="font-weight:400;color:#78350f;">(ต้องมีก่อนออกใบ)</small></label>
+                <input type="file" name="background_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" style="margin-top:0.25rem;">
+            </div>
+
             <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label>วันที่จัดกิจกรรม</label>
@@ -57,14 +66,6 @@
                         </option>
                     <?php endforeach; ?>
                 </select>
-            </div>
-
-            <div class="form-group">
-                <label>ไฟล์ใบรับรองของกิจกรรม (PDF / JPG / PNG)</label>
-                <input type="file" name="background_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                <small class="form-text text-muted">
-                    ระบบจะวางชื่อและ QR ทับไฟล์นี้ — แนะนำอัปโหลดตอนสร้างหรือที่หน้าแก้ไขก่อนออกใบ
-                </small>
             </div>
 
             <div class="form-group">
