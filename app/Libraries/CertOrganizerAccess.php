@@ -2,10 +2,13 @@
 
 namespace App\Libraries;
 
+use App\Models\UserModel;
+use Config\Certificate as CertificateConfig;
+
 /**
  * สิทธิ์ผู้จัดกิจกรรม E-Certificate
- * — ผู้ใช้ Dashboard (Portal) ที่ล็อกอินแล้ว (role user / admin / …) สร้างกิจกรรมและออกใบได้
- * — ผู้ดูแลระดับคณะ (super_admin, faculty_admin) เห็นและกรองรายการทั้งคณะได้
+ * — ต้องเป็นผู้ใช้ใน table user ที่คอลัมน์ faculty ระบุสังกัดคณะวิทยาศาสตร์และเทคโนโลยี (ยกเว้นโรลใน certOrganizerFacultyBypassRoles)
+ * — ผู้ดูแลระดับคณะ (super_admin, faculty_admin) เห็นและกรองรายการทั้งคณะได้เมื่อผ่าน currentMayOrganize()
  */
 class CertOrganizerAccess
 {
@@ -26,34 +29,56 @@ class CertOrganizerAccess
 
     /**
      * ผู้ใช้ปัจจุบันสร้าง/จัดการกิจกรรมใบรับรองจาก Dashboard ได้หรือไม่
-     * (ทุกคนที่เข้า Portal แล้วได้ session admin_* จากระบบเว็บ — ไม่บังคับ personnel)
+     * อ่านแถว user จาก session admin_id — ตรวจคอลัมน์ faculty ให้ตรงกับคณะวิทยาศาสตร์และเทคโนโลยี (ดู Config\Certificate)
      */
     public static function currentMayOrganize(): bool
     {
         if (! session()->get('admin_logged_in')) {
             return false;
         }
-        if ((int) (session()->get('admin_id') ?? 0) <= 0) {
+        $uid = (int) (session()->get('admin_id') ?? 0);
+        if ($uid <= 0) {
             return false;
         }
 
-        if (self::isFacultyWideViewer()) {
-            return true;
-        }
-
         $role = (string) (session()->get('admin_role') ?? '');
-        if (in_array($role, ['admin', 'editor'], true)) {
-            return true;
+        $cfg  = config(CertificateConfig::class);
+
+        foreach ($cfg->certOrganizerFacultyBypassRoles as $bypassRole) {
+            if ($bypassRole !== '' && $role === $bypassRole) {
+                return true;
+            }
         }
 
-        // ผู้ใช้ทั่วไป (role user) หลัง OAuth Portal — ใช้งาน E-Certificate ได้ทันที
-        if ($role === 'user') {
-            return true;
+        $user = (new UserModel())->find($uid);
+        if (! $user) {
+            return false;
         }
 
-        // บทบาทอื่นที่ยังใช้ Dashboard เดียวกัน (ถ้ามี)
-        if ($role !== '') {
-            return true;
+        return self::userFacultyMatchesOrganizerFaculty($user, $cfg);
+    }
+
+    /**
+     * user.faculty มีคีย์เวิร์ดคณะวิทยาศาสตร์และเทคโนโลยีหรือไม่
+     *
+     * @param array<string, mixed> $userRow แถวจากตาราง user
+     */
+    public static function userFacultyMatchesOrganizerFaculty(array $userRow, ?CertificateConfig $cfg = null): bool
+    {
+        $cfg ??= config(CertificateConfig::class);
+        $faculty = trim((string) ($userRow['faculty'] ?? ''));
+        if ($faculty === '') {
+            return false;
+        }
+        $haystack = mb_strtolower($faculty, 'UTF-8');
+        foreach ($cfg->certOrganizerFacultyKeywords as $keyword) {
+            $keyword = trim((string) $keyword);
+            if ($keyword === '') {
+                continue;
+            }
+            if (mb_stripos($haystack, mb_strtolower($keyword, 'UTF-8'), 0, 'UTF-8') !== false) {
+                return true;
+            }
         }
 
         return false;

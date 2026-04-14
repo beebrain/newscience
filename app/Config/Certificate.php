@@ -110,6 +110,25 @@ class Certificate extends BaseConfig
      */
     public string $eventCertificateDefaultLayoutJson = '{"field_mapping":{"student_name":{"x":90,"y":145,"font_size":22},"purpose":{"x":90,"y":168,"font_size":14}},"signature_x":150,"signature_y":200,"qr_x":18,"qr_y":262,"qr_size":22}';
 
+    /**
+     * ถ้า user.faculty มีข้อความย่อยใดย่อยหนึ่งในรายการนี้ (ไม่สนตัวพิมพ์) ถือว่าเป็นสังกัดคณะวิทยาศาสตร์และเทคโนโลยี
+     * กำหนดเพิ่มได้ที่ env cert.organizerFacultyKeywords (คั่นด้วยจุลภาค)
+     *
+     * @var list<string>
+     */
+    public array $certOrganizerFacultyKeywords = [
+        'วิทยาศาสตร์และเทคโนโลยี',
+        'science and technology',
+    ];
+
+    /**
+     * โรลที่ไม่บังคับตรวจ user.faculty (เช่น super_admin)
+     * env cert.organizerFacultyBypassRoles — คั่นด้วยจุลภาค; ถ้าไม่ตั้งใช้ค่าเริ่มต้นด้านล่าง
+     *
+     * @var list<string>
+     */
+    public array $certOrganizerFacultyBypassRoles = ['super_admin'];
+
     public function __construct()
     {
         parent::__construct();
@@ -140,6 +159,22 @@ class Certificate extends BaseConfig
         $layoutEnv = env('cert.eventDefaultLayoutJson', '');
         if (is_string($layoutEnv) && trim($layoutEnv) !== '') {
             $this->eventCertificateDefaultLayoutJson = $layoutEnv;
+        }
+
+        $kwEnv = env('cert.organizerFacultyKeywords', null);
+        if (is_string($kwEnv) && trim($kwEnv) !== '') {
+            $this->certOrganizerFacultyKeywords = array_values(array_filter(array_map(
+                static fn (string $s): string => trim($s),
+                explode(',', $kwEnv)
+            ), static fn (string $s): bool => $s !== ''));
+        }
+
+        $bypassEnv = env('cert.organizerFacultyBypassRoles', null);
+        if (is_string($bypassEnv)) {
+            $this->certOrganizerFacultyBypassRoles = array_values(array_filter(array_map(
+                static fn (string $s): string => trim($s),
+                explode(',', $bypassEnv)
+            ), static fn (string $s): bool => $s !== ''));
         }
     }
 }

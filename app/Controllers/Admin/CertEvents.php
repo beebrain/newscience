@@ -42,6 +42,18 @@ class CertEvents extends BaseController
         $this->studentModel = new StudentUserModel();
         $this->userModel = new UserModel();
         $this->certConfig = config(CertificateConfig::class);
+
+        if (! CertOrganizerAccess::currentMayOrganize()) {
+            $path = trim((string) uri_string(), '/');
+            $to    = str_starts_with($path, 'dashboard/') ? base_url('dashboard') : base_url('admin');
+            redirect()->to($to)
+                ->with(
+                    'error',
+                    'ไม่สามารถเข้าถึงระบบใบรับรองได้: สงวนสำหรับบุคลากรที่สังกัดคณะวิทยาศาสตร์และเทคโนโลยีเท่านั้น (ตรวจสอบคอลัมน์คณะในโปรไฟล์หลังล็อกอิน Portal หรือติดต่อผู้ดูแลระบบ)'
+                )
+                ->send();
+            exit;
+        }
     }
 
     protected function certUrl(string $path = ''): string

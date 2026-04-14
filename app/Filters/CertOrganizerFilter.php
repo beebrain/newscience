@@ -23,7 +23,10 @@ class CertOrganizerFilter implements FilterInterface
 
         if (! CertOrganizerAccess::currentMayOrganize()) {
             return redirect()->to(base_url('dashboard'))
-                ->with('error', 'คุณไม่มีสิทธิ์จัดการกิจกรรมใบรับรอง');
+                ->with(
+                    'error',
+                    'คุณไม่มีสิทธิ์จัดการกิจกรรมใบรับรอง: สงวนสำหรับบุคลากรที่สังกัดคณะวิทยาศาสตร์และเทคโนโลยีเท่านั้น'
+                );
         }
 
         return null;
