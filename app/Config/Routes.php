@@ -120,6 +120,7 @@ $routes->group('dashboard/cert-events', ['filter' => 'certorganizer'], static fu
     $routes->get('issued-report', 'User\CertEvents::issuedReport');
     $routes->get('create', 'User\CertEvents::create');
     $routes->post('store', 'User\CertEvents::store');
+    $routes->get('(:num)/background-preview', 'User\CertEvents::backgroundPreview/$1');
     $routes->get('(:num)', 'User\CertEvents::show/$1');
     $routes->get('(:num)/edit', 'User\CertEvents::edit/$1');
     $routes->post('(:num)/update', 'User\CertEvents::update/$1');
@@ -303,6 +304,7 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->get('cert-events', 'Admin\CertEvents::index');
     $routes->get('cert-events/create', 'Admin\CertEvents::create');
     $routes->post('cert-events/store', 'Admin\CertEvents::store');
+    $routes->get('cert-events/(:num)/background-preview', 'Admin\CertEvents::backgroundPreview/$1');
     $routes->get('cert-events/(:num)', 'Admin\CertEvents::show/$1');
     $routes->get('cert-events/(:num)/edit', 'Admin\CertEvents::edit/$1');
     $routes->post('cert-events/(:num)/update', 'Admin\CertEvents::update/$1');

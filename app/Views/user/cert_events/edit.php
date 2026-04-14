@@ -37,7 +37,7 @@
                     อัปโหลดไฟล์<strong> JPG / PNG / PDF</strong> ของใบรับรองที่ออกแบบแล้ว — ระบบจะซ้อนชื่อและ QR บนไฟล์นี้
                 </p>
                 <label style="font-weight: 600;">เปลี่ยนไฟล์แม่แบบ (ถ้าต้องการ)</label>
-                <input type="file" name="background_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" style="margin-top:0.25rem;">
+                <input type="file" id="cert_event_background_file" name="background_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" style="margin-top:0.25rem;">
                 <?php if (! empty($event['background_file'])): ?>
                     <small class="form-text text-muted" style="display:block;margin-top:0.5rem;">ปัจจุบัน: <?= esc($event['background_kind'] ?? '') ?> — <?= esc($event['background_file']) ?></small>
                 <?php else: ?>
@@ -74,9 +74,16 @@
                 </select>
             </div>
 
+            <?= view('admin/cert_events/partials/cert_layout_picker', [
+                'layoutTextareaSelector' => '#cert_event_layout_json',
+                'fileInputSelector'      => '#cert_event_background_file',
+                'cert_base'              => $cb,
+                'event'                  => $event,
+            ]) ?>
+
             <div class="form-group">
-                <label>layout_json (ทับตำแหน่งฟิลด์ — ไม่บังคับ)</label>
-                <textarea name="layout_json" class="form-control" rows="6" placeholder='{"field_mapping":{"student_name":{"x":100,"y":140,"font_size":22}},...}'><?= esc(old('layout_json', $event['layout_json'] ?? '')) ?></textarea>
+                <label for="cert_event_layout_json">layout_json <small class="text-muted">(อัปเดตเมื่อคลิกบนภาพ)</small></label>
+                <textarea id="cert_event_layout_json" name="layout_json" class="form-control" rows="6" placeholder='{"field_mapping":{"student_name":{"x":100,"y":140,"font_size":22}},...}'><?= esc(old('layout_json', $event['layout_json'] ?? '')) ?></textarea>
             </div>
 
             <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 1.5rem;">
@@ -86,4 +93,15 @@
         </form>
     </div>
 </div>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script src="<?= base_url('js/cert-layout-picker.js') ?>"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.CertLayoutPicker) {
+        window.CertLayoutPicker.initAll();
+    }
+});
+</script>
 <?= $this->endSection() ?>

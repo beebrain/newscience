@@ -101,7 +101,12 @@ class CertPdfGenerator
             return $out;
         }
         if (! empty($layout['field_mapping']) && is_array($layout['field_mapping'])) {
-            $out['field_mapping'] = json_encode($layout['field_mapping'], JSON_UNESCAPED_UNICODE);
+            $baseMap = json_decode($out['field_mapping'] ?? '{}', true);
+            if (! is_array($baseMap)) {
+                $baseMap = [];
+            }
+            $merged = array_merge($baseMap, $layout['field_mapping']);
+            $out['field_mapping'] = json_encode($merged, JSON_UNESCAPED_UNICODE);
         }
         foreach (['signature_x', 'signature_y', 'qr_x', 'qr_y', 'qr_size'] as $k) {
             if (isset($layout[$k])) {

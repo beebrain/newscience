@@ -39,7 +39,7 @@
                     — ระบบจะซ้อนชื่อ วัตถุประสงค์ QR และลายเซ็นบนไฟล์นี้ ไม่ใช้เทมเพลตจากเมนูเทมเพลตของระบบ
                 </p>
                 <label style="font-weight: 600;">เลือกไฟล์ <small style="font-weight:400;color:#78350f;">(ต้องมีก่อนกดออกใบ — แนบตอนนี้หรือที่หน้าแก้ไข)</small></label>
-                <input type="file" name="background_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" style="margin-top:0.25rem;">
+                <input type="file" id="cert_event_background_file" name="background_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" style="margin-top:0.25rem;">
             </div>
 
             <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -69,9 +69,16 @@
                 </select>
             </div>
 
+            <?= view('admin/cert_events/partials/cert_layout_picker', [
+                'layoutTextareaSelector' => '#cert_event_layout_json',
+                'fileInputSelector'      => '#cert_event_background_file',
+                'cert_base'              => $cb,
+                'event'                  => null,
+            ]) ?>
+
             <div class="form-group">
-                <label>layout_json (ปรับตำแหน่งข้อความ — ไม่บังคับ)</label>
-                <textarea name="layout_json" class="form-control" rows="4" placeholder='{"field_mapping":{"student_name":{"x":90,"y":145,"font_size":22}},...}'><?= esc(old('layout_json')) ?></textarea>
+                <label for="cert_event_layout_json">layout_json <small class="text-muted">(อัปเดตอัตโนมัติเมื่อคลิกบนภาพ — แก้มือได้)</small></label>
+                <textarea id="cert_event_layout_json" name="layout_json" class="form-control" rows="5" placeholder='{"field_mapping":{"student_name":{"x":90,"y":145,"font_size":22}},...}'><?= esc(old('layout_json')) ?></textarea>
             </div>
 
             <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 1.5rem;">
@@ -81,4 +88,15 @@
         </form>
     </div>
 </div>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script src="<?= base_url('js/cert-layout-picker.js') ?>"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.CertLayoutPicker) {
+        window.CertLayoutPicker.initAll();
+    }
+});
+</script>
 <?= $this->endSection() ?>

@@ -196,6 +196,60 @@ class CertEvents extends BaseController
     }
 
     /**
+     * ส่งไฟล์ภาพพื้นหลังกิจกรรม (สำหรับแสดงในเบราว์เซอร์เพื่อคลิกวางตำแหน่งชื่อ) — เฉพาะ background_kind = image
+     */
+    public function backgroundPreview(int $id)
+    {
+        $event = $this->eventModel->find($id);
+        if (! $event || ! CertOrganizerAccess::mayAccessEvent($event)) {
+            return $this->response->setStatusCode(403)->setBody('Forbidden');
+        }
+        if (strtolower((string) ($event['background_kind'] ?? '')) !== 'image') {
+            return $this->response->setStatusCode(404)->setBody('Not an image background');
+        }
+        $rel = trim((string) ($event['background_file'] ?? ''));
+        if ($rel === '') {
+            return $this->response->setStatusCode(404);
+        }
+        $full = $this->absoluteEventBackgroundPath($rel);
+        if ($full === null || ! is_file($full)) {
+            return $this->response->setStatusCode(404);
+        }
+
+        $ext = strtolower((string) pathinfo($full, PATHINFO_EXTENSION));
+        $mime = match ($ext) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png'       => 'image/png',
+            default     => null,
+        };
+        if ($mime === null) {
+            return $this->response->setStatusCode(404);
+        }
+
+        $this->response->setHeader('Content-Type', $mime);
+        $this->response->setHeader('Cache-Control', 'private, max-age=120');
+        $this->response->setBody((string) file_get_contents($full));
+
+        return $this->response;
+    }
+
+    /**
+     * @param non-empty-string $relative path จาก DB เช่น writable/uploads/cert_system/event_backgrounds/...
+     */
+    protected function absoluteEventBackgroundPath(string $relative): ?string
+    {
+        $relative = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, trim($relative));
+        if ($relative === '') {
+            return null;
+        }
+        if (str_starts_with($relative, 'writable' . DIRECTORY_SEPARATOR) || str_starts_with($relative, 'writable/')) {
+            return ROOTPATH . ltrim(str_replace('/', DIRECTORY_SEPARATOR, $relative), DIRECTORY_SEPARATOR);
+        }
+
+        return null;
+    }
+
+    /**
      * แสดงรายละเอียดกิจกรรม + รายชื่อผู้รับ
      */
     public function show(int $id)
