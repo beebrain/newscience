@@ -6,7 +6,6 @@
         <h2 style="margin: 0;">จัดการกิจกรรมใบรับรอง</h2>
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
             <a href="<?= esc($cert_base) ?>/issued-report" class="btn btn-secondary">รายงานใบที่ออกแล้ว</a>
-            <a href="<?= esc($cert_base) ?>/create" class="btn btn-outline-primary">สร้างแบบเต็ม (แนบไฟล์ใหญ่)</a>
             <button type="button" class="btn btn-primary" onclick="openModal('certEventModal')">
                 + สร้างกิจกรรมใหม่
             </button>
@@ -160,8 +159,15 @@ function getStatusLabel($status): string
 }
 ?>
 
+<script src="<?= base_url('js/cert-layout-picker.js') ?>"></script>
 <script src="<?= base_url('js/ajax-form-handler.js') ?>"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.CertLayoutPicker) {
+            window.CertLayoutPicker.initAll();
+        }
+    });
+
     // Edit event - load data and open modal
     async function editEvent(eventId) {
         try {
@@ -190,6 +196,19 @@ function getStatusLabel($status): string
                 const layoutEl = form.querySelector('[name="layout_json"]');
                 if (layoutEl) {
                     layoutEl.value = data.event.layout_json || '';
+                }
+                const picker = form.querySelector('[data-cert-layout-picker]');
+                if (picker) {
+                    picker.removeAttribute('data-cert-lp-inited');
+                    const b = '<?= esc(rtrim((string) ($cert_base ?? ''), '/'), 'js') ?>';
+                    if (String(data.event.background_kind || '').toLowerCase() === 'image' && data.event.id) {
+                        picker.setAttribute('data-preview-url', b + '/' + data.event.id + '/background-preview');
+                    } else {
+                        picker.setAttribute('data-preview-url', '');
+                    }
+                    if (window.CertLayoutPicker) {
+                        window.CertLayoutPicker.initAll();
+                    }
                 }
                 const bgFile = form.querySelector('[name="background_file"]');
                 if (bgFile) {
@@ -237,6 +256,14 @@ function getStatusLabel($status): string
         const layoutEl = form.querySelector('[name="layout_json"]');
         if (layoutEl) {
             layoutEl.value = '';
+        }
+        const picker = document.querySelector('#certEventModal [data-cert-layout-picker]');
+        if (picker) {
+            picker.removeAttribute('data-cert-lp-inited');
+            picker.setAttribute('data-preview-url', '');
+            if (window.CertLayoutPicker) {
+                window.CertLayoutPicker.initAll();
+            }
         }
     });
 </script>

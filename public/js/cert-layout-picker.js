@@ -1,11 +1,83 @@
 /**
- * คลิก/ลากบนภาพแม่แบบใบรับรอง (A4 210×297 mm) เพื่อตั้งตำแหน่งชื่อผู้รับ (field student_name → layout_json)
+ * ระบุตำแหน่งชื่อผู้รับบนแม่แบบใบรับรอง: กดปุ่มแสดงภาพ แล้วลากกรอบสี่เหลี่ยม (หน่วย mm บนหน้า A4 210×297)
+ * ค่าเขียนลง input[name=layout_json] อัตโนมัติ — ไม่ต้องแก้ JSON มือ
  */
 (function (window) {
     'use strict';
 
     var PAGE_W_MM = 210;
     var PAGE_H_MM = 297;
+
+    /** @type {{ root: Element, img: HTMLElement, startX: number, startY: number, drawActive: boolean }|null} */
+    var activeDrag = null;
+
+    function bindGlobalPointerOnce() {
+        if (window._certLpPointerBound) {
+            return;
+        }
+        window._certLpPointerBound = true;
+        document.addEventListener('pointermove', function (ev) {
+            if (!activeDrag || !activeDrag.drawActive) {
+                return;
+            }
+            var img = activeDrag.img;
+            if (img.style.display === 'none') {
+                return;
+            }
+            var ir = img.getBoundingClientRect();
+            var x = ev.clientX - ir.left;
+            var y = ev.clientY - ir.top;
+            var l = Math.min(activeDrag.startX, x);
+            var t = Math.min(activeDrag.startY, y);
+            var w = Math.abs(x - activeDrag.startX);
+            var h = Math.abs(y - activeDrag.startY);
+            var rubber = activeDrag.root.querySelector('.cert-lp-rubber');
+            if (rubber) {
+                rubber.style.display = w > 0 && h > 0 ? 'block' : 'none';
+                rubber.style.left = l + 'px';
+                rubber.style.top = t + 'px';
+                rubber.style.width = w + 'px';
+                rubber.style.height = h + 'px';
+            }
+        });
+        document.addEventListener('pointerup', function (ev) {
+            if (!activeDrag || !activeDrag.drawActive) {
+                return;
+            }
+            var root = activeDrag.root;
+            var img = activeDrag.img;
+            var layoutInput = activeDrag.layoutInput;
+            var defaultsJson = activeDrag.defaultsJson;
+            activeDrag.drawActive = false;
+            var ir = img.getBoundingClientRect();
+            var x = ev.clientX - ir.left;
+            var y = ev.clientY - ir.top;
+            var boxMm = pxRectToMm(activeDrag.startX, activeDrag.startY, x, y, { width: ir.width, height: ir.height });
+            var rubber = root.querySelector('.cert-lp-rubber');
+            if (rubber) {
+                rubber.style.display = 'none';
+                rubber.style.width = '0';
+                rubber.style.height = '0';
+            }
+            if (boxMm && layoutInput) {
+                setStudentNameBox(layoutInput, defaultsJson, boxMm);
+                if (typeof activeDrag.syncFromLayout === 'function') {
+                    activeDrag.syncFromLayout();
+                }
+            }
+            activeDrag = null;
+        });
+        document.addEventListener('pointercancel', function () {
+            if (activeDrag) {
+                activeDrag.drawActive = false;
+                var rubber = activeDrag.root.querySelector('.cert-lp-rubber');
+                if (rubber) {
+                    rubber.style.display = 'none';
+                }
+                activeDrag = null;
+            }
+        });
+    }
 
     function safeJsonParse(str, fallback) {
         try {
@@ -24,120 +96,150 @@
         return fm.student_name;
     }
 
-    function setStudentNameInLayoutJson(textarea, defaultsJson, xMm, yMm, fontSize) {
+    function fontFromBoxHeight(hMm) {
+        if (!hMm || hMm <= 0) {
+            return 22;
+        }
+        return Math.min(36, Math.max(10, Math.round(hMm * 0.32)));
+    }
+
+    function setStudentNameBox(layoutInput, defaultsJson, boxMm) {
         var defaults = safeJsonParse(defaultsJson, {});
-        var current = safeJsonParse(textarea.value.trim(), {});
+        var current = safeJsonParse(String(layoutInput.value || '').trim(), {});
         var out = Object.assign({}, defaults, current);
         out.field_mapping = Object.assign(
             {},
             defaults.field_mapping || {},
             current.field_mapping || {}
         );
+        var fs = fontFromBoxHeight(boxMm.h);
         out.field_mapping.student_name = {
-            x: Math.round(xMm * 10) / 10,
-            y: Math.round(yMm * 10) / 10,
-            font_size: fontSize
+            x: Math.round(boxMm.x * 10) / 10,
+            y: Math.round(boxMm.y * 10) / 10,
+            font_size: fs,
+            box_w: Math.round(boxMm.w * 10) / 10,
+            box_h: Math.round(boxMm.h * 10) / 10
         };
-        textarea.value = JSON.stringify(out, null, 2);
+        layoutInput.value = JSON.stringify(out);
+        layoutInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    function pxToMm(xPx, yPx, rect) {
+    function pxRectToMm(x0, y0, x1, y1, rect) {
+        var l = Math.min(x0, x1);
+        var t = Math.min(y0, y1);
+        var r = Math.max(x0, x1);
+        var b = Math.max(y0, y1);
+        l = Math.max(0, Math.min(rect.width, l));
+        t = Math.max(0, Math.min(rect.height, t));
+        r = Math.max(0, Math.min(rect.width, r));
+        b = Math.max(0, Math.min(rect.height, b));
+        var w = r - l;
+        var h = b - t;
+        if (w < 2 || h < 2) {
+            return null;
+        }
         return {
-            x: (xPx / rect.width) * PAGE_W_MM,
-            y: (yPx / rect.height) * PAGE_H_MM
+            x: (l / rect.width) * PAGE_W_MM,
+            y: (t / rect.height) * PAGE_H_MM,
+            w: (w / rect.width) * PAGE_W_MM,
+            h: (h / rect.height) * PAGE_H_MM
         };
     }
 
-    function mmToPx(xMm, yMm, rect) {
+    function mmRectToPx(box, imgRect) {
         return {
-            x: (xMm / PAGE_W_MM) * rect.width,
-            y: (yMm / PAGE_H_MM) * rect.height
+            left: (box.x / PAGE_W_MM) * imgRect.width,
+            top: (box.y / PAGE_H_MM) * imgRect.height,
+            width: (box.w / PAGE_W_MM) * imgRect.width,
+            height: (box.h / PAGE_H_MM) * imgRect.height
         };
     }
 
     function initRoot(root) {
-        var selLayout = root.getAttribute('data-layout-textarea');
-        var selFile = root.getAttribute('data-file-input');
+        var hiddenId = root.getAttribute('data-layout-input-id');
+        var fileId = root.getAttribute('data-file-input-id');
         var defaultsJson = root.getAttribute('data-defaults-json') || '{}';
         var previewUrl = (root.getAttribute('data-preview-url') || '').trim();
-        var sampleText = root.getAttribute('data-sample-text') || 'ชื่อ นามสกุล ผู้เข้ารับ';
+        var sampleText = root.getAttribute('data-sample-text') || 'ชื่อ นามสกุล ผู้เข้ารับการอบรม';
 
-        var textarea = document.querySelector(selLayout);
-        var fileInput = selFile ? document.querySelector(selFile) : null;
-        if (!textarea) {
+        var layoutInput = hiddenId ? document.getElementById(hiddenId) : null;
+        var fileInput = fileId ? document.getElementById(fileId) : null;
+        if (!layoutInput) {
             return;
         }
 
+        var btnOpen = root.querySelector('.cert-lp-open');
+        var stageWrap = root.querySelector('.cert-lp-stage-wrap');
         var stage = root.querySelector('.cert-lp-stage');
         var img = root.querySelector('.cert-lp-img');
-        var marker = root.querySelector('.cert-lp-marker');
+        var rubber = root.querySelector('.cert-lp-rubber');
+        var rectFinal = root.querySelector('.cert-lp-rect-final');
         var ghost = root.querySelector('.cert-lp-ghost');
         var notePdf = root.querySelector('.cert-lp-note-pdf');
-        var fontInput = root.querySelector('.cert-lp-font-size');
         var objectUrl = null;
 
         if (ghost) {
             ghost.textContent = sampleText;
         }
 
-        function fontSize() {
-            var v = fontInput ? parseInt(String(fontInput.value), 10) : 22;
-            if (isNaN(v) || v < 8) {
-                return 22;
+        function showRubber(left, top, w, h) {
+            if (!rubber) {
+                return;
             }
-            if (v > 48) {
-                return 48;
-            }
-            return v;
+            rubber.style.display = w > 0 && h > 0 ? 'block' : 'none';
+            rubber.style.left = left + 'px';
+            rubber.style.top = top + 'px';
+            rubber.style.width = w + 'px';
+            rubber.style.height = h + 'px';
         }
 
-        function showStage(show) {
-            if (stage) {
-                stage.style.display = show ? 'block' : 'none';
+        function showFinalRect(boxMm) {
+            if (!rectFinal || !img || img.style.display === 'none' || !boxMm) {
+                return;
+            }
+            var ir = img.getBoundingClientRect();
+            var px = mmRectToPx(boxMm, { width: ir.width, height: ir.height });
+            rectFinal.style.display = 'block';
+            rectFinal.style.left = px.left + 'px';
+            rectFinal.style.top = px.top + 'px';
+            rectFinal.style.width = px.width + 'px';
+            rectFinal.style.height = px.height + 'px';
+            if (ghost) {
+                ghost.style.display = 'block';
+                ghost.style.left = px.left + 4 + 'px';
+                ghost.style.top = px.top + 4 + 'px';
+                ghost.style.maxWidth = Math.max(40, px.width - 8) + 'px';
+                ghost.style.whiteSpace = 'normal';
             }
         }
 
-        function hideMarker() {
-            if (marker) {
-                marker.style.display = 'none';
+        function hideFinalRect() {
+            if (rectFinal) {
+                rectFinal.style.display = 'none';
             }
             if (ghost) {
                 ghost.style.display = 'none';
             }
         }
 
-        function positionMarkerFromMm(xMm, yMm) {
-            if (!img || !marker || img.style.display === 'none') {
-                return;
-            }
-            var rect = img.getBoundingClientRect();
-            var px = mmToPx(xMm, yMm, rect);
-            marker.style.left = px.x + 'px';
-            marker.style.top = px.y + 'px';
-            marker.style.display = 'block';
-            if (ghost) {
-                ghost.style.left = px.x + 'px';
-                ghost.style.top = px.y + 'px';
-                ghost.style.display = 'block';
-            }
-        }
-
-        function syncMarkerFromTextarea() {
-            var layout = safeJsonParse(textarea.value.trim(), safeJsonParse(defaultsJson, {}));
+        function syncFromLayoutInput() {
+            var layout = safeJsonParse(String(layoutInput.value || '').trim(), safeJsonParse(defaultsJson, {}));
             var sn = getStudentNameLayout(layout);
             if (sn && typeof sn.x === 'number' && typeof sn.y === 'number' && img.style.display !== 'none') {
-                positionMarkerFromMm(Number(sn.x), Number(sn.y));
-                if (fontInput && sn.font_size) {
-                    fontInput.value = String(sn.font_size);
+                var bw = Number(sn.box_w);
+                var bh = Number(sn.box_h);
+                if (!(bw > 0) || !(bh > 0)) {
+                    bw = 95;
+                    bh = Math.max(10, Math.round(Number(sn.font_size || 16) * 0.55));
                 }
+                showFinalRect({
+                    x: Number(sn.x),
+                    y: Number(sn.y),
+                    w: bw,
+                    h: bh
+                });
             } else {
-                var def = safeJsonParse(defaultsJson, {});
-                var dsn = getStudentNameLayout(def);
-                if (dsn && img.style.display !== 'none') {
-                    positionMarkerFromMm(Number(dsn.x), Number(dsn.y));
-                } else {
-                    hideMarker();
-                }
+                hideFinalRect();
             }
         }
 
@@ -154,12 +256,11 @@
                 if (notePdf) {
                     notePdf.style.display = 'none';
                 }
-                showStage(true);
-                syncMarkerFromTextarea();
+                syncFromLayoutInput();
             };
             img.onerror = function () {
                 img.style.display = 'none';
-                hideMarker();
+                hideFinalRect();
             };
             img.src = src;
         }
@@ -174,13 +275,16 @@
                 if (notePdf) {
                     notePdf.style.display = 'block';
                     notePdf.textContent =
-                        'ไฟล์ PDF: ใช้ช่อง layout_json ด้านล่างตั้งพิกัดเองได้ หรืออัปโหลดเป็น JPG/PNG เพื่อคลิกวางตำแหน่งบนภาพ';
+                        'ไฟล์ PDF: ไม่สามารถลากกรอบบนภาพได้ — ระบบจะใช้ตำแหน่งชื่อตามค่าเริ่มต้น หรืออัปโหลดเป็น JPG/PNG';
                 }
                 if (img) {
                     img.style.display = 'none';
                 }
-                hideMarker();
-                showStage(false);
+                if (stageWrap) {
+                    stageWrap.style.display = 'none';
+                }
+                hideFinalRect();
+                showRubber(0, 0, 0, 0);
                 return;
             }
             if (type.indexOf('image/') === 0) {
@@ -197,85 +301,55 @@
             setImageSrc(previewUrl);
         }
 
-        if (img) {
-            img.addEventListener('click', function (ev) {
-                if (img.style.display === 'none') {
+        if (btnOpen && stageWrap) {
+            btnOpen.addEventListener('click', function () {
+                if (!img || img.style.display === 'none' || !img.src) {
+                    window.alert('กรุณาอัปโหลดรูป JPG หรือ PNG ของแม่แบบใบรับรองก่อน');
                     return;
                 }
-                var rect = img.getBoundingClientRect();
-                var x = ev.clientX - rect.left;
-                var y = ev.clientY - rect.top;
-                var mm = pxToMm(x, y, rect);
-                setStudentNameInLayoutJson(textarea, defaultsJson, mm.x, mm.y, fontSize());
-                positionMarkerFromMm(mm.x, mm.y);
-            });
-        }
-
-        /* ลากจุดยึดตำแหน่ง */
-        var drag = false;
-        function onDocMove(ev) {
-            if (!drag || !img || img.style.display === 'none') {
-                return;
-            }
-            var rect = img.getBoundingClientRect();
-            var x = ev.clientX - rect.left;
-            var y = ev.clientY - rect.top;
-            x = Math.max(0, Math.min(rect.width, x));
-            y = Math.max(0, Math.min(rect.height, y));
-            var mm = pxToMm(x, y, rect);
-            setStudentNameInLayoutJson(textarea, defaultsJson, mm.x, mm.y, fontSize());
-            positionMarkerFromMm(mm.x, mm.y);
-        }
-
-        function endDrag() {
-            if (!drag) {
-                return;
-            }
-            drag = false;
-            document.removeEventListener('pointermove', onDocMove);
-            document.removeEventListener('pointerup', endDrag);
-            document.removeEventListener('pointercancel', endDrag);
-        }
-
-        function onPointerDown(ev) {
-            if (!marker || ev.target !== marker) {
-                return;
-            }
-            drag = true;
-            ev.preventDefault();
-            ev.stopPropagation();
-            document.addEventListener('pointermove', onDocMove);
-            document.addEventListener('pointerup', endDrag);
-            document.addEventListener('pointercancel', endDrag);
-        }
-
-        if (marker) {
-            marker.addEventListener('pointerdown', onPointerDown);
-        }
-
-        if (fontInput) {
-            fontInput.addEventListener('change', function () {
-                var layout = safeJsonParse(textarea.value.trim(), safeJsonParse(defaultsJson, {}));
-                var sn = getStudentNameLayout(layout) || safeJsonParse(defaultsJson, {}).field_mapping.student_name;
-                if (sn) {
-                    setStudentNameInLayoutJson(textarea, defaultsJson, Number(sn.x), Number(sn.y), fontSize());
+                var vis = stageWrap.style.display !== 'none';
+                stageWrap.style.display = vis ? 'none' : 'block';
+                btnOpen.setAttribute('aria-expanded', vis ? 'false' : 'true');
+                if (!vis) {
+                    syncFromLayoutInput();
                 }
-                syncMarkerFromTextarea();
             });
         }
 
-        textarea.addEventListener('input', function () {
-            syncMarkerFromTextarea();
+        if (img) {
+            img.addEventListener('pointerdown', function (ev) {
+                if (img.style.display === 'none' || ev.button !== 0) {
+                    return;
+                }
+                var ir = img.getBoundingClientRect();
+                activeDrag = {
+                    root: root,
+                    img: img,
+                    layoutInput: layoutInput,
+                    defaultsJson: defaultsJson,
+                    startX: ev.clientX - ir.left,
+                    startY: ev.clientY - ir.top,
+                    drawActive: true,
+                    syncFromLayout: syncFromLayoutInput
+                };
+                showRubber(activeDrag.startX, activeDrag.startY, 0, 0);
+                ev.preventDefault();
+            });
+        }
+
+        layoutInput.addEventListener('change', function () {
+            syncFromLayoutInput();
         });
 
         window.addEventListener('resize', function () {
-            syncMarkerFromTextarea();
+            syncFromLayoutInput();
         });
 
-        syncMarkerFromTextarea();
+        syncFromLayoutInput();
     }
 
     function initAll() {
+        bindGlobalPointerOnce();
         document.querySelectorAll('[data-cert-layout-picker]').forEach(function (root) {
             if (root.getAttribute('data-cert-lp-inited') === '1') {
                 return;

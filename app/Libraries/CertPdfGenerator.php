@@ -178,9 +178,18 @@ class CertPdfGenerator
             }
             $value = $this->getFieldValue((string) $field, $student, $request);
             if ($value !== null) {
-                $pdf->SetFont('THSarabun', '', $cfg['font_size'] ?? 16);
-                $pdf->SetXY((float) ($cfg['x'] ?? 0), (float) ($cfg['y'] ?? 0));
-                $pdf->Cell(0, 0, $value, 0, 0, 'L');
+                $x = (float) ($cfg['x'] ?? 0);
+                $y = (float) ($cfg['y'] ?? 0);
+                $fs = (float) ($cfg['font_size'] ?? 16);
+                $bw = isset($cfg['box_w']) ? (float) $cfg['box_w'] : 0.0;
+                $bh = isset($cfg['box_h']) ? (float) $cfg['box_h'] : 0.0;
+                $pdf->SetFont('THSarabun', '', $fs);
+                if ($bw > 0 && $bh > 0) {
+                    $pdf->MultiCell($bw, 0, (string) $value, 0, 'C', false, 0, $x, $y, true, 0, false, true, $bh, 'M');
+                } else {
+                    $pdf->SetXY($x, $y);
+                    $pdf->Cell(0, 0, (string) $value, 0, 0, 'L');
+                }
             }
         }
 

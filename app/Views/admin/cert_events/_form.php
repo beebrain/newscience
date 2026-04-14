@@ -99,15 +99,15 @@ $cb = $cert_base ?? rtrim(base_url('admin/cert-events'), '/');
         </select>
     </div>
 
-    <div class="form-group" style="margin-bottom: 0;">
-        <label for="layout_json">ปรับตำแหน่งข้อความ (ไม่บังคับ)</label>
-        <textarea id="layout_json"
-                  name="layout_json"
-                  class="form-control"
-                  rows="3"
-                  placeholder='{"field_mapping":{"student_name":{"x":90,"y":145,"font_size":22}},...}'><?= esc($event['layout_json'] ?? old('layout_json', '')) ?></textarea>
-        <small class="form-text text-muted">เว้นว่างได้ — ใช้เมื่อต้องการเลื่อนตำแหน่งชื่อ/QR เทียบกับแม่แบบ</small>
-    </div>
+    <?= view('admin/cert_events/partials/cert_layout_picker', [
+        'layoutHiddenId'      => 'cert_modal_layout_json',
+        'fileInputId'         => 'background_file',
+        'cert_base'           => $cb,
+        'event'               => $isEdit ? $event : null,
+        'initial_layout_json' => $isEdit
+            ? (string) ($event['layout_json'] ?? '')
+            : (string) old('layout_json', ''),
+    ]) ?>
 
 </form>
 

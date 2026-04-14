@@ -75,16 +75,12 @@
             </div>
 
             <?= view('admin/cert_events/partials/cert_layout_picker', [
-                'layoutTextareaSelector' => '#cert_event_layout_json',
-                'fileInputSelector'      => '#cert_event_background_file',
-                'cert_base'              => $cb,
-                'event'                  => $event,
+                'layoutHiddenId'      => 'cert_event_layout_json',
+                'fileInputId'         => 'cert_event_background_file',
+                'cert_base'           => $cb,
+                'event'               => $event,
+                'initial_layout_json' => (string) old('layout_json', $event['layout_json'] ?? ''),
             ]) ?>
-
-            <div class="form-group">
-                <label for="cert_event_layout_json">layout_json <small class="text-muted">(อัปเดตเมื่อคลิกบนภาพ)</small></label>
-                <textarea id="cert_event_layout_json" name="layout_json" class="form-control" rows="6" placeholder='{"field_mapping":{"student_name":{"x":100,"y":140,"font_size":22}},...}'><?= esc(old('layout_json', $event['layout_json'] ?? '')) ?></textarea>
-            </div>
 
             <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 1.5rem;">
                 <a href="<?= esc($cb) ?>/<?= (int) $event['id'] ?>" class="btn btn-secondary">ยกเลิก</a>
