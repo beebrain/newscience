@@ -109,7 +109,7 @@
 <?= view('admin/components/modal_base', [
     'modal_id' => 'certEventModal',
     'title' => 'สร้างกิจกรรมใหม่',
-    'size' => 'full',
+    'size' => 'lg',
     'content' => view('admin/cert_events/_form', [
         'event' => null,
         'cert_base' => $cert_base,
