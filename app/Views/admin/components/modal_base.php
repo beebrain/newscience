@@ -7,14 +7,19 @@
  *     'modal_id' => 'createEventModal',
  *     'title' => 'สร้างกิจกรรมใหม่',
  *     'content' => view('admin/cert_events/_form', ['event' => null]),
- *     'size' => 'lg', // sm, md, lg, xl
+ *     'size' => 'lg', // sm, md, lg, xl, full (full = เต็มหน้าจอ)
  *     'footer' => '<button type="button" class="btn btn-primary" onclick="submitModalForm()">บันทึก</button>'
  * ]) ?>
  */
 ?>
-<div id="<?= $modal_id ?>" class="modal" role="dialog" aria-modal="true" aria-labelledby="<?= $modal_id ?>_title" style="display: none;">
+<?php
+$sizeKey      = $size ?? 'md';
+$isFullPage   = ($sizeKey === 'full');
+$dialogClass  = $isFullPage ? 'modal-full' : 'modal-' . $sizeKey;
+?>
+<div id="<?= $modal_id ?>" class="modal<?= $isFullPage ? ' modal--fullpage' : '' ?>" role="dialog" aria-modal="true" aria-labelledby="<?= $modal_id ?>_title" style="display: none;">
     <div class="modal-backdrop" onclick="closeModal('<?= $modal_id ?>')"></div>
-    <div class="modal-dialog modal-<?= $size ?? 'md' ?>">
+    <div class="modal-dialog <?= $dialogClass ?>">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="<?= $modal_id ?>_title" class="modal-title"><?= esc($title) ?></h3>
@@ -84,6 +89,24 @@
 .modal-md { max-width: 600px; }
 .modal-lg { max-width: 800px; }
 .modal-xl { max-width: 1140px; }
+
+/* เต็มหน้าจอ — ใช้กับ size => full */
+.modal--fullpage {
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+.modal-full {
+    max-width: none;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    min-height: 100vh;
+    min-height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
+}
 
 .modal-header {
     flex-shrink: 0;
@@ -186,6 +209,12 @@
     .modal-dialog {
         max-width: 100%;
         max-height: 95vh;
+    }
+
+    .modal-full {
+        max-height: none;
+        min-height: 100vh;
+        min-height: 100dvh;
     }
     
     .modal-sm,
