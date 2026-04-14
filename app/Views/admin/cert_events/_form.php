@@ -3,7 +3,6 @@
  * Cert Event Form Partial - Used in modals
  *
  * @var array|null $event Event data for editing (null for create)
- * @var array $signers Available signers
  */
 $isEdit = isset($event) && $event;
 $cb = $cert_base ?? rtrim(base_url('admin/cert-events'), '/');
@@ -61,42 +60,13 @@ $cb = $cert_base ?? rtrim(base_url('admin/cert-events'), '/');
         </p>
     </div>
 
-    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-        <div class="form-group">
-            <label for="event_date">วันที่จัดกิจกรรม</label>
-            <input type="date"
-                   id="event_date"
-                   name="event_date"
-                   class="form-control"
-                   value="<?= esc($event['event_date'] ?? old('event_date', '')) ?>">
-        </div>
-
-        <div class="form-group">
-            <label for="status">สถานะ</label>
-            <select id="status" name="status" class="form-control" required>
-                <option value="draft" <?= ($event['status'] ?? old('status', 'draft')) === 'draft' ? 'selected' : '' ?>>ร่าง (Draft)</option>
-                <option value="open" <?= ($event['status'] ?? old('status')) === 'open' ? 'selected' : '' ?>>เปิด (Open)</option>
-                <option value="issued" <?= ($event['status'] ?? old('status')) === 'issued' ? 'selected' : '' ?>>ออก Cert แล้ว (Issued)</option>
-                <option value="closed" <?= ($event['status'] ?? old('status')) === 'closed' ? 'selected' : '' ?>>ปิด (Closed)</option>
-            </select>
-            <small class="form-text text-muted">
-                ร่าง = กำลังเตรียม, เปิด = พร้อมเพิ่มผู้รับ, ออก Cert แล้ว = ออกใบรับรองแล้ว, ปิด = จบกิจกรรม
-            </small>
-        </div>
-    </div>
-
     <div class="form-group" style="margin-bottom: 1rem;">
-        <label for="signer_id">ผู้ลงนามในใบรับรอง</label>
-        <select id="signer_id" name="signer_id" class="form-control">
-            <option value="">ไม่ระบุ (ไม่แสดงลายเซ็น)</option>
-            <?php foreach ($signers as $signer): ?>
-                <option value="<?= $signer['uid'] ?>"
-                        <?= ($event['signer_id'] ?? old('signer_id')) == $signer['uid'] ? 'selected' : '' ?>>
-                    <?= esc($signer['tf_name'] ?? $signer['name']) ?>
-                    (<?= $signer['position'] ?? 'ไม่ระบุตำแหน่ง' ?>)
-                </option>
-            <?php endforeach; ?>
-        </select>
+        <label for="event_date">วันที่จัดกิจกรรม</label>
+        <input type="date"
+               id="event_date"
+               name="event_date"
+               class="form-control"
+               value="<?= esc($event['event_date'] ?? old('event_date', '')) ?>">
     </div>
 
     <?= view('admin/cert_events/partials/cert_layout_picker', [

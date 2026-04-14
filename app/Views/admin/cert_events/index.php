@@ -112,7 +112,6 @@
     'size' => 'lg',
     'content' => view('admin/cert_events/_form', [
         'event' => null,
-        'signers' => $signers ?? [],
         'cert_base' => $cert_base,
     ]),
     'footer' => '
@@ -190,8 +189,6 @@ function getStatusLabel($status): string
                 form.querySelector('[name="title"]').value = data.event.title || '';
                 form.querySelector('[name="description"]').value = data.event.description || '';
                 form.querySelector('[name="event_date"]').value = data.event.event_date || '';
-                form.querySelector('[name="status"]').value = data.event.status || 'draft';
-                form.querySelector('[name="signer_id"]').value = data.event.signer_id || '';
 
                 const layoutEl = form.querySelector('[name="layout_json"]');
                 if (layoutEl) {

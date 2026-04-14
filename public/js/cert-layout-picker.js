@@ -243,13 +243,17 @@
             }
         }
 
-        function setImageSrc(src) {
+        function setImageSrc(src, onAfterLoad) {
             if (!img) {
                 return;
             }
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-                objectUrl = null;
+            var prevBlob = objectUrl;
+            objectUrl = null;
+            if (prevBlob && prevBlob !== src) {
+                URL.revokeObjectURL(prevBlob);
+            }
+            if (typeof src === 'string' && src.indexOf('blob:') === 0) {
+                objectUrl = src;
             }
             img.onload = function () {
                 img.style.display = 'block';
@@ -257,6 +261,9 @@
                     notePdf.style.display = 'none';
                 }
                 syncFromLayoutInput();
+                if (typeof onAfterLoad === 'function') {
+                    onAfterLoad();
+                }
             };
             img.onerror = function () {
                 img.style.display = 'none';
@@ -289,7 +296,17 @@
             }
             if (type.indexOf('image/') === 0) {
                 objectUrl = URL.createObjectURL(f);
-                setImageSrc(objectUrl);
+                setImageSrc(objectUrl, function () {
+                    if (stageWrap && btnOpen) {
+                        stageWrap.style.display = 'block';
+                        btnOpen.setAttribute('aria-expanded', 'true');
+                        try {
+                            stageWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        } catch (e) {
+                            stageWrap.scrollIntoView(false);
+                        }
+                    }
+                });
             }
         }
 

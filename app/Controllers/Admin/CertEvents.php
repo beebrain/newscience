@@ -93,16 +93,11 @@ class CertEvents extends BaseController
 
         $events = $this->eventModel->getAllWithStats($status, 50, $createdBy);
 
-        $signers = $this->userModel->where('active', 1)
-            ->whereIn('role', ['super_admin', 'faculty_admin', 'admin'])
-            ->findAll();
-
         return $this->renderCert('index', [
             'page_title'    => 'จัดการกิจกรรมใบรับรอง',
             'events'        => $events,
             'filter_status' => $status,
             'filter_creator'=> $createdBy,
-            'signers'       => $signers,
         ]);
     }
 
@@ -124,13 +119,8 @@ class CertEvents extends BaseController
      */
     public function create()
     {
-        $signers = $this->userModel->where('active', 1)
-            ->whereIn('role', ['super_admin', 'faculty_admin', 'admin'])
-            ->findAll();
-
         return $this->renderCert('create', [
             'page_title' => 'สร้างกิจกรรมใบรับรอง',
-            'signers'    => $signers,
         ]);
     }
 
@@ -152,8 +142,8 @@ class CertEvents extends BaseController
             'description'  => $this->request->getPost('description'),
             'event_date'   => $this->request->getPost('event_date'),
             'template_id'  => null,
-            'signer_id'    => (int) $this->request->getPost('signer_id') ?: null,
-            'status'       => $this->request->getPost('status') ?? 'draft',
+            'signer_id'    => $this->resolvedSignerIdFromPost(true, []),
+            'status'       => $this->resolvedCertEventStatusFromRequest(true),
             'created_by'   => session()->get('admin_id'),
         ];
 
@@ -301,14 +291,9 @@ class CertEvents extends BaseController
             ]);
         }
 
-        $signers = $this->userModel->where('active', 1)
-            ->whereIn('role', ['super_admin', 'faculty_admin', 'admin'])
-            ->findAll();
-
         return $this->renderCert('edit', [
             'page_title' => 'แก้ไขกิจกรรม: ' . $event['title'],
             'event'      => $event,
-            'signers'    => $signers,
         ]);
     }
 
@@ -345,8 +330,8 @@ class CertEvents extends BaseController
             'description'  => $this->request->getPost('description'),
             'event_date'   => $this->request->getPost('event_date'),
             'template_id'  => null,
-            'signer_id'    => (int) $this->request->getPost('signer_id') ?: null,
-            'status'       => $this->request->getPost('status') ?? $event['status'],
+            'signer_id'    => $this->resolvedSignerIdFromPost(false, $event),
+            'status'       => $this->resolvedCertEventStatusFromRequest(false, (string) ($event['status'] ?? 'draft')),
         ];
 
         $layoutErr = $this->mergeLayoutJsonIntoPayload($payload);
@@ -918,6 +903,61 @@ class CertEvents extends BaseController
     }
 
     /**
+     * ผู้ลงนามจากฟอร์ม — ฟอร์มไม่ส่ง signer_id แล้ว: สร้างใหม่ = null, แก้ไข = คงค่าเดิม
+     *
+     * @param array<string, mixed> $event แถวกิจกรรม (ใช้เฉพาะเมื่อแก้ไข)
+     */
+    protected function resolvedSignerIdFromPost(bool $isCreate, array $event): ?int
+    {
+        $post = $this->request->getPost();
+        if (! is_array($post) || ! array_key_exists('signer_id', $post)) {
+            if ($isCreate) {
+                return null;
+            }
+            $sid = $event['signer_id'] ?? null;
+
+            return ($sid !== null && $sid !== '') ? (int) $sid : null;
+        }
+        $raw = $post['signer_id'];
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+        $id = (int) $raw;
+
+        return $id > 0 ? $id : null;
+    }
+
+    /**
+     * ค่า status จากฟอร์ม: ว่าง = สร้างใหม่ใช้ draft, แก้ไขคงค่าเดิมในฐานข้อมูล
+     */
+    protected function resolvedCertEventStatusFromRequest(bool $isCreate, ?string $existingStatus = null): string
+    {
+        $allowed = ['draft', 'open', 'issued', 'closed'];
+        $raw     = $this->request->getPost('status');
+        $s       = trim((string) ($raw ?? ''));
+
+        if ($isCreate) {
+            if ($s !== '' && in_array($s, $allowed, true)) {
+                return $s;
+            }
+
+            return 'draft';
+        }
+
+        if ($s === '') {
+            $ex = trim((string) ($existingStatus ?? 'draft'));
+
+            return in_array($ex, $allowed, true) ? $ex : 'draft';
+        }
+        if (in_array($s, $allowed, true)) {
+            return $s;
+        }
+        $ex = trim((string) ($existingStatus ?? 'draft'));
+
+        return in_array($ex, $allowed, true) ? $ex : 'draft';
+    }
+
+    /**
      * Validation rules
      */
     protected function rules(bool $isCreate = true): array
@@ -925,8 +965,6 @@ class CertEvents extends BaseController
         return [
             'title'        => 'required|min_length[3]',
             'event_date'   => 'permit_empty|valid_date',
-            'signer_id'    => 'permit_empty|integer',
-            'status'       => 'permit_empty|in_list[draft,open,issued,closed]',
         ];
     }
 

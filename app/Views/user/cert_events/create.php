@@ -41,31 +41,9 @@
                 <input type="file" id="cert_event_background_file" name="background_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" style="margin-top:0.25rem;">
             </div>
 
-            <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                    <label>วันที่จัดกิจกรรม</label>
-                    <input type="date" name="event_date" class="form-control" value="<?= esc(old('event_date')) ?>">
-                </div>
-
-                <div class="form-group">
-                    <label>สถานะ</label>
-                    <select name="status" class="form-control">
-                        <option value="draft" <?= old('status') === 'draft' ? 'selected' : '' ?>>ร่าง (ยังไม่เปิด)</option>
-                        <option value="open" <?= old('status', 'open') === 'open' ? 'selected' : '' ?>>เปิด (พร้อมเพิ่มรายชื่อ)</option>
-                    </select>
-                </div>
-            </div>
-
             <div class="form-group">
-                <label>ผู้ลงนาม</label>
-                <select name="signer_id" class="form-control">
-                    <option value="">-- ไม่ระบุ (ไม่มีลายเซ็น) --</option>
-                    <?php foreach ($signers as $signer): ?>
-                        <option value="<?= $signer['uid'] ?>" <?= old('signer_id') == $signer['uid'] ? 'selected' : '' ?>>
-                            <?= esc(($signer['tf_name'] ?? $signer['gf_name']) . ' ' . ($signer['tl_name'] ?? $signer['gl_name'])) ?> (<?= $signer['role'] ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                <label>วันที่จัดกิจกรรม</label>
+                <input type="date" name="event_date" class="form-control" value="<?= esc(old('event_date')) ?>">
             </div>
 
             <?= view('admin/cert_events/partials/cert_layout_picker', [
