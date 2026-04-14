@@ -33,10 +33,10 @@ if (is_array($event ?? null)
      data-sample-text="<?= esc('ชื่อ นามสกุล ผู้เข้ารับการอบรม', 'attr') ?>"
      style="margin: 1rem 0; padding: 1rem; border: 1px solid #93c5fd; border-radius: 0.5rem; background: #eff6ff;">
 
-    <strong style="display:block; margin-bottom: 0.35rem; color: #1e40af;">ระบุตำแหน่งชื่อผู้ได้รับใบประกาศ</strong>
+    <strong style="display:block; margin-bottom: 0.35rem; color: #1e40af;">ระบุตำแหน่งชื่อผู้ได้รับเกียรติบัตร</strong>
     <p style="margin: 0 0 0.75rem; font-size: 13px; color: #1e3a8a; line-height: 1.5;">
-        อัปโหลด<strong>รูป JPG/PNG</strong> ก่อน จากนั้นกดปุ่มด้านล่าง แล้ว<strong>ลากกรอบสี่เหลี่ยม</strong>บนภาพรอบพื้นที่ที่ต้องการให้แสดงชื่อ
-        — ไม่ต้องกรอกพิกัดเอง
+        อัปโหลด<strong>รูป JPG/PNG</strong> ที่มี<strong>อัตราส่วนเดียวกับกระดาษ A4</strong> (แนวตั้ง 210×297 มม.) ก่อน จากนั้นกดปุ่มด้านล่าง
+        — พื้นที่ลากจะแสดงเป็น<strong>แนวนอน</strong> (สัดส่วน A4 แนวนอน) แต่ระบบยังบันทึกพิกัดบนหน้า A4 แนวตั้งเหมือนไฟล์ PDF
     </p>
 
     <button type="button" class="btn btn-primary cert-lp-open" style="margin-bottom: 0.75rem;" aria-expanded="false">
@@ -46,11 +46,13 @@ if (is_array($event ?? null)
     <p class="cert-lp-note-pdf" style="display:none; font-size: 13px; color: #92400e; margin: 0 0 0.5rem;"></p>
 
     <div class="cert-lp-stage-wrap" style="display: none;">
-        <div class="cert-lp-stage" style="position: relative; width: 100%; max-width: 520px; margin: 0 auto; aspect-ratio: 210 / 297; border: 1px solid #94a3b8; border-radius: 4px; overflow: hidden; background: #e2e8f0;">
-            <img class="cert-lp-img" alt="แม่แบบใบรับรอง" src="" style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit: fill; cursor: crosshair; touch-action: none;">
-            <div class="cert-lp-rubber" style="display:none; position:absolute; z-index:4; border:2px dashed #2563eb; background:rgba(37,99,235,0.12); pointer-events:none; box-sizing:border-box;"></div>
-            <div class="cert-lp-rect-final" style="display:none; position:absolute; z-index:3; border:2px solid #16a34a; background:rgba(22,163,74,0.08); pointer-events:none; box-sizing:border-box;"></div>
-            <div class="cert-lp-ghost" style="display:none; position:absolute; z-index:5; font-size: 13px; font-weight: 600; color: #0f172a; text-shadow: 0 0 4px #fff, 0 0 6px #fff; pointer-events:none;"></div>
+        <div class="cert-lp-stage" style="position: relative; width: 100%; max-width: 960px; margin: 0 auto; aspect-ratio: 297 / 210; border: 1px solid #94a3b8; border-radius: 4px; overflow: hidden; background: #e2e8f0;">
+            <div class="cert-lp-sheet" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-90deg); transform-origin: center center; box-sizing: border-box; touch-action: none; cursor: crosshair;">
+                <img class="cert-lp-img" alt="แม่แบบใบรับรอง" src="" style="display:none; position:absolute; left:0; top:0; width:100%; height:100%; object-fit: fill; cursor: crosshair; touch-action: none;">
+                <div class="cert-lp-rubber" style="display:none; position:absolute; z-index:4; border:2px dashed #2563eb; background:rgba(37,99,235,0.12); pointer-events:none; box-sizing:border-box;"></div>
+                <div class="cert-lp-rect-final" style="display:none; position:absolute; z-index:3; border:2px solid #16a34a; background:rgba(22,163,74,0.08); pointer-events:none; box-sizing:border-box;"></div>
+                <div class="cert-lp-ghost" style="display:none; position:absolute; z-index:5; font-size: 13px; font-weight: 600; color: #0f172a; text-shadow: 0 0 4px #fff, 0 0 6px #fff; pointer-events:none;"></div>
+            </div>
         </div>
         <p style="margin: 0.5rem 0 0; font-size: 12px; color: #475569;">กดค้างแล้วลากบนภาพเพื่อวาดกรอบ — ปล่อยเมาส์เมื่อครอบคลุมพื้นที่ชื่อ</p>
     </div>

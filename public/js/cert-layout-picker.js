@@ -1,6 +1,6 @@
 /**
- * ระบุตำแหน่งชื่อผู้รับบนแม่แบบใบรับรอง: กดปุ่มแสดงภาพ แล้วลากกรอบสี่เหลี่ยม (หน่วย mm บนหน้า A4 210×297)
- * ค่าเขียนลง input[name=layout_json] อัตโนมัติ — ไม่ต้องแก้ JSON มือ
+ * ระบุตำแหน่งชื่อผู้รับบนแม่แบบ A4 แนวตั้ง (210×297 mm ใน PDF)
+ * พื้นที่ลากแสดงเป็น A4 แนวนอน (อัตราส่วน 297:210) โดยหมุนภาพ -90° — ค่า layout_json ยังเป็นหน่วย mm บนหน้าแนวตั้ง
  */
 (function (window) {
     'use strict';
@@ -8,8 +8,35 @@
     var PAGE_W_MM = 210;
     var PAGE_H_MM = 297;
 
-    /** @type {{ root: Element, img: HTMLElement, startX: number, startY: number, drawActive: boolean }|null} */
+    /** @type {Record<string, unknown>|null} */
     var activeDrag = null;
+
+    /**
+     * แปลงพิกัดหน้าจอ → พิกัดในระบบ "แผ่น A4 แนวตั้ง" (px) บน .cert-lp-sheet ก่อนหมุน
+     * (sheet หมุน -90° รอบจุดกลาง; ใช้สมการผกผันเดียวกับที่ตรวจมุมท้ายแผ่น)
+     */
+    function clientToPortraitLocal(clientX, clientY, sheet, w0, h0) {
+        var r = sheet.getBoundingClientRect();
+        var mcx = r.left + r.width / 2;
+        var mcy = r.top + r.height / 2;
+        var mx = clientX - mcx;
+        var my = clientY - mcy;
+        var lx = w0 / 2 - my;
+        var ly = mx + h0 / 2;
+        if (lx < 0) {
+            lx = 0;
+        }
+        if (lx > w0) {
+            lx = w0;
+        }
+        if (ly < 0) {
+            ly = 0;
+        }
+        if (ly > h0) {
+            ly = h0;
+        }
+        return { lx: lx, ly: ly };
+    }
 
     function bindGlobalPointerOnce() {
         if (window._certLpPointerBound) {
@@ -21,17 +48,21 @@
                 return;
             }
             var img = activeDrag.img;
-            if (img.style.display === 'none') {
+            if (!img || img.style.display === 'none') {
                 return;
             }
-            var ir = img.getBoundingClientRect();
-            var x = ev.clientX - ir.left;
-            var y = ev.clientY - ir.top;
-            var l = Math.min(activeDrag.startX, x);
-            var t = Math.min(activeDrag.startY, y);
-            var w = Math.abs(x - activeDrag.startX);
-            var h = Math.abs(y - activeDrag.startY);
-            var rubber = activeDrag.root.querySelector('.cert-lp-rubber');
+            var sheet = activeDrag.sheet;
+            var pw = activeDrag.pw;
+            var ph = activeDrag.ph;
+            if (!sheet || !(pw > 0) || !(ph > 0)) {
+                return;
+            }
+            var loc = clientToPortraitLocal(ev.clientX, ev.clientY, sheet, pw, ph);
+            var l = Math.min(activeDrag.startLx, loc.lx);
+            var t = Math.min(activeDrag.startLy, loc.ly);
+            var w = Math.abs(loc.lx - activeDrag.startLx);
+            var h = Math.abs(loc.ly - activeDrag.startLy);
+            var rubber = activeDrag.rubberEl;
             if (rubber) {
                 rubber.style.display = w > 0 && h > 0 ? 'block' : 'none';
                 rubber.style.left = l + 'px';
@@ -45,19 +76,26 @@
                 return;
             }
             var root = activeDrag.root;
-            var img = activeDrag.img;
+            var sheet = activeDrag.sheet;
             var layoutInput = activeDrag.layoutInput;
             var defaultsJson = activeDrag.defaultsJson;
+            var pw = activeDrag.pw;
+            var ph = activeDrag.ph;
             activeDrag.drawActive = false;
-            var ir = img.getBoundingClientRect();
-            var x = ev.clientX - ir.left;
-            var y = ev.clientY - ir.top;
-            var boxMm = pxRectToMm(activeDrag.startX, activeDrag.startY, x, y, { width: ir.width, height: ir.height });
-            var rubber = root.querySelector('.cert-lp-rubber');
+            var loc = clientToPortraitLocal(ev.clientX, ev.clientY, sheet, pw, ph);
+            var boxMm = pxRectToMm(activeDrag.startLx, activeDrag.startLy, loc.lx, loc.ly, { width: pw, height: ph });
+            var rubber = activeDrag.rubberEl;
             if (rubber) {
                 rubber.style.display = 'none';
                 rubber.style.width = '0';
                 rubber.style.height = '0';
+            }
+            if (sheet.releasePointerCapture && ev.pointerId != null) {
+                try {
+                    sheet.releasePointerCapture(ev.pointerId);
+                } catch (e) {
+                    /* ignore */
+                }
             }
             if (boxMm && layoutInput) {
                 setStudentNameBox(layoutInput, defaultsJson, boxMm);
@@ -70,7 +108,7 @@
         document.addEventListener('pointercancel', function () {
             if (activeDrag) {
                 activeDrag.drawActive = false;
-                var rubber = activeDrag.root.querySelector('.cert-lp-rubber');
+                var rubber = activeDrag.rubberEl;
                 if (rubber) {
                     rubber.style.display = 'none';
                 }
@@ -146,12 +184,12 @@
         };
     }
 
-    function mmRectToPx(box, imgRect) {
+    function mmRectToPx(box, portraitPxRect) {
         return {
-            left: (box.x / PAGE_W_MM) * imgRect.width,
-            top: (box.y / PAGE_H_MM) * imgRect.height,
-            width: (box.w / PAGE_W_MM) * imgRect.width,
-            height: (box.h / PAGE_H_MM) * imgRect.height
+            left: (box.x / PAGE_W_MM) * portraitPxRect.width,
+            top: (box.y / PAGE_H_MM) * portraitPxRect.height,
+            width: (box.w / PAGE_W_MM) * portraitPxRect.width,
+            height: (box.h / PAGE_H_MM) * portraitPxRect.height
         };
     }
 
@@ -171,6 +209,7 @@
         var btnOpen = root.querySelector('.cert-lp-open');
         var stageWrap = root.querySelector('.cert-lp-stage-wrap');
         var stage = root.querySelector('.cert-lp-stage');
+        var sheet = root.querySelector('.cert-lp-sheet');
         var img = root.querySelector('.cert-lp-img');
         var rubber = root.querySelector('.cert-lp-rubber');
         var rectFinal = root.querySelector('.cert-lp-rect-final');
@@ -180,6 +219,33 @@
 
         if (ghost) {
             ghost.textContent = sampleText;
+        }
+
+        function layoutSheet() {
+            if (!stage || !sheet) {
+                return;
+            }
+            var sw = stage.clientWidth;
+            if (sw < 8) {
+                return;
+            }
+            var s = sw / 297;
+            var w0 = 210 * s;
+            var h0 = 297 * s;
+            sheet.style.width = w0 + 'px';
+            sheet.style.height = h0 + 'px';
+            sheet.dataset.lpW0 = String(w0);
+            sheet.dataset.lpH0 = String(h0);
+        }
+
+        function getPortraitPx() {
+            if (!sheet) {
+                return { w0: 0, h0: 0 };
+            }
+            layoutSheet();
+            var w0 = parseFloat(sheet.dataset.lpW0 || '0');
+            var h0 = parseFloat(sheet.dataset.lpH0 || '0');
+            return { w0: w0, h0: h0 };
         }
 
         function showRubber(left, top, w, h) {
@@ -197,8 +263,11 @@
             if (!rectFinal || !img || img.style.display === 'none' || !boxMm) {
                 return;
             }
-            var ir = img.getBoundingClientRect();
-            var px = mmRectToPx(boxMm, { width: ir.width, height: ir.height });
+            var dims = getPortraitPx();
+            if (!(dims.w0 > 0) || !(dims.h0 > 0)) {
+                return;
+            }
+            var px = mmRectToPx(boxMm, { width: dims.w0, height: dims.h0 });
             rectFinal.style.display = 'block';
             rectFinal.style.left = px.left + 'px';
             rectFinal.style.top = px.top + 'px';
@@ -260,6 +329,7 @@
                 if (notePdf) {
                     notePdf.style.display = 'none';
                 }
+                layoutSheet();
                 syncFromLayoutInput();
                 if (typeof onAfterLoad === 'function') {
                     onAfterLoad();
@@ -318,6 +388,14 @@
             setImageSrc(previewUrl);
         }
 
+        if (typeof ResizeObserver !== 'undefined' && stage) {
+            var ro = new ResizeObserver(function () {
+                layoutSheet();
+                syncFromLayoutInput();
+            });
+            ro.observe(stage);
+        }
+
         if (btnOpen && stageWrap) {
             btnOpen.addEventListener('click', function () {
                 if (!img || img.style.display === 'none' || !img.src) {
@@ -328,28 +406,44 @@
                 stageWrap.style.display = vis ? 'none' : 'block';
                 btnOpen.setAttribute('aria-expanded', vis ? 'false' : 'true');
                 if (!vis) {
-                    syncFromLayoutInput();
+                    window.requestAnimationFrame(function () {
+                        layoutSheet();
+                        syncFromLayoutInput();
+                    });
                 }
             });
         }
 
-        if (img) {
-            img.addEventListener('pointerdown', function (ev) {
+        if (sheet && img) {
+            sheet.addEventListener('pointerdown', function (ev) {
                 if (img.style.display === 'none' || ev.button !== 0) {
                     return;
                 }
-                var ir = img.getBoundingClientRect();
+                layoutSheet();
+                var w0 = parseFloat(sheet.dataset.lpW0 || '0');
+                var h0 = parseFloat(sheet.dataset.lpH0 || '0');
+                if (!(w0 > 0) || !(h0 > 0)) {
+                    return;
+                }
+                var loc = clientToPortraitLocal(ev.clientX, ev.clientY, sheet, w0, h0);
                 activeDrag = {
                     root: root,
+                    sheet: sheet,
                     img: img,
+                    rubberEl: rubber,
                     layoutInput: layoutInput,
                     defaultsJson: defaultsJson,
-                    startX: ev.clientX - ir.left,
-                    startY: ev.clientY - ir.top,
+                    pw: w0,
+                    ph: h0,
+                    startLx: loc.lx,
+                    startLy: loc.ly,
                     drawActive: true,
                     syncFromLayout: syncFromLayoutInput
                 };
-                showRubber(activeDrag.startX, activeDrag.startY, 0, 0);
+                showRubber(loc.lx, loc.ly, 0, 0);
+                if (sheet.setPointerCapture) {
+                    sheet.setPointerCapture(ev.pointerId);
+                }
                 ev.preventDefault();
             });
         }
@@ -359,9 +453,11 @@
         });
 
         window.addEventListener('resize', function () {
+            layoutSheet();
             syncFromLayoutInput();
         });
 
+        layoutSheet();
         syncFromLayoutInput();
     }
 
