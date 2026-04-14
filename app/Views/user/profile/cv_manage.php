@@ -347,6 +347,17 @@ $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
         </div>
     <?php endif; ?>
 
+    <?php if (session()->getFlashdata('success')): ?>
+        <div class="rounded-xl px-4 py-3 text-sm border bg-emerald-50 text-emerald-900 border-emerald-200">
+            <?= esc((string) session()->getFlashdata('success')) ?>
+        </div>
+    <?php endif; ?>
+    <?php if (session()->getFlashdata('error')): ?>
+        <div class="rounded-xl px-4 py-3 text-sm border bg-red-50 text-red-900 border-red-200">
+            <?= esc((string) session()->getFlashdata('error')) ?>
+        </div>
+    <?php endif; ?>
+
     <?php
     $pNarr = $person ?? [];
     $vBio = old('bio', $pNarr['bio'] ?? '');
@@ -598,7 +609,8 @@ $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
                 <section id="cv-edit-orcid" class="cv-edit-stitch-panel <?= $cvEditActiveTab !== 'orcid' ? 'hidden' : '' ?>">
                     <div class="border-b-2 border-secondary-dark pb-2 mb-4">
                         <p class="cv-edit-stitch-kicker mb-1">ORCID</p>
-                        <p class="text-sm text-slate-600">ดึงรายการที่ตั้งเป็น<strong class="text-slate-800">สาธารณะ</strong>จาก <a href="https://orcid.org" target="_blank" rel="noopener noreferrer" class="text-secondary-dark underline">orcid.org</a> แล้วเพิ่ม/อัปเดตใน CV — เลือกประเภทด้านล่าง (จับคู่รายการเดิมด้วย <code class="text-xs bg-slate-100 px-1 rounded border border-slate-200">put-code</code> หรือคีย์สำรองเมื่อไม่มี put-code)</p>
+                        <p class="text-sm text-slate-600">กด <strong class="text-slate-800">บันทึกเลข ORCID</strong> เพื่อเก็บเลขไว้แสดงบนหน้า CV สาธารณะ (ลิงก์ไป orcid.org) — แยกจากการนำเข้ารายการ</p>
+                        <p class="text-sm text-slate-600 mt-2">ดึงรายการที่ตั้งเป็น<strong class="text-slate-800">สาธารณะ</strong>จาก <a href="https://orcid.org" target="_blank" rel="noopener noreferrer" class="text-secondary-dark underline">orcid.org</a> แล้วเพิ่ม/อัปเดตใน CV — เลือกประเภทด้านล่าง (จับคู่รายการเดิมด้วย <code class="text-xs bg-slate-100 px-1 rounded border border-slate-200">put-code</code> หรือคีย์สำรองเมื่อไม่มี put-code)</p>
                     </div>
                     <div class="space-y-4">
                         <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-700">
@@ -615,18 +627,28 @@ $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
                                 ผลงานตีพิมพ์ (works)
                             </label>
                         </div>
-                        <div class="flex flex-col sm:flex-row sm:items-end gap-3">
-                            <div class="flex-1 min-w-[220px]">
-                                <label for="cv-orcid-input" class="block text-xs font-medium text-slate-600 mb-1">ORCID iD</label>
-                                <input type="text" id="cv-orcid-input" maxlength="19" placeholder="0000-0002-1825-0097"
-                                       value="<?= esc($person['orcid_id'] ?? '') ?>"
-                                       class="w-full text-sm border border-slate-200 rounded-[6px] px-3 py-2 font-mono focus:ring-2 focus:ring-primary/35 focus:border-secondary">
+                        <form method="post" action="<?= base_url('dashboard/profile/cv/orcid/save') ?>" class="flex flex-col gap-3">
+                            <?= csrf_field() ?>
+                            <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+                                <div class="flex-1 min-w-[220px]">
+                                    <label for="cv-orcid-input" class="block text-xs font-medium text-slate-600 mb-1">ORCID iD</label>
+                                    <input type="text" name="orcid_id" id="cv-orcid-input" maxlength="19" placeholder="0000-0002-1825-0097"
+                                           value="<?= esc(old('orcid_id', $person['orcid_id'] ?? '')) ?>"
+                                           class="w-full text-sm border border-slate-200 rounded-[6px] px-3 py-2 font-mono focus:ring-2 focus:ring-primary/35 focus:border-secondary"
+                                           autocomplete="off">
+                                </div>
+                                <div class="flex flex-wrap gap-2 shrink-0">
+                                    <button type="submit" class="bg-secondary hover:bg-secondary-dark text-white py-2 px-5 rounded-[6px] text-sm font-semibold transition">
+                                        บันทึกเลข ORCID
+                                    </button>
+                                    <button type="button" id="cv-orcid-import-btn" onclick="importOrcidCv()"
+                                            class="bg-slate-800 hover:bg-slate-900 text-white py-2 px-5 rounded-[6px] text-sm font-semibold transition">
+                                        นำเข้าจาก ORCID
+                                    </button>
+                                </div>
                             </div>
-                            <button type="button" id="cv-orcid-import-btn" onclick="importOrcidCv()"
-                                    class="bg-slate-800 hover:bg-slate-900 text-white py-2 px-5 rounded-[6px] text-sm font-semibold transition shrink-0">
-                                นำเข้าจาก ORCID
-                            </button>
-                        </div>
+                            <p class="text-xs text-slate-500">เว้นช่องว่างแล้วกดบันทึก = ล้างเลข ORCID ออกจากระบบ</p>
+                        </form>
                     </div>
                 </section>
 

@@ -738,6 +738,42 @@ class ProfileCv extends BaseController
     }
 
     /**
+     * POST — บันทึกเฉพาะ ORCID iD (ไม่ดึงข้อมูลจาก ORCID) — ว่าง = ล้างค่า
+     */
+    public function saveOrcidId()
+    {
+        if (! $this->request->is('post')) {
+            return redirect()->to(base_url('dashboard/profile/cv?tab=orcid'));
+        }
+
+        $personnelId = $this->personnelIdOrRedirect();
+        if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $personnelId;
+        }
+
+        $personnelModel = new PersonnelModel();
+        if (! $personnelModel->db->fieldExists('orcid_id', 'personnel')) {
+            return redirect()->to(base_url('dashboard/profile/cv?tab=orcid'))->with('error', 'ระบบยังไม่รองรับคอลัมน์ ORCID — รัน migrate');
+        }
+
+        $orcidRaw = trim((string) $this->request->getPost('orcid_id'));
+        if ($orcidRaw === '') {
+            $personnelModel->update($personnelId, ['orcid_id' => null]);
+
+            return redirect()->to(base_url('dashboard/profile/cv?tab=orcid'))->with('success', 'ล้างเลข ORCID แล้ว');
+        }
+
+        if (! OrcidPublicRecord::isValidId($orcidRaw)) {
+            return redirect()->to(base_url('dashboard/profile/cv?tab=orcid'))->withInput()->with('error', 'รูปแบบ ORCID iD ไม่ถูกต้อง (เช่น 0000-0002-1825-0097)');
+        }
+
+        $orcidId = OrcidPublicRecord::normalizeId($orcidRaw);
+        $personnelModel->update($personnelId, ['orcid_id' => $orcidId]);
+
+        return redirect()->to(base_url('dashboard/profile/cv?tab=orcid'))->with('success', 'บันทึกเลข ORCID แล้ว');
+    }
+
+    /**
      * POST (AJAX) — ดึงจาก ORCID Public API แล้วบันทึกลง cv_sections / cv_entries
      *
      * พารามิเตอร์: orcid_id, scopes (optional) = comma-separated: education,employment,works — default ทั้งหมด
@@ -782,6 +818,11 @@ class ProfileCv extends BaseController
 
         $orcidId = OrcidPublicRecord::normalizeId($orcidRaw);
 
+        $personnelModel = new PersonnelModel();
+        if ($personnelModel->db->fieldExists('orcid_id', 'personnel')) {
+            $personnelModel->update($personnelId, ['orcid_id' => $orcidId]);
+        }
+
         $fetched = OrcidPublicRecord::fetchRecord($orcidId);
         if (empty($fetched['success']) || empty($fetched['data']) || !is_array($fetched['data'])) {
             return $this->response->setJSON([
@@ -808,10 +849,6 @@ class ProfileCv extends BaseController
         $eduCount     = $this->upsertOrcidEntries($cvEntryModel, $educationSection, $education);
         $empCount     = $this->upsertOrcidEntries($cvEntryModel, $employmentSection, $employment);
         $worksCount   = $this->upsertOrcidEntries($cvEntryModel, $worksSection, $works);
-
-        if ($cvSectionModel->db->fieldExists('orcid_id', 'personnel')) {
-            (new PersonnelModel())->update($personnelId, ['orcid_id' => $orcidId]);
-        }
 
         $hasAnyData = $education !== [] || $employment !== [] || $works !== [];
         $msg        = $hasAnyData

@@ -16,6 +16,13 @@ $posLabel = $position !== '' ? $position . ($posDetail !== '' ? ' ' . $posDetail
 $bio = trim($p['bio'] ?? '');
 $education = trim($p['education'] ?? '');
 $expertise = trim($p['expertise'] ?? '');
+$orcidRaw = trim((string) ($p['orcid_id'] ?? ''));
+$orcidDisplay = '';
+$orcidHref = '';
+if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) {
+    $orcidDisplay = \App\Libraries\OrcidPublicRecord::normalizeId($orcidRaw);
+    $orcidHref    = 'https://orcid.org/' . rawurlencode($orcidDisplay);
+}
 ?>
 <style>
   /* Full-page CV — สีอ้างอิง theme.css (เหลือง primary + เขียว secondary) */
@@ -259,6 +266,13 @@ $expertise = trim($p['expertise'] ?? '');
     text-decoration: underline;
   }
   .personnel-cv-doc .cv-dash { color: var(--color-gray-400, #d1d5db); }
+  .personnel-cv-doc .cv-orcid-link {
+    color: var(--cv-accent);
+    font-weight: 600;
+    text-decoration: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .personnel-cv-doc .cv-orcid-link:hover { text-decoration: underline; color: var(--secondary-dark, #1e5c32); }
   .personnel-cv-doc .cv-sheet-foot {
     grid-column: 1 / -1;
     grid-row: 2;
@@ -342,7 +356,7 @@ $expertise = trim($p['expertise'] ?? '');
         <div class="cv-sidebar-role" style="margin-top:0.35rem;"><?= esc($posLabel) ?></div>
       </div>
 
-      <?php if ($email || $phone): ?>
+      <?php if ($email || $phone || $orcidHref !== ''): ?>
         <div class="cv-contact-block">
           <?php if ($email): ?>
             <div class="cv-contact-row">
@@ -354,6 +368,12 @@ $expertise = trim($p['expertise'] ?? '');
             <div class="cv-contact-row">
               <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
               <span><?= esc($phone) ?></span>
+            </div>
+          <?php endif; ?>
+          <?php if ($orcidHref !== ''): ?>
+            <div class="cv-contact-row">
+              <span class="text-[0.65rem] font-extrabold tracking-wide opacity-90" aria-hidden="true">ORCID</span>
+              <a href="<?= esc($orcidHref, 'attr') ?>" target="_blank" rel="noopener noreferrer" class="underline font-medium" style="color:inherit;opacity:0.95;"><?= esc($orcidDisplay) ?></a>
             </div>
           <?php endif; ?>
         </div>
@@ -383,6 +403,11 @@ $expertise = trim($p['expertise'] ?? '');
           <p class="cv-name-en"><?= esc($nameEn) ?></p>
         <?php endif; ?>
         <p class="cv-position"><?= esc($posLabel) ?></p>
+        <?php if ($orcidHref !== ''): ?>
+          <p class="cv-orcid-main" style="margin:0.5rem 0 0;font-size:0.9rem;">
+            <a href="<?= esc($orcidHref, 'attr') ?>" target="_blank" rel="noopener noreferrer" class="cv-orcid-link">ORCID <?= esc($orcidDisplay) ?></a>
+          </p>
+        <?php endif; ?>
       </header>
 
       <?php if ($education): ?>
