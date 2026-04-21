@@ -16,6 +16,7 @@ class ProgramPageModel extends Model
         'objectives',
         'graduate_profile',
         'elos_json',
+        'learning_standards_json',
         'curriculum_json',
         'alumni_messages_json',
         'curriculum_structure',

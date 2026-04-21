@@ -49,6 +49,7 @@ class ProgramSpaController extends BaseController
             'text_color' => null,
             'background_color' => null,
             'elos_json' => '',
+            'learning_standards_json' => '',
             'curriculum_json' => '',
             'curriculum_structure' => '',
             'contact_info' => '',
@@ -195,6 +196,8 @@ class ProgramSpaController extends BaseController
                 : base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $heroImage), '/'));
         }
 
+        helper('program_page');
+
         $elos = [];
         $elosRaw = $page['elos_json'] ?? '';
         if ($elosRaw !== '') {
@@ -203,6 +206,8 @@ class ProgramSpaController extends BaseController
                 $elos = $decoded;
             }
         }
+
+        $learningStandards = parse_learning_standards_json($page['learning_standards_json'] ?? null);
 
         $curriculum = [];
         $curriculumRaw = $page['curriculum_json'] ?? '';
@@ -365,6 +370,7 @@ class ProgramSpaController extends BaseController
             'contact_info'         => $page['contact_info'] ?? '',
             'intro_video_url'      => $page['intro_video_url'] ?? '',
             'elos'                 => $elos,
+            'learning_standards'   => $learningStandards,
             'curriculum'            => $curriculum,
             'staff'                => $staff,
             'documents'             => $documents,

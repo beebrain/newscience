@@ -104,25 +104,94 @@
     }
 
     function renderELOs(data) {
-        var $grid = $('#pd-elo-grid');
-        $grid.empty();
+        var ls = data.learning_standards || {};
+        var intro = (ls.intro || '').trim();
+        var standards = ls.standards || [];
+        var mapping = ls.mapping || [];
+        var elos = data.elos || [];
 
-        if (!data.elos || !data.elos.length) {
+        var hasStandardsBlock = intro.length > 0 || (standards && standards.length > 0) || (mapping && mapping.length > 0);
+        var hasElos = elos && elos.length > 0;
+
+        if (!hasStandardsBlock && !hasElos) {
             $('#pd-elo').hide();
             return;
         }
 
-        $.each(data.elos, function (i, elo) {
-            var html = '<div class="pd-elo-card" data-index="' + i + '">' +
-                '<div class="pd-elo-card__icon">' + ICONS.target + '</div>' +
-                '<div class="pd-elo-card__category">' + escHtml(elo.category) + '</div>' +
-                '<h4 class="pd-elo-card__title">' + escHtml(elo.title) + '</h4>' +
-                '<p class="pd-elo-card__summary">' + escHtml(elo.summary) + '</p>' +
-                '<div class="pd-elo-card__detail">' + escHtml(elo.detail) + '</div>' +
-                '<span class="pd-elo-card__toggle">รายละเอียด ' + ICONS.chevron + '</span>' +
-                '</div>';
-            $grid.append(html);
-        });
+        $('#pd-elo').show();
+
+        // Intro (ความสัมพันธ์ PLO – มาตรฐาน / คำอธิบาย)
+        var $intro = $('#pd-plo-intro');
+        if (intro) {
+            $intro.html('<p class="pd-plo-intro__text">' + escHtml(intro).replace(/\n/g, '<br>') + '</p>').show();
+        } else {
+            $intro.empty().hide();
+        }
+
+        // มาตรฐานการเรียนรู้
+        var $lsBlock = $('#pd-learning-standards-block');
+        var $lsGrid = $('#pd-learning-standards-grid');
+        $lsGrid.empty();
+        if (standards && standards.length > 0) {
+            $lsBlock.show();
+            $.each(standards, function (i, st) {
+                var title = st.title || st.category || ('มาตรฐานการเรียนรู้ ' + (i + 1));
+                var code = st.code || ('LS' + (i + 1));
+                var sum = st.summary || '';
+                var det = st.detail || '';
+                var html = '<div class="pd-elo-card pd-ls-card" data-index="ls-' + i + '">' +
+                    '<div class="pd-elo-card__icon">' + ICONS.mortar + '</div>' +
+                    '<span class="pd-ls-card__code">' + escHtml(code) + '</span>' +
+                    '<div class="pd-elo-card__category">' + escHtml(st.category || 'มาตรฐานการเรียนรู้') + '</div>' +
+                    '<h4 class="pd-elo-card__title">' + escHtml(title) + '</h4>' +
+                    '<p class="pd-elo-card__summary">' + escHtml(sum) + '</p>' +
+                    '<div class="pd-elo-card__detail">' + escHtml(det) + '</div>' +
+                    '<span class="pd-elo-card__toggle">รายละเอียด ' + ICONS.chevron + '</span>' +
+                    '</div>';
+                $lsGrid.append(html);
+            });
+        } else {
+            $lsBlock.hide();
+        }
+
+        // ตารางเชื่อมโยง มาตรฐาน – PLO
+        var $mapWrap = $('#pd-mapping-wrap');
+        var $mapInner = $('#pd-mapping-table-wrap');
+        $mapInner.empty();
+        if (mapping && mapping.length > 0) {
+            $mapWrap.show();
+            var rows = '';
+            $.each(mapping, function (i, row) {
+                rows += '<tr><td>' + escHtml(row.standard_code || '—') + '</td><td>' + escHtml(row.plo_refs || '—') + '</td></tr>';
+            });
+            $mapInner.html(
+                '<table class="pd-mapping-table" role="table">' +
+                '<thead><tr><th scope="col">รหัส / มาตรฐานการเรียนรู้</th><th scope="col">PLO ที่เกี่ยวข้อง</th></tr></thead>' +
+                '<tbody>' + rows + '</tbody></table>'
+            );
+        } else {
+            $mapWrap.hide();
+        }
+
+        // PLO / ELO cards
+        var $grid = $('#pd-elo-grid');
+        $grid.empty();
+        var showPloSub = hasElos && hasStandardsBlock;
+        $('#pd-plo-subheading').toggle(showPloSub);
+
+        if (hasElos) {
+            $.each(elos, function (i, elo) {
+                var html = '<div class="pd-elo-card" data-index="' + i + '">' +
+                    '<div class="pd-elo-card__icon">' + ICONS.target + '</div>' +
+                    '<div class="pd-elo-card__category">' + escHtml(elo.category) + '</div>' +
+                    '<h4 class="pd-elo-card__title">' + escHtml(elo.title) + '</h4>' +
+                    '<p class="pd-elo-card__summary">' + escHtml(elo.summary) + '</p>' +
+                    '<div class="pd-elo-card__detail">' + escHtml(elo.detail) + '</div>' +
+                    '<span class="pd-elo-card__toggle">รายละเอียด ' + ICONS.chevron + '</span>' +
+                    '</div>';
+                $grid.append(html);
+            });
+        }
     }
 
     function renderCurriculum(data) {

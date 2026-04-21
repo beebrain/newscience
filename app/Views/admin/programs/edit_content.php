@@ -199,6 +199,32 @@
                         </div>
 
                         <?php
+                        helper('program_page');
+                        $ls_initial = parse_learning_standards_json($program_page['learning_standards_json'] ?? null);
+                        ?>
+                        <div class="form-group learning-standards-editor-wrap">
+                            <label class="form-label">มาตรฐานการเรียนรู้ (Learning Standards)</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">แสดงคู่กับ PLO บนหน้า program-detail — คำนำ + รายการมาตรฐาน + ตารางเชื่อมโยง PLO (ถ้ามี)</p>
+                            <div class="form-group">
+                                <label for="learning-standards-intro" class="form-label">คำอธิบาย / ความสัมพันธ์ PLO กับมาตรฐาน (ไม่บังคับ)</label>
+                                <textarea id="learning-standards-intro" class="form-control" rows="3" placeholder="เช่น หลักสูตรอ้างอิงมาตรฐานการเรียนรู้ของ... และกำหนด PLO ให้สอดคล้องกับ..."><?= esc($ls_initial['intro'] ?? '') ?></textarea>
+                            </div>
+                            <label class="form-label" style="margin-top: 0.75rem;">รายการมาตรฐานการเรียนรู้</label>
+                            <div id="learning-standards-list" class="learning-standards-list" data-initial="<?= htmlspecialchars(json_encode($ls_initial['standards'] ?? [], JSON_UNESCAPED_UNICODE)) ?>"></div>
+                            <div class="elos-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-outline btn-sm" id="ls-add-btn">+ เพิ่มมาตรฐาน</button>
+                                <button type="button" class="btn btn-primary btn-sm" id="ls-save-ajax-btn">บันทึกมาตรฐานการเรียนรู้</button>
+                                <span id="ls-ajax-msg" class="ajax-msg" aria-live="polite"></span>
+                            </div>
+                            <label class="form-label" style="margin-top: 1rem;">ตารางเชื่อมโยงมาตรฐาน – PLO (ไม่บังคับ)</label>
+                            <div id="learning-standards-mapping-list" class="learning-standards-mapping-list" data-initial="<?= htmlspecialchars(json_encode($ls_initial['mapping'] ?? [], JSON_UNESCAPED_UNICODE)) ?>"></div>
+                            <div class="elos-actions" style="margin-top: 0.5rem;">
+                                <button type="button" class="btn btn-outline btn-sm" id="ls-add-mapping-btn">+ เพิ่มแถวเชื่อมโยง</button>
+                            </div>
+                            <textarea id="learning_standards_json" name="learning_standards_json" class="form-control" style="display: none;" aria-hidden="true"><?= esc($program_page['learning_standards_json'] ?? '') ?></textarea>
+                        </div>
+
+                        <?php
                         $elos_initial = [];
                         if (!empty($program_page['elos_json'])) {
                             $decoded = json_decode($program_page['elos_json'], true);
@@ -206,8 +232,8 @@
                         }
                         ?>
                         <div class="form-group elos-editor-wrap">
-                            <label class="form-label">ELO (ผลลัพธ์การเรียนรู้ที่คาดหวัง)</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">สำหรับหน้า AUN-QA program-detail — กรอกเฉพาะ หมวด และ รายละเอียด แล้วกดบันทึก ELO ได้ทันที</p>
+                            <label class="form-label">PLO / ELO (ผลลัพธ์การเรียนรู้ระดับหลักสูตร)</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">สำหรับหน้า AUN-QA program-detail — กรอกหมวด (เช่น PLO1) และรายละเอียด แล้วกดบันทึกได้ทันที</p>
                             <div id="elos-list" class="elos-list" data-initial="<?= htmlspecialchars(json_encode($elos_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
                             <div class="elos-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button type="button" class="btn btn-outline btn-sm" id="elos-add-btn">+ เพิ่ม ELO</button>
@@ -1445,17 +1471,147 @@
             swalAlert('JSON ไม่ถูกต้อง: ' + e.message, 'error');
         }
     }
-    // --- ELO UI: โหลดจาก data-initial, บันทึกได้ผ่าน Ajax ---
+    // --- เนื้อหาหลักสูตร: มาตรฐานการเรียนรู้ + PLO/ELO ---
+    var contentForm = document.querySelector('#content-tab form');
+    if (!contentForm) return;
+
     var elosList = document.getElementById('elos-list');
     var elosJsonField = document.getElementById('elos_json');
-    var contentForm = document.querySelector('#content-tab form');
-    if (!elosList || !elosJsonField || !contentForm) return;
+    var lsIntroField = document.getElementById('learning-standards-intro');
+    var lsList = document.getElementById('learning-standards-list');
+    var lsMapList = document.getElementById('learning-standards-mapping-list');
+    var lsJsonField = document.getElementById('learning_standards_json');
 
     function escapeHtml(s) {
         if (s == null) return '';
         var div = document.createElement('div');
         div.textContent = s;
         return div.innerHTML;
+    }
+
+    function addStandardRow(data) {
+        data = data || {};
+        var code = escapeHtml(data.code || '');
+        var category = escapeHtml(data.category || '');
+        var detail = escapeHtml(data.detail || '');
+        var row = document.createElement('div');
+        row.className = 'ls-row elo-row';
+        row.innerHTML =
+            '<div class="elo-row__fields">' +
+            '<div class="form-group"><label class="form-label">รหัส (code)</label><input type="text" class="form-control ls-field ls-code" value="' + code + '" placeholder="เช่น LS1"></div>' +
+            '<div class="form-group"><label class="form-label">หมวด / ด้าน</label><input type="text" class="form-control ls-field ls-category" value="' + category + '" placeholder="เช่น ด้านคุณธรรมจริยธรรม"></div>' +
+            '<div class="form-group"><label class="form-label">รายละเอียด</label><textarea class="form-control ls-field ls-detail" rows="3" placeholder="ข้อความมาตรฐานการเรียนรู้">' + detail + '</textarea></div>' +
+            '</div>' +
+            '<div class="elo-row__actions"><button type="button" class="btn btn-danger btn-sm ls-remove-btn">ลบ</button></div>';
+        lsList.appendChild(row);
+        row.querySelector('.ls-remove-btn').addEventListener('click', function () { row.remove(); });
+    }
+
+    function addMappingRow(data) {
+        data = data || {};
+        var sc = escapeHtml(data.standard_code || '');
+        var pr = escapeHtml(data.plo_refs || '');
+        var row = document.createElement('div');
+        row.className = 'ls-map-row elo-row';
+        row.innerHTML =
+            '<div class="elo-row__fields" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end;">' +
+            '<div class="form-group" style="flex:1; min-width:10rem;"><label class="form-label">รหัสมาตรฐาน</label><input type="text" class="form-control ls-map-field ls-map-code" value="' + sc + '" placeholder="LS1"></div>' +
+            '<div class="form-group" style="flex:2; min-width:12rem;"><label class="form-label">PLO ที่เกี่ยวข้อง</label><input type="text" class="form-control ls-map-field ls-map-plo" value="' + pr + '" placeholder="PLO1, PLO2"></div>' +
+            '</div>' +
+            '<div class="elo-row__actions"><button type="button" class="btn btn-danger btn-sm ls-map-remove-btn">ลบ</button></div>';
+        lsMapList.appendChild(row);
+        row.querySelector('.ls-map-remove-btn').addEventListener('click', function () { row.remove(); });
+    }
+
+    function buildLearningStandardsJson() {
+        if (!lsJsonField || !lsList) return '';
+        var intro = (lsIntroField && lsIntroField.value) ? lsIntroField.value.trim() : '';
+        var standards = [];
+        lsList.querySelectorAll('.ls-row').forEach(function (row) {
+            var code = (row.querySelector('.ls-code') && row.querySelector('.ls-code').value) || '';
+            var category = (row.querySelector('.ls-category') && row.querySelector('.ls-category').value) || '';
+            var detail = (row.querySelector('.ls-detail') && row.querySelector('.ls-detail').value) || '';
+            var summary = detail.length > 120 ? detail.substring(0, 120) + '…' : detail;
+            standards.push({
+                code: code.trim(),
+                category: category.trim(),
+                title: category.trim() || code.trim() || ('มาตรฐาน ' + (standards.length + 1)),
+                summary: summary,
+                detail: detail
+            });
+        });
+        var mapping = [];
+        if (lsMapList) {
+            lsMapList.querySelectorAll('.ls-map-row').forEach(function (row) {
+                var sc = (row.querySelector('.ls-map-code') && row.querySelector('.ls-map-code').value) || '';
+                var pr = (row.querySelector('.ls-map-plo') && row.querySelector('.ls-map-plo').value) || '';
+                if (sc.trim() || pr.trim()) {
+                    mapping.push({ standard_code: sc.trim(), plo_refs: pr.trim() });
+                }
+            });
+        }
+        var obj = { intro: intro, standards: standards, mapping: mapping };
+        lsJsonField.value = JSON.stringify(obj);
+        return lsJsonField.value;
+    }
+
+    window.buildLearningStandardsJson = buildLearningStandardsJson;
+
+    var programId = <?= (int)($program['id'] ?? 0) ?>;
+    var updatePageJsonUrl = '<?= base_url('program-admin/update-page-json/' . (int)($program['id'] ?? 0)) ?>';
+    var csrfInput = contentForm.querySelector('input[name="csrf_test_name"]') || contentForm.querySelector('input[type="hidden"][name*="csrf"]');
+
+    function showLsMsg(msg, isError) {
+        var el = document.getElementById('ls-ajax-msg');
+        if (el) { el.textContent = msg; el.style.color = isError ? 'var(--color-error)' : 'var(--secondary)'; }
+    }
+
+    if (lsList && lsJsonField) {
+        document.getElementById('ls-save-ajax-btn') && document.getElementById('ls-save-ajax-btn').addEventListener('click', function () {
+            var btn = this;
+            var json = buildLearningStandardsJson();
+            btn.disabled = true;
+            showLsMsg('กำลังบันทึก...');
+            var fd = new FormData();
+            fd.append('learning_standards_json', json);
+            if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
+            fetch(updatePageJsonUrl, { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    btn.disabled = false;
+                    showLsMsg(res.success ? 'บันทึกมาตรฐานการเรียนรู้เรียบร้อย' : (res.message || 'เกิดข้อผิดพลาด'), !res.success);
+                })
+                .catch(function () { btn.disabled = false; showLsMsg('เกิดข้อผิดพลาดในการเชื่อมต่อ', true); });
+        });
+
+        var lsInitial = [];
+        try {
+            var lraw = lsList.getAttribute('data-initial') || '[]';
+            lsInitial = JSON.parse(lraw);
+            if (!Array.isArray(lsInitial)) lsInitial = [];
+        } catch (e1) { lsInitial = []; }
+        if (lsInitial.length === 0) {
+            addStandardRow({});
+        } else {
+            lsInitial.forEach(function (item) { addStandardRow(item); });
+        }
+
+        var mapInitial = [];
+        if (lsMapList) {
+            try {
+                var mraw = lsMapList.getAttribute('data-initial') || '[]';
+                mapInitial = JSON.parse(mraw);
+                if (!Array.isArray(mapInitial)) mapInitial = [];
+            } catch (e2) { mapInitial = []; }
+            if (mapInitial.length === 0) {
+                addMappingRow({});
+            } else {
+                mapInitial.forEach(function (item) { addMappingRow(item); });
+            }
+        }
+
+        document.getElementById('ls-add-btn') && document.getElementById('ls-add-btn').addEventListener('click', function () { addStandardRow({}); });
+        document.getElementById('ls-add-mapping-btn') && document.getElementById('ls-add-mapping-btn').addEventListener('click', function () { addMappingRow({}); });
     }
 
     function addElosRow(data) {
@@ -1466,7 +1622,7 @@
         row.className = 'elo-row';
         row.innerHTML =
             '<div class="elo-row__fields">' +
-            '<div class="form-group"><label class="form-label">หมวด (category)</label><input type="text" class="form-control elo-field elo-category" value="' + category + '" placeholder="เช่น ความรู้ (Knowledge)"></div>' +
+            '<div class="form-group"><label class="form-label">หมวด (category)</label><input type="text" class="form-control elo-field elo-category" value="' + category + '" placeholder="เช่น PLO1 / ความรู้"></div>' +
             '<div class="form-group"><label class="form-label">รายละเอียด (detail)</label><textarea class="form-control elo-field elo-detail" rows="3" placeholder="อธิบายผลลัพธ์การเรียนรู้ที่คาดหวัง">' + detail + '</textarea></div>' +
             '</div>' +
             '<div class="elo-row__actions"><button type="button" class="btn btn-danger btn-sm elo-remove-btn">ลบ</button></div>';
@@ -1475,7 +1631,8 @@
     }
 
     function buildElosJson() {
-        var rows = elosList.querySelectorAll('.elo-row');
+        if (!elosList || !elosJsonField) return '';
+        var rows = elosList.querySelectorAll(':scope > .elo-row');
         var arr = [];
         rows.forEach(function (row) {
             var category = (row.querySelector('.elo-category') && row.querySelector('.elo-category').value) || '';
@@ -1488,50 +1645,54 @@
     }
 
     window.buildElosJson = buildElosJson;
-    contentForm.addEventListener('submit', function () { buildElosJson(); });
 
-    var programId = <?= (int)($program['id'] ?? 0) ?>;
-    var updatePageJsonUrl = '<?= base_url('program-admin/update-page-json/' . (int)($program['id'] ?? 0)) ?>';
-    var csrfInput = contentForm.querySelector('input[name="csrf_test_name"]') || contentForm.querySelector('input[type="hidden"][name*="csrf"]');
     function showElosMsg(msg, isError) {
         var el = document.getElementById('elos-ajax-msg');
         if (el) { el.textContent = msg; el.style.color = isError ? 'var(--color-error)' : 'var(--secondary)'; }
     }
-    document.getElementById('elos-save-ajax-btn') && document.getElementById('elos-save-ajax-btn').addEventListener('click', function () {
-        var btn = this;
-        var json = buildElosJson();
-        btn.disabled = true;
-        showElosMsg('กำลังบันทึก...');
-        var fd = new FormData();
-        fd.append('elos_json', json);
-        if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
-        fetch(updatePageJsonUrl, { method: 'POST', body: fd })
-            .then(function (r) { return r.json(); })
-            .then(function (res) {
-                btn.disabled = false;
-                showElosMsg(res.success ? 'บันทึก ELO เรียบร้อย' : (res.message || 'เกิดข้อผิดพลาด'), !res.success);
-            })
-            .catch(function () { btn.disabled = false; showElosMsg('เกิดข้อผิดพลาดในการเชื่อมต่อ', true); });
-    });
 
-    var initialData = [];
-    try {
-        var raw = elosList.getAttribute('data-initial') || '[]';
-        initialData = JSON.parse(raw);
-        if (!Array.isArray(initialData)) initialData = [];
-    } catch (e) {
-        initialData = [];
-    }
-    if (initialData.length === 0) {
-        addElosRow({});
-    } else {
-        initialData.forEach(function (item) {
-            addElosRow(item);
+    if (elosList && elosJsonField) {
+        document.getElementById('elos-save-ajax-btn') && document.getElementById('elos-save-ajax-btn').addEventListener('click', function () {
+            var btn = this;
+            var json = buildElosJson();
+            btn.disabled = true;
+            showElosMsg('กำลังบันทึก...');
+            var fd = new FormData();
+            fd.append('elos_json', json);
+            if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
+            fetch(updatePageJsonUrl, { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    btn.disabled = false;
+                    showElosMsg(res.success ? 'บันทึก PLO/ELO เรียบร้อย' : (res.message || 'เกิดข้อผิดพลาด'), !res.success);
+                })
+                .catch(function () { btn.disabled = false; showElosMsg('เกิดข้อผิดพลาดในการเชื่อมต่อ', true); });
+        });
+
+        var initialData = [];
+        try {
+            var raw = elosList.getAttribute('data-initial') || '[]';
+            initialData = JSON.parse(raw);
+            if (!Array.isArray(initialData)) initialData = [];
+        } catch (e) {
+            initialData = [];
+        }
+        if (initialData.length === 0) {
+            addElosRow({});
+        } else {
+            initialData.forEach(function (item) {
+                addElosRow(item);
+            });
+        }
+
+        document.getElementById('elos-add-btn') && document.getElementById('elos-add-btn').addEventListener('click', function () {
+            addElosRow({});
         });
     }
 
-    document.getElementById('elos-add-btn') && document.getElementById('elos-add-btn').addEventListener('click', function () {
-        addElosRow({});
+    contentForm.addEventListener('submit', function () {
+        if (typeof buildLearningStandardsJson === 'function') buildLearningStandardsJson();
+        if (typeof buildElosJson === 'function') buildElosJson();
     });
 
     // --- ศิษย์เก่าถึงรุ่นน้อง: repeater + อัปโหลดรูป (ครอป 1:1) + บันทึก Ajax ---

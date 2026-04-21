@@ -58,7 +58,7 @@ $programAccent = !empty($page['theme_color']) ? $page['theme_color'] : '';
     <nav class="pd-sticky-nav" aria-label="เมนูส่วนต่างๆ ของหลักสูตร">
         <ul class="pd-sticky-nav__list">
             <li><a href="#pd-overview" class="pd-sticky-nav__link active">ภาพรวม</a></li>
-            <li><a href="#pd-elo" class="pd-sticky-nav__link">ผลลัพธ์การเรียนรู้</a></li>
+            <li><a href="#pd-elo" class="pd-sticky-nav__link">PLO / มาตรฐาน</a></li>
             <li><a href="#pd-curriculum" class="pd-sticky-nav__link">หลักสูตร</a></li>
             <li><a href="#pd-content-sections" class="pd-sticky-nav__link">รายละเอียด</a></li>
             <li><a href="#pd-staff" class="pd-sticky-nav__link">บุคลากร</a></li>
@@ -79,14 +79,24 @@ $programAccent = !empty($page['theme_color']) ? $page['theme_color'] : '';
         </div>
     </section>
 
-    <!-- ELOs -->
+    <!-- PLO & Learning Standards -->
     <section id="pd-elo" class="pd-section">
         <div class="container">
             <div class="pd-section__header">
                 <span class="pd-section__number">2</span>
-                <h2 class="pd-section__title">ผลลัพธ์การเรียนรู้ที่คาดหวัง</h2>
-                <p class="pd-section__subtitle">Expected Learning Outcomes (ELOs) — หัวใจสำคัญของ AUN-QA</p>
+                <h2 class="pd-section__title">PLO และมาตรฐานการเรียนรู้</h2>
+                <p class="pd-section__subtitle">Programme Learning Outcomes (PLO/ELOs) & Learning Standards — OBE / AUN-QA</p>
             </div>
+            <div id="pd-plo-intro" class="pd-plo-intro" style="display:none;"></div>
+            <div id="pd-learning-standards-block" style="display:none;">
+                <h3 class="pd-subsection-title">มาตรฐานการเรียนรู้ (Learning Standards)</h3>
+                <div class="pd-elo-grid pd-elo-grid--standards" id="pd-learning-standards-grid"></div>
+            </div>
+            <div id="pd-mapping-wrap" class="pd-mapping-wrap" style="display:none;">
+                <h3 class="pd-subsection-title">ความเชื่อมโยงมาตรฐานการเรียนรู้ – PLO</h3>
+                <div id="pd-mapping-table-wrap" class="pd-mapping-table-wrap"></div>
+            </div>
+            <h3 id="pd-plo-subheading" class="pd-subsection-title" style="display:none;">PLO / ผลลัพธ์การเรียนรู้ระดับหลักสูตร (Programme Learning Outcomes)</h3>
             <div class="pd-elo-grid" id="pd-elo-grid"></div>
         </div>
     </section>

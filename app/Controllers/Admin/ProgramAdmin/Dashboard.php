@@ -307,6 +307,7 @@ class Dashboard extends BaseController
             'objectives' => 'max_length[5000]',
             'graduate_profile' => 'max_length[5000]',
             'elos_json' => 'max_length[65000]',
+            'learning_standards_json' => 'max_length[65000]',
             'curriculum_json' => 'max_length[65000]',
             'curriculum_structure' => 'max_length[10000]',
             'study_plan' => 'max_length[10000]',
@@ -328,6 +329,7 @@ class Dashboard extends BaseController
             'objectives' => $this->request->getPost('objectives'),
             'graduate_profile' => $this->request->getPost('graduate_profile'),
             'elos_json' => $this->request->getPost('elos_json'),
+            'learning_standards_json' => $this->request->getPost('learning_standards_json'),
             'curriculum_json' => $this->request->getPost('curriculum_json'),
             'curriculum_structure' => $this->request->getPost('curriculum_structure'),
             'study_plan' => $this->request->getPost('study_plan'),
@@ -370,9 +372,9 @@ class Dashboard extends BaseController
     }
 
     /**
-     * บันทึกเฉพาะ elos_json และ/หรือ curriculum_json ผ่าน Ajax (สำหรับ AUN-QA)
+     * บันทึกเฉพาะ elos_json, learning_standards_json และ/หรือ curriculum_json ผ่าน Ajax (สำหรับ AUN-QA)
      * POST program-admin/update-page-json/{id}
-     * Body: elos_json (optional), curriculum_json (optional), curriculum_structure (optional)
+     * Body: elos_json (optional), learning_standards_json (optional), curriculum_json (optional), curriculum_structure (optional)
      */
     public function updatePageJson($programId)
     {
@@ -390,6 +392,12 @@ class Dashboard extends BaseController
             $raw = $this->request->getPost('elos_json');
             if (is_string($raw) && strlen($raw) <= 65000) {
                 $updateData['elos_json'] = $raw;
+            }
+        }
+        if ($this->request->getPost('learning_standards_json') !== null) {
+            $raw = $this->request->getPost('learning_standards_json');
+            if (is_string($raw) && strlen($raw) <= 65000) {
+                $updateData['learning_standards_json'] = $raw;
             }
         }
         if ($this->request->getPost('curriculum_json') !== null) {

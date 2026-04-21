@@ -308,6 +308,82 @@
     transform: rotate(180deg);
 }
 
+.pd-subsection-title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--color-dark);
+    margin: var(--spacing-8) 0 var(--spacing-4);
+    padding-bottom: var(--spacing-2);
+    border-bottom: 2px solid var(--color-gray-200);
+}
+
+.pd-subsection-title:first-of-type {
+    margin-top: var(--spacing-4);
+}
+
+.pd-plo-intro {
+    margin-bottom: var(--spacing-6);
+    max-width: 52rem;
+}
+
+.pd-plo-intro__text {
+    font-size: var(--text-base);
+    color: var(--color-gray-700);
+    line-height: 1.75;
+    margin: 0;
+}
+
+.pd-ls-card::before {
+    background: var(--color-accent, #0d9488);
+}
+
+.pd-ls-card:hover,
+.pd-ls-card.expanded {
+    border-color: var(--color-accent, #0d9488);
+}
+
+.pd-ls-card__code {
+    display: inline-block;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--color-accent, #0d9488);
+    margin-bottom: var(--spacing-2);
+}
+
+.pd-mapping-wrap {
+    margin-bottom: var(--spacing-4);
+}
+
+.pd-mapping-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-gray-200);
+}
+
+.pd-mapping-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+.pd-mapping-table th,
+.pd-mapping-table td {
+    padding: var(--spacing-3) var(--spacing-4);
+    text-align: left;
+    border-bottom: 1px solid var(--color-gray-200);
+}
+
+.pd-mapping-table th {
+    background: var(--color-gray-50);
+    font-weight: 600;
+    color: var(--color-dark);
+}
+
+.pd-mapping-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
 /* ================================
    Curriculum Accordion
    ================================ */

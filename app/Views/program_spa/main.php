@@ -257,10 +257,16 @@
                 <div id="about-vision" class="text-slate-600 leading-relaxed"></div>
             </div>
             <div class="reveal-right">
-                <h3 class="text-xl font-semibold section-accent mb-6 flex items-center gap-2">
+                <h3 class="text-xl font-semibold section-accent mb-4 flex items-center gap-2">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
-                    ผลลัพธ์การเรียนรู้ที่คาดหวัง (ELOs)
+                    PLO และมาตรฐานการเรียนรู้
                 </h3>
+                <p class="text-sm text-slate-500 mb-4">Programme Learning Outcomes & Learning Standards</p>
+                <div id="learning-standards-intro-spa" class="text-slate-600 text-sm leading-relaxed mb-4 hidden"></div>
+                <h4 class="text-sm font-semibold text-teal-700 mb-2 hidden" id="learning-standards-heading-spa">มาตรฐานการเรียนรู้</h4>
+                <div id="learning-standards-grid-spa" class="space-y-2 mb-4 hidden"></div>
+                <div id="plo-mapping-spa" class="mb-4 hidden overflow-x-auto text-xs"></div>
+                <h4 class="text-sm font-semibold section-accent mb-3 hidden" id="plo-subheading-spa">PLO / ผลลัพธ์ระดับหลักสูตร</h4>
                 <div id="elos-grid" class="space-y-3 stagger-children"></div>
             </div>
         </div>
@@ -507,11 +513,55 @@
         if (d.philosophy) document.getElementById('about-philosophy').innerHTML = '<h3 class="text-lg font-semibold section-accent mb-3">ปรัชญา</h3><p>' + esc(d.philosophy).replace(/\n/g, '<br>') + '</p>';
         if (d.vision) document.getElementById('about-vision').innerHTML = '<h3 class="text-lg font-semibold section-accent mb-3">วัตถุประสงค์</h3><p>' + esc(d.vision).replace(/\n/g, '<br>') + '</p>';
 
-        // ELOs
+        // PLO + มาตรฐานการเรียนรู้
+        var ls = d.learning_standards || {};
+        var introEl = document.getElementById('learning-standards-intro-spa');
+        var lsHead = document.getElementById('learning-standards-heading-spa');
+        var lsGridSpa = document.getElementById('learning-standards-grid-spa');
+        var mapSpa = document.getElementById('plo-mapping-spa');
+        var ploSub = document.getElementById('plo-subheading-spa');
+        if (introEl) {
+            if (ls.intro && String(ls.intro).trim()) {
+                introEl.innerHTML = '<p>' + esc(String(ls.intro)).replace(/\n/g, '<br>') + '</p>';
+                introEl.classList.remove('hidden');
+            } else { introEl.innerHTML = ''; introEl.classList.add('hidden'); }
+        }
+        if (lsGridSpa) {
+            lsGridSpa.innerHTML = '';
+            var stds = ls.standards || [];
+            if (stds.length) {
+                if (lsHead) lsHead.classList.remove('hidden');
+                lsGridSpa.classList.remove('hidden');
+                stds.forEach(function (st, i) {
+                    var code = st.code || ('LS' + (i + 1));
+                    var tit = st.title || st.category || '';
+                    var det = st.detail || st.summary || '';
+                    lsGridSpa.innerHTML += '<div class="p-3 rounded-lg border border-teal-200/60 bg-teal-50/40 text-slate-700 text-sm"><span class="font-bold text-teal-800">' + esc(code) + '</span> ' + esc(tit) + (det ? '<div class="mt-1 text-slate-600">' + esc(det).substring(0, 280) + (det.length > 280 ? '…' : '') + '</div>' : '') + '</div>';
+                });
+            } else {
+                if (lsHead) lsHead.classList.add('hidden');
+                lsGridSpa.classList.add('hidden');
+            }
+        }
+        if (mapSpa) {
+            var mp = ls.mapping || [];
+            if (mp.length) {
+                mapSpa.classList.remove('hidden');
+                var rows = '';
+                mp.forEach(function (m) {
+                    rows += '<tr><td class="border border-slate-200 px-2 py-1">' + esc(m.standard_code || '—') + '</td><td class="border border-slate-200 px-2 py-1">' + esc(m.plo_refs || '—') + '</td></tr>';
+                });
+                mapSpa.innerHTML = '<table class="w-full border-collapse text-slate-700"><thead><tr class="bg-slate-100"><th class="border border-slate-200 px-2 py-1 text-left">มาตรฐาน</th><th class="border border-slate-200 px-2 py-1 text-left">PLO</th></tr></thead><tbody>' + rows + '</tbody></table>';
+            } else { mapSpa.innerHTML = ''; mapSpa.classList.add('hidden'); }
+        }
         var eg = document.getElementById('elos-grid'); eg.innerHTML = '';
-        if (Array.isArray(d.elos) && d.elos.length) {
+        var hasElos = Array.isArray(d.elos) && d.elos.length;
+        var hasLsBlock = (ls.intro && String(ls.intro).trim()) || (ls.standards && ls.standards.length) || (ls.mapping && ls.mapping.length);
+        if (ploSub) ploSub.classList.toggle('hidden', !(hasElos && hasLsBlock));
+        if (hasElos) {
             d.elos.forEach(function(el, i) {
-                var t = (typeof el === 'string') ? el : (el.title || el.text || el.name || el.description || '');
+                var t = (typeof el === 'string') ? el : (el.detail || el.title || el.text || el.name || el.description || '');
+                if (!t && el.category) t = el.category;
                 eg.innerHTML += '<div class="flex items-start gap-3 p-4 rounded-xl glass"><span class="flex-shrink-0 w-8 h-8 rounded-full elo-num flex items-center justify-center text-sm font-bold">' + (i + 1) + '</span><span class="text-slate-600">' + esc(t) + '</span></div>';
             });
         }

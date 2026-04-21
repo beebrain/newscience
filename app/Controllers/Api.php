@@ -632,6 +632,8 @@ class Api extends BaseController
                 : base_url('serve/uploads/programs/' . basename(str_replace('\\', '/', $heroImage)));
         }
 
+        helper('program_page');
+
         // ELOs and curriculum from JSON columns
         $elos = [];
         $elosRaw = $page['elos_json'] ?? '';
@@ -641,6 +643,8 @@ class Api extends BaseController
                 $elos = $decoded;
             }
         }
+
+        $learningStandards = parse_learning_standards_json($page['learning_standards_json'] ?? null);
 
         $curriculum = [];
         $curriculumRaw = $page['curriculum_json'] ?? '';
@@ -786,6 +790,7 @@ class Api extends BaseController
             'contact_info'         => $page['contact_info'] ?? '',
             'intro_video_url'      => $page['intro_video_url'] ?? '',
             'elos'                 => $elos,
+            'learning_standards'   => $learningStandards,
             'curriculum'           => $curriculum,
             'careers'              => $careers,
             'staff'                => $staff,

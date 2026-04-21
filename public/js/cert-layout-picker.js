@@ -221,6 +221,188 @@
             ghost.textContent = sampleText;
         }
 
+        var reviewTools = root.querySelector('.cert-lp-review-tools');
+        var btnCropOpen = root.querySelector('.cert-lp-crop-open');
+        var cropPanel = root.querySelector('.cert-lp-crop-panel');
+        var cropTarget = root.querySelector('.cert-lp-crop-target');
+        var btnCropApply = root.querySelector('.cert-lp-crop-apply');
+        var btnCropCancel = root.querySelector('.cert-lp-crop-cancel');
+        var btnCropRotL = root.querySelector('.cert-lp-crop-rotate-left');
+        var btnCropRotR = root.querySelector('.cert-lp-crop-rotate-right');
+        var cropperInstance = null;
+
+        function ensureCropperAssets(cb) {
+            if (typeof window.Cropper === 'function') {
+                cb();
+                return;
+            }
+            if (!window._certLpCropperLoading) {
+                window._certLpCropperLoading = true;
+                window._certLpCropperQueue = [];
+                var link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css';
+                link.crossOrigin = 'anonymous';
+                document.head.appendChild(link);
+                var script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js';
+                script.crossOrigin = 'anonymous';
+                script.onload = function () {
+                    window._certLpCropperLoading = false;
+                    cb();
+                    (window._certLpCropperQueue || []).forEach(function (fn) {
+                        fn();
+                    });
+                    window._certLpCropperQueue = [];
+                };
+                script.onerror = function () {
+                    window._certLpCropperLoading = false;
+                    window.alert('โหลดเครื่องมือครอบภาพไม่สำเร็จ กรุณาลองใหม่หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+                };
+                document.head.appendChild(script);
+                return;
+            }
+            window._certLpCropperQueue = window._certLpCropperQueue || [];
+            window._certLpCropperQueue.push(cb);
+        }
+
+        function destroyCropperInstance() {
+            if (cropperInstance) {
+                try {
+                    cropperInstance.destroy();
+                } catch (e) {
+                    /* ignore */
+                }
+                cropperInstance = null;
+            }
+        }
+
+        function showReviewTools(visible) {
+            if (reviewTools) {
+                reviewTools.style.display = visible ? 'block' : 'none';
+            }
+            if (!visible) {
+                destroyCropperInstance();
+                if (cropPanel) {
+                    cropPanel.style.display = 'none';
+                }
+                if (cropTarget) {
+                    cropTarget.removeAttribute('src');
+                }
+            }
+        }
+
+        function initCropperOnImage() {
+            if (!cropTarget || !img || !img.src || img.style.display === 'none') {
+                return;
+            }
+            destroyCropperInstance();
+            if (cropPanel) {
+                cropPanel.style.display = 'block';
+            }
+            ensureCropperAssets(function () {
+                destroyCropperInstance();
+                var loader = new Image();
+                loader.crossOrigin = 'anonymous';
+                loader.onload = function () {
+                    cropTarget.src = loader.src;
+                    try {
+                        cropperInstance = new window.Cropper(cropTarget, {
+                            aspectRatio: 210 / 297,
+                            viewMode: 1,
+                            dragMode: 'move',
+                            autoCropArea: 0.92,
+                            restore: false,
+                            guides: true,
+                            center: true,
+                            highlight: true,
+                            background: true,
+                            toggleDragModeOnDblclick: false
+                        });
+                    } catch (e) {
+                        window.alert('ไม่สามารถเปิดตัวครอบภาพได้');
+                    }
+                };
+                loader.onerror = function () {
+                    window.alert('โหลดภาพสำหรับครอบไม่สำเร็จ');
+                };
+                loader.src = img.src;
+            });
+        }
+
+        if (btnCropOpen && cropTarget && cropPanel) {
+            btnCropOpen.addEventListener('click', function () {
+                if (!img || !img.src || img.style.display === 'none') {
+                    window.alert('กรุณาอัปโหลดรูป JPG หรือ PNG ก่อน');
+                    return;
+                }
+                if (cropPanel.style.display === 'none' || cropPanel.style.display === '') {
+                    initCropperOnImage();
+                } else {
+                    destroyCropperInstance();
+                    cropPanel.style.display = 'none';
+                    if (cropTarget) {
+                        cropTarget.removeAttribute('src');
+                    }
+                }
+            });
+        }
+        if (btnCropRotL) {
+            btnCropRotL.addEventListener('click', function () {
+                if (cropperInstance) {
+                    cropperInstance.rotate(-90);
+                }
+            });
+        }
+        if (btnCropRotR) {
+            btnCropRotR.addEventListener('click', function () {
+                if (cropperInstance) {
+                    cropperInstance.rotate(90);
+                }
+            });
+        }
+        if (btnCropCancel && cropPanel && cropTarget) {
+            btnCropCancel.addEventListener('click', function () {
+                destroyCropperInstance();
+                cropPanel.style.display = 'none';
+                cropTarget.removeAttribute('src');
+            });
+        }
+        if (btnCropApply && cropTarget && fileInput) {
+            btnCropApply.addEventListener('click', function () {
+                if (!cropperInstance) {
+                    return;
+                }
+                var canvas = cropperInstance.getCroppedCanvas({
+                    width: 2310,
+                    height: 3267,
+                    imageSmoothingQuality: 'high',
+                    fillColor: '#ffffff'
+                });
+                if (!canvas) {
+                    window.alert('ไม่สามารถสร้างภาพจากกรอบครอบได้');
+                    return;
+                }
+                canvas.toBlob(function (blob) {
+                    if (!blob) {
+                        window.alert('ส่งออกภาพไม่สำเร็จ');
+                        return;
+                    }
+                    destroyCropperInstance();
+                    cropPanel.style.display = 'none';
+                    cropTarget.removeAttribute('src');
+                    var base = (fileInput.files && fileInput.files[0] && fileInput.files[0].name)
+                        ? fileInput.files[0].name.replace(/\.[^.]+$/, '')
+                        : 'certificate-background';
+                    var file = new File([blob], base + '-a4.png', { type: 'image/png' });
+                    var dt = new DataTransfer();
+                    dt.items.add(file);
+                    fileInput.files = dt.files;
+                    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }, 'image/png', 0.95);
+            });
+        }
+
         function layoutSheet() {
             if (!stage || !sheet) {
                 return;
@@ -279,6 +461,9 @@
                 ghost.style.top = px.top + 4 + 'px';
                 ghost.style.maxWidth = Math.max(40, px.width - 8) + 'px';
                 ghost.style.whiteSpace = 'normal';
+                ghost.style.writingMode = 'horizontal-tb';
+                ghost.style.textOrientation = 'mixed';
+                ghost.style.wordBreak = 'keep-all';
             }
         }
 
@@ -329,6 +514,7 @@
                 if (notePdf) {
                     notePdf.style.display = 'none';
                 }
+                showReviewTools(true);
                 layoutSheet();
                 syncFromLayoutInput();
                 if (typeof onAfterLoad === 'function') {
@@ -337,6 +523,7 @@
             };
             img.onerror = function () {
                 img.style.display = 'none';
+                showReviewTools(false);
                 hideFinalRect();
             };
             img.src = src;
@@ -357,6 +544,7 @@
                 if (img) {
                     img.style.display = 'none';
                 }
+                showReviewTools(false);
                 if (stageWrap) {
                     stageWrap.style.display = 'none';
                 }
