@@ -68,6 +68,7 @@
                             
                             <!-- Quick Actions -->
                             <div class="actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="<?= base_url('program-admin/data-guide/' . $program['id']) ?>" class="btn btn-secondary btn-sm" title="คู่มือข้อมูล AUN-QA ลิงก์ไปกรอกแท็บ">คู่มือข้อมูล AUN</a>
                                 <a href="<?= base_url('program-admin/edit/' . $program['id']) ?>" class="btn btn-primary btn-sm">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />

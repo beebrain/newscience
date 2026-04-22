@@ -444,11 +444,13 @@ $routes->group('api', function ($routes) {
 $routes->group('program-admin', ['filter' => 'programadmin'], function ($routes) {
     $routes->get('/', 'Admin\ProgramAdmin\Dashboard::index');
     $routes->get('edit/(:num)', 'Admin\ProgramAdmin\Dashboard::edit/$1');
+    $routes->get('data-guide/(:num)', 'Admin\ProgramAdmin\Dashboard::dataGuide/$1');
     $routes->post('update/(:num)', 'Admin\ProgramAdmin\Dashboard::update/$1');
     $routes->post('update-page/(:num)', 'Admin\ProgramAdmin\Dashboard::updatePage/$1');
     $routes->post('update-page-json/(:num)', 'Admin\ProgramAdmin\Dashboard::updatePageJson/$1');
     $routes->post('update-website/(:num)', 'Admin\ProgramAdmin\Dashboard::updateWebsite/$1');
     $routes->post('upload-hero/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadHero/$1');
+    $routes->post('upload-page-media/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadPageMedia/$1');
     $routes->post('upload-alumni-photo/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadAlumniPhoto/$1');
     $routes->get('downloads/(:num)', 'Admin\ProgramAdmin\Dashboard::downloads/$1');
     $routes->post('upload-download/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadDownload/$1');

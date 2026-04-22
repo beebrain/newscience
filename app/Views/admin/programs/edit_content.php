@@ -6,6 +6,7 @@
     <div class="news-page-header" style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--color-gray-200);">
         <div class="card-header">
             <h2><?= esc($page_title) ?></h2>
+            <p class="form-text text-muted" style="margin: 0.35rem 0 0; font-size: 0.875rem; max-width: 52rem;">แก้ไขผ่านหน้าเว็บนี้ทั้งหมด ไม่ต้องนำเข้าไฟล์แบบพิเศษ หรือรู้เรื่องเทคนิคคอมพิวเตอร์ — หลังแก้ไข ใช้ปุ่ม <strong>ดูตัวอย่าง</strong> ด้านบนเพื่อตรวจสอบ</p>
             <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                 <a href="<?= base_url('program-admin') ?>" class="btn btn-secondary btn-sm">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -14,6 +15,7 @@
                     </svg>
                     กลับ
                 </a>
+                <a href="<?= base_url('program-admin/data-guide/' . $program['id']) ?>" class="btn btn-secondary btn-sm" title="รายการข้อมูลที่ควรเผยแพร่ (อ้างอิง AUN-QA)">คู่มือข้อมูล</a>
                 <a href="<?= base_url('program-admin/preview/' . $program['id']) ?>" class="btn btn-outline btn-sm" target="_blank">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -43,7 +45,7 @@
                     <line x1="16" y1="17" x2="8" y2="17" />
                     <polyline points="10 9 9 9 8 9" />
                 </svg>
-                เนื้อหาหลักสูตร
+                เนื้อหาเว็บหลักสูตร
             </button>
             <button type="button" class="tab-button" data-tab="alumni" onclick="switchTab('alumni')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -106,6 +108,7 @@
 
                     <div class="form-section">
                         <h4 class="form-section-title">ข้อมูลพื้นฐาน</h4>
+                        <p class="form-text text-muted program-edit-tab-hint" style="font-size: 0.875rem; margin-bottom: 1rem;">บนหน้าเว็บหลักสูตร ส่วนนี้สอดคล้องกับชื่อ/ระดับหลักสูตร และ <strong>รูปหน้าปก</strong> บริเวณต้อนรับ (ด้านบนสุดของหน้า)</p>
 
                         <div class="form-row">
                             <div class="form-group">
@@ -145,7 +148,8 @@
                         ?>
                         <div class="form-group hero-basic-wrap">
                             <label class="form-label">รูปหน้าปกหลักสูตร</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">ใช้เป็นภาพหน้าปกบนหน้าเว็บหลักสูตร แนะนำอัตราส่วน 16:9 (กว้าง 1920px ขึ้นไป) ลากวางหรือเลือกไฟล์แล้วครอปให้พอดี</p>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">ใช้เป็นภาพบริเวณต้อนรับ/หน้าจอแรกของหลักสูตร (ไม่ใช่รูปประกอบในย่อหน้า — รูปในข้อความใช้กล่อง <strong>แทรกในเนื้อหา</strong> ในแท็บเนื้อหา) แนะนำอัตราส่วน 16:9 กว้างประมาณ 1920px ขึ้นไป ลากวางหรือเลือกไฟล์แล้วครอป</p>
+                            <p class="admin-upload-hint" style="font-size: 0.8125rem; color: var(--color-gray-600); margin: 0 0 0.5rem;">รองรับ: JPG, PNG, WEBP, GIF</p>
                             <div id="hero-basic-preview" class="hero-basic-preview" style="<?= $heroBasicUrl ? '' : 'display:none;' ?> margin-bottom: 0.75rem;">
                                 <img id="hero-basic-img" src="<?= esc($heroBasicUrl) ?>" alt="หน้าปกปัจจุบัน" style="max-width: 100%; max-height: 220px; width: auto; object-fit: contain; border: 1px solid var(--color-gray-200); border-radius: 8px;">
                                 <div style="margin-top: 0.5rem;">
@@ -175,14 +179,47 @@
                 </form>
             </div>
 
-            <!-- Content Tab -->
+            <!-- Content Tab — แบ่งแท็บย่อยตาม Section -->
             <div id="content-tab" class="tab-content">
-                <form id="content-page-form" action="<?= base_url('program-admin/update-page/' . $program['id']) ?>" method="post" enctype="multipart/form-data" style="padding: 1.5rem;">
+                <form id="content-page-form" action="<?= base_url('program-admin/update-page/' . $program['id']) ?>" method="post" enctype="multipart/form-data" style="padding: 0;">
                     <?= csrf_field() ?>
+                    <?php
+                    helper('program_page');
+                    $ls_initial = parse_learning_standards_json($program_page['learning_standards_json'] ?? null);
+                    ?>
 
-                    <div class="form-section">
-                        <h4 class="form-section-title">เนื้อหาหลักสูตร</h4>
+                    <p class="content-tab-intro" style="margin: 0; padding: 0.75rem 1.5rem; font-size: 0.875rem; color: var(--color-gray-600); background: var(--color-gray-50); border-bottom: 1px solid var(--color-gray-200);">
+                        แต่ละแท็บย่อย = กลุ่มข้อมูลบนหน้าเว็บ (แยกกัน ไม่งง) ปุ่ม <strong>บันทึกเนื้อหา</strong> ด้านล่างสุดจะบันทึก <strong>ทุกช่อง</strong> ในฟอร์มนี้ครั้งเดียว หรือใช้ปุ่มบันทึกเฉพาะส่วน (มาตรฐาน, PLO, แผนการเรียน, ฯลฯ) ตามที่แสดง — ลิงก์ตรงมายังแท็บ: <code style="font-size:0.8em">?tab=content&amp;sub=overview|quality|curriculum|pages|publish</code>
+                    </p>
 
+                    <div class="content-subtab-bar" role="tablist" aria-label="แท็บย่อยเนื้อหาหลักสูตร">
+                        <button type="button" class="content-subtab-btn active" data-content-sub="overview" role="tab" aria-selected="true" onclick="switchContentSubTab('overview')">1. ภาพรวม</button>
+                        <button type="button" class="content-subtab-btn" data-content-sub="quality" role="tab" aria-selected="false" onclick="switchContentSubTab('quality')">2. มาตรฐาน &amp; PLO</button>
+                        <button type="button" class="content-subtab-btn" data-content-sub="curriculum" role="tab" aria-selected="false" onclick="switchContentSubTab('curriculum')">3. แผนการเรียน</button>
+                        <button type="button" class="content-subtab-btn" data-content-sub="pages" role="tab" aria-selected="false" onclick="switchContentSubTab('pages')">4. อาชีพ · รับสมัคร · ติดต่อ</button>
+                        <button type="button" class="content-subtab-btn" data-content-sub="publish" role="tab" aria-selected="false" onclick="switchContentSubTab('publish')">5. เผยแพร่ &amp; หน้าเว็บ</button>
+                    </div>
+
+                    <details class="program-edit-ia" style="margin: 0; padding: 0.65rem 1.5rem; font-size: 0.8125rem; color: var(--color-gray-700); background: #fff; border-bottom: 1px solid var(--color-gray-200);">
+                        <summary style="cursor: pointer; font-weight: 500;">แสดงแผนผัง: ส่วนในหน้าเว็บ กับ แท็บแก้ไข (คลิก)</summary>
+                        <ul style="margin: 0.5rem 0 0 1.1rem; padding: 0; line-height: 1.6;">
+                            <li><strong>บริเวณต้อนรับ + รูปใหญ่ด้านบน</strong> → แท็บ <em>ข้อมูลพื้นฐาน</em> (รูปหน้าปก)</li>
+                            <li><strong>เกี่ยวกับหลักสูตร</strong> (ปรัชญา วัตถุประสงค์ ฯลฯ) → แท็บนี้ แท็บย่อย 1. ภาพรวม</li>
+                            <li><strong>มาตรฐานการเรียนรู้ / ผลลัพธ์ PLO</strong> → แท็บย่อย 2</li>
+                            <li><strong>รายวิชา โครงสร้าง แผนการเรียน</strong> → แท็บย่อย 3</li>
+                            <li><strong>อาชีพ ค่าใช้จ่าย รับสมัคร ติดต่อ วิดีโอ</strong> → แท็บย่อย 4</li>
+                            <li><strong>เผยแพร่บนหน้าเว็บ + คำอธิบายการค้นหา (SEO)</strong> → แท็บย่อย 5</li>
+                            <li><strong>เอกสารแนบอื่น</strong> (Word, สไลด์, Zip ฯลฯ) → แท็บ <em>ดาวน์โหลด</em> แล้วอาจลิงก์มาจากเนื้อหา</li>
+                            <li><strong>ข่าว / บุคลากร / สีเว็บ</strong> → แท็บ <em>ข่าวหลักสูตร / บุคลากร / การตั้งค่าเว็บไซต์</em> ตามลำดับ</li>
+                        </ul>
+                    </details>
+
+                    <div class="content-subtab-panels" style="padding: 1.5rem;">
+
+                    <div id="content-sub-overview" class="content-subpanel active" role="tabpanel">
+                        <div class="form-section">
+                            <h4 class="form-section-title">ภาพรวมหลักสูตร</h4>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">นี่คือส่วน <strong>เกี่ยวกับหลักสูตร</strong> บนหน้าเว็บ (ปรัชญา วัตถุประสงค์ คุณลักษณะบัณฑิต)</p>
                         <div class="form-group">
                             <label for="philosophy" class="form-label">ปรัชญาหลักสูตร</label>
                             <textarea id="philosophy" name="philosophy" class="form-control" rows="4"><?= esc($program_page['philosophy'] ?? '') ?></textarea>
@@ -197,14 +234,16 @@
                             <label for="graduate_profile" class="form-label">คุณลักษณะบัณฑิต</label>
                             <textarea id="graduate_profile" name="graduate_profile" class="form-control" rows="4"><?= esc($program_page['graduate_profile'] ?? '') ?></textarea>
                         </div>
+                        </div>
+                    </div>
 
-                        <?php
-                        helper('program_page');
-                        $ls_initial = parse_learning_standards_json($program_page['learning_standards_json'] ?? null);
-                        ?>
+                    <div id="content-sub-quality" class="content-subpanel" role="tabpanel">
+                        <div class="form-section">
+                            <h4 class="form-section-title">มาตรฐานการเรียนรู้ &amp; PLO / ELO</h4>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">บนหน้าเว็บ: กล่องมาตรฐานการเรียนรู้ / ตารางเชื่อม PLO กับมาตรฐาน และรายการผลลัพธ์การเรียนรู้ — กดปุ่ม <strong>บันทึก</strong> สีน้ำเงินแยกวินาที (ไม่บังคับรอปุ่มบันทึกเนื้อหาใหญ่)</p>
                         <div class="form-group learning-standards-editor-wrap">
                             <label class="form-label">มาตรฐานการเรียนรู้ (Learning Standards)</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">แสดงคู่กับ PLO บนหน้า program-detail — คำนำ + รายการมาตรฐาน + ตารางเชื่อมโยง PLO (ถ้ามี)</p>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">แสดงคู่กับ PLO บนหน้าเว็บ — คำนำ + รายการมาตรฐาน + ตารางเชื่อมโยง (ถ้ามี)</p>
                             <div class="form-group">
                                 <label for="learning-standards-intro" class="form-label">คำอธิบาย / ความสัมพันธ์ PLO กับมาตรฐาน (ไม่บังคับ)</label>
                                 <textarea id="learning-standards-intro" class="form-control" rows="3" placeholder="เช่น หลักสูตรอ้างอิงมาตรฐานการเรียนรู้ของ... และกำหนด PLO ให้สอดคล้องกับ..."><?= esc($ls_initial['intro'] ?? '') ?></textarea>
@@ -233,7 +272,7 @@
                         ?>
                         <div class="form-group elos-editor-wrap">
                             <label class="form-label">PLO / ELO (ผลลัพธ์การเรียนรู้ระดับหลักสูตร)</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">สำหรับหน้า AUN-QA program-detail — กรอกหมวด (เช่น PLO1) และรายละเอียด แล้วกดบันทึกได้ทันที</p>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">กรอกหมวด (เช่น PLO1) และรายละเอียด แสดงบนหน้าเว็บ แล้วกดบันทึกแยกได้</p>
                             <div id="elos-list" class="elos-list" data-initial="<?= htmlspecialchars(json_encode($elos_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
                             <div class="elos-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button type="button" class="btn btn-outline btn-sm" id="elos-add-btn">+ เพิ่ม ELO</button>
@@ -242,7 +281,13 @@
                             </div>
                             <textarea id="elos_json" name="elos_json" class="form-control" style="display: none;" aria-hidden="true"><?= esc($program_page['elos_json'] ?? '') ?></textarea>
                         </div>
+                        </div>
+                    </div>
 
+                    <div id="content-sub-curriculum" class="content-subpanel" role="tabpanel">
+                        <div class="form-section">
+                            <h4 class="form-section-title">แผนการเรียน / รายวิชา &amp; ข้อความโครงสร้าง</h4>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">บนหน้าเว็บ: บล็อก <strong>รายวิชาโครงสร้าง</strong> และ <strong>โครงสร้าง/แผนการเรียน</strong> (ข้อความเสริม) ไฟล์ Word/สไลด์ให้นักศึกษาโหลด → อัปโหลดที่แท็บ <strong>ดาวน์โหลด</strong></p>
                         <?php
                         $curriculum_initial = [];
                         if (!empty($program_page['curriculum_json'])) {
@@ -251,8 +296,8 @@
                         }
                         ?>
                         <div class="form-group curriculum-editor-wrap">
-                            <label class="form-label">หลักสูตร/แผนการเรียน</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">สำหรับหน้า AUN-QA program-detail — เพิ่มปี/ภาคเรียน/วิชา แล้วกดบันทึกแผนการเรียน</p>
+                            <label class="form-label">หลักสูตร/แผนการเรียน (รายวิชารายปี)</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">เพิ่มปี ภาคเรียน รายวิชา แล้วกดบันทึกแผนการเรียน (แสดงเป็นตารางบนหน้าเว็บ)</p>
                             <div id="curriculum-list" class="curriculum-list" data-initial="<?= htmlspecialchars(json_encode($curriculum_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
                             <div class="curriculum-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button type="button" class="btn btn-outline btn-sm" id="curriculum-add-year-btn">+ เพิ่มปี</button>
@@ -263,8 +308,8 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="curriculum_structure" class="form-label">โครงสร้างหลักสูตร</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
+                            <label for="curriculum_structure" class="form-label">โครงสร้างหลักสูตร (HTML)</label>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">อัปโหลดรูป/PDF แทรกในช่อง HTML ใช้กล่อง <strong>อัปโหลดแทรกในเนื้อหา</strong> ในแท็บย่อย 4 (หรือสลับไปแท็บ 4 แล้วเลือกช่อง &quot;โครงสร้าง/แผนการเรียน&quot; เป็นปลายทาง)</p>
                             <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
@@ -280,7 +325,7 @@
                         </div>
 
                         <div class="form-group content-with-toolbar">
-                            <label for="study_plan" class="form-label">แผนการเรียน</label>
+                            <label for="study_plan" class="form-label">แผนการเรียน (HTML)</label>
                             <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
                             <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
@@ -290,6 +335,46 @@
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
                             </div>
                             <textarea id="study_plan" name="study_plan" class="form-control" rows="6"><?= esc($program_page['study_plan'] ?? '') ?></textarea>
+                        </div>
+                        </div>
+                    </div>
+
+                    <div id="content-sub-pages" class="content-subpanel" role="tabpanel">
+                        <div class="form-section">
+                            <h4 class="form-section-title">อาชีพ · ค่าใช้จ่าย · รับสมัคร · ติดต่อ · วิดีโอ</h4>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">นี่คือเนื้อหา HTML สำหรับย่อหน้าส่วน <strong>อาชีพ ค่าใช้จ่าย รับสมัคร ติดต่อ</strong> บนหน้าเว็บ — กล่องด้านล่างใช้ <strong>แทรกรูปหรือ PDF ในข้อความ</strong> เท่านั้น</p>
+
+                        <div class="form-section admin-upload-panel" style="background: var(--color-gray-50); border: 1px solid var(--color-gray-200); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+                            <h5 class="form-section-title" style="font-size: 1rem; margin-top: 0;">อัปโหลดแทรกในเนื้อหา (รูปหรือ PDF)</h5>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">ระบบจะสร้างรูปหรือลิงก์ PDF ใส่ในช่องที่เลือก ที่ตำแหน่งเคอร์เซอร์ (หรือต่อท้ายถ้ายังไม่ได้คลิกในช่อง) แล้วกด <strong>บันทึกเนื้อหา</strong> ด้านล่าง</p>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">ต้องการอัปโหลด <strong>Word, Excel, PowerPoint, Zip</strong> หรือไฟล์อื่นที่นักศึกษาโหลดทั้งก้อน? ใช้แท็บ <a href="javascript:void(0)" class="link-to-downloads-tab" style="color: var(--color-primary, #2563eb); font-weight: 500;">ดาวน์โหลด</a> แล้วนำ <strong>ลิงก์</strong> มาวางในช่องนี้ (หรือพิมพ์ข้อความอ้างอิง)</p>
+                            <p class="admin-upload-hint" style="font-size: 0.8125rem; color: var(--color-gray-600); margin: 0 0 0.75rem;">รองรับเฉพาะ: JPG, PNG, WEBP, GIF, PDF — ไม่เกิน 15 MB ต่อไฟล์</p>
+                            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+                                <div class="form-group" style="flex: 1; min-width: 200px;">
+                                    <label for="page-media-insert-target" class="form-label">แทรกในช่อง</label>
+                                    <select id="page-media-insert-target" class="form-control">
+                                        <option value="curriculum_structure">โครงสร้างหลักสูตร</option>
+                                        <option value="study_plan">แผนการเรียน</option>
+                                        <option value="career_prospects">อาชีพที่สามารถประกอบได้</option>
+                                        <option value="tuition_fees">ค่าเล่าเรียน/ค่าธรรมเนียม</option>
+                                        <option value="admission_info">การรับสมัคร</option>
+                                        <option value="contact_info">ข้อมูลติดต่อ</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 200px;">
+                                    <label for="page-media-file" class="form-label">เลือกไฟล์</label>
+                                    <input type="file" id="page-media-file" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf">
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.5rem;">
+                                <button type="button" class="btn btn-primary btn-sm" id="page-media-upload-btn">อัปโหลดและแทรก</button>
+                                <span id="page-media-msg" class="ajax-msg" aria-live="polite"></span>
+                            </div>
+                            <div id="page-media-result" style="display: none; margin-top: 0.75rem; padding: 0.75rem; background: #fff; border-radius: 6px; border: 1px solid var(--color-gray-200); font-size: 0.8125rem;">
+                                <div style="word-break: break-all; margin-bottom: 0.5rem;"><strong>URL:</strong> <code id="page-media-url"></code></div>
+                                <button type="button" class="btn btn-outline btn-sm" id="page-media-copy-img">คัดลอกโค้ด &lt;img&gt;</button>
+                                <button type="button" class="btn btn-outline btn-sm" id="page-media-copy-link">คัดลอกโค้ดลิงก์</button>
+                            </div>
                         </div>
 
                         <div class="form-group content-with-toolbar">
@@ -348,9 +433,15 @@
                             <label for="intro_video_url" class="form-label">วิดีโอแนะนำ</label>
                             <input type="url" id="intro_video_url" name="intro_video_url" class="form-control" value="<?= esc($program_page['intro_video_url'] ?? '') ?>" placeholder="https://youtube.com/watch?v=...">
                         </div>
+                        </div>
+                    </div>
 
-                        <div class="form-section" style="margin-top: 1.5rem;">
-                            <h4 class="form-section-title">หน้าตัวแทนหลักสูตร (SPA)</h4>
+                    <div id="content-sub-publish" class="content-subpanel" role="tabpanel">
+                        <div class="form-section">
+                            <h4 class="form-section-title">เผยแพร่ &amp; หน้าเว็บหลักสูตร</h4>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">นี่คือส่วน <strong>เปิดหรือปิดการแสดง</strong> บนหน้าเว็บ กับ <strong>คำอธิบาย</strong> สำหรับการค้นหา รูปหน้าปกแบบลาก-ครอปใช้ที่แท็บ <strong>ข้อมูลพื้นฐาน</strong> — ด้านล่างอัปโหลด/ลบรูปผ่านปุ่มบันทึกเนื้อหา</p>
+                        <div class="form-section" style="margin-top: 0;">
+                            <h5 class="form-section-title" style="font-size: 1rem;">รูปหน้าปก (Hero) สำหรับบันทึกรวม</h5>
                             <div class="form-group">
                                 <label class="form-label">รูปหน้าปกหลักสูตร (Hero)</label>
                                 <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">ใช้แสดงเป็นพื้นหลังส่วน Hero บนหน้าเว็บหลักสูตร (แนะนำขนาดกว้าง 1920px ขึ้นไป)</p>
@@ -393,8 +484,12 @@
                             <label for="meta_description" class="form-label">คำอธิบายสำหรับ SEO</label>
                             <textarea id="meta_description" name="meta_description" class="form-control" rows="2" placeholder="คำอธิบายสำหรับแสดงในผลการค้นหา"><?= esc($program_page['meta_description'] ?? '') ?></textarea>
                         </div>
+                        </div>
+                    </div>
 
-                        <div class="form-actions">
+                    </div><!-- /.content-subtab-panels -->
+
+                        <div class="form-actions" style="padding: 1rem 1.5rem 1.5rem; border-top: 1px solid var(--color-gray-200); background: var(--color-gray-50);">
                             <button type="submit" class="btn btn-primary" id="content-save-btn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
@@ -406,7 +501,6 @@
                             </button>
                             <span id="content-ajax-msg" class="ajax-msg" aria-live="polite"></span>
                         </div>
-                    </div>
                 </form>
             </div>
 
@@ -424,7 +518,7 @@
                 <div style="padding: 1.5rem;">
                     <div class="form-section">
                         <h4 class="form-section-title">ศิษย์เก่าถึงรุ่นน้อง</h4>
-                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">เพิ่มข้อความจากศิษย์เก่า (ข้อความที่ฝากถึง รูป ตำแหน่งงาน สถานที่ทำงาน ปีที่จบ) แล้วกดบันทึก</p>
+                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">บนหน้าเว็บ: ส่วน <strong>ศิษย์เก่าถึงรุ่นน้อง</strong> — เพิ่มข้อความ รูป งาน/สถานที่/ปีที่จบ แล้วกดบันทึก</p>
                         <div id="alumni-list" class="alumni-list" data-initial="<?= htmlspecialchars(json_encode($alumni_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
                         <div class="alumni-actions" style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
                             <button type="button" class="btn btn-outline btn-sm" id="alumni-add-btn">+ เพิ่มคน</button>
@@ -440,11 +534,12 @@
                 <div style="padding: 1.5rem;">
                     <div class="section-header" style="margin-bottom: 1.5rem;">
                         <h4>เอกสารดาวน์โหลด</h4>
-                        <p style="color: var(--color-gray-600);">จัดการไฟล์เอกสารสำหรับนักศึกษาดาวน์โหลด</p>
+                        <p style="color: var(--color-gray-600);">ไฟล์สำหรับนักศึกษาโหลดเก็บ (Word, สไลด์, PDF, รูป, Zip ฯลฯ) แยกจากการแทรกรูป/PDF ในย่อหน้า — อัปโหลดที่นี่แล้วนำ <strong>ลิงก์</strong> ไปวางในช่องเนื้อหาได้</p>
                     </div>
+                    <p class="admin-upload-hint" style="font-size: 0.875rem; color: var(--color-gray-600); margin: -0.5rem 0 1rem;">รองรับ: PDF, Word (doc/docx), Excel, PowerPoint, Zip, รูป (JPG/PNG/GIF), MP4, MP3, TXT ตามที่ระบบอนุญาต</p>
 
                     <!-- Upload Form -->
-                    <form action="<?= base_url('program-admin/upload-download/' . $program['id']) ?>" method="post" enctype="multipart/form-data" style="margin-bottom: 2rem;">
+                    <form action="<?= base_url('program-admin/upload-download/' . $program['id']) ?>" method="post" enctype="multipart/form-data" class="admin-upload-panel" style="margin-bottom: 2rem;">
                         <?= csrf_field() ?>
                         <div class="form-row">
                             <div class="form-group" style="flex: 1;">
@@ -537,7 +632,7 @@
                 <div style="padding: 1.5rem;">
                     <div class="section-header" style="margin-bottom: 1.5rem;">
                         <h4>ข่าวหลักสูตร</h4>
-                        <p style="color: var(--color-gray-600);">ข่าวที่แท็กกับหลักสูตรนี้ (ค่าเริ่มต้นจะแท็กหลักสูตรปัจจุบัน)</p>
+                        <p style="color: var(--color-gray-600);">บนหน้าเว็บ: กล่อง <strong>ข่าวสาร &amp; ประชาสัมพันธ์</strong> — ข่าวที่เชื่อมกับหลักสูตรนี้ (สร้างข่าวใหม่จะติดแท็กหลักสูตรเดิม)</p>
                     </div>
                     <div id="program-news-list" style="margin-bottom: 2rem;">
                         <p style="color: var(--color-gray-500);">กำลังโหลด...</p>
@@ -666,7 +761,7 @@
                 <div style="padding: 1.5rem;">
                     <div class="section-header" style="margin-bottom: 1.5rem;">
                         <h4>บุคลากรหลักสูตร</h4>
-                        <p style="color: var(--color-gray-600);">ประธานหลักสูตรและอาจารย์ประจำหลักสูตร</p>
+                        <p style="color: var(--color-gray-600);">บนหน้าเว็บ: ส่วน <strong>คณาจารย์ประจำหลักสูตร</strong> (ข้อมูลอ้างอิงจากระบบบุคลากร แก้รายละเอียดรายบุคคลผ่านผู้ดูแลระบบ)</p>
                     </div>
 
                     <!-- Coordinator -->
@@ -727,7 +822,7 @@
                     <?= csrf_field() ?>
                     <div class="form-section">
                         <h4 class="form-section-title">การตั้งค่าเว็บไซต์หลักสูตร</h4>
-                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">กำหนดสีธีม สีข้อความ และสีพื้นหลังของหน้าเว็บหลักสูตร (SPA)</p>
+                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">กำหนดสีธีม สีตัวอักษร และสีพื้นหลังของ <strong>หน้าเว็บหลักสูตร</strong> ที่ผู้เยี่ยมชมเห็น</p>
 
                         <div class="form-group" style="margin-bottom: 1.25rem;">
                             <label for="theme_color_hex" class="form-label">สีธีมหลักสูตร</label>
@@ -882,14 +977,66 @@
 
 <!-- JavaScript for Tab Navigation -->
 <script>
-    function switchTab(tabName) {
+    function getActiveMainTab() {
+        var b = document.querySelector('.tab-button.active');
+        return b && b.getAttribute('data-tab') ? b.getAttribute('data-tab') : 'basic';
+    }
+
+    function getActiveContentSub() {
+        var b = document.querySelector('.content-subtab-btn.active');
+        return b && b.getAttribute('data-content-sub') ? b.getAttribute('data-content-sub') : 'overview';
+    }
+
+    function syncProgramEditUrl() {
+        var t = getActiveMainTab();
+        if (!t || t === 'activities') { return; }
+        var u = new URL(window.location.href);
+        u.search = '';
+        u.searchParams.set('tab', t);
+        if (t === 'content') {
+            u.searchParams.set('sub', getActiveContentSub());
+        }
+        var newUrl = u.pathname + u.search;
+        if (newUrl === window.location.pathname + window.location.search) { return; }
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', newUrl);
+        }
+    }
+
+    function switchContentSubTab(sub, opts) {
+        opts = opts || {};
+        document.querySelectorAll('.content-subpanel').forEach(function (el) {
+            el.classList.remove('active');
+        });
+        document.querySelectorAll('.content-subtab-btn').forEach(function (btn) {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
+        });
+        var panel = document.getElementById('content-sub-' + sub);
+        var btn = document.querySelector('.content-subtab-btn[data-content-sub="' + sub + '"]');
+        if (panel) panel.classList.add('active');
+        if (btn) {
+            btn.classList.add('active');
+            btn.setAttribute('aria-selected', 'true');
+        }
+        try {
+            sessionStorage.setItem('programEditContentSub', sub);
+        } catch (e) { /* ignore */ }
+        if (!opts.skipUrl && getActiveMainTab() === 'content') {
+            syncProgramEditUrl();
+        }
+    }
+
+    function switchTab(tabName, opts) {
+        opts = opts || {};
+        if (!document.getElementById(tabName + '-tab')) { return; }
         // Hide all tabs
-        document.querySelectorAll('.tab-content').forEach(tab => {
+        document.querySelectorAll('.tab-content').forEach(function (tab) {
             tab.classList.remove('active');
         });
 
         // Remove active class from all buttons
-        document.querySelectorAll('.tab-button').forEach(button => {
+        document.querySelectorAll('.tab-button').forEach(function (button) {
             button.classList.remove('active');
         });
 
@@ -897,8 +1044,100 @@
         document.getElementById(tabName + '-tab').classList.add('active');
 
         // Add active class to clicked button
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        var mainBtn = document.querySelector('.tab-button[data-tab="' + tabName + '"]');
+        if (mainBtn) { mainBtn.classList.add('active'); }
+
+        if (tabName === 'content') {
+            var sub = 'overview';
+            try {
+                var saved = sessionStorage.getItem('programEditContentSub');
+                if (saved && document.getElementById('content-sub-' + saved)) {
+                    sub = saved;
+                }
+            } catch (e) { /* ignore */ }
+            switchContentSubTab(sub, { skipUrl: opts.skipUrl });
+        } else if (!opts.skipUrl) {
+            syncProgramEditUrl();
+        }
     }
+
+    (function initPageMediaUpload() {
+        var uploadUrl = '<?= base_url('program-admin/upload-page-media/' . (int)($program['id'] ?? 0)) ?>';
+        var lastSnippetImg = '';
+        var lastSnippetLink = '';
+        function insertAtCursorTextarea(el, text) {
+            if (!el || text == null || text === '') return;
+            el.focus();
+            var start = typeof el.selectionStart === 'number' ? el.selectionStart : el.value.length;
+            var end = typeof el.selectionEnd === 'number' ? el.selectionEnd : el.value.length;
+            el.value = el.value.slice(0, start) + text + el.value.slice(end);
+            var pos = start + text.length;
+            if (typeof el.setSelectionRange === 'function') el.setSelectionRange(pos, pos);
+        }
+        function focusTargetSubpanel(targetId) {
+            if (targetId === 'curriculum_structure' || targetId === 'study_plan') {
+                switchContentSubTab('curriculum');
+            } else {
+                switchContentSubTab('pages');
+            }
+        }
+        document.getElementById('page-media-upload-btn') && document.getElementById('page-media-upload-btn').addEventListener('click', function () {
+            var fileInput = document.getElementById('page-media-file');
+            var targetSel = document.getElementById('page-media-insert-target');
+            var msg = document.getElementById('page-media-msg');
+            var result = document.getElementById('page-media-result');
+            if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+                if (msg) { msg.textContent = 'กรุณาเลือกไฟล์'; msg.style.color = 'var(--color-error)'; }
+                return;
+            }
+            var form = document.getElementById('content-page-form');
+            var csrf = form && form.querySelector('input[name*="csrf"]');
+            var fd = new FormData();
+            fd.append('file', fileInput.files[0]);
+            if (csrf) fd.append(csrf.name, csrf.value);
+            var btn = this;
+            btn.disabled = true;
+            if (msg) { msg.textContent = 'กำลังอัปโหลด...'; msg.style.color = ''; }
+            fetch(uploadUrl, { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    btn.disabled = false;
+                    if (!res.success) {
+                        if (msg) { msg.textContent = res.message || 'อัปโหลดไม่สำเร็จ'; msg.style.color = 'var(--color-error)'; }
+                        return;
+                    }
+                    lastSnippetImg = res.snippet_img || '';
+                    lastSnippetLink = res.snippet_link || '';
+                    var targetId = targetSel ? targetSel.value : 'contact_info';
+                    var ta = document.getElementById(targetId);
+                    var snippet = res.is_image ? lastSnippetImg : lastSnippetLink;
+                    focusTargetSubpanel(targetId);
+                    if (ta) insertAtCursorTextarea(ta, snippet);
+                    if (msg) { msg.textContent = 'อัปโหลดแล้ว — แทรกในช่องที่เลือกแล้ว (อย่าลืมกดบันทึกเนื้อหา)'; msg.style.color = 'var(--secondary)'; }
+                    if (result) {
+                        result.style.display = 'block';
+                        var urlEl = document.getElementById('page-media-url');
+                        if (urlEl) urlEl.textContent = res.url || '';
+                    }
+                    fileInput.value = '';
+                })
+                .catch(function () {
+                    btn.disabled = false;
+                    if (msg) { msg.textContent = 'เชื่อมต่อไม่สำเร็จ'; msg.style.color = 'var(--color-error)'; }
+                });
+        });
+        function copyText(t) {
+            if (!t) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(t).then(function () {
+                    var msg = document.getElementById('page-media-msg');
+                    if (msg) { msg.textContent = 'คัดลอกแล้ว'; msg.style.color = 'var(--secondary)'; }
+                });
+            }
+        }
+        document.getElementById('page-media-copy-img') && document.getElementById('page-media-copy-img').addEventListener('click', function () { copyText(lastSnippetImg); });
+        document.getElementById('page-media-copy-link') && document.getElementById('page-media-copy-link').addEventListener('click', function () { copyText(lastSnippetLink); });
+    })();
 
     function confirmDelete(url) {
         swalConfirm({ title: 'คุณแน่ใจว่าต้องการลบไฟล์นี้?', confirmText: 'ลบ', cancelText: 'ยกเลิก' }).then(function(ok) {
@@ -1137,29 +1376,35 @@
         }
     })();
 
-    // Initialize first tab (or tab from query string)
+    // Initialize first tab (or tab from query string ?tab= & sub= สำหรับเนื้อหา)
     document.addEventListener('DOMContentLoaded', function() {
         var params = new URLSearchParams(window.location.search);
         var tab = params.get('tab');
-        if (tab === 'news' && document.getElementById('news-tab')) {
-            switchTab('news');
-            loadProgramNews();
-            setTimeout(initNewsCKEditor, 100);
-        } else if (tab === 'website' && document.getElementById('website-tab')) {
-            switchTab('website');
-        } else if (tab === 'alumni' && document.getElementById('alumni-tab')) {
-            switchTab('alumni');
+        var sub = params.get('sub');
+        var validTabs = ['basic', 'content', 'alumni', 'downloads', 'news', 'personnel', 'website'];
+        var contentSubs = ['overview', 'quality', 'curriculum', 'pages', 'publish'];
+        if (tab === 'content' && sub && contentSubs.indexOf(sub) >= 0) {
+            try { sessionStorage.setItem('programEditContentSub', sub); } catch (e) { /* ignore */ }
+        }
+        if (tab && validTabs.indexOf(tab) >= 0 && document.getElementById(tab + '-tab')) {
+            switchTab(tab, { skipUrl: false });
         } else {
-            switchTab('basic');
+            switchTab('basic', { skipUrl: !params.get('tab') });
         }
         document.getElementById('program-news-form') && document.getElementById('program-news-form').addEventListener('submit', function() {
             ensureNewsEditorSync();
         });
+        document.querySelectorAll('.link-to-downloads-tab').forEach(function (el) {
+            el.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (typeof switchTab === 'function') { switchTab('downloads'); }
+            });
         });
+    });
     var origSwitchTab = window.switchTab;
     if (typeof origSwitchTab === 'function') {
-        window.switchTab = function(tabName) {
-            origSwitchTab(tabName);
+        window.switchTab = function(tabName, opts) {
+            origSwitchTab(tabName, opts);
             if (tabName === 'news') { loadProgramNews(); setTimeout(initNewsCKEditor, 100); }
         };
     }
@@ -1254,6 +1499,40 @@
         border-bottom-color: var(--secondary);
         background: white;
     }
+
+    .content-subtab-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        padding: 0.65rem 1rem;
+        border-bottom: 1px solid var(--color-gray-200);
+        background: var(--color-gray-100);
+    }
+    .content-subtab-btn {
+        border: 1px solid transparent;
+        background: transparent;
+        padding: 0.45rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.8125rem;
+        color: var(--color-gray-700);
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .content-subtab-btn:hover { background: var(--color-gray-200); }
+    .content-subtab-btn.active {
+        background: #fff;
+        border-color: var(--color-gray-300);
+        font-weight: 600;
+        color: var(--secondary);
+    }
+    .content-subpanel { display: none; }
+    .content-subpanel.active { display: block; }
+
+    .admin-upload-hint { line-height: 1.45; }
+    .admin-upload-panel { box-sizing: border-box; }
+    .program-edit-ia summary { list-style: none; }
+    .program-edit-ia summary::-webkit-details-marker { display: none; }
+    .program-edit-ia[open] { background: var(--color-gray-50) !important; }
 
     .tab-content-container {
         background: white;

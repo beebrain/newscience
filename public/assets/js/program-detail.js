@@ -205,9 +205,11 @@
 
         $.each(data.curriculum, function (i, year) {
             var semestersHtml = '';
-            $.each(year.semesters, function (j, sem) {
+            var semesters = year.semesters || [];
+            $.each(semesters, function (j, sem) {
                 var rows = '';
-                $.each(sem.courses, function (k, c) {
+                var courses = sem.courses || [];
+                $.each(courses, function (k, c) {
                     rows += '<tr>' +
                         '<td>' + escHtml(c.code) + '</td>' +
                         '<td>' + escHtml(c.name) + '</td>' +

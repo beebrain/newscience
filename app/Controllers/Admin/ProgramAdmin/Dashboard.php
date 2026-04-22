@@ -189,6 +189,29 @@ class Dashboard extends BaseController
     }
 
     /**
+     * คู่มือข้อมูลหลักสูตรสำหรับเว็บ (อ้างอิง AUN-QA) — ลิงก์ไปแท็บแอดมิน
+     */
+    public function dataGuide($programId)
+    {
+        $programId = (int) $programId;
+        $program     = $this->programModel->find($programId);
+        if (!$program) {
+            return redirect()->to(base_url('program-admin'))->with('error', 'ไม่พบหลักสูตร');
+        }
+        if (!$this->canManageProgram($programId)) {
+            return redirect()->to(base_url('program-admin'))->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
+        }
+
+        $data = [
+            'page_title' => 'คู่มือข้อมูลหลักสูตร — ' . ($program['name_th'] ?? $program['name_en'] ?? ''),
+            'program'    => $program,
+            'layout'     => 'admin/layouts/admin_layout',
+        ];
+
+        return view('admin/programs/data_guide', $data);
+    }
+
+    /**
      * Edit program content
      */
     public function edit($programId)
@@ -570,6 +593,64 @@ class Dashboard extends BaseController
             'message' => 'อัปโหลดรูปเรียบร้อย',
             'photo_url' => $photoUrl,
             'path' => $relativePath,
+        ]);
+    }
+
+    /**
+     * อัปโหลดรูปหรือ PDF สำหรับแทรกในเนื้อหา HTML (โครงสร้างหลักสูตร ฯลฯ)
+     * POST program-admin/upload-page-media/{id} — field: file
+     */
+    public function uploadPageMedia($programId)
+    {
+        $programId = (int) $programId;
+        if (!$this->programModel->find($programId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบหลักสูตร'])->setStatusCode(404);
+        }
+        if (!$this->canManageProgram($programId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการหลักสูตรนี้'])->setStatusCode(403);
+        }
+
+        $file = $this->request->getFile('file');
+        if (!$file || !$file->isValid()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'กรุณาเลือกไฟล์'])->setStatusCode(400);
+        }
+        if ($file->getSize() > 15 * 1024 * 1024) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไฟล์ต้องไม่เกิน 15 MB'])->setStatusCode(400);
+        }
+
+        $ext = strtolower($file->getExtension() ?: pathinfo($file->getClientName(), PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
+        if (!in_array($ext, $allowed, true)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'รองรับเฉพาะ JPG, PNG, GIF, WEBP, PDF'])->setStatusCode(400);
+        }
+
+        helper('program_upload');
+        $uploadPath = program_upload_path($programId, 'page-media');
+        $filename = 'page_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . ($ext === 'jpeg' ? 'jpg' : $ext);
+        $relativePath = program_upload_relative_path($programId, 'page-media', $filename);
+
+        if (!$file->move($uploadPath, $filename)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'บันทึกไฟล์ไม่สำเร็จ'])->setStatusCode(500);
+        }
+
+        $fullPath = rtrim($uploadPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename;
+        if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+            program_create_image_thumbnail($fullPath);
+        }
+
+        $publicUrl = base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $relativePath), '/'));
+        $isImage = $ext !== 'pdf';
+        $snippetImg = '<p><img src="' . $publicUrl . '" alt="" style="max-width:100%;height:auto;"></p>';
+        $snippetLink = '<p><a href="' . $publicUrl . '" target="_blank" rel="noopener">ดาวน์โหลดเอกสาร (PDF)</a></p>';
+
+        return $this->response->setJSON([
+            'success'       => true,
+            'message'       => 'อัปโหลดไฟล์เรียบร้อย',
+            'url'           => $publicUrl,
+            'is_image'      => $isImage,
+            'snippet_img'   => $snippetImg,
+            'snippet_link'  => $snippetLink,
+            'path'          => $relativePath,
         ]);
     }
 

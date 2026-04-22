@@ -109,6 +109,8 @@ $programAccent = !empty($page['theme_color']) ? $page['theme_color'] : '';
                 <h2 class="pd-section__title">โครงสร้างหลักสูตรและแผนการเรียน</h2>
                 <p class="pd-section__subtitle">Curriculum & Study Plan</p>
             </div>
+            <h3 class="pd-subsection-title">รายวิชาโครงสร้างหลักสูตร</h3>
+            <p class="pd-section__subtitle" style="margin-top:-0.5rem;margin-bottom:1.25rem;">แยกตามปีการศึกษาและภาคเรียน (จากแผนการเรียนในระบบผู้ดูแล)</p>
             <div class="pd-accordion" id="pd-curriculum-accordion"></div>
         </div>
     </section>

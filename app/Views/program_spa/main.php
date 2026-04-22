@@ -170,6 +170,9 @@
         .doc-icon-bg { background: rgba(var(--theme-rgb), 0.1); }
         .doc-icon-fg { color: var(--theme); }
         .doc-row:hover .doc-arrow { color: var(--theme); }
+        /* รายวิชาแยกตามปี — details/summary */
+        #spa-curriculum-by-year details > summary { list-style: none; }
+        #spa-curriculum-by-year details > summary::-webkit-details-marker { display: none; }
     </style>
 </head>
 <body class="min-h-screen antialiased">
@@ -202,6 +205,7 @@
             </button>
             <div id="nav-links" class="hidden md:flex items-center gap-8">
                 <a href="#about" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">เกี่ยวกับ</a>
+                <a href="#curriculum-courses" id="nav-curriculum-courses" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">รายวิชา</a>
                 <a href="#faculty" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">คณาจารย์</a>
                 <a href="#news" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">ข่าวสาร</a>
                 <a href="#alumni" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">ศิษย์เก่า</a>
@@ -213,6 +217,7 @@
         </div>
         <div id="nav-mobile" class="hidden md:hidden border-t border-slate-200 px-6 py-4 space-y-3 bg-white/95">
             <a href="#about" class="block text-slate-600 nav-link-theme">เกี่ยวกับ</a>
+            <a href="#curriculum-courses" id="nav-curriculum-courses-mobile" class="block text-slate-600 nav-link-theme hidden">รายวิชา</a>
             <a href="#faculty" class="block text-slate-600 nav-link-theme">คณาจารย์</a>
             <a href="#news" class="block text-slate-600 nav-link-theme">ข่าวสาร</a>
             <a href="#activities" class="block text-slate-600 nav-link-theme">กิจกรรม</a>
@@ -270,9 +275,14 @@
                 <div id="elos-grid" class="space-y-3 stagger-children"></div>
             </div>
         </div>
-        <div id="about-curriculum" class="mt-16 reveal">
+        <div id="about-curriculum" class="mt-16 reveal hidden">
             <h3 class="text-xl font-semibold section-accent mb-6">โครงสร้างหลักสูตร</h3>
-            <div id="curriculum-content" class="glass rounded-2xl p-8 text-slate-600 leading-relaxed"></div>
+            <div id="curriculum-structure-block" class="glass rounded-2xl p-8 text-slate-600 leading-relaxed mb-10"></div>
+        </div>
+        <div id="curriculum-courses" class="mt-4 reveal hidden">
+            <h3 class="text-xl font-semibold section-accent mb-2">รายวิชาโครงสร้างหลักสูตร</h3>
+            <p class="text-sm text-slate-500 mb-6">รายวิชาตามปีการศึกษาและภาคเรียน (จากแผนการเรียนที่บันทึกในระบบผู้ดูแล)</p>
+            <div id="spa-curriculum-by-year" class="max-w-4xl"></div>
         </div>
     </div>
 </section>
@@ -490,6 +500,68 @@
         document.documentElement.style.setProperty('--theme-rgb', hexToRgb(hex));
     }
 
+    function toggleCurriculumCoursesNav(show) {
+        var n = document.getElementById('nav-curriculum-courses');
+        var nm = document.getElementById('nav-curriculum-courses-mobile');
+        if (n) n.classList.toggle('hidden', !show);
+        if (nm) nm.classList.toggle('hidden', !show);
+    }
+
+    /** แสดงรายวิชาตามปี/ภาคจาก curriculum_json (โครงเดียวกับแผนการเรียนใน Admin) */
+    function renderSpaCurriculumByYear(d) {
+        var section = document.getElementById('curriculum-courses');
+        var wrap = document.getElementById('spa-curriculum-by-year');
+        if (!wrap || !section) return;
+        var plan = d.curriculum;
+        if (!Array.isArray(plan) || !plan.length) {
+            section.classList.add('hidden');
+            wrap.innerHTML = '';
+            toggleCurriculumCoursesNav(false);
+            return;
+        }
+        section.classList.remove('hidden');
+        toggleCurriculumCoursesNav(true);
+        var html = '';
+        plan.forEach(function (year, i) {
+            var sems = year.semesters || [];
+            var semHtml = '';
+            sems.forEach(function (sem, si) {
+                var courses = sem.courses || [];
+                var rows = '';
+                courses.forEach(function (c) {
+                    rows += '<tr><td class="border border-slate-200 px-2 py-1.5 text-sm">' + esc(c.code || '') + '</td>' +
+                        '<td class="border border-slate-200 px-2 py-1.5 text-sm">' + esc(c.name || '') + '</td>' +
+                        '<td class="border border-slate-200 px-2 py-1.5 text-sm text-center w-16">' + esc(String(c.credits != null && c.credits !== '' ? c.credits : '—')) + '</td></tr>';
+                });
+                if (!rows) {
+                    rows = '<tr><td colspan="3" class="border border-slate-200 px-2 py-2 text-sm text-slate-500">ยังไม่มีรายวิชาในภาคนี้</td></tr>';
+                }
+                semHtml += '<div class="mb-4 last:mb-0"><h5 class="font-semibold text-slate-700 text-sm mb-2">' + esc(sem.name || ('ภาคเรียนที่ ' + (si + 1))) + '</h5>' +
+                    '<div class="overflow-x-auto rounded-lg border border-slate-200">' +
+                    '<table class="w-full border-collapse text-slate-700 min-w-[280px]"><thead><tr class="bg-slate-100 text-xs">' +
+                    '<th class="border border-slate-200 px-2 py-1.5 text-left font-semibold">รหัสวิชา</th>' +
+                    '<th class="border border-slate-200 px-2 py-1.5 text-left font-semibold">ชื่อวิชา</th>' +
+                    '<th class="border border-slate-200 px-2 py-1.5 font-semibold">หน่วยกิต</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+            });
+            if (!semHtml) {
+                semHtml = '<p class="text-sm text-slate-500">ยังไม่มีข้อมูลภาคเรียน</p>';
+            }
+            var yearLabel = year.year != null && year.year !== '' ? String(year.year) : ('ปีที่ ' + (i + 1));
+            var title = year.title || ('ปีการศึกษาที่ ' + (i + 1));
+            var credits = year.total_credits != null && year.total_credits !== '' ? ('รวม ' + year.total_credits + ' หน่วยกิต') : '';
+            var openAttr = i === 0 ? ' open' : '';
+            html += '<details class="group border border-slate-200 rounded-xl mb-3 overflow-hidden bg-white/90 shadow-sm"' + openAttr + '>' +
+                '<summary class="cursor-pointer px-4 py-4 flex flex-wrap items-center justify-between gap-2">' +
+                '<span class="flex items-center gap-3 min-w-0">' +
+                '<span class="inline-flex items-center justify-center min-w-[2.75rem] h-9 px-2 rounded-lg text-sm font-bold text-white shrink-0" style="background:var(--theme)">' + esc(yearLabel) + '</span>' +
+                '<span class="min-w-0"><span class="font-semibold text-slate-800 block">' + esc(title) + '</span>' +
+                (credits ? '<span class="block text-xs text-slate-500 mt-0.5">' + esc(credits) + '</span>' : '') + '</span></span>' +
+                '<svg class="w-5 h-5 text-slate-400 shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></summary>' +
+                '<div class="px-4 pb-4 border-t border-slate-100 pt-4">' + semHtml + '</div></details>';
+        });
+        wrap.innerHTML = html;
+    }
+
     function renderData(d) {
         document.title = (d.name_th || d.name_en || 'หลักสูตร') + ' | Program SPA';
 
@@ -566,9 +638,21 @@
             });
         }
 
-        // Curriculum
-        var cc = document.getElementById('curriculum-content');
-        cc.innerHTML = d.curriculum_structure ? esc(d.curriculum_structure).replace(/\n/g, '<br>') : '<span class="text-slate-500">ไม่มีข้อมูล</span>';
+        // โครงสร้างหลักสูตร (ข้อความ) + รายวิชาแยกตามปี (จาก curriculum_json)
+        var aboutCurriculum = document.getElementById('about-curriculum');
+        var structBlock = document.getElementById('curriculum-structure-block');
+        var structText = (d.curriculum_structure && String(d.curriculum_structure).trim()) ? d.curriculum_structure : '';
+        if (structBlock) {
+            if (structText) {
+                structBlock.innerHTML = esc(structText).replace(/\n/g, '<br>');
+            } else {
+                structBlock.innerHTML = '';
+            }
+        }
+        if (aboutCurriculum) {
+            aboutCurriculum.classList.toggle('hidden', !structText);
+        }
+        renderSpaCurriculumByYear(d);
 
         // Faculty
         var fg = document.getElementById('faculty-grid'); fg.innerHTML = '';
