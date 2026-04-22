@@ -6,7 +6,7 @@
     <div class="news-page-header" style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--color-gray-200);">
         <div class="card-header">
             <h2><?= esc($page_title) ?></h2>
-            <p class="form-text text-muted" style="margin: 0.35rem 0 0; font-size: 0.875rem; max-width: 52rem;">แก้ไขผ่านหน้าเว็บนี้ทั้งหมด ไม่ต้องนำเข้าไฟล์แบบพิเศษ หรือรู้เรื่องเทคนิคคอมพิวเตอร์ — หลังแก้ไข ใช้ปุ่ม <strong>ดูตัวอย่าง</strong> ด้านบนเพื่อตรวจสอบ</p>
+            <p class="form-text text-muted" style="margin: 0.35rem 0 0; font-size: 0.875rem; max-width: 52rem;">แนะนำ: แก้ไขบนหน้านี้ แล้วใช้ปุ่ม <strong>ดูตัวอย่าง</strong> เพื่อตรวจหน้าเว็บ</p>
             <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                 <a href="<?= base_url('program-admin') ?>" class="btn btn-secondary btn-sm">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -15,7 +15,6 @@
                     </svg>
                     กลับ
                 </a>
-                <a href="<?= base_url('program-admin/onepage/' . $program['id']) ?>" class="btn btn-primary btn-sm" title="กรอกหน้า Onepage ราย section">Onepage ข้อมูล</a>
                 <a href="<?= base_url('program-admin/preview/' . $program['id']) ?>" class="btn btn-outline btn-sm" target="_blank">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -99,6 +98,163 @@
             </button>
         </div>
 
+        <details class="program-section-matrix-wrap" style="margin: 0; border-bottom: 1px solid var(--color-gray-200); background: #fafafa;">
+            <summary class="program-section-matrix-summary" style="cursor: pointer; padding: 0.65rem 1.25rem; font-size: 0.875rem; font-weight: 600; color: var(--color-gray-800); list-style: none;">รายละเอียดแต่ละ Section ที่ควรมี (อ้างอิง)</summary>
+            <div class="program-section-matrix-scroll" style="padding: 0 1.25rem 1rem; overflow-x: auto;">
+                <p class="form-text text-muted" style="font-size: 0.8125rem; margin: 0 0 0.5rem;">ใช้เป็นตัวเช็กสาระสำคัญที่ควรเผยแพร่และรายละเอียดที่ควรระบุในเนื้อหา ไม่บังคับทุกข้อ</p>
+                <table class="program-section-matrix-table" style="width: 100%; min-width: 720px; border-collapse: collapse; font-size: 0.8125rem; line-height: 1.45;">
+                    <thead>
+                        <tr style="background: var(--color-gray-100);">
+                            <th scope="col" style="text-align: left; padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); width: 14%;">หัวข้อหลัก</th>
+                            <th scope="col" style="text-align: left; padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); width: 24%;">ข้อมูลที่ควรเผยแพร่</th>
+                            <th scope="col" style="text-align: left; padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200);">รายละเอียดที่ต้องระบุในเนื้อหา</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">1. ปรัชญาและแนวคิด</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ปรัชญาการศึกษา (Educational Philosophy)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ปรัชญาการศึกษาของมหาวิทยาลัย/คณะ/หลักสูตร และแนวคิดการจัดการเรียนรู้ (เช่น OBE, Constructivism)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">2. ข้อมูลทั่วไป</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ชื่อหลักสูตรและวุฒิการศึกษา</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ชื่อหลักสูตรและชื่อปริญญา ทั้งภาษาไทยและภาษาอังกฤษ (ตัวเต็มและตัวย่อ) และสาขาวิชา</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">3. เป้าหมายหลักสูตร</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ผลลัพธ์การเรียนรู้ (PLOs / ELOs)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">รายการ PLO ทุกข้อที่ชัดเจน วัดผลได้ และระบุความเชื่อมโยงกับความต้องการของผู้มีส่วนได้ส่วนเสีย (Stakeholders)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">4. โครงสร้างหลักสูตร</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">โครงสร้างและแผนการศึกษา</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">จำนวนหน่วยกิตรวม, แบ่งหมวดวิชา (ศึกษาทั่วไป/วิชาเอก/เลือก), และแผนการเรียนรายเทอม (ปี 1–4)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">5. รายละเอียดวิชา</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">คำอธิบายรายวิชา (Course Spec)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ชื่อวิชา, คำอธิบายรายวิชา, ผลลัพธ์การเรียนรู้ระดับรายวิชา (CLO), และ Curriculum Mapping (วิชานี้ตอบ PLO ข้อใด)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">6. รูปแบบการเรียนสอน</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">วิธีการจัดการเรียนรู้</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">รูปแบบการสอนหลัก เช่น Active Learning, Project-based, CWIE, หรือการฝึกงานในสถานประกอบการ</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">7. การวัดและประเมินผล</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">เกณฑ์การประเมินและอุทธรณ์</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">วิธีการให้คะแนน, การใช้ Rubrics, นโยบายการสอบ, และขั้นตอนการอุทธรณ์ผลการเรียนที่ชัดเจน</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">8. เกณฑ์การจบ</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">เงื่อนไขการสำเร็จการศึกษา</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">เกณฑ์ GPA ขั้นต่ำ, คะแนนทดสอบภาษาอังกฤษ (เช่น TOEIC/IELTS), และข้อกำหนดพิเศษ (เช่น ผลงานตีพิมพ์)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">9. บุคลากร</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ข้อมูลอาจารย์ประจำหลักสูตร</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">รายชื่อ, ตำแหน่งวิชาการ, คุณวุฒิการศึกษา, ความเชี่ยวชาญ, และผลงานวิจัย/วิชาการที่โดดเด่น</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">10. การสนับสนุน</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ระบบดูแลและสิ่งอำนวยความสะดวก</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ระบบอาจารย์ที่ปรึกษา, ทุนการศึกษา, ห้องปฏิบัติการ, ห้องสมุด, และซอฟต์แวร์ที่สนับสนุนการเรียน</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">11. ความสำเร็จ</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ผลลัพธ์และสถิติบัณฑิต</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">อัตราการได้งานทำ, เงินเดือนเริ่มต้นเฉลี่ย, รางวัลที่นักศึกษาได้รับ, และข่าวสารกิจกรรมล่าสุดของหลักสูตร</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">12. การติดต่อ</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ช่องทางการติดต่อสื่อสาร</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">เบอร์โทรศัพท์, อีเมล, Social Media (Facebook/Line), และแผนที่ตั้งของหลักสูตร/คณะ</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4 style="font-size: 0.9rem; margin: 1.25rem 0 0.4rem; color: var(--color-gray-800);">เปรียบเทียบกับส่วนเดิมในระบบ — อะไรอยู่กรอบ 12 ข้อ อะไรควร “ตัดออก” จากการนับเป็นหัวข้อเนื้อหาหลักสูตร</h4>
+                <p class="form-text text-muted" style="font-size: 0.8125rem; margin: 0 0 0.5rem;">คอลัมน์ “นอกกรอบ/แนวทาง” หมายถึง: ส่วนนั้น<strong>ไม่อยู่</strong>ใน 12 หัวข้อนี้โดยตรง หรือ<strong>ไม่ควรใช้แทน</strong>เนื้อหาตามข้อ 5–8 — ยัง<strong>เก็บฟีเจอร์ระบบได้</strong> แค่แยกบทบาท (เช่น สีเว็บ = ตั้งค่า มิใช่หัวข้อ 6)</p>
+                <table class="program-section-legacy-table" style="width: 100%; min-width: 800px; border-collapse: collapse; font-size: 0.8125rem; line-height: 1.45; margin-bottom: 0.25rem;">
+                    <thead>
+                        <tr style="background: var(--color-gray-100);">
+                            <th scope="col" style="text-align: left; padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); width: 28%;">ส่วนเดิมในระบบ (แอดมิน / หน้าเว็บ)</th>
+                            <th scope="col" style="text-align: left; padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); width: 20%;">สอดคล้องหัวข้อ 12 ข้อ (เบอร์)</th>
+                            <th scope="col" style="text-align: left; padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200);">นอกกรอบ หรือแนวจัด / “ตัด” อะไร</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ ข้อมูลพื้นฐาน + รูปหน้าปก</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">2</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">— ไม่ตัด</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ เนื้อหา &gt; 1. ภาพรวม (ปรัชญา วัตถุประสงค์ คุณลักษณะบัณฑิต)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">1, 3 (บางส่วน)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">— จัดรวมกับข้อ 1 ตามบทบาทจริง ไม่ตัดฟิลด์</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ 2 มาตรฐาน &amp; PLO / ELO</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">3</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">— ไม่ตัด</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ 3 แผนการเรียน + โครงสร้าง/แผน (HTML)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">4, 5–8 (รอง)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ตารางรายวิชาในระบบยัง<strong>ไม่เท่า</strong> course spec ครบ (CLO/mapping) — อย่า<strong>ตัด</strong> แต่เสริมข้อ 5 ในช่อง HTML หรือเอกสารดาวน์โหลด; ข้อ 6–8 ยัง<strong>ไม่มีฟิลด์เฉพาะ</strong> ใส่ในช่อง HTML/ไฟล์</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ 4 อาชีพ / ค่าใช้จ่าย / รับสมัคร / ติดต่อ + อัปโหลดแทรก + ลิงก์วิดีโอ</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">11, 12, 4 บางส่วน (ค่า/โครง)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;"><strong>วิดีโอ</strong> ไม่นับแทน ข้อ 6/7/8; <strong>อาชีพ HTML</strong> กับ <strong>การ์ดอาชีพ</strong> บนหน้า (ถ้ามี) อย่าให้ซ้ำสาระโดยไม่จำเป็น</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ 5 เผยแพร่ &amp; SEO + Hero ในฟอร์มนี้</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">2, เชิงเทคนิค</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;"><strong>ไม่นับ</strong> เป็น 6–8 — ลดงาน<strong>ซ้ำ</strong> รูป Hero กับแท็บพื้นฐาน ใช้แหล่งเดียวเท่าที่ทำได้</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ ดาวน์โหลด + เอกสารบนหน้า (QA)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">4, 5, 7, 10 รอง</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;"><strong>นอก 12 ในฐานะ “หัวข้อ”</strong> เป็นคลังไฟล์ — ไม่<strong>แทน</strong>การเขียนในเว็บสำหรับข้อ 5/7/8 ถ้าต้องเผยแพร่ต่อสาธารณะ</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ฐานข้อมูล/หน้า สิ่งอำนวยความสะดวก (Facilities)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">10</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">— ไม่ตัด; อาจเสริมทุน/อาจารย์ที่ปรึกษาในข้อความหรือเอกสาร</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ ศิษย์เก่าถึงรุ่นน้อง</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">11 บางส่วน / นอกกรอบ</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;"><strong>ไม่อยู่</strong>ใน 1–8 ตามนิยาม AUN — อย่าใช้<strong>แทน</strong>สถิติ/กิจกรรมรายงานโครง; จัดเป็นเนื้อหา/ชุมชน<strong>เสริม</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ ข่าว + กิจกรรม (เพจแยก)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">11 เสริม</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;"><strong>PR/ข่าว</strong> — ไม่นับ<strong>แทน</strong>เนื้อหา 3/5/6/7/8; <strong>“ตัด”</strong> เฉพาะความคาดหมายที่ข่าวจะรับรองมาตรฐานหลักสูตรแทนเอกสาร</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ บุคลากร (อ่านจากระบบ)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">9</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;"><strong>ไม่ตัด</strong>; รายละเอียด CV/งานวิจัยเชิงลึกเสริมได้ในเนื้อหา/ดาวน์โหลด (ข้อ 9)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ การตั้งค่าเว็บ (สีธีม)</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">—</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;"><strong>นอก 12 ข้อ</strong> — ตัด<strong>ออกจากบันทึก</strong>ว่า “เนื้อหาหลักสูตร” เป็นตั้งค่า UI</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">หน้าเว็บ: Hero, ปุ่มสมัคร, แถบ CTA, ลิงก์ภายนอก</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">—</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;"><strong>ไม่นับ</strong>เป็นข้อ 1–12 — รับสมัคร/CTA แยกจากเอกสารหลักสูตร (ข้อ 4/8/12 เป็นสาระ ไม่ใช่เฉพาะลิงก์)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </details>
+
         <!-- Tab Content -->
         <div class="tab-content-container">
             <!-- Basic Info Tab -->
@@ -108,7 +264,7 @@
 
                     <div class="form-section">
                         <h4 class="form-section-title">ข้อมูลพื้นฐาน</h4>
-                        <p class="form-text text-muted program-edit-tab-hint" style="font-size: 0.875rem; margin-bottom: 1rem;">บนหน้าเว็บหลักสูตร ส่วนนี้สอดคล้องกับชื่อ/ระดับหลักสูตร และ <strong>รูปหน้าปก</strong> บริเวณต้อนรับ (ด้านบนสุดของหน้า)</p>
+                        <p class="form-text text-muted program-edit-tab-hint" style="font-size: 0.875rem; margin-bottom: 1rem;">ชื่อหลักสูตร ระดับ และรูปหน้าปกด้านบน</p>
 
                         <div class="form-row">
                             <div class="form-group">
@@ -148,7 +304,7 @@
                         ?>
                         <div class="form-group hero-basic-wrap">
                             <label class="form-label">รูปหน้าปกหลักสูตร</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">ใช้เป็นภาพบริเวณต้อนรับ/หน้าจอแรกของหลักสูตร (ไม่ใช่รูปประกอบในย่อหน้า — รูปในข้อความใช้กล่อง <strong>แทรกในเนื้อหา</strong> ในแท็บเนื้อหา) แนะนำอัตราส่วน 16:9 กว้างประมาณ 1920px ขึ้นไป ลากวางหรือเลือกไฟล์แล้วครอป</p>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">รูปต้อนรับด้านบน แนะนำ 16:9</p>
                             <p class="admin-upload-hint" style="font-size: 0.8125rem; color: var(--color-gray-600); margin: 0 0 0.5rem;">รองรับ: JPG, PNG, WEBP, GIF</p>
                             <div id="hero-basic-preview" class="hero-basic-preview" style="<?= $heroBasicUrl ? '' : 'display:none;' ?> margin-bottom: 0.75rem;">
                                 <img id="hero-basic-img" src="<?= esc($heroBasicUrl) ?>" alt="หน้าปกปัจจุบัน" style="max-width: 100%; max-height: 220px; width: auto; object-fit: contain; border: 1px solid var(--color-gray-200); border-radius: 8px;">
@@ -189,7 +345,7 @@
                     ?>
 
                     <p class="content-tab-intro" style="margin: 0; padding: 0.75rem 1.5rem; font-size: 0.875rem; color: var(--color-gray-600); background: var(--color-gray-50); border-bottom: 1px solid var(--color-gray-200);">
-                        แต่ละแท็บย่อย = กลุ่มข้อมูลบนหน้าเว็บ (แยกกัน ไม่งง) ปุ่ม <strong>บันทึกเนื้อหา</strong> ด้านล่างสุดจะบันทึก <strong>ทุกช่อง</strong> ในฟอร์มนี้ครั้งเดียว หรือใช้ปุ่มบันทึกเฉพาะส่วน (มาตรฐาน, PLO, แผนการเรียน, ฯลฯ) ตามที่แสดง — ลิงก์ตรงมายังแท็บ: <code style="font-size:0.8em">?tab=content&amp;sub=overview|quality|curriculum|pages|publish</code>
+                        แนะนำ: แท็บย่อยแยกหัวข้อ — บันทึกท้ายฟอร์มหรือบันทึกเฉพาะส่วนตามปุ่ม
                     </p>
 
                     <div class="content-subtab-bar" role="tablist" aria-label="แท็บย่อยเนื้อหาหลักสูตร">
@@ -200,26 +356,12 @@
                         <button type="button" class="content-subtab-btn" data-content-sub="publish" role="tab" aria-selected="false" onclick="switchContentSubTab('publish')">5. เผยแพร่ &amp; หน้าเว็บ</button>
                     </div>
 
-                    <details class="program-edit-ia" style="margin: 0; padding: 0.65rem 1.5rem; font-size: 0.8125rem; color: var(--color-gray-700); background: #fff; border-bottom: 1px solid var(--color-gray-200);">
-                        <summary style="cursor: pointer; font-weight: 500;">แสดงแผนผัง: ส่วนในหน้าเว็บ กับ แท็บแก้ไข (คลิก)</summary>
-                        <ul style="margin: 0.5rem 0 0 1.1rem; padding: 0; line-height: 1.6;">
-                            <li><strong>บริเวณต้อนรับ + รูปใหญ่ด้านบน</strong> → แท็บ <em>ข้อมูลพื้นฐาน</em> (รูปหน้าปก)</li>
-                            <li><strong>เกี่ยวกับหลักสูตร</strong> (ปรัชญา วัตถุประสงค์ ฯลฯ) → แท็บนี้ แท็บย่อย 1. ภาพรวม</li>
-                            <li><strong>มาตรฐานการเรียนรู้ / ผลลัพธ์ PLO</strong> → แท็บย่อย 2</li>
-                            <li><strong>รายวิชา โครงสร้าง แผนการเรียน</strong> → แท็บย่อย 3</li>
-                            <li><strong>อาชีพ ค่าใช้จ่าย รับสมัคร ติดต่อ วิดีโอ</strong> → แท็บย่อย 4</li>
-                            <li><strong>เผยแพร่บนหน้าเว็บ + คำอธิบายการค้นหา (SEO)</strong> → แท็บย่อย 5</li>
-                            <li><strong>เอกสารแนบอื่น</strong> (Word, สไลด์, Zip ฯลฯ) → แท็บ <em>ดาวน์โหลด</em> แล้วอาจลิงก์มาจากเนื้อหา</li>
-                            <li><strong>ข่าว / บุคลากร / สีเว็บ</strong> → แท็บ <em>ข่าวหลักสูตร / บุคลากร / การตั้งค่าเว็บไซต์</em> ตามลำดับ</li>
-                        </ul>
-                    </details>
-
                     <div class="content-subtab-panels" style="padding: 1.5rem;">
 
                     <div id="content-sub-overview" class="content-subpanel active" role="tabpanel">
                         <div class="form-section">
                             <h4 class="form-section-title">ภาพรวมหลักสูตร</h4>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">นี่คือส่วน <strong>เกี่ยวกับหลักสูตร</strong> บนหน้าเว็บ (ปรัชญา วัตถุประสงค์ คุณลักษณะบัณฑิต)</p>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">ปรัชญา วัตถุประสงค์ คุณลักษณะบัณฑิต</p>
                         <div class="form-group">
                             <label for="philosophy" class="form-label">ปรัชญาหลักสูตร</label>
                             <textarea id="philosophy" name="philosophy" class="form-control" rows="4"><?= esc($program_page['philosophy'] ?? '') ?></textarea>
@@ -240,10 +382,8 @@
                     <div id="content-sub-quality" class="content-subpanel" role="tabpanel">
                         <div class="form-section">
                             <h4 class="form-section-title">มาตรฐานการเรียนรู้ &amp; PLO / ELO</h4>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">บนหน้าเว็บ: กล่องมาตรฐานการเรียนรู้ / ตารางเชื่อม PLO กับมาตรฐาน และรายการผลลัพธ์การเรียนรู้ — กดปุ่ม <strong>บันทึก</strong> สีน้ำเงินแยกวินาที (ไม่บังคับรอปุ่มบันทึกเนื้อหาใหญ่)</p>
                         <div class="form-group learning-standards-editor-wrap">
                             <label class="form-label">มาตรฐานการเรียนรู้ (Learning Standards)</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">แสดงคู่กับ PLO บนหน้าเว็บ — คำนำ + รายการมาตรฐาน + ตารางเชื่อมโยง (ถ้ามี)</p>
                             <div class="form-group">
                                 <label for="learning-standards-intro" class="form-label">คำอธิบาย / ความสัมพันธ์ PLO กับมาตรฐาน (ไม่บังคับ)</label>
                                 <textarea id="learning-standards-intro" class="form-control" rows="3" placeholder="เช่น หลักสูตรอ้างอิงมาตรฐานการเรียนรู้ของ... และกำหนด PLO ให้สอดคล้องกับ..."><?= esc($ls_initial['intro'] ?? '') ?></textarea>
@@ -272,7 +412,6 @@
                         ?>
                         <div class="form-group elos-editor-wrap">
                             <label class="form-label">PLO / ELO (ผลลัพธ์การเรียนรู้ระดับหลักสูตร)</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">กรอกหมวด (เช่น PLO1) และรายละเอียด แสดงบนหน้าเว็บ แล้วกดบันทึกแยกได้</p>
                             <div id="elos-list" class="elos-list" data-initial="<?= htmlspecialchars(json_encode($elos_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
                             <div class="elos-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button type="button" class="btn btn-outline btn-sm" id="elos-add-btn">+ เพิ่ม ELO</button>
@@ -287,7 +426,6 @@
                     <div id="content-sub-curriculum" class="content-subpanel" role="tabpanel">
                         <div class="form-section">
                             <h4 class="form-section-title">แผนการเรียน / รายวิชา &amp; ข้อความโครงสร้าง</h4>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">บนหน้าเว็บ: บล็อก <strong>รายวิชาโครงสร้าง</strong> และ <strong>โครงสร้าง/แผนการเรียน</strong> (ข้อความเสริม) ไฟล์ Word/สไลด์ให้นักศึกษาโหลด → อัปโหลดที่แท็บ <strong>ดาวน์โหลด</strong></p>
                         <?php
                         $curriculum_initial = [];
                         if (!empty($program_page['curriculum_json'])) {
@@ -297,7 +435,6 @@
                         ?>
                         <div class="form-group curriculum-editor-wrap">
                             <label class="form-label">หลักสูตร/แผนการเรียน (รายวิชารายปี)</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">เพิ่มปี ภาคเรียน รายวิชา แล้วกดบันทึกแผนการเรียน (แสดงเป็นตารางบนหน้าเว็บ)</p>
                             <div id="curriculum-list" class="curriculum-list" data-initial="<?= htmlspecialchars(json_encode($curriculum_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
                             <div class="curriculum-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button type="button" class="btn btn-outline btn-sm" id="curriculum-add-year-btn">+ เพิ่มปี</button>
@@ -309,7 +446,6 @@
 
                         <div class="form-group">
                             <label for="curriculum_structure" class="form-label">โครงสร้างหลักสูตร (HTML)</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">อัปโหลดรูป/PDF แทรกในช่อง HTML ใช้กล่อง <strong>อัปโหลดแทรกในเนื้อหา</strong> ในแท็บย่อย 4 (หรือสลับไปแท็บ 4 แล้วเลือกช่อง &quot;โครงสร้าง/แผนการเรียน&quot; เป็นปลายทาง)</p>
                             <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
@@ -326,7 +462,6 @@
 
                         <div class="form-group content-with-toolbar">
                             <label for="study_plan" class="form-label">แผนการเรียน (HTML)</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
                             <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
@@ -342,12 +477,10 @@
                     <div id="content-sub-pages" class="content-subpanel" role="tabpanel">
                         <div class="form-section">
                             <h4 class="form-section-title">อาชีพ · ค่าใช้จ่าย · รับสมัคร · ติดต่อ · วิดีโอ</h4>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">นี่คือเนื้อหา HTML สำหรับย่อหน้าส่วน <strong>อาชีพ ค่าใช้จ่าย รับสมัคร ติดต่อ</strong> บนหน้าเว็บ — กล่องด้านล่างใช้ <strong>แทรกรูปหรือ PDF ในข้อความ</strong> เท่านั้น</p>
 
                         <div class="form-section admin-upload-panel" style="background: var(--color-gray-50); border: 1px solid var(--color-gray-200); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
                             <h5 class="form-section-title" style="font-size: 1rem; margin-top: 0;">อัปโหลดแทรกในเนื้อหา (รูปหรือ PDF)</h5>
-                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">ระบบจะสร้างรูปหรือลิงก์ PDF ใส่ในช่องที่เลือก ที่ตำแหน่งเคอร์เซอร์ (หรือต่อท้ายถ้ายังไม่ได้คลิกในช่อง) แล้วกด <strong>บันทึกเนื้อหา</strong> ด้านล่าง</p>
-                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">ต้องการอัปโหลด <strong>Word, Excel, PowerPoint, Zip</strong> หรือไฟล์อื่นที่นักศึกษาโหลดทั้งก้อน? ใช้แท็บ <a href="javascript:void(0)" class="link-to-downloads-tab" style="color: var(--color-primary, #2563eb); font-weight: 500;">ดาวน์โหลด</a> แล้วนำ <strong>ลิงก์</strong> มาวางในช่องนี้ (หรือพิมพ์ข้อความอ้างอิง)</p>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เลือกช่อง อัปโหลด แล้วบันทึก — ไฟล์อื่นอัปโหลดที่แท็บ <a href="javascript:void(0)" class="link-to-downloads-tab" style="color: var(--color-primary, #2563eb); font-weight: 500;">ดาวน์โหลด</a> แล้ววางลิงก์</p>
                             <p class="admin-upload-hint" style="font-size: 0.8125rem; color: var(--color-gray-600); margin: 0 0 0.75rem;">รองรับเฉพาะ: JPG, PNG, WEBP, GIF, PDF — ไม่เกิน 15 MB ต่อไฟล์</p>
                             <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
                                 <div class="form-group" style="flex: 1; min-width: 200px;">
@@ -379,7 +512,6 @@
 
                         <div class="form-group content-with-toolbar">
                             <label for="career_prospects" class="form-label">อาชีพที่สามารถประกอบได้</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
                             <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
@@ -392,7 +524,6 @@
 
                         <div class="form-group content-with-toolbar">
                             <label for="tuition_fees" class="form-label">ค่าเล่าเรียน/ค่าธรรมเนียม</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
                             <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
@@ -405,7 +536,6 @@
 
                         <div class="form-group content-with-toolbar">
                             <label for="admission_info" class="form-label">การรับสมัคร</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
                             <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
@@ -418,7 +548,6 @@
 
                         <div class="form-group content-with-toolbar">
                             <label for="contact_info" class="form-label">ข้อมูลติดต่อ</label>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แทรกข้อความสำเร็จรูปด้วยปุ่มด้านล่าง</p>
                             <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
@@ -439,12 +568,12 @@
                     <div id="content-sub-publish" class="content-subpanel" role="tabpanel">
                         <div class="form-section">
                             <h4 class="form-section-title">เผยแพร่ &amp; หน้าเว็บหลักสูตร</h4>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">นี่คือส่วน <strong>เปิดหรือปิดการแสดง</strong> บนหน้าเว็บ กับ <strong>คำอธิบาย</strong> สำหรับการค้นหา รูปหน้าปกแบบลาก-ครอปใช้ที่แท็บ <strong>ข้อมูลพื้นฐาน</strong> — ด้านล่างอัปโหลด/ลบรูปผ่านปุ่มบันทึกเนื้อหา</p>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">การแสดงผล SEO และรูป Hero</p>
                         <div class="form-section" style="margin-top: 0;">
                             <h5 class="form-section-title" style="font-size: 1rem;">รูปหน้าปก (Hero) สำหรับบันทึกรวม</h5>
                             <div class="form-group">
                                 <label class="form-label">รูปหน้าปกหลักสูตร (Hero)</label>
-                                <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">ใช้แสดงเป็นพื้นหลังส่วน Hero บนหน้าเว็บหลักสูตร (แนะนำขนาดกว้าง 1920px ขึ้นไป)</p>
+                                <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แนะนำกว้างประมาณ 1920px</p>
                                 <?php
                                 $hero = $program_page['hero_image'] ?? '';
                                 $heroUrl = '';
@@ -518,7 +647,7 @@
                 <div style="padding: 1.5rem;">
                     <div class="form-section">
                         <h4 class="form-section-title">ศิษย์เก่าถึงรุ่นน้อง</h4>
-                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">บนหน้าเว็บ: ส่วน <strong>ศิษย์เก่าถึงรุ่นน้อง</strong> — เพิ่มข้อความ รูป งาน/สถานที่/ปีที่จบ แล้วกดบันทึก</p>
+                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">แสดงในส่วนศิษย์เก่าถึงรุ่นน้อง</p>
                         <div id="alumni-list" class="alumni-list" data-initial="<?= htmlspecialchars(json_encode($alumni_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
                         <div class="alumni-actions" style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
                             <button type="button" class="btn btn-outline btn-sm" id="alumni-add-btn">+ เพิ่มคน</button>
@@ -534,7 +663,7 @@
                 <div style="padding: 1.5rem;">
                     <div class="section-header" style="margin-bottom: 1.5rem;">
                         <h4>เอกสารดาวน์โหลด</h4>
-                        <p style="color: var(--color-gray-600);">ไฟล์สำหรับนักศึกษาโหลดเก็บ (Word, สไลด์, PDF, รูป, Zip ฯลฯ) แยกจากการแทรกรูป/PDF ในย่อหน้า — อัปโหลดที่นี่แล้วนำ <strong>ลิงก์</strong> ไปวางในช่องเนื้อหาได้</p>
+                        <p style="color: var(--color-gray-600);">เอกสารให้นักศึกษาโหลด — นำลิงก์ไปวางในเนื้อหาได้</p>
                     </div>
                     <p class="admin-upload-hint" style="font-size: 0.875rem; color: var(--color-gray-600); margin: -0.5rem 0 1rem;">รองรับ: PDF, Word (doc/docx), Excel, PowerPoint, Zip, รูป (JPG/PNG/GIF), MP4, MP3, TXT ตามที่ระบบอนุญาต</p>
 
@@ -632,7 +761,7 @@
                 <div style="padding: 1.5rem;">
                     <div class="section-header" style="margin-bottom: 1.5rem;">
                         <h4>ข่าวหลักสูตร</h4>
-                        <p style="color: var(--color-gray-600);">บนหน้าเว็บ: กล่อง <strong>ข่าวสาร &amp; ประชาสัมพันธ์</strong> — ข่าวที่เชื่อมกับหลักสูตรนี้ (สร้างข่าวใหม่จะติดแท็กหลักสูตรเดิม)</p>
+                        <p style="color: var(--color-gray-600);">ข่าวที่เชื่อมกับหลักสูตรนี้</p>
                     </div>
                     <div id="program-news-list" style="margin-bottom: 2rem;">
                         <p style="color: var(--color-gray-500);">กำลังโหลด...</p>
@@ -761,7 +890,7 @@
                 <div style="padding: 1.5rem;">
                     <div class="section-header" style="margin-bottom: 1.5rem;">
                         <h4>บุคลากรหลักสูตร</h4>
-                        <p style="color: var(--color-gray-600);">บนหน้าเว็บ: ส่วน <strong>คณาจารย์ประจำหลักสูตร</strong> (ข้อมูลอ้างอิงจากระบบบุคลากร แก้รายละเอียดรายบุคคลผ่านผู้ดูแลระบบ)</p>
+                        <p style="color: var(--color-gray-600);">คณาจารย์ประจำหลักสูตร (ข้อมูลจากระบบ)</p>
                     </div>
 
                     <!-- Coordinator -->
@@ -822,11 +951,10 @@
                     <?= csrf_field() ?>
                     <div class="form-section">
                         <h4 class="form-section-title">การตั้งค่าเว็บไซต์หลักสูตร</h4>
-                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">กำหนดสีธีม สีตัวอักษร และสีพื้นหลังของ <strong>หน้าเว็บหลักสูตร</strong> ที่ผู้เยี่ยมชมเห็น</p>
+                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">สีของหน้าเว็บหลักสูตร</p>
 
                         <div class="form-group" style="margin-bottom: 1.25rem;">
                             <label for="theme_color_hex" class="form-label">สีธีมหลักสูตร</label>
-                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">ใช้เป็นสีหลัก (ปุ่ม, ไฮไลต์) บนหน้าเว็บหลักสูตร (รูปแบบ #RRGGBB)</p>
                             <div style="display: flex; align-items: center; gap: 0.75rem;">
                                 <input type="color" id="theme_color" class="form-control" value="<?= esc($program_page['theme_color'] ?? '#1e40af') ?>" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
                                 <input type="text" id="theme_color_hex" name="theme_color" class="form-control" value="<?= esc($program_page['theme_color'] ?? '#1e40af') ?>" style="width: 100px; font-family: monospace;" maxlength="7" placeholder="#1e40af">
@@ -836,7 +964,6 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="text_color" class="form-label">สีข้อความ</label>
-                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">สีของข้อความหลักบนหน้าเว็บ (รูปแบบ #RRGGBB)</p>
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                                     <input type="color" id="text_color" class="form-control" value="<?= esc($program_page['text_color'] ?? '#1e293b') ?>" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
                                     <input type="text" id="text_color_hex" name="text_color" class="form-control" value="<?= esc($program_page['text_color'] ?? '') ?>" style="width: 100px; font-family: monospace;" maxlength="7" placeholder="#1e293b">
@@ -845,7 +972,6 @@
                             </div>
                             <div class="form-group">
                                 <label for="background_color" class="form-label">สีพื้นหลัง</label>
-                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">สีพื้นหลังหลักของหน้าเว็บ (รูปแบบ #RRGGBB)</p>
                                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                                     <input type="color" id="background_color" class="form-control" value="<?= esc($program_page['background_color'] ?? '#f8fafc') ?>" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
                                     <input type="text" id="background_color_hex" name="background_color" class="form-control" value="<?= esc($program_page['background_color'] ?? '') ?>" style="width: 100px; font-family: monospace;" maxlength="7" placeholder="#f8fafc">
@@ -1530,9 +1656,10 @@
 
     .admin-upload-hint { line-height: 1.45; }
     .admin-upload-panel { box-sizing: border-box; }
-    .program-edit-ia summary { list-style: none; }
-    .program-edit-ia summary::-webkit-details-marker { display: none; }
-    .program-edit-ia[open] { background: var(--color-gray-50) !important; }
+
+    .program-section-matrix-wrap summary { list-style: none; }
+    .program-section-matrix-wrap summary::-webkit-details-marker { display: none; }
+    .program-section-matrix-wrap[open] > summary { border-bottom: 1px solid var(--color-gray-200); margin-bottom: 0.25rem; }
 
     .tab-content-container {
         background: white;

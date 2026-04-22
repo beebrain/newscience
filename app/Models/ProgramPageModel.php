@@ -33,7 +33,6 @@ class ProgramPageModel extends Model
         'text_color',
         'background_color',
         'meta_description',
-        'onepage_json',
         'is_published'
     ];
     protected $useTimestamps = true;

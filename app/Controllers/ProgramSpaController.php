@@ -53,7 +53,6 @@ class ProgramSpaController extends BaseController
             'curriculum_json' => '',
             'curriculum_structure' => '',
             'contact_info' => '',
-            'onepage_json' => null,
         ];
     }
 
@@ -98,57 +97,6 @@ class ProgramSpaController extends BaseController
         $id = (int) $id;
         $data = ['id' => $id];
         return view('program_spa/main', $data);
-    }
-
-    /**
-     * หน้า Onepage รวมข้อมูลหลักสูตร แยก section — GET /p/{id}/onepage
-     */
-    public function onepage($id)
-    {
-        $id = (int) $id;
-        if ($id <= 0) {
-            return $this->response->setStatusCode(404)->setBody(view('errors/html/error_404', [
-                'message' => lang('Errors.sorryCannotFind'),
-            ]));
-        }
-
-        $resolved = $this->resolveById($id);
-        if ($resolved['program_id'] === null || ! $resolved['program']) {
-            return $this->response->setStatusCode(404)->setBody(view('errors/html/error_404', [
-                'message' => lang('Errors.sorryCannotFind'),
-            ]));
-        }
-
-        $program = $resolved['program'];
-        $page    = $resolved['page'];
-
-        $onPageConfig  = new \Config\ProgramOnepage();
-        $allSections   = $onPageConfig->buildSectionsForView($page['onepage_json'] ?? null);
-        $showSections  = $onPageConfig->filterVisibleForPublic($allSections, false);
-
-        $heroImage = trim($page['hero_image'] ?? '');
-        if ($heroImage === '') {
-            $heroImage = trim($program['image'] ?? '');
-        }
-        $heroImageUrl = '';
-        if ($heroImage !== '') {
-            $heroImageUrl = strpos($heroImage, 'http') === 0
-                ? $heroImage
-                : base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $heroImage), '/'));
-        }
-
-        $data = [
-            'program_id'     => $id,
-            'program'        => $program,
-            'page'           => $page,
-            'hero_image_url' => $heroImageUrl,
-            'theme_color'    => $page['theme_color'] ?? '#1e40af',
-            'text_color'     => $page['text_color'] ?? null,
-            'background_color' => $page['background_color'] ?? null,
-            'sections'       => $showSections,
-        ];
-
-        return view('program_spa/onepage', $data);
     }
 
     /**

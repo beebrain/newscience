@@ -1,4 +1,4 @@
-<?php $id = (int) ($id ?? 0); $dataUrl = base_url('p/' . $id . '/data'); $onepageUrl = base_url('p/' . $id . '/onepage'); ?>
+<?php $id = (int) ($id ?? 0); $dataUrl = base_url('p/' . $id . '/data'); ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -204,7 +204,6 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
             <div id="nav-links" class="hidden md:flex items-center gap-8">
-                <a href="<?= esc($onepageUrl, 'attr') ?>" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme" target="_blank" rel="noopener">ข้อมูล Onepage</a>
                 <a href="#about" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">เกี่ยวกับ</a>
                 <a href="#curriculum-courses" id="nav-curriculum-courses" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">รายวิชา</a>
                 <a href="#faculty" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">คณาจารย์</a>
@@ -217,7 +216,6 @@
             </div>
         </div>
         <div id="nav-mobile" class="hidden md:hidden border-t border-slate-200 px-6 py-4 space-y-3 bg-white/95">
-            <a href="<?= esc($onepageUrl, 'attr') ?>" class="block text-slate-600 nav-link-theme" target="_blank" rel="noopener">ข้อมูล Onepage</a>
             <a href="#about" class="block text-slate-600 nav-link-theme">เกี่ยวกับ</a>
             <a href="#curriculum-courses" id="nav-curriculum-courses-mobile" class="block text-slate-600 nav-link-theme hidden">รายวิชา</a>
             <a href="#faculty" class="block text-slate-600 nav-link-theme">คณาจารย์</a>
