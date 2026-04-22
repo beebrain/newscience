@@ -189,26 +189,96 @@ class Dashboard extends BaseController
     }
 
     /**
-     * คู่มือข้อมูลหลักสูตรสำหรับเว็บ (อ้างอิง AUN-QA) — ลิงก์ไปแท็บแอดมิน
+     * แก้ไขหน้า Onepage ข้อมูล — ราย section (HTML) สำหรับ /p/{id}/onepage
      */
-    public function dataGuide($programId)
+    public function editOnepage($programId)
     {
         $programId = (int) $programId;
-        $program     = $this->programModel->find($programId);
-        if (!$program) {
+        $program   = $this->programModel->find($programId);
+        if (! $program) {
             return redirect()->to(base_url('program-admin'))->with('error', 'ไม่พบหลักสูตร');
         }
-        if (!$this->canManageProgram($programId)) {
+        if (! $this->canManageProgram($programId)) {
             return redirect()->to(base_url('program-admin'))->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
         }
 
+        $programPage = $this->programPageModel->findByProgramId($programId);
+        $onDef       = new \Config\ProgramOnepage();
+        $sections    = $onDef->buildSectionsForView($programPage['onepage_json'] ?? null);
+        $publicUrl   = base_url('p/' . $programId . '/onepage');
+
         $data = [
-            'page_title' => 'คู่มือข้อมูลหลักสูตร — ' . ($program['name_th'] ?? $program['name_en'] ?? ''),
-            'program'    => $program,
-            'layout'     => 'admin/layouts/admin_layout',
+            'page_title'         => 'หน้า Onepage ข้อมูล — ' . ($program['name_th'] ?? $program['name_en'] ?? ''),
+            'program'            => $program,
+            'program_page'       => $programPage,
+            'sections'           => $sections,
+            'onepage_public_url' => $publicUrl,
+            'layout'             => 'admin/layouts/admin_layout',
         ];
 
-        return view('admin/programs/data_guide', $data);
+        return view('admin/programs/onepage_edit', $data);
+    }
+
+    /**
+     * บันทึก onepage_json — POST program-admin/onepage/(:num)
+     */
+    public function updateOnepage($programId)
+    {
+        $programId = (int) $programId;
+        $program   = $this->programModel->find($programId);
+        if (! $program) {
+            return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
+        }
+        if (! $this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
+        }
+
+        $onDef    = new \Config\ProgramOnepage();
+        $allowIds = array_column($onDef->sectionDefinitions, 'id');
+        $posted   = $this->request->getPost('sections');
+        if (! is_array($posted)) {
+            $posted = [];
+        }
+
+        $out = [];
+        foreach ($allowIds as $id) {
+            $row = (isset($posted[$id]) && is_array($posted[$id])) ? $posted[$id] : [];
+            $body = (string) ($row['body'] ?? '');
+            if (strlen($body) > 200000) {
+                return redirect()->back()->withInput()->with('error', 'เนื้อหาส่วน ' . $id . ' ยาวเกินไป (จำกัด ~200,000 ตัวอักษร)');
+
+            }
+            $out[$id] = [
+                'body'            => $body,
+                'hidden'          => ! empty($row['hidden']),
+                'title_override'  => trim((string) ($row['title_override'] ?? '')),
+            ];
+        }
+
+        $payload = [
+            'version'   => 1,
+            'updated_at'=> date('c'),
+            'sections'  => $out,
+        ];
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        if ($json === false) {
+            return redirect()->back()->withInput()->with('error', 'สร้าง JSON สำหรับบันทึกไม่สำเร็จ');
+        }
+        if (strlen($json) > 16000000) {
+            return redirect()->back()->withInput()->with('error', 'ข้อมูลรวมใหญ่เกินกำหนด');
+
+        }
+
+        try {
+            $this->programPageModel->updateOrCreate(['program_id' => $programId], [
+                'onepage_json' => $json,
+            ]);
+
+            return redirect()->to(base_url('program-admin/onepage/' . $programId))
+                ->with('success', 'บันทึกหน้า Onepage เรียบร้อยแล้ว');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
     }
 
     /**

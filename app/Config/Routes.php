@@ -35,6 +35,7 @@ $routes->get('p/(:num)', 'ProgramSpaController::index/$1');
 $routes->get('p/(:num)/check', 'ProgramSpaController::checkSystem/$1');
 $routes->get('p/(:num)/data', 'ProgramSpaController::getData/$1');
 $routes->get('p/(:num)/main', 'ProgramSpaController::main/$1');
+$routes->get('p/(:num)/onepage', 'ProgramSpaController::onepage/$1');
 
 // Serve uploaded files from writable (fallback to public)
 // ใส่ path เต็มก่อน (programs/8/hero/xxx.jpg) ไป fileByPath — เหลือ 2 segments ค่อยไป file()
@@ -444,7 +445,8 @@ $routes->group('api', function ($routes) {
 $routes->group('program-admin', ['filter' => 'programadmin'], function ($routes) {
     $routes->get('/', 'Admin\ProgramAdmin\Dashboard::index');
     $routes->get('edit/(:num)', 'Admin\ProgramAdmin\Dashboard::edit/$1');
-    $routes->get('data-guide/(:num)', 'Admin\ProgramAdmin\Dashboard::dataGuide/$1');
+    $routes->get('onepage/(:num)', 'Admin\ProgramAdmin\Dashboard::editOnepage/$1');
+    $routes->post('onepage/(:num)', 'Admin\ProgramAdmin\Dashboard::updateOnepage/$1');
     $routes->post('update/(:num)', 'Admin\ProgramAdmin\Dashboard::update/$1');
     $routes->post('update-page/(:num)', 'Admin\ProgramAdmin\Dashboard::updatePage/$1');
     $routes->post('update-page-json/(:num)', 'Admin\ProgramAdmin\Dashboard::updatePageJson/$1');

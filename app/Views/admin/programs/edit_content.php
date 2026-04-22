@@ -15,7 +15,7 @@
                     </svg>
                     กลับ
                 </a>
-                <a href="<?= base_url('program-admin/data-guide/' . $program['id']) ?>" class="btn btn-secondary btn-sm" title="รายการข้อมูลที่ควรเผยแพร่ (อ้างอิง AUN-QA)">คู่มือข้อมูล</a>
+                <a href="<?= base_url('program-admin/onepage/' . $program['id']) ?>" class="btn btn-primary btn-sm" title="กรอกหน้า Onepage ราย section">Onepage ข้อมูล</a>
                 <a href="<?= base_url('program-admin/preview/' . $program['id']) ?>" class="btn btn-outline btn-sm" target="_blank">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
