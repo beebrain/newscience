@@ -71,6 +71,10 @@
                 </div>
 
                 <!-- Content Sections -->
+                <?php helper('overview_lists');
+                $previewObjLines = overview_text_lines_from_db($page['objectives'] ?? null);
+                $previewGpLines  = overview_text_lines_from_db($page['graduate_profile'] ?? null);
+                ?>
                 <div style="max-width: 800px; margin: 0 auto;">
                     <?php if (!empty($page['philosophy'])): ?>
                         <section style="margin-bottom: 3rem;">
@@ -79,17 +83,35 @@
                         </section>
                     <?php endif; ?>
 
-                    <?php if (!empty($page['objectives'])): ?>
+                    <?php if ($previewObjLines !== []): ?>
                         <section style="margin-bottom: 3rem;">
                             <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">วัตถุประสงค์</h2>
-                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['objectives'] ?></div>
+                            <ol style="color: var(--color-gray-700); line-height: 1.7; padding-left: 1.25rem;">
+                                <?php foreach ($previewObjLines as $line): ?>
+                                    <li style="margin-bottom: 0.35rem;"><?= esc($line) ?></li>
+                                <?php endforeach; ?>
+                            </ol>
+                        </section>
+                    <?php elseif (!empty($page['objectives'])): ?>
+                        <section style="margin-bottom: 3rem;">
+                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">วัตถุประสงค์</h2>
+                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= nl2br(esc($page['objectives'])) ?></div>
                         </section>
                     <?php endif; ?>
 
-                    <?php if (!empty($page['graduate_profile'])): ?>
+                    <?php if ($previewGpLines !== []): ?>
                         <section style="margin-bottom: 3rem;">
                             <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">คุณลักษณะบัณฑิต</h2>
-                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['graduate_profile'] ?></div>
+                            <ol style="color: var(--color-gray-700); line-height: 1.7; padding-left: 1.25rem;">
+                                <?php foreach ($previewGpLines as $line): ?>
+                                    <li style="margin-bottom: 0.35rem;"><?= esc($line) ?></li>
+                                <?php endforeach; ?>
+                            </ol>
+                        </section>
+                    <?php elseif (!empty($page['graduate_profile'])): ?>
+                        <section style="margin-bottom: 3rem;">
+                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">คุณลักษณะบัณฑิต</h2>
+                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= nl2br(esc($page['graduate_profile'])) ?></div>
                         </section>
                     <?php endif; ?>
 
@@ -114,10 +136,36 @@
                         </section>
                     <?php endif; ?>
 
-                    <?php if (!empty($page['tuition_fees'])): ?>
+                    <?php
+                    helper('tuition_fees');
+                    $tuitionItemsPreview = tuition_fee_items_from_json_string($page['tuition_fees_json'] ?? null);
+                    $hasTuitionBlock = $tuitionItemsPreview !== [] || ! empty($page['tuition_fees'] ?? null);
+                    ?>
+                    <?php if ($hasTuitionBlock): ?>
                         <section style="margin-bottom: 3rem;">
                             <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">ค่าเล่าเรียน/ค่าธรรมเนียม</h2>
-                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['tuition_fees'] ?></div>
+                            <?php if ($tuitionItemsPreview !== []): ?>
+                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 0.95rem;">
+                                    <thead><tr style="background: var(--color-gray-50);">
+                                        <th style="border: 1px solid var(--color-gray-200); padding: 0.5rem 0.75rem; text-align: left;">รายการ</th>
+                                        <th style="border: 1px solid var(--color-gray-200); padding: 0.5rem 0.75rem; text-align: left;">จำนวน / รายละเอียด</th>
+                                    </tr></thead>
+                                    <tbody>
+                                    <?php foreach ($tuitionItemsPreview as $ti): ?>
+                                        <tr>
+                                            <td style="border: 1px solid var(--color-gray-200); padding: 0.5rem 0.75rem; color: var(--color-gray-800); vertical-align: top;"><?= esc($ti['label'] ?? '') ?></td>
+                                            <td style="border: 1px solid var(--color-gray-200); padding: 0.5rem 0.75rem; color: var(--color-gray-800); vertical-align: top;">
+                                                <strong><?= esc($ti['amount'] ?? '') ?></strong>
+                                                <?php if (!empty($ti['note'])): ?><div style="color: var(--color-gray-600); font-size: 0.9em; margin-top: 0.25rem;"><?= esc($ti['note']) ?></div><?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            <?php endif; ?>
+                            <?php if (!empty($page['tuition_fees'])): ?>
+                                <div style="color: var(--color-gray-700); line-height: 1.6;"><?= $page['tuition_fees'] ?></div>
+                            <?php endif; ?>
                         </section>
                     <?php endif; ?>
 

@@ -60,6 +60,10 @@ writable/database_dump_import_*.sql
 writable/session/*
 !writable/session/index.html
 
+# Ephemeral (program JSON import staging, etc.)
+writable/temp/**
+!writable/temp/index.html
+
 writable/uploads/*
 !writable/uploads/index.html
 

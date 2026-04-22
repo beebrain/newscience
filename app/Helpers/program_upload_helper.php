@@ -59,7 +59,7 @@ if (!function_exists('program_upload_path')) {
      * news, activities, downloads เก็บรวมในโฟลเดอร์ตาม feature — ใช้รหัสหลักสูตรในชื่อไฟล์ (p1_xxx)
      *
      * @param int $programId Program ID
-     * @param string $feature One of: 'news', 'downloads', 'activities'
+     * @param string $feature One of: 'news', 'downloads', 'activities', หรือโฟลเดอร์ใต้ programs/{id}/ เช่น 'hero', 'data'
      * @return string Absolute path (with trailing slash)
      */
     function program_upload_path(int $programId, string $feature): string

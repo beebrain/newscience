@@ -348,6 +348,33 @@
                         แนะนำ: แท็บย่อยแยกหัวข้อ — บันทึกท้ายฟอร์มหรือบันทึกเฉพาะส่วนตามปุ่ม
                     </p>
 
+                    <div class="program-bundle-panel" style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--color-gray-200); background: #fff; font-size: 0.875rem;">
+                        <h4 class="form-section-title" style="margin: 0 0 0.5rem 0; font-size: 1rem;">นำเข้า / ส่งออก JSON (เนื้อหา program_pages)</h4>
+                        <p class="form-text text-muted" style="margin: 0 0 0.75rem 0; font-size: 0.8125rem;">ดาวน์โหลด snapshot ก่อนแก้ หรือเตรียมย้ายเครื่อง — เอกสารต้องระบุ <code>schema_version</code> กับ <code>program_id</code> ให้ตรงหลักสูตรนี้ (<?= (int) $program['id'] ?>) — หลังส่งออกหรือหลังนำเข้าสำเร็จ ระบบจะบันทึกสำเนาไว้ที่ <code style="font-size:0.75rem;">writable/uploads/programs/<?= (int) $program['id'] ?>/data/content-bundle-latest.json</code> (แหล่งความจริงยังเป็นฐานข้อมูล)</p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;">
+                            <a href="<?= base_url('program-admin/bundle-export/' . (int) $program['id']) ?>" class="btn btn-outline btn-sm" download>ดาวน์โหลด JSON ปัจจุบัน</a>
+                            <a href="<?= base_url('program-admin/bundle-template/' . (int) $program['id']) ?>" class="btn btn-outline btn-sm" download>ดาวน์โหลดแม่แบบว่าง</a>
+                            <button type="button" class="btn btn-outline btn-sm" id="bundle-preview-current-btn">ดูสรุปฐานปัจจุบันต่อหัวข้อ</button>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end; margin-bottom: 0.5rem;">
+                            <div class="form-group" style="margin: 0;">
+                                <label for="bundle-file-input" class="form-label" style="font-size: 0.8125rem;">นำเข้าไฟล์ .json</label>
+                                <input type="file" id="bundle-file-input" accept=".json,application/json" class="form-control" style="max-width: 22rem; font-size: 0.875rem;">
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm" id="bundle-import-preview-btn">ตรวจก่อนนำเข้า</button>
+                        </div>
+                        <p id="bundle-import-msg" class="ajax-msg" style="min-height: 1.2em; margin: 0 0 0.5rem 0;" aria-live="polite"></p>
+                        <ul id="bundle-import-errors" class="bundle-error-list" aria-live="polite" style="display: none; margin: 0 0 0.5rem 0; padding: 0.5rem 0.75rem 0.5rem 1.25rem; border: 1px solid var(--color-error, #c92a2a); border-radius: 6px; background: #fff5f5; color: var(--color-error, #c92a2a); font-size: 0.8125rem; list-style: disc;"></ul>
+                        <div id="bundle-preview-wrap" style="display: none; margin-top: 0.5rem; max-height: 420px; overflow: auto; border: 1px solid var(--color-gray-200); border-radius: 8px; padding: 0.75rem; background: var(--color-gray-50);">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.8125rem;" id="bundle-compare-grid">
+                            </div>
+                        </div>
+                        <div id="bundle-commit-row" style="display: none; margin-top: 0.5rem;">
+                            <button type="button" class="btn btn-primary btn-sm" id="bundle-import-commit-btn">ยืนยันบันทึกลงฐานข้อมูล</button>
+                            <span class="form-text text-muted" style="font-size: 0.75rem; margin-left: 0.5rem;">token อายุ ~10 นาที</span>
+                        </div>
+                    </div>
+
                     <div class="content-subtab-bar" role="tablist" aria-label="แท็บย่อยเนื้อหาหลักสูตร">
                         <button type="button" class="content-subtab-btn active" data-content-sub="overview" role="tab" aria-selected="true" onclick="switchContentSubTab('overview')">1. ภาพรวม</button>
                         <button type="button" class="content-subtab-btn" data-content-sub="quality" role="tab" aria-selected="false" onclick="switchContentSubTab('quality')">2. มาตรฐาน &amp; PLO</button>
@@ -359,22 +386,32 @@
                     <div class="content-subtab-panels" style="padding: 1.5rem;">
 
                     <div id="content-sub-overview" class="content-subpanel active" role="tabpanel">
+                        <?php helper('overview_lists');
+                        $overview_objectives_init = overview_text_lines_from_db($program_page['objectives'] ?? null);
+                        $overview_graduate_init    = overview_text_lines_from_db($program_page['graduate_profile'] ?? null);
+                        ?>
                         <div class="form-section">
                             <h4 class="form-section-title">ภาพรวมหลักสูตร</h4>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">ปรัชญา วัตถุประสงค์ คุณลักษณะบัณฑิต</p>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">ปรัชญา (ย่อหน้า) · วัตถุประสงค์ · คุณลักษณะบัณฑิต — สองรายหลังกรอกทีละข้อ แสดงเป็นหมายเลขบนหน้าเว็บ (ข้อมูลเก่าหลายบรรทัดยังอ่านได้)</p>
                         <div class="form-group">
                             <label for="philosophy" class="form-label">ปรัชญาหลักสูตร</label>
-                            <textarea id="philosophy" name="philosophy" class="form-control" rows="4"><?= esc($program_page['philosophy'] ?? '') ?></textarea>
+                            <textarea id="philosophy" name="philosophy" class="form-control" rows="4" placeholder="ข้อความอธิบายปรัชญา"><?= esc($program_page['philosophy'] ?? '') ?></textarea>
                         </div>
 
                         <div class="form-group">
-                            <label for="objectives" class="form-label">วัตถุประสงค์</label>
-                            <textarea id="objectives" name="objectives" class="form-control" rows="4"><?= esc($program_page['objectives'] ?? '') ?></textarea>
+                            <label class="form-label">วัตถุประสงค์ (ทีละข้อ)</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">แต่ละข้อหนึ่งบรรทัด — บนหน้าเว็บแสดงเป็นรายการ 1. 2. 3.</p>
+                            <div id="objectives-line-editor" class="ol-line-editor" data-initial="<?= htmlspecialchars(json_encode($overview_objectives_init, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"></div>
+                            <button type="button" class="btn btn-outline btn-sm" id="objectives-line-add" style="margin-top:0.5rem">+ เพิ่มข้อ</button>
+                            <textarea name="objectives" id="objectives" class="ol-serialized" hidden aria-hidden="true"></textarea>
                         </div>
 
                         <div class="form-group">
-                            <label for="graduate_profile" class="form-label">คุณลักษณะบัณฑิต</label>
-                            <textarea id="graduate_profile" name="graduate_profile" class="form-control" rows="4"><?= esc($program_page['graduate_profile'] ?? '') ?></textarea>
+                            <label class="form-label">คุณลักษณะบัณฑิต (ทีละข้อ)</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">กำหนดทีละข้อ แสดงเป็นหมายเลขเช่นกัน</p>
+                            <div id="graduate-line-editor" class="ol-line-editor" data-initial="<?= htmlspecialchars(json_encode($overview_graduate_init, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"></div>
+                            <button type="button" class="btn btn-outline btn-sm" id="graduate-line-add" style="margin-top:0.5rem">+ เพิ่มข้อ</button>
+                            <textarea name="graduate_profile" id="graduate_profile" class="ol-serialized" hidden aria-hidden="true"></textarea>
                         </div>
                         </div>
                     </div>
@@ -434,7 +471,8 @@
                         }
                         ?>
                         <div class="form-group curriculum-editor-wrap">
-                            <label class="form-label">หลักสูตร/แผนการเรียน (รายวิชารายปี)</label>
+                            <label class="form-label">รายวิชาโครงสร้างหลักสูตร (แยกตามปี/ภาค)</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เพิ่มปี → ภาคเรียน → รายวิชา (หน่วยกิต) ใช้แสดงตารางบนหน้าเว็บ — คนละส่วนกับกล่อง &quot;แผนการเรียน (คำอธิบาย)&quot; ด้านล่าง</p>
                             <div id="curriculum-list" class="curriculum-list" data-initial="<?= htmlspecialchars(json_encode($curriculum_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
                             <div class="curriculum-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button type="button" class="btn btn-outline btn-sm" id="curriculum-add-year-btn">+ เพิ่มปี</button>
@@ -445,31 +483,37 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="curriculum_structure" class="form-label">โครงสร้างหลักสูตร (HTML)</label>
-                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<hr>">เส้นคั่น</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
+                            <label class="form-label">โครงสร้างหลักสูตร</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เพิ่มเป็นหัวข้อย่อยและรายละเอียด — กรอกข้อความธรรมดาได้ แทรกรูป/ลิงก์ที่ช่องรายละเอียด (คลิกในช่องก่อน แล้วใช้อัปโหลดแทรกหรือปุ่มด้านล่าง)</p>
+                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรก (โครงสร้าง)" style="margin-bottom: 0.5rem;">
+                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="curriculum_structure" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
+                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="curriculum_structure" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
+                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="curriculum_structure" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
+                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="curriculum_structure" data-insert="<hr>">เส้นคั่น</button>
+                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="curriculum_structure" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
                             </div>
-                            <textarea id="curriculum_structure" name="curriculum_structure" class="form-control" rows="8"><?= esc($program_page['curriculum_structure'] ?? '') ?></textarea>
+                            <div id="ptb-wrap-curriculum_structure" class="ptb-editor-wrap" data-ptb-kind="curriculum"></div>
+                            <button type="button" class="btn btn-outline btn-sm" id="ptb-add-curriculum_structure" style="margin-top:0.5rem">+ เพิ่มหัวข้อ</button>
+                            <textarea id="curriculum_structure" name="curriculum_structure" class="ptb-serialized-field" hidden aria-hidden="true"><?= esc($program_page['curriculum_structure'] ?? '') ?></textarea>
                             <div style="margin-top: 0.5rem;">
                                 <button type="button" class="btn btn-primary btn-sm" id="curriculum-structure-save-ajax-btn">บันทึกโครงสร้างหลักสูตร</button>
                                 <span id="curriculum-structure-ajax-msg" class="ajax-msg" aria-live="polite"></span>
                             </div>
                         </div>
 
-                        <div class="form-group content-with-toolbar">
-                            <label for="study_plan" class="form-label">แผนการเรียน (HTML)</label>
-                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<hr>">เส้นคั่น</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
+                        <div class="form-group">
+                            <label class="form-label">แผนการเรียน (คำอธิบาย)</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">อธิบายแนวทาง/ลำดับการเรียน (แยกจากตารางรายวิชารายปีด้านบน)</p>
+                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรก (แผนการเรียน)" style="margin-bottom: 0.5rem;">
+                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="study_plan" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
+                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="study_plan" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
+                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="study_plan" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
+                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="study_plan" data-insert="<hr>">เส้นคั่น</button>
+                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="study_plan" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
                             </div>
-                            <textarea id="study_plan" name="study_plan" class="form-control" rows="6"><?= esc($program_page['study_plan'] ?? '') ?></textarea>
+                            <div id="ptb-wrap-study_plan" class="ptb-editor-wrap" data-ptb-kind="study"></div>
+                            <button type="button" class="btn btn-outline btn-sm" id="ptb-add-study_plan" style="margin-top:0.5rem">+ เพิ่มหัวข้อ</button>
+                            <textarea id="study_plan" name="study_plan" class="ptb-serialized-field" hidden aria-hidden="true"><?= esc($program_page['study_plan'] ?? '') ?></textarea>
                         </div>
                         </div>
                     </div>
@@ -510,8 +554,17 @@
                             </div>
                         </div>
 
+                        <?php helper('career_cards'); ?>
+                        <div class="form-group career-cards-admin">
+                            <label class="form-label">อาชีพที่สามารถประกอบได้ (การ์ด)</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เพิ่มทีละอาชีพ — ชื่อ คำอธิบายสั้น และไอคอน (แสดงเป็นบัตรบนหน้าเว็บ)</p>
+                            <div id="career-cards-editor" class="career-cards-editor"></div>
+                            <button type="button" class="btn btn-outline btn-sm" id="career-card-add-btn" style="margin-top: 0.5rem;">+ เพิ่มอาชีพ</button>
+                            <textarea name="careers_json" id="careers_json" style="display: none !important;" aria-hidden="true"><?= htmlspecialchars($program_page['careers_json'] ?? '[]', ENT_QUOTES, 'UTF-8') ?></textarea>
+                        </div>
                         <div class="form-group content-with-toolbar">
-                            <label for="career_prospects" class="form-label">อาชีพที่สามารถประกอบได้</label>
+                            <label for="career_prospects" class="form-label">รายละเอียดเพิ่มเติม (HTML ไม่บังคับ)</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">ย่อหน้า/รูป/รายการยาว — แสดงใต้การ์ดเมื่อกรอก</p>
                             <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
@@ -522,8 +575,16 @@
                             <textarea id="career_prospects" name="career_prospects" class="form-control" rows="4"><?= esc($program_page['career_prospects'] ?? '') ?></textarea>
                         </div>
 
+                        <div class="form-group tuition-fees-items-admin">
+                            <label class="form-label">ค่าเล่าเรียน/ค่าธรรมเนียม (รายการ)</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เพิ่มทีละรายการ — ชื่อรายการ จำนวนเงินหรือข้อความกำหนด หมายเหตุ (ไม่บังคับ)</p>
+                            <div id="tuition-fees-editor"></div>
+                            <button type="button" class="btn btn-outline btn-sm" id="tuition-fee-add-btn" style="margin-top: 0.5rem;">+ เพิ่มรายการ</button>
+                            <textarea name="tuition_fees_json" id="tuition_fees_json" style="display: none !important;" aria-hidden="true"><?= htmlspecialchars($program_page['tuition_fees_json'] ?? '[]', ENT_QUOTES, 'UTF-8') ?></textarea>
+                        </div>
                         <div class="form-group content-with-toolbar">
-                            <label for="tuition_fees" class="form-label">ค่าเล่าเรียน/ค่าธรรมเนียม</label>
+                            <label for="tuition_fees" class="form-label">รายละเอียดเพิ่มเติม (HTML ไม่บังคับ)</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">ตารางยาว เงื่อนไขพิเศษ หรือลิงก์ประกาศ — แสดงใต้รายการเมื่อกรอก</p>
                             <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
                                 <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
@@ -1238,7 +1299,19 @@
                     var ta = document.getElementById(targetId);
                     var snippet = res.is_image ? lastSnippetImg : lastSnippetLink;
                     focusTargetSubpanel(targetId);
-                    if (ta) insertAtCursorTextarea(ta, snippet);
+                    if (ta && ta.classList && ta.classList.contains('ptb-serialized-field')) {
+                        var b = window._ptbLastBody;
+                        if (!b || b.getAttribute('data-ptb-field') !== targetId) {
+                            var w = document.getElementById('ptb-wrap-' + targetId);
+                            b = w ? w.querySelector('.ptb-block-body') : null;
+                        }
+                        if (b) {
+                            insertAtCursorTextarea(b, snippet);
+                            if (typeof window.syncPtbField === 'function') window.syncPtbField(targetId);
+                        }
+                    } else if (ta) {
+                        insertAtCursorTextarea(ta, snippet);
+                    }
                     if (msg) { msg.textContent = 'อัปโหลดแล้ว — แทรกในช่องที่เลือกแล้ว (อย่าลืมกดบันทึกเนื้อหา)'; msg.style.color = 'var(--secondary)'; }
                     if (result) {
                         result.style.display = 'block';
@@ -2096,10 +2169,369 @@
         });
     }
 
+    // --- โครงสร้างหลักสูตร / แผนการเรียน: หัวข้อ + รายละเอียด (บันทึกเป็น HTML มาร์กเกอร์ ไม่ใช่ JSON) ---
+    (function initPtbEditors() {
+        function bodyLooksLikeHtml(s) {
+            if (!s) return false;
+            return /<(img|a|p|ul|ol|h\d|br|div|span|table|tr|td|th|em|strong|b|i|hr)\b/i.test(s);
+        }
+        function bodyToStoredHtml(s) {
+            if (!s) return '';
+            if (bodyLooksLikeHtml(s)) {
+                return s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+            }
+            return escapeHtml(s).replace(/\n/g, '<br>');
+        }
+        function parsePtb(raw, kind) {
+            if (!raw || !String(raw).trim()) return [{ title: '', body: '' }];
+            var s = String(raw);
+            if (s.indexOf('ptb-' + kind) === -1) {
+                return [{ title: '', body: s.trim() }];
+            }
+            var doc;
+            try {
+                doc = new DOMParser().parseFromString(s, 'text/html');
+            } catch (e) {
+                return [{ title: '', body: s.trim() }];
+            }
+            var root = doc.querySelector('.ptb-' + kind);
+            if (!root) return [{ title: '', body: s.trim() }];
+            var blocks = root.querySelectorAll('.ptb-block');
+            if (!blocks || !blocks.length) return [{ title: '', body: s.trim() }];
+            var out = [];
+            for (var i = 0; i < blocks.length; i++) {
+                var b = blocks[i];
+                var th = b.querySelector('.ptb-title');
+                var bd = b.querySelector('.ptb-body');
+                out.push({
+                    title: th ? th.textContent.trim() : '',
+                    body: bd ? (bd.innerHTML || '').trim() : ''
+                });
+            }
+            return out.length ? out : [{ title: '', body: s.trim() }];
+        }
+        function serializePtb(rows, kind) {
+            var cls = 'ptb ptb-' + kind;
+            var h = '\n<!--ptb:' + kind + ':v1-->\n<div class="' + cls + '" data-ptb-version="1">';
+            for (var i = 0; i < rows.length; i++) {
+                var r = rows[i];
+                var title = r.title != null ? String(r.title) : '';
+                var body = r.body != null ? String(r.body) : '';
+                if (!title.trim() && !body.trim()) continue;
+                h += '<section class="ptb-block"><h3 class="ptb-title">' + escapeHtml(title) + '</h3><div class="ptb-body">' + bodyToStoredHtml(body) + '</div></section>';
+            }
+            h += '</div>\n<!--/ptb:' + kind + ':v1-->\n';
+            return h.trim() ? h : '';
+        }
+        function addPtbRow(wrap, fieldName, data) {
+            data = data || {};
+            var row = document.createElement('div');
+            row.className = 'ptb-dyn-block';
+            row.style.cssText = 'border:1px solid var(--color-gray-200); border-radius:8px; padding:0.9rem; margin-bottom:0.6rem; background:#fafafa;';
+            row.innerHTML =
+                '<div class="form-group" style="margin:0 0 0.6rem 0;">' +
+                '<label class="form-label" style="font-size:0.8rem;">หัวข้อ</label>' +
+                '<input type="text" class="form-control ptb-block-title" maxlength="500" value="" placeholder="เช่น โครงสร้างเครดิตรวม">' +
+                '</div>' +
+                '<div class="form-group" style="margin:0;">' +
+                '<label class="form-label" style="font-size:0.8rem;">รายละเอียด</label>' +
+                '<textarea class="form-control ptb-block-body" rows="5" data-ptb-field="' + fieldName + '"></textarea>' +
+                '</div>' +
+                '<div style="margin-top:0.5rem;text-align:right;"><button type="button" class="btn btn-outline btn-sm ptb-row-remove">ลบก้อนนี้</button></div>';
+            var titleIn = row.querySelector('.ptb-block-title');
+            var bodyIn = row.querySelector('.ptb-block-body');
+            if (titleIn) titleIn.value = data.title != null ? data.title : '';
+            if (bodyIn) bodyIn.value = data.body != null ? data.body : '';
+            if (bodyIn) {
+                bodyIn.addEventListener('focus', function () { window._ptbLastBody = bodyIn; });
+            }
+            row.querySelector('.ptb-row-remove').addEventListener('click', function () { row.remove(); syncPtbField(fieldName); });
+            ['input', 'change'].forEach(function (ev) {
+                row.addEventListener(ev, function (e) {
+                    if (e.target && (e.target.classList.contains('ptb-block-title') || e.target.classList.contains('ptb-block-body'))) {
+                        syncPtbField(fieldName);
+                    }
+                });
+            });
+            wrap.appendChild(row);
+        }
+        function syncPtbField(fieldName) {
+            var wrap = document.getElementById('ptb-wrap-' + fieldName);
+            var hidden = document.getElementById(fieldName);
+            if (!wrap || !hidden) return;
+            var kind = wrap.getAttribute('data-ptb-kind') || (fieldName === 'study_plan' ? 'study' : 'curriculum');
+            var rows = [];
+            wrap.querySelectorAll('.ptb-dyn-block').forEach(function (row) {
+                var t = (row.querySelector('.ptb-block-title') && row.querySelector('.ptb-block-title').value) || '';
+                var b = (row.querySelector('.ptb-block-body') && row.querySelector('.ptb-block-body').value) || '';
+                if (!t.trim() && !b.trim()) return;
+                rows.push({ title: t, body: b });
+            });
+            hidden.value = rows.length ? serializePtb(rows, kind) : '';
+        }
+        function initWrap(fieldName) {
+            var wrap = document.getElementById('ptb-wrap-' + fieldName);
+            var hidden = document.getElementById(fieldName);
+            if (!wrap || !hidden) return;
+            var kind = wrap.getAttribute('data-ptb-kind') || (fieldName === 'study_plan' ? 'study' : 'curriculum');
+            var initial = (hidden && hidden.value) ? hidden.value : '';
+            var rows = parsePtb(initial, kind);
+            wrap.innerHTML = '';
+            if (rows.length === 0) rows = [{ title: '', body: '' }];
+            for (var i = 0; i < rows.length; i++) {
+                addPtbRow(wrap, fieldName, rows[i]);
+            }
+            var firstB = wrap.querySelector('.ptb-block-body');
+            if (firstB) window._ptbLastBody = firstB;
+            syncPtbField(fieldName);
+        }
+        window.syncPtbField = function () {};
+        window.syncPtbAll = function () {};
+        if (document.getElementById('ptb-wrap-curriculum_structure')) {
+            initWrap('curriculum_structure');
+            initWrap('study_plan');
+            document.getElementById('ptb-add-curriculum_structure') && document.getElementById('ptb-add-curriculum_structure').addEventListener('click', function () {
+                var w = document.getElementById('ptb-wrap-curriculum_structure');
+                if (w) addPtbRow(w, 'curriculum_structure', {});
+            });
+            document.getElementById('ptb-add-study_plan') && document.getElementById('ptb-add-study_plan').addEventListener('click', function () {
+                var w = document.getElementById('ptb-wrap-study_plan');
+                if (w) addPtbRow(w, 'study_plan', {});
+            });
+            document.querySelectorAll('.ptb-insert-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var fid = this.getAttribute('data-ptb-field');
+                    if (!fid) return;
+                    var ins = this.getAttribute('data-insert') || '';
+                    var body = window._ptbLastBody;
+                    if (!body || body.getAttribute('data-ptb-field') !== fid) {
+                        var w = document.getElementById('ptb-wrap-' + fid);
+                        body = w ? w.querySelector('.ptb-block-body') : null;
+                    }
+                    if (body) {
+                        var start = typeof body.selectionStart === 'number' ? body.selectionStart : body.value.length;
+                        var end = typeof body.selectionEnd === 'number' ? body.selectionEnd : body.value.length;
+                        var v = body.value;
+                        body.value = v.substring(0, start) + ins + v.substring(end);
+                        if (typeof body.setSelectionRange === 'function') {
+                            var p = start + ins.length;
+                            body.setSelectionRange(p, p);
+                        }
+                        body.focus();
+                        syncPtbField(fid);
+                    }
+                });
+            });
+            document.addEventListener('focusin', function (e) {
+                if (e.target && e.target.classList && e.target.classList.contains('ptb-block-body')) {
+                    window._ptbLastBody = e.target;
+                }
+            });
+            window.syncPtbField = syncPtbField;
+            window.syncPtbAll = function () {
+                syncPtbField('curriculum_structure');
+                syncPtbField('study_plan');
+            };
+        }
+    })();
+
+    (function initOverviewLineEditors() {
+        function addRow(wrap, val) {
+            var row = document.createElement('div');
+            row.className = 'ol-line-row';
+            row.style.cssText = 'display:flex; gap:0.5rem; align-items:center; margin-bottom:0.45rem;';
+            row.innerHTML =
+                '<span class="ol-line-badge" style="min-width:1.6rem; text-align:center; font-size:0.8rem; color:var(--color-gray-500); font-weight:600;">1</span>' +
+                '<input type="text" class="form-control ol-line-input" maxlength="2000" value="" style="flex:1;" placeholder="พิมพ์ข้อความข้อนี้" />' +
+                '<button type="button" class="btn btn-outline btn-sm ol-line-remove" title="ลบข้อนี้">ลบ</button>';
+            var inp = row.querySelector('.ol-line-input');
+            if (inp && val != null) inp.value = val;
+            row.querySelector('.ol-line-remove').addEventListener('click', function () { row.remove(); renumber(wrap); syncOverviewOne(wrap); });
+            ['input', 'change'].forEach(function (ev) { row.addEventListener(ev, function () { syncOverviewOne(wrap); }); });
+            wrap.appendChild(row);
+            renumber(wrap);
+        }
+        function renumber(wrap) {
+            if (!wrap) return;
+            var n = 1;
+            wrap.querySelectorAll('.ol-line-row').forEach(function (r) {
+                var b = r.querySelector('.ol-line-badge');
+                if (b) b.textContent = String(n);
+                n++;
+            });
+        }
+        function syncOverviewOne(wrap) {
+            if (!wrap) return;
+            var hidden = wrap.id === 'objectives-line-editor' ? document.getElementById('objectives') : document.getElementById('graduate_profile');
+            if (!hidden) return;
+            var arr = [];
+            wrap.querySelectorAll('.ol-line-input').forEach(function (inp) {
+                var v = (inp.value || '').trim();
+                if (v) arr.push(v);
+            });
+            hidden.value = JSON.stringify(arr);
+        }
+        function initEditor(editorId, addBtnId) {
+            var wrap = document.getElementById(editorId);
+            var addBtn = document.getElementById(addBtnId);
+            if (!wrap) return;
+            var initial = [];
+            try { initial = JSON.parse(wrap.getAttribute('data-initial') || '[]'); } catch (e1) { initial = []; }
+            if (!Array.isArray(initial)) initial = [];
+            if (initial.length === 0) initial = [''];
+            initial.forEach(function (line) { addRow(wrap, line == null ? '' : line); });
+            if (addBtn) addBtn.addEventListener('click', function () { addRow(wrap, ''); });
+            renumber(wrap);
+            syncOverviewOne(wrap);
+        }
+        initEditor('objectives-line-editor', 'objectives-line-add');
+        initEditor('graduate-line-editor', 'graduate-line-add');
+        window.syncOverviewLineEditors = function () {
+            var o = document.getElementById('objectives-line-editor');
+            var g = document.getElementById('graduate-line-editor');
+            if (o) syncOverviewOne(o);
+            if (g) syncOverviewOne(g);
+        };
+    })();
+
     contentForm.addEventListener('submit', function () {
         if (typeof buildLearningStandardsJson === 'function') buildLearningStandardsJson();
         if (typeof buildElosJson === 'function') buildElosJson();
+        if (typeof window.syncOverviewLineEditors === 'function') window.syncOverviewLineEditors();
+        if (typeof window.syncPtbAll === 'function') window.syncPtbAll();
+        if (typeof buildCareersJson === 'function') buildCareersJson();
+        if (typeof buildTuitionJson === 'function') buildTuitionJson();
     });
+
+    // --- ค่าเล่าเรียน: label + amount + note -> tuition_fees_json ---
+    (function () {
+        var editor = document.getElementById('tuition-fees-editor');
+        var hidden = document.getElementById('tuition_fees_json');
+        var addBtn = document.getElementById('tuition-fee-add-btn');
+        if (!editor || !hidden) return;
+
+        function addRow(data) {
+            data = data || {};
+            var row = document.createElement('div');
+            row.className = 'tuition-fee-row';
+            row.style.cssText = 'display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-start; padding: 0.9rem; margin-bottom: 0.5rem; border: 1px solid var(--color-gray-200); border-radius: 8px; background: #fafafa;';
+            row.innerHTML =
+                '<div class="form-group" style="flex: 1; min-width: 200px; margin:0"><label class="form-label" style="font-size:0.8rem">รายการ</label>' +
+                '<input type="text" class="form-control tf-label" maxlength="200" value="" placeholder="เช่น ค่าลงทะเบียนเรียน (ภาคปกติ)"></div>' +
+                '<div class="form-group" style="flex: 1; min-width: 180px; margin:0"><label class="form-label" style="font-size:0.8rem">จำนวนเงิน / ข้อความ</label>' +
+                '<input type="text" class="form-control tf-amount" maxlength="500" value="" placeholder="เช่น 15,000 บาท / ภาค"></div>' +
+                '<div class="form-group" style="flex: 1 1 100%; min-width: 0; margin:0"><label class="form-label" style="font-size:0.8rem">หมายเหตุ (ไม่บังคับ)</label>' +
+                '<input type="text" class="form-control tf-note" maxlength="500" value="" placeholder="เช่น อ้างอิงประกาศ 2567"></div>' +
+                '<button type="button" class="btn btn-outline btn-sm tuition-row-remove" style="align-self: flex-end;">ลบ</button>';
+            var lb = row.querySelector('.tf-label');
+            var am = row.querySelector('.tf-amount');
+            var nt = row.querySelector('.tf-note');
+            if (lb) lb.value = data.label || data.title || '';
+            if (am) am.value = data.amount || data.value || '';
+            if (nt) nt.value = data.note || data.remark || '';
+            row.querySelector('.tuition-row-remove').addEventListener('click', function () { row.remove(); sync(); });
+            ['input', 'change'].forEach(function (ev) {
+                row.addEventListener(ev, function (e) {
+                    if (e.target && (e.target.classList.contains('tf-label') || e.target.classList.contains('tf-amount') || e.target.classList.contains('tf-note'))) sync();
+                });
+            });
+            editor.appendChild(row);
+        }
+
+        function sync() {
+            var rows = editor.querySelectorAll('.tuition-fee-row');
+            var arr = [];
+            rows.forEach(function (row) {
+                var label = (row.querySelector('.tf-label') || { value: '' }).value || '';
+                var amount = (row.querySelector('.tf-amount') || { value: '' }).value || '';
+                var note = (row.querySelector('.tf-note') || { value: '' }).value || '';
+                if (!label.trim() && !amount.trim() && !note.trim()) return;
+                arr.push({ label: label.trim(), amount: amount.trim(), note: note.trim() });
+            });
+            hidden.value = JSON.stringify(arr);
+        }
+        window.buildTuitionJson = sync;
+
+        var initial = [];
+        try { initial = JSON.parse((hidden && hidden.value) ? hidden.value : '[]'); } catch (e) { initial = []; }
+        if (!Array.isArray(initial)) initial = [];
+        if (initial.length === 0) {
+            addRow({ label: '', amount: '', note: '' });
+        } else {
+            initial.forEach(function (it) { addRow(it); });
+        }
+        if (addBtn) addBtn.addEventListener('click', function () { addRow({}); sync(); });
+        sync();
+    })();
+
+    // --- อาชีพ (การ์ด): title + คำอธิบาย + ไอคอน -> careers_json ---
+    (function () {
+        var editor = document.getElementById('career-cards-editor');
+        var hidden = document.getElementById('careers_json');
+        var addBtn = document.getElementById('career-card-add-btn');
+        if (!editor || !hidden) return;
+
+        var ICON_KEYS = <?= json_encode(career_icon_whitelist(), JSON_UNESCAPED_UNICODE) ?>;
+        var ICON_LABELS = { cpu: 'เทคโนโลยี / คอมพิวเตอร์', chart: 'วิเคราะห์ / ข้อมูล', search: 'วิจัย / สำรวจ', code: 'พัฒนา / โปรแกรม', users: 'ทีม / บริการ', rocket: 'โอกาส / ก้าวหน้า', mortar: 'การศึกษา / ฝึกอบรม', target: 'เป้าหมาย / มุ่งมั่น', briefcase: 'องค์กร / ธุรกิจ', book: 'วิชาการ / ตำรา' };
+
+        function selectOptions(val) {
+            var h = '';
+            ICON_KEYS.forEach(function (k) {
+                h += '<option value="' + k + '"' + (k === val ? ' selected' : '') + '>' + (ICON_LABELS[k] || k) + '</option>';
+            });
+            return h;
+        }
+
+        function addRow(data) {
+            data = data || {};
+            var row = document.createElement('div');
+            row.className = 'career-card-row';
+            row.style.cssText = 'display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-start; padding: 0.9rem; margin-bottom: 0.5rem; border: 1px solid var(--color-gray-200); border-radius: 8px; background: #fafafa;';
+            var icon = (data.icon && ICON_KEYS.indexOf(data.icon) >= 0) ? data.icon : 'rocket';
+            row.innerHTML =
+                '<div class="form-group" style="flex: 1; min-width: 180px; margin:0"><label class="form-label" style="font-size:0.8rem">ชื่ออาชีพ / บทบาท</label>' +
+                '<input type="text" class="form-control cc-title" maxlength="200" value="" placeholder="เช่น นักวิเคราะห์ข้อมูล"></div>' +
+                '<div class="form-group" style="min-width: 160px; max-width: 220px; margin:0"><label class="form-label" style="font-size:0.8rem">ไอคอน</label>' +
+                '<select class="form-control cc-icon">' + selectOptions(icon) + '</select></div>' +
+                '<div class="form-group" style="flex: 1 1 100%; min-width: 0; margin:0"><label class="form-label" style="font-size:0.8rem">คำอธิบายสั้น (แสดงใต้หัวข้อ)</label>' +
+                '<textarea class="form-control cc-desc" rows="2" maxlength="2000" placeholder="สายงาน หรือลักษณะการประกอบอาชีพ"></textarea></div>' +
+                '<button type="button" class="btn btn-outline btn-sm career-row-remove" style="align-self: flex-end;">ลบ</button>';
+            var titleIn = row.querySelector('.cc-title');
+            var descIn = row.querySelector('.cc-desc');
+            if (titleIn) titleIn.value = data.title || '';
+            if (descIn) descIn.value = (data.desc != null && data.desc !== '') ? data.desc : (data.description || '');
+            row.querySelector('.career-row-remove').addEventListener('click', function () { row.remove(); sync(); });
+            ['input', 'change'].forEach(function (ev) {
+                row.addEventListener(ev, function (e) { if (e.target && (e.target.classList.contains('cc-title') || e.target.classList.contains('cc-desc') || e.target.classList.contains('cc-icon'))) sync(); });
+            });
+            editor.appendChild(row);
+        }
+
+        function sync() {
+            var rows = editor.querySelectorAll('.career-card-row');
+            var arr = [];
+            rows.forEach(function (row) {
+                var t = (row.querySelector('.cc-title') || { value: '' }).value || '';
+                var d = (row.querySelector('.cc-desc') || { value: '' }).value || '';
+                var ic = (row.querySelector('.cc-icon') || { value: 'rocket' }).value || 'rocket';
+                if (!t.trim() && !d.trim()) return;
+                arr.push({ title: t.trim(), desc: d.trim(), icon: ic });
+            });
+            hidden.value = JSON.stringify(arr);
+        }
+        window.buildCareersJson = sync;
+
+        var initial = [];
+        try { initial = JSON.parse((hidden && hidden.value) ? hidden.value : '[]'); } catch (e) { initial = []; }
+        if (!Array.isArray(initial)) initial = [];
+        if (initial.length === 0) {
+            addRow({ title: '', desc: '', icon: 'rocket' });
+        } else {
+            initial.forEach(function (it) { addRow(it); });
+        }
+        if (addBtn) addBtn.addEventListener('click', function () { addRow({}); sync(); });
+        sync();
+    })();
 
     // --- ศิษย์เก่าถึงรุ่นน้อง: repeater + อัปโหลดรูป (ครอป 1:1) + บันทึก Ajax ---
     var alumniList = document.getElementById('alumni-list');
@@ -2459,6 +2891,7 @@
         document.getElementById('curriculum-structure-save-ajax-btn') && document.getElementById('curriculum-structure-save-ajax-btn').addEventListener('click', function () {
             var btn = this;
             var msgEl = document.getElementById('curriculum-structure-ajax-msg');
+            if (typeof window.syncPtbField === 'function') window.syncPtbField('curriculum_structure');
             btn.disabled = true;
             if (msgEl) msgEl.textContent = 'กำลังบันทึก...';
             var fd = new FormData();
@@ -2471,6 +2904,138 @@
                     if (msgEl) { msgEl.textContent = res.success ? 'บันทึกโครงสร้างหลักสูตรเรียบร้อย' : (res.message || 'เกิดข้อผิดพลาด'); msgEl.style.color = res.success ? 'var(--secondary)' : 'var(--color-error)'; }
                 })
                 .catch(function () { btn.disabled = false; if (msgEl) msgEl.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ'; });
+        });
+    }
+})();
+</script>
+<script>
+(function () {
+    var programId = <?= (int) ($program['id'] ?? 0) ?>;
+    var form = document.getElementById('content-page-form');
+    var msg = document.getElementById('bundle-import-msg');
+    var wrap = document.getElementById('bundle-preview-wrap');
+    var grid = document.getElementById('bundle-compare-grid');
+    var commitRow = document.getElementById('bundle-commit-row');
+    var commitBtn = document.getElementById('bundle-import-commit-btn');
+    var previewBtn = document.getElementById('bundle-import-preview-btn');
+    var fileInput = document.getElementById('bundle-file-input');
+    var currentBtn = document.getElementById('bundle-preview-current-btn');
+    var errorsList = document.getElementById('bundle-import-errors');
+    var bundleToken = null;
+
+    function clearErrors() {
+        if (!errorsList) return;
+        errorsList.innerHTML = '';
+        errorsList.style.display = 'none';
+    }
+    function showErrors(errors) {
+        if (!errorsList) return;
+        if (!errors || !errors.length) { clearErrors(); return; }
+        var h = '';
+        errors.forEach(function (e) { h += '<li>' + esc(e) + '</li>'; });
+        errorsList.innerHTML = h;
+        errorsList.style.display = 'block';
+    }
+
+    function csrfPair() {
+        if (!form) return { name: '', value: '' };
+        var inp = form.querySelector('input[name="csrf_test_name"]') || form.querySelector('input[type="hidden"][name*="csrf"]');
+        return inp ? { name: inp.name, value: inp.value } : { name: '', value: '' };
+    }
+    function esc(s) {
+        var d = document.createElement('div');
+        d.textContent = s == null ? '' : String(s);
+        return d.innerHTML;
+    }
+    function renderSections(sections) {
+        if (!sections || !sections.length) return '<p style="color:var(--color-gray-500);">—</p>';
+        var h = '';
+        sections.forEach(function (sec) {
+            h += '<div style="margin-bottom:0.5rem; padding-bottom:0.35rem; border-bottom:1px dashed var(--color-gray-200);"><div style="font-weight:600; margin-bottom:0.2rem;">' + esc(sec.title) + '</div>';
+            (sec.items || []).forEach(function (it) {
+                h += '<div style="font-size:0.78rem; line-height:1.4;"><span style="color:var(--color-gray-600);">' + esc(it.label) + '</span><br><span style="word-break:break-word;">' + esc(it.value) + '</span></div>';
+            });
+            h += '</div>';
+        });
+        return h;
+    }
+    if (currentBtn) {
+        currentBtn.addEventListener('click', function () {
+            if (msg) { msg.textContent = 'กำลังโหลด...'; msg.style.color = ''; }
+            clearErrors();
+            fetch('<?= base_url('program-admin/bundle-preview/') ?>' + programId, { method: 'GET', credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (!res.success) { if (msg) { msg.textContent = res.message || 'ผิดพลาด'; msg.style.color = 'var(--color-error)'; } return; }
+                    if (grid) grid.innerHTML = '<div>' + renderSections(res.sections) + '</div><div style="color:var(--color-gray-500); font-size:0.75rem;">(ฝั่งขวา: นำเข้า — ยังไม่มี)</div>';
+                    if (wrap) wrap.style.display = 'block';
+                    if (msg) { msg.textContent = 'ฐานปัจจุบัน'; msg.style.color = 'var(--secondary)'; }
+                    if (commitRow) commitRow.style.display = 'none';
+                    bundleToken = null;
+                })
+                .catch(function () { if (msg) { msg.textContent = 'เชื่อมต่อไม่สำเร็จ'; msg.style.color = 'var(--color-error)'; } });
+        });
+    }
+    if (previewBtn && fileInput) {
+        previewBtn.addEventListener('click', function () {
+            var f = fileInput.files && fileInput.files[0];
+            if (!f) { if (msg) { msg.textContent = 'เลือกไฟล์ .json ก่อน'; msg.style.color = 'var(--color-error)'; } return; }
+            var c = csrfPair();
+            var fd = new FormData();
+            fd.append('bundle_file', f);
+            if (c.name) fd.append(c.name, c.value);
+            if (msg) { msg.textContent = 'กำลังตรวจ...'; msg.style.color = ''; }
+            clearErrors();
+            if (commitRow) commitRow.style.display = 'none';
+            bundleToken = null;
+            fetch('<?= base_url('program-admin/bundle-import-preview/') ?>' + programId, { method: 'POST', body: fd, credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (!res.success) {
+                        if (msg) { msg.textContent = res.message || 'นำเข้าไม่ผ่าน'; msg.style.color = 'var(--color-error)'; }
+                        showErrors(res.errors);
+                        return;
+                    }
+                    bundleToken = res.token;
+                    if (grid) {
+                        grid.innerHTML = '<div><div style="font-weight:600; margin-bottom:0.25rem; color:var(--color-gray-800);">ฐานปัจจุบัน (ต่อหัวข้อ)</div>' + renderSections(res.current_sections) + '</div>' +
+                            '<div><div style="font-weight:600; margin-bottom:0.25rem; color:var(--color-primary);">สิ่งที่นำเข้า (ก่อนบันทึก)</div>' + renderSections(res.preview_sections) + '</div>';
+                    }
+                    if (wrap) wrap.style.display = 'block';
+                    if (commitRow) commitRow.style.display = 'block';
+                    if (msg) {
+                        msg.textContent = 'ตรวจผ่าน — sha1: ' + (res.file_sha1 || '').slice(0, 12) + '… กด "ยืนยันบันทึก" หรืออัปโหลดไฟล์ใหม่เพื่อล้าง';
+                        msg.style.color = 'var(--secondary)';
+                    }
+                })
+                .catch(function () { if (msg) { msg.textContent = 'เชื่อมต่อไม่สำเร็จ'; msg.style.color = 'var(--color-error)'; } });
+        });
+    }
+    if (commitBtn) {
+        commitBtn.addEventListener('click', function () {
+            if (!bundleToken) { if (msg) { msg.textContent = 'ยังไม่มี token ให้รัน ตรวจก่อนนำเข้า อีกครั้ง'; msg.style.color = 'var(--color-error)'; } return; }
+            var c = csrfPair();
+            var fd = new FormData();
+            fd.append('token', bundleToken);
+            if (c.name) fd.append(c.name, c.value);
+            if (msg) { msg.textContent = 'กำลังบันทึก...'; msg.style.color = ''; }
+            clearErrors();
+            commitBtn.disabled = true;
+            fetch('<?= base_url('program-admin/bundle-import-commit/') ?>' + programId, { method: 'POST', body: fd, credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    commitBtn.disabled = false;
+                    if (!res.success) {
+                        if (msg) { msg.textContent = res.message || 'บันทึกไม่สำเร็จ'; msg.style.color = 'var(--color-error)'; }
+                        showErrors(res.errors);
+                        return;
+                    }
+                    if (msg) { msg.textContent = res.message || 'สำเร็จ'; msg.style.color = 'var(--secondary)'; }
+                    if (commitRow) commitRow.style.display = 'none';
+                    bundleToken = null;
+                    if (res.success) window.location.reload();
+                })
+                .catch(function () { commitBtn.disabled = false; if (msg) { msg.textContent = 'เชื่อมต่อไม่สำเร็จ'; msg.style.color = 'var(--color-error)'; } });
         });
     }
 })();

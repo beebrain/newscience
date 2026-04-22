@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin\ProgramAdmin;
 
 use App\Controllers\BaseController;
+use App\Services\ProgramContentBundleService;
 use App\Models\ProgramModel;
 use App\Models\ProgramPageModel;
 use App\Models\ProgramDownloadModel;
@@ -304,15 +305,17 @@ class Dashboard extends BaseController
 
         $rules = [
             'philosophy' => 'max_length[5000]',
-            'objectives' => 'max_length[5000]',
-            'graduate_profile' => 'max_length[5000]',
+            'objectives' => 'max_length[20000]',
+            'graduate_profile' => 'max_length[20000]',
             'elos_json' => 'max_length[65000]',
             'learning_standards_json' => 'max_length[65000]',
             'curriculum_json' => 'max_length[65000]',
             'curriculum_structure' => 'max_length[10000]',
             'study_plan' => 'max_length[10000]',
             'career_prospects' => 'max_length[5000]',
+            'careers_json' => 'max_length[65000]',
             'tuition_fees' => 'max_length[5000]',
+            'tuition_fees_json' => 'max_length[65000]',
             'admission_info' => 'max_length[5000]',
             'contact_info' => 'max_length[5000]',
             'intro_video_url' => 'max_length[500]',
@@ -324,17 +327,27 @@ class Dashboard extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        helper('career_cards');
+        helper('tuition_fees');
+        helper('overview_lists');
+        $careersJson = career_json_normalize($this->request->getPost('careers_json'));
+        $tuitionFeesJson = tuition_fees_json_normalize($this->request->getPost('tuition_fees_json'));
+        $objectivesStored = overview_lines_normalize($this->request->getPost('objectives'));
+        $graduateStored = overview_lines_normalize($this->request->getPost('graduate_profile'));
+
         $updateData = [
             'philosophy' => $this->request->getPost('philosophy'),
-            'objectives' => $this->request->getPost('objectives'),
-            'graduate_profile' => $this->request->getPost('graduate_profile'),
+            'objectives' => $objectivesStored,
+            'graduate_profile' => $graduateStored,
             'elos_json' => $this->request->getPost('elos_json'),
             'learning_standards_json' => $this->request->getPost('learning_standards_json'),
             'curriculum_json' => $this->request->getPost('curriculum_json'),
             'curriculum_structure' => $this->request->getPost('curriculum_structure'),
             'study_plan' => $this->request->getPost('study_plan'),
             'career_prospects' => $this->request->getPost('career_prospects'),
+            'careers_json' => $careersJson,
             'tuition_fees' => $this->request->getPost('tuition_fees'),
+            'tuition_fees_json' => $tuitionFeesJson,
             'admission_info' => $this->request->getPost('admission_info'),
             'contact_info' => $this->request->getPost('contact_info'),
             'intro_video_url' => $this->request->getPost('intro_video_url'),
@@ -981,5 +994,222 @@ class Dashboard extends BaseController
 
         return redirect()->to(base_url('program-admin/edit/' . $programId) . '?tab=news')
             ->with('success', 'เพิ่มข่าวหลักสูตรเรียบร้อยแล้ว');
+    }
+
+    /**
+     * GET ส่งออก JSON bundle เนื้อหา program_pages (+ สรุป programs)
+     */
+    public function exportContentBundle($programId)
+    {
+        $programId = (int) $programId;
+        $program   = $this->programModel->find($programId);
+        if (! $program) {
+            return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
+        }
+        if (! $this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
+        }
+        $page = $this->programPageModel->findByProgramId($programId);
+
+        $svc    = new ProgramContentBundleService();
+        $bundle = $svc->buildBundleFromDatabase($programId, $program, $page);
+
+        $filename = 'program-' . $programId . '-content-bundle.json';
+        $json     = json_encode($bundle, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        if ($json === false) {
+            return redirect()->back()->with('error', 'สร้าง JSON ไม่สำเร็จ');
+        }
+
+        $svc->writeSnapshotToUploads($programId, ProgramContentBundleService::SNAPSHOT_LATEST, $json);
+        log_message('info', 'content bundle export snapshot program_id=' . $programId);
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/json; charset=UTF-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->setBody($json);
+    }
+
+    /**
+     * GET ดาวน์โหลดแม่แบบ JSON ว่าง (กรอก page นอกระบบแล้วนำเข้า)
+     */
+    public function exportContentBundleTemplate($programId)
+    {
+        $programId = (int) $programId;
+        $program   = $this->programModel->find($programId);
+        if (! $program) {
+            return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
+        }
+        if (! $this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
+        }
+
+        $svc    = new ProgramContentBundleService();
+        $bundle = $svc->buildEmptyTemplateBundle($programId, $program);
+
+        $filename = 'program-' . $programId . '-content-bundle.TEMPLATE.json';
+        $json     = json_encode($bundle, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        if ($json === false) {
+            return redirect()->back()->with('error', 'สร้าง JSON ไม่สำเร็จ');
+        }
+
+        $svc->writeSnapshotToUploads($programId, ProgramContentBundleService::SNAPSHOT_TEMPLATE, $json);
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/json; charset=UTF-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->setBody($json);
+    }
+
+    /**
+     * GET — JSON: preview ฐานปัจจุบันต่อหัวข้อ
+     */
+    public function currentBundlePreview($programId)
+    {
+        $programId = (int) $programId;
+        if (! $this->programModel->find($programId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบหลักสูตร'])->setStatusCode(404);
+        }
+        if (! $this->canManageProgram($programId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการหลักสูตรนี้'])->setStatusCode(403);
+        }
+        $page = $this->programPageModel->findByProgramId($programId) ?? [];
+        $svc  = new ProgramContentBundleService();
+        $dec  = $svc->decodePageRowForBundle($page);
+
+        return $this->response->setJSON([
+            'success'  => true,
+            'sections' => $svc->buildSectionPreviews($dec),
+        ]);
+    }
+
+    /**
+     * POST อัปโหลด JSON → ตรวจสอบ + preview + token สำหรับ commit
+     */
+    public function importContentBundlePreview($programId)
+    {
+        $programId = (int) $programId;
+        if (! $this->programModel->find($programId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบหลักสูตร'])->setStatusCode(404);
+        }
+        if (! $this->canManageProgram($programId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการหลักสูตรนี้'])->setStatusCode(403);
+        }
+
+        $file = $this->request->getFile('bundle_file');
+        if (! $file || ! $file->isValid() || $file->hasMoved()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'กรุณาเลือกไฟล์ .json'])->setStatusCode(400);
+        }
+        if (strtolower($file->getClientExtension() ?: pathinfo($file->getClientName(), PATHINFO_EXTENSION)) !== 'json') {
+            return $this->response->setJSON(['success' => false, 'message' => 'ต้องเป็นไฟล์ .json'])->setStatusCode(400);
+        }
+        if ($file->getSize() > 2_200_000) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไฟล์ใหญ่เกิน'])->setStatusCode(400);
+        }
+
+        $raw = @file_get_contents($file->getTempName());
+        if ($raw === false || $raw === '') {
+            return $this->response->setJSON(['success' => false, 'message' => 'อ่านไฟล์ไม่ได้'])->setStatusCode(400);
+        }
+
+        $svc   = new ProgramContentBundleService();
+        $p     = $svc->parseBundleJsonString($raw);
+        $allErr = $p['errors'];
+        if ($p['program_id'] !== $programId) {
+            $allErr[] = 'program_id ในไฟล์ต้องตรง ' . $programId;
+        }
+        if (! empty($allErr) || $p['page'] === null) {
+            return $this->response->setJSON(['success' => false, 'message' => implode(' ', $allErr), 'errors' => $allErr]);
+        }
+
+        $conv = $svc->pageBundleToUpdateRow($p['page']);
+        $allErr = array_merge($allErr, $conv['errors']);
+        if (! empty($allErr)) {
+            return $this->response->setJSON(['success' => false, 'message' => implode(' ', $allErr), 'errors' => $allErr]);
+        }
+        if (empty($conv['update'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีข้อมูลใน key page สำหรับนำเข้า']);
+        }
+
+        $allowed  = $this->programPageModel->allowedFields;
+        $existing = $this->programPageModel->findByProgramId($programId) ?? [];
+        $importU  = $conv['update'];
+        $merged   = ['program_id' => $programId];
+        foreach ($allowed as $field) {
+            if (in_array($field, ['id', 'created_at', 'updated_at'], true)) {
+                continue;
+            }
+            if (array_key_exists($field, $importU)) {
+                $merged[$field] = $importU[$field];
+            } elseif (array_key_exists($field, $existing)) {
+                $merged[$field] = $existing[$field];
+            }
+        }
+
+        $token  = $svc->writeStagingFile($programId, $merged);
+        $pageDec = $p['page'];
+        $fileSha = sha1($raw);
+        $uid     = session()->get('admin_id');
+        log_message('info', "program bundle import preview program_id={$programId} sha1={$fileSha} user=" . (string) $uid);
+
+        return $this->response->setJSON([
+            'success'          => true,
+            'token'            => $token,
+            'expires_in_sec'  => 600,
+            'file_sha1'        => $fileSha,
+            'preview_sections' => $svc->buildSectionPreviews($pageDec),
+            'current_sections' => $svc->buildSectionPreviews($svc->decodePageRowForBundle($existing)),
+        ]);
+    }
+
+    /**
+     * POST ยืนยันบันทึกหลัง preview
+     */
+    public function importContentBundleCommit($programId)
+    {
+        $programId = (int) $programId;
+        if (! $this->programModel->find($programId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบหลักสูตร'])->setStatusCode(404);
+        }
+        if (! $this->canManageProgram($programId)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการหลักสูตรนี้'])->setStatusCode(403);
+        }
+
+        $token = (string) $this->request->getPost('token');
+        $svc   = new ProgramContentBundleService();
+        $data  = $svc->readStagingFile($programId, $token);
+        if ($data === null) {
+            return $this->response->setJSON(['success' => false, 'message' => 'รหัสนำเข้าไม่ถูกต้องหรือหมดอายุ ให้เพรสส่งไฟล์อีกครั้ง'])->setStatusCode(400);
+        }
+
+        $update = $data['update'] ?? [];
+        unset($update['id'], $update['created_at'], $update['updated_at']);
+        if (empty($update)) {
+            $svc->deleteStagingFile($programId, $token);
+
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีข้อมูลที่บันทึก']);
+        }
+
+        try {
+            $this->programPageModel->updateOrCreate(['program_id' => $programId], $update);
+        } catch (\Throwable $e) {
+            log_message('error', 'importContentBundleCommit: ' . $e->getMessage());
+
+            return $this->response->setJSON(['success' => false, 'message' => 'บันทึกไม่สำเร็จ: ' . $e->getMessage()])->setStatusCode(500);
+        }
+
+        $svc->deleteStagingFile($programId, $token);
+        $uid = session()->get('admin_id');
+        log_message('info', "program bundle import committed program_id={$programId} user=" . (string) $uid);
+
+        $program = $this->programModel->find($programId);
+        $page    = $this->programPageModel->findByProgramId($programId);
+        if ($program) {
+            $jsonAfter = json_encode($svc->buildBundleFromDatabase($programId, $program, $page), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            if ($jsonAfter !== false) {
+                $svc->writeSnapshotToUploads($programId, ProgramContentBundleService::SNAPSHOT_LATEST, $jsonAfter);
+            }
+        }
+
+        return $this->response->setJSON(['success' => true, 'message' => 'นำเข้าและบันทึกเนื้อหาเรียบร้อยแล้ว']);
     }
 }

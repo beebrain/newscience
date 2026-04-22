@@ -20,7 +20,9 @@
         chevron: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>',
         mortar: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 4 6 4s6-2 6-4v-5"/></svg>',
         target: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
-        user: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+        user: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+        briefcase: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>',
+        book: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
     };
 
     function getUrlParam(key) {
@@ -70,16 +72,35 @@
         }
     }
 
+    function parseListField(raw) {
+        if (raw == null) return [];
+        if (Array.isArray(raw) && raw.length) return raw;
+        var s = String(raw).trim();
+        if (s === '') return [];
+        if (s[0] === '[') {
+            try {
+                var p = JSON.parse(s);
+                if (Array.isArray(p)) {
+                    return p;
+                }
+            } catch (e) { /* use lines */ }
+        }
+        var lines = s.split(/\r\n|\n|\r/).map(function (x) { return x.trim(); }).filter(Boolean);
+        return lines.length > 1 ? lines : [s];
+    }
+
     function renderOverview(data) {
         var boxes = [];
         if (data.philosophy) {
-            boxes.push({ label: 'ปรัชญา (Philosophy)', text: data.philosophy });
+            boxes.push({ type: 'text', label: 'ปรัชญา (Philosophy)', text: data.philosophy });
         }
-        if (data.vision) {
-            boxes.push({ label: 'วัตถุประสงค์ (Objectives)', text: data.vision });
+        var objList = (data.objectives_list && data.objectives_list.length) ? data.objectives_list : parseListField(data.vision);
+        if (objList && objList.length) {
+            boxes.push({ type: 'ol', label: 'วัตถุประสงค์ (Objectives)', items: objList });
         }
-        if (data.graduate_profile) {
-            boxes.push({ label: 'คุณลักษณะบัณฑิต (Graduate Profile)', text: data.graduate_profile });
+        var gpList = (data.graduate_profile_list && data.graduate_profile_list.length) ? data.graduate_profile_list : parseListField(data.graduate_profile);
+        if (gpList && gpList.length) {
+            boxes.push({ type: 'ol', label: 'คุณลักษณะบัณฑิต (Graduate Profile)', items: gpList });
         }
 
         if (boxes.length === 0) {
@@ -90,15 +111,30 @@
         var $section = $('#pd-overview-section');
         $section.empty();
         $.each(boxes, function (i, box) {
-            $section.append(
-                '<div class="pd-overview-box">' +
-                '<div class="pd-overview-box__label">' + escHtml(box.label) + '</div>' +
-                '<p class="pd-overview-box__text">' + escHtml(box.text) + '</p>' +
-                '</div>'
-            );
+            if (box.type === 'ol' && box.items && box.items.length) {
+                var lis = '';
+                $.each(box.items, function (j, line) {
+                    lis += '<li class="pd-overview-box__li">' + escHtml(String(line)) + '</li>';
+                });
+                $section.append(
+                    '<div class="pd-overview-box pd-overview-box--list">' +
+                    '<div class="pd-overview-box__label">' + escHtml(box.label) + '</div>' +
+                    '<ol class="pd-overview-box__ol">' + lis + '</ol>' +
+                    '</div>'
+                );
+            } else {
+                $section.append(
+                    '<div class="pd-overview-box">' +
+                    '<div class="pd-overview-box__label">' + escHtml(box.label) + '</div>' +
+                    '<p class="pd-overview-box__text">' + escHtml(String(box.text || '')).replace(/\n/g, '<br>') + '</p>' +
+                    '</div>'
+                );
+            }
         });
         if (boxes.length === 1) {
             $section.css('grid-template-columns', '1fr');
+        } else {
+            $section.css('grid-template-columns', '');
         }
         $('#pd-overview').show();
     }
@@ -253,6 +289,37 @@
 
         $.each(sections, function (i, sec) {
             var content = data[sec.key];
+            if (sec.key === 'tuition_fees') {
+                var items = data.tuition_items || [];
+                var htmlPart = (content && String(content).replace(/\s/g, '') !== '') ? String(content) : '';
+                if (!items.length && !htmlPart) {
+                    return;
+                }
+                hasContent = true;
+                var body = '';
+                if (items.length) {
+                    body += '<table class="pd-tuition-table"><thead><tr><th>รายการ</th><th>จำนวน / รายละเอียด</th></tr></thead><tbody>';
+                    $.each(items, function (j, row) {
+                        var note = row.note ? '<div class="pd-tuition-note">' + escHtml(row.note) + '</div>' : '';
+                        body += '<tr><td>' + escHtml(row.label) + '</td><td><strong>' + escHtml(row.amount) + '</strong>' + note + '</td></tr>';
+                    });
+                    body += '</tbody></table>';
+                }
+                if (htmlPart) {
+                    if (items.length) {
+                        body += '<div class="pd-tuition-extra pd-content-block__body">' + htmlPart + '</div>';
+                    } else {
+                        body += '<div class="pd-content-block__body">' + htmlPart + '</div>';
+                    }
+                }
+                $container.append(
+                    '<div class="pd-content-block">' +
+                    '<h3 class="pd-content-block__title">' + escHtml(sec.title) + '</h3>' +
+                    '<div class="pd-content-block__body pd-tuition-wrap">' + body + '</div>' +
+                    '</div>'
+                );
+                return;
+            }
             if (!content || !content.trim()) return;
             hasContent = true;
             $container.append(

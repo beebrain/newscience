@@ -166,6 +166,33 @@
         .faculty-role { color: var(--theme); }
         .news-date { color: var(--theme); }
         .activity-thumb { --tw-ring-color: var(--theme); }
+        /* อาชีพ — การ์ด (careers_json) */
+        .spa-career-item {
+            display: flex; gap: 1rem; align-items: flex-start; padding: 1.15rem 1.25rem; border-radius: 1rem;
+            background: color-mix(in srgb, var(--theme) 6%, #ffffff); border: 1px solid rgba(var(--theme-rgb), 0.2);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .spa-career-item:hover {
+            border-color: rgba(var(--theme-rgb), 0.45); transform: translateY(-3px);
+            box-shadow: 0 10px 22px rgba(0,0,0,0.08), 0 0 16px rgba(var(--theme-rgb), 0.08);
+        }
+        .spa-career-prose a, .spa-tuition-prose a { color: var(--theme); text-decoration: underline; }
+        #curriculum-structure-block .ptb-block { margin-bottom: 1.25rem; }
+        #curriculum-structure-block .ptb-block:last-child { margin-bottom: 0; }
+        #curriculum-structure-block .ptb-title { font-size: 1.125rem; font-weight: 600; color: var(--theme); margin: 0 0 0.5rem; }
+        #curriculum-structure-block .ptb-body { line-height: 1.75; color: #334155; }
+        #curriculum-structure-block .ptb-body a { color: var(--theme); }
+        /* ตาราง ปรัชญา / วัตถุประสงค์ / คุณลักษณะบัณฑิต (AUN-QA) */
+        .spa-overview-aun-table { border: 1px solid rgba(148, 163, 184, 0.45); }
+        .spa-overview-aun-table th {
+            width: 34%; max-width: 14rem; vertical-align: top; text-align: left; font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; background: color-mix(in srgb, var(--theme) 6%, #fff);
+            border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; padding: 1rem 1.1rem;
+        }
+        .spa-overview-aun-table td { vertical-align: top; border-bottom: 1px solid #e2e8f0; padding: 1rem 1.15rem; color: #334155; }
+        .spa-overview-aun-table tr:last-child th, .spa-overview-aun-table tr:last-child td { border-bottom: none; }
+        .spa-overview-aun-table .spa-ol { margin: 0; padding: 0 0 0 1.2rem; list-style: decimal; }
+        .spa-overview-aun-table .spa-ol li { margin: 0.4rem 0; padding-left: 0.2rem; }
+        .spa-overview-aun-prose p { margin: 0; line-height: 1.75; }
         .facility-placeholder { color: rgba(var(--theme-rgb), 0.25); }
         .doc-icon-bg { background: rgba(var(--theme-rgb), 0.1); }
         .doc-icon-fg { color: var(--theme); }
@@ -205,6 +232,7 @@
             </button>
             <div id="nav-links" class="hidden md:flex items-center gap-8">
                 <a href="#about" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">เกี่ยวกับ</a>
+                <a href="#careers" id="nav-careers" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">อาชีพ</a>
                 <a href="#curriculum-courses" id="nav-curriculum-courses" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">รายวิชา</a>
                 <a href="#faculty" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">คณาจารย์</a>
                 <a href="#news" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">ข่าวสาร</a>
@@ -212,11 +240,13 @@
                 <a href="#activities" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">กิจกรรม</a>
                 <a href="#facilities" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">สิ่งอำนวยความสะดวก</a>
                 <a href="#documents" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">เอกสาร</a>
+                <a href="#tuition" id="nav-tuition" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">ค่าเล่าเรียน</a>
                 <a href="#video" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">วิดีโอ</a>
             </div>
         </div>
         <div id="nav-mobile" class="hidden md:hidden border-t border-slate-200 px-6 py-4 space-y-3 bg-white/95">
             <a href="#about" class="block text-slate-600 nav-link-theme">เกี่ยวกับ</a>
+            <a href="#careers" id="nav-careers-mobile" class="block text-slate-600 nav-link-theme hidden">อาชีพ</a>
             <a href="#curriculum-courses" id="nav-curriculum-courses-mobile" class="block text-slate-600 nav-link-theme hidden">รายวิชา</a>
             <a href="#faculty" class="block text-slate-600 nav-link-theme">คณาจารย์</a>
             <a href="#news" class="block text-slate-600 nav-link-theme">ข่าวสาร</a>
@@ -224,6 +254,7 @@
             <a href="#alumni" class="block text-slate-600 nav-link-theme">ศิษย์เก่า</a>
             <a href="#facilities" class="block text-slate-600 nav-link-theme">สิ่งอำนวยความสะดวก</a>
             <a href="#documents" class="block text-slate-600 nav-link-theme">เอกสาร</a>
+            <a href="#tuition" id="nav-tuition-mobile" class="block text-slate-600 nav-link-theme hidden">ค่าเล่าเรียน</a>
             <a href="#video" class="block text-slate-600 nav-link-theme">วิดีโอ</a>
         </div>
     </div>
@@ -256,10 +287,13 @@
 <section id="about" class="relative py-24 md:py-32 section-bg-base">
     <div class="max-w-7xl mx-auto px-6">
         <div class="grid lg:grid-cols-2 gap-16 items-start">
-            <div class="reveal-left">
+            <div class="reveal-left max-w-3xl">
                 <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-800 mb-8">เกี่ยวกับหลักสูตร<br><span class="section-accent">& AUN-QA</span></h2>
-                <div id="about-philosophy" class="text-slate-600 leading-relaxed mb-6"></div>
-                <div id="about-vision" class="text-slate-600 leading-relaxed"></div>
+                <div id="about-overview-table-wrap" class="spa-overview-aun-table rounded-2xl overflow-hidden glass shadow-sm hidden" role="region" aria-label="สรุปหลักสูตร">
+                    <table class="w-full border-collapse text-left">
+                        <tbody id="about-overview-tbody"></tbody>
+                    </table>
+                </div>
             </div>
             <div class="reveal-right">
                 <h3 class="text-xl font-semibold section-accent mb-4 flex items-center gap-2">
@@ -284,6 +318,18 @@
             <p class="text-sm text-slate-500 mb-6">รายวิชาตามปีการศึกษาและภาคเรียน (จากแผนการเรียนที่บันทึกในระบบผู้ดูแล)</p>
             <div id="spa-curriculum-by-year" class="max-w-4xl"></div>
         </div>
+    </div>
+</section>
+
+<!-- ==================== CAREERS (อาชีพ — การ์ดจาก careers_json) ==================== -->
+<section id="careers" class="relative py-24 md:py-32 section-bg-tint-1" style="display:none;">
+    <div class="max-w-6xl mx-auto px-6">
+        <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-800 mb-4 text-center reveal">อาชีพที่สามารถ<span class="section-accent">ประกอบได้</span></h2>
+        <p class="text-center text-slate-500 text-sm mb-10 max-w-2xl mx-auto reveal">แนวทางอาชีพที่สอดคล้องกับคุณลักษณะบัณฑิตและผลลัพธ์การเรียนรู้ของหลักสูตร</p>
+        <div id="careers-grid-wrap" class="hidden">
+            <div id="careers-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+        <div id="careers-fallback" class="hidden mt-2 text-slate-600 leading-relaxed max-w-4xl mx-auto spa-career-prose"></div>
     </div>
 </section>
 
@@ -386,6 +432,21 @@
     </div>
 </section>
 
+<!-- ==================== TUITION (ค่าเล่าเรียน/ค่าธรรมเนียม) ==================== -->
+<section id="tuition" class="relative py-24 md:py-32 section-bg-tint-3" style="display:none;">
+    <div class="max-w-4xl mx-auto px-6">
+        <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-800 mb-4 text-center reveal">ค่าเล่าเรียน<span class="section-accent">/ ค่าธรรมเนียม</span></h2>
+        <p class="text-center text-slate-500 text-sm mb-8 max-w-2xl mx-auto reveal">อัตราและรายละเอียดอ้างอิงตามที่หลักสูตรกำหนด (แก้ไขได้จากแอดมิน)</p>
+        <div id="tuition-table-wrap" class="hidden overflow-x-auto reveal rounded-2xl border border-slate-200 bg-white/90 shadow-sm">
+            <table class="w-full text-sm text-left text-slate-700 min-w-[320px]">
+                <thead><tr class="bg-slate-100 text-slate-800"><th class="px-4 py-3 font-semibold border-b border-slate-200 w-[45%]">รายการ</th><th class="px-4 py-3 font-semibold border-b border-slate-200">จำนวน / รายละเอียด</th></tr></thead>
+                <tbody id="tuition-table-body"></tbody>
+            </table>
+        </div>
+        <div id="tuition-fallback" class="hidden mt-6 text-slate-600 leading-relaxed max-w-4xl mx-auto spa-tuition-prose"></div>
+    </div>
+</section>
+
 <!-- ==================== VIDEO (คลิปวิดีโอ สนับสนุน AUN-QA) ==================== -->
 <section id="video" class="relative py-24 md:py-32 section-bg-tint-3" style="display:none;">
     <div class="max-w-4xl mx-auto px-6">
@@ -423,6 +484,19 @@
     var dataUrl = <?= json_encode($dataUrl) ?>;
 
     function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    var CAREER_ICONS = {
+        cpu: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>',
+        chart: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+        search: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+        code: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+        users: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+        rocket: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>',
+        mortar: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 4 6 4s6-2 6-4v-5"/></svg>',
+        target: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+        briefcase: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>',
+        book: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
+    };
 
     // Neural network canvas animation
     function initNeuralCanvas() {
@@ -507,6 +581,20 @@
         if (nm) nm.classList.toggle('hidden', !show);
     }
 
+    function toggleCareersNav(show) {
+        var n = document.getElementById('nav-careers');
+        var nm = document.getElementById('nav-careers-mobile');
+        if (n) n.classList.toggle('hidden', !show);
+        if (nm) nm.classList.toggle('hidden', !show);
+    }
+
+    function toggleTuitionNav(show) {
+        var n = document.getElementById('nav-tuition');
+        var nm = document.getElementById('nav-tuition-mobile');
+        if (n) n.classList.toggle('hidden', !show);
+        if (nm) nm.classList.toggle('hidden', !show);
+    }
+
     /** แสดงรายวิชาตามปี/ภาคจาก curriculum_json (โครงเดียวกับแผนการเรียนใน Admin) */
     function renderSpaCurriculumByYear(d) {
         var section = document.getElementById('curriculum-courses');
@@ -581,9 +669,48 @@
         document.querySelector('.glow-btn').style.opacity = '1';
         document.getElementById('nav-brand').textContent = d.name_th || 'หลักสูตร';
 
-        // About
-        if (d.philosophy) document.getElementById('about-philosophy').innerHTML = '<h3 class="text-lg font-semibold section-accent mb-3">ปรัชญา</h3><p>' + esc(d.philosophy).replace(/\n/g, '<br>') + '</p>';
-        if (d.vision) document.getElementById('about-vision').innerHTML = '<h3 class="text-lg font-semibold section-accent mb-3">วัตถุประสงค์</h3><p>' + esc(d.vision).replace(/\n/g, '<br>') + '</p>';
+        // ภาพรวม: ตาราง ปรัชญา / วัตถุประสงค์ (ข้อ) / คุณลักษณะบัณฑิต (ข้อ)
+        var overviewWrap = document.getElementById('about-overview-table-wrap');
+        var overviewTbody = document.getElementById('about-overview-tbody');
+        if (overviewTbody) {
+            overviewTbody.innerHTML = '';
+            var objList = Array.isArray(d.objectives_list) ? d.objectives_list : [];
+            if (!objList.length && d.vision) {
+                var vs = String(d.vision);
+                if (vs.trim().charAt(0) === '[') {
+                    try { var pj = JSON.parse(vs); if (Array.isArray(pj)) objList = pj; } catch (e0) {}
+                } else {
+                    var parts = vs.split(/\r\n|\n|\r/).map(function (x) { return x.trim(); }).filter(Boolean);
+                    objList = parts.length > 1 ? parts : (vs.trim() ? [vs.trim()] : []);
+                }
+            }
+            var gpList = Array.isArray(d.graduate_profile_list) ? d.graduate_profile_list : [];
+            if (!gpList.length && d.graduate_profile) {
+                var gs = String(d.graduate_profile);
+                if (gs.trim().charAt(0) === '[') {
+                    try { var gj = JSON.parse(gs); if (Array.isArray(gj)) gpList = gj; } catch (e1) {}
+                } else {
+                    var gp2 = gs.split(/\r\n|\n|\r/).map(function (x) { return x.trim(); }).filter(Boolean);
+                    gpList = gp2.length > 1 ? gp2 : (gs.trim() ? [gs.trim()] : []);
+                }
+            }
+            var hasPhi = d.philosophy && String(d.philosophy).trim() !== '';
+            var hasRow = hasPhi || objList.length > 0 || gpList.length > 0;
+            if (hasRow) {
+                if (hasPhi) {
+                    overviewTbody.innerHTML += '<tr><th scope="row">ปรัชญา</th><td><div class="spa-overview-aun-prose text-slate-700 text-sm sm:text-base leading-relaxed">' + esc(d.philosophy).replace(/\n/g, '<br>') + '</div></td></tr>';
+                }
+                if (objList.length) {
+                    var ols = objList.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
+                    overviewTbody.innerHTML += '<tr><th scope="row">วัตถุ<br class="md:hidden" />ประสงค์</th><td><ol class="spa-ol text-sm sm:text-base">' + ols + '</ol></td></tr>';
+                }
+                if (gpList.length) {
+                    var gls = gpList.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
+                    overviewTbody.innerHTML += '<tr><th scope="row">คุณลักษณะ<br class="md:hidden" />บัณฑิต</th><td><ol class="spa-ol text-sm sm:text-base">' + gls + '</ol></td></tr>';
+                }
+            }
+            if (overviewWrap) overviewWrap.classList.toggle('hidden', !hasRow);
+        }
 
         // PLO + มาตรฐานการเรียนรู้
         var ls = d.learning_standards || {};
@@ -644,7 +771,11 @@
         var structText = (d.curriculum_structure && String(d.curriculum_structure).trim()) ? d.curriculum_structure : '';
         if (structBlock) {
             if (structText) {
-                structBlock.innerHTML = esc(structText).replace(/\n/g, '<br>');
+                if (String(structText).indexOf('ptb-curriculum') !== -1) {
+                    structBlock.innerHTML = structText;
+                } else {
+                    structBlock.innerHTML = esc(structText).replace(/\n/g, '<br>');
+                }
             } else {
                 structBlock.innerHTML = '';
             }
@@ -653,6 +784,86 @@
             aboutCurriculum.classList.toggle('hidden', !structText);
         }
         renderSpaCurriculumByYear(d);
+
+        // อาชีพ (การ์ดจาก careers JSON + รายละเอียด HTML career_prospects ถ้ามี)
+        var careersSection = document.getElementById('careers');
+        var careersGrid = document.getElementById('careers-grid');
+        var careersGridWrap = document.getElementById('careers-grid-wrap');
+        var careersFallback = document.getElementById('careers-fallback');
+        if (careersSection && careersGrid && careersGridWrap && careersFallback) {
+            var hasCards = Array.isArray(d.careers) && d.careers.length > 0;
+            var rawProspects = d.career_prospects != null ? String(d.career_prospects) : '';
+            var hasProspects = rawProspects.replace(/\s/g, '').length > 0;
+            if (!hasCards && !hasProspects) {
+                careersSection.style.display = 'none';
+                toggleCareersNav(false);
+                careersGrid.innerHTML = '';
+                careersGridWrap.classList.add('hidden');
+                careersFallback.classList.add('hidden');
+                careersFallback.innerHTML = '';
+            } else {
+                careersSection.style.display = 'block';
+                toggleCareersNav(true);
+                careersGrid.innerHTML = '';
+                if (hasCards) {
+                    careersGridWrap.classList.remove('hidden');
+                    d.careers.forEach(function (c, i) {
+                        var key = (c.icon && CAREER_ICONS[c.icon]) ? c.icon : 'rocket';
+                        var icon = CAREER_ICONS[key] || CAREER_ICONS.rocket;
+                        var delay = 'transition-delay:' + (i * 60) + 'ms';
+                        careersGrid.innerHTML += '<div class="spa-career-item reveal-scale" style="' + delay + '"><div class="text-[var(--theme)]" aria-hidden="true">' + icon + '</div><div class="min-w-0"><h3 class="font-semibold text-slate-800 text-base leading-snug mb-1">' + esc(c.title || '') + '</h3><p class="text-slate-600 text-sm leading-relaxed">' + esc(c.desc || '') + '</p></div></div>';
+                    });
+                } else {
+                    careersGridWrap.classList.add('hidden');
+                }
+                if (hasProspects) {
+                    careersFallback.classList.remove('hidden');
+                    careersFallback.innerHTML = rawProspects;
+                } else {
+                    careersFallback.classList.add('hidden');
+                    careersFallback.innerHTML = '';
+                }
+            }
+        }
+
+        // ค่าเล่าเรียน/ค่าธรรมเนียม (รายการ tuition_items + HTML tuition_fees)
+        var tuitionSection = document.getElementById('tuition');
+        var tuitionTbody = document.getElementById('tuition-table-body');
+        var tuitionTableWrap = document.getElementById('tuition-table-wrap');
+        var tuitionHtmlEl = document.getElementById('tuition-fallback');
+        if (tuitionSection && tuitionTbody && tuitionTableWrap && tuitionHtmlEl) {
+            var hasTuitionRows = Array.isArray(d.tuition_items) && d.tuition_items.length > 0;
+            var rawTuitionHtml = d.tuition_fees != null ? String(d.tuition_fees) : '';
+            var hasTuitionHtml = rawTuitionHtml.replace(/\s/g, '').length > 0;
+            if (!hasTuitionRows && !hasTuitionHtml) {
+                tuitionSection.style.display = 'none';
+                toggleTuitionNav(false);
+                tuitionTbody.innerHTML = '';
+                tuitionTableWrap.classList.add('hidden');
+                tuitionHtmlEl.classList.add('hidden');
+                tuitionHtmlEl.innerHTML = '';
+            } else {
+                tuitionSection.style.display = 'block';
+                toggleTuitionNav(true);
+                tuitionTbody.innerHTML = '';
+                if (hasTuitionRows) {
+                    tuitionTableWrap.classList.remove('hidden');
+                    d.tuition_items.forEach(function (row) {
+                        var note = row.note ? '<p class="text-slate-500 text-xs mt-1">' + esc(row.note) + '</p>' : '';
+                        tuitionTbody.innerHTML += '<tr class="border-b border-slate-100"><td class="px-4 py-3 align-top font-medium text-slate-800">' + esc(row.label || '') + '</td><td class="px-4 py-3 align-top"><span class="text-slate-800">' + esc(row.amount || '') + '</span>' + note + '</td></tr>';
+                    });
+                } else {
+                    tuitionTableWrap.classList.add('hidden');
+                }
+                if (hasTuitionHtml) {
+                    tuitionHtmlEl.classList.remove('hidden');
+                    tuitionHtmlEl.innerHTML = rawTuitionHtml;
+                } else {
+                    tuitionHtmlEl.classList.add('hidden');
+                    tuitionHtmlEl.innerHTML = '';
+                }
+            }
+        }
 
         // Faculty
         var fg = document.getElementById('faculty-grid'); fg.innerHTML = '';

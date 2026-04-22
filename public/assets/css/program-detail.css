@@ -809,6 +809,19 @@
     margin-bottom: 0;
 }
 
+.pd-overview-box__ol {
+    margin: 0;
+    padding-left: 1.25rem;
+    list-style: decimal;
+    color: var(--color-gray-700);
+    line-height: 1.8;
+    font-size: var(--text-base);
+}
+.pd-overview-box__li {
+    margin: 0.35rem 0;
+    padding-left: 0.15rem;
+}
+
 @media (max-width: 768px) {
     .pd-overview-grid {
         grid-template-columns: 1fr;
@@ -895,6 +908,54 @@
 .pd-content-block__body th {
     background: var(--color-gray-50);
     font-weight: 600;
+}
+
+.pd-tuition-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+.pd-tuition-table th,
+.pd-tuition-table td {
+    padding: var(--spacing-2) var(--spacing-3);
+    border: 1px solid var(--color-gray-200);
+    text-align: left;
+    vertical-align: top;
+}
+.pd-tuition-table thead th {
+    background: var(--color-gray-50);
+    font-weight: 600;
+}
+.pd-tuition-table .pd-tuition-note {
+    color: var(--color-gray-600);
+    font-size: 0.9em;
+}
+.pd-tuition-extra {
+    margin-top: var(--spacing-4);
+    padding-top: var(--spacing-4);
+    border-top: 1px solid var(--color-gray-200);
+}
+
+.pd-content-block__body .ptb-block,
+.pd-content-block__body .ptb .ptb-block {
+    margin-bottom: var(--spacing-5);
+    padding-bottom: var(--spacing-4);
+    border-bottom: 1px solid var(--color-gray-100);
+}
+.pd-content-block__body .ptb .ptb-block:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+.pd-content-block__body .ptb-title {
+    color: var(--color-primary, #1e3a5f);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 var(--spacing-2) 0;
+}
+.pd-content-block__body .ptb-body {
+    line-height: 1.7;
+    color: var(--color-gray-700);
 }
 
 /* ================================

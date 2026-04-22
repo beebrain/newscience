@@ -456,6 +456,11 @@ $routes->group('program-admin', ['filter' => 'programadmin'], function ($routes)
     $routes->post('delete-download/(:num)', 'Admin\ProgramAdmin\Dashboard::deleteDownload/$1');
     $routes->post('update-order/(:num)', 'Admin\ProgramAdmin\Dashboard::updateOrder/$1');
     $routes->get('preview/(:num)', 'Admin\ProgramAdmin\Dashboard::preview/$1');
+    $routes->get('bundle-export/(:num)', 'Admin\ProgramAdmin\Dashboard::exportContentBundle/$1');
+    $routes->get('bundle-template/(:num)', 'Admin\ProgramAdmin\Dashboard::exportContentBundleTemplate/$1');
+    $routes->get('bundle-preview/(:num)', 'Admin\ProgramAdmin\Dashboard::currentBundlePreview/$1');
+    $routes->post('bundle-import-preview/(:num)', 'Admin\ProgramAdmin\Dashboard::importContentBundlePreview/$1');
+    $routes->post('bundle-import-commit/(:num)', 'Admin\ProgramAdmin\Dashboard::importContentBundleCommit/$1');
     $routes->post('toggle-publish/(:num)', 'Admin\ProgramAdmin\Dashboard::togglePublish/$1');
 
     // Program News (tag program_{id} by default)

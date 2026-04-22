@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://newscience.local/schema/program_content_bundle.v1.json",
+  "title": "Program Content Bundle v1",
+  "description": "เอกสาร JSON ส่งออก/นำเข้าเนื้อหาหลักสูตร (program_pages + metadata programs)",
+  "type": "object",
+  "required": ["schema_version", "program_id", "page"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "program_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "exported_at": {
+      "type": ["string", "null"],
+      "description": "ISO-8601 timestamp จากระบบเมื่อส่งออก (null สำหรับแม่แบบ)"
+    },
+    "template_note": {
+      "type": "string"
+    },
+    "program": {
+      "type": "object",
+      "properties": {
+        "id":      { "type": "integer" },
+        "name_th": { "type": "string", "maxLength": 500 },
+        "name_en": { "type": "string", "maxLength": 500 },
+        "level":   { "type": "string", "maxLength": 100 },
+        "status":  { "type": "string", "maxLength": 100 }
+      },
+      "additionalProperties": true
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "slug":                    { "type": "string", "maxLength": 500 },
+        "philosophy":              { "type": "string", "maxLength": 5000 },
+        "objectives": {
+          "oneOf": [
+            { "type": "array", "items": { "type": ["string", "number"] }, "maxItems": 40 },
+            { "type": "string" }
+          ]
+        },
+        "graduate_profile": {
+          "oneOf": [
+            { "type": "array", "items": { "type": ["string", "number"] }, "maxItems": 40 },
+            { "type": "string" }
+          ]
+        },
+        "elos_json":               { "type": ["array", "object", "string", "null"] },
+        "learning_standards_json": { "type": ["array", "object", "string", "null"] },
+        "curriculum_json":         { "type": ["array", "object", "string", "null"] },
+        "alumni_messages_json":    { "type": ["array", "object", "string", "null"] },
+        "curriculum_structure":    { "type": "string", "maxLength": 10000 },
+        "study_plan":              { "type": "string", "maxLength": 10000 },
+        "career_prospects":        { "type": "string", "maxLength": 5000 },
+        "careers_json":            { "type": ["array", "string", "null"] },
+        "tuition_fees":            { "type": "string", "maxLength": 5000 },
+        "tuition_fees_json":       { "type": ["array", "string", "null"] },
+        "admission_info":          { "type": "string", "maxLength": 5000 },
+        "contact_info":            { "type": "string", "maxLength": 5000 },
+        "intro_video_url":         { "type": "string", "maxLength": 500 },
+        "meta_description":        { "type": "string", "maxLength": 500 },
+        "gallery_images":          { "type": ["array", "string", "null"] },
+        "social_links":            { "type": ["array", "object", "string", "null"] },
+        "hero_image":              { "type": "string", "maxLength": 500 },
+        "theme_color":             { "type": "string", "pattern": "^(|#[0-9A-Fa-f]{6})$" },
+        "text_color":              { "type": ["string", "null"], "pattern": "^(|#[0-9A-Fa-f]{6})$" },
+        "background_color":        { "type": ["string", "null"], "pattern": "^(|#[0-9A-Fa-f]{6})$" },
+        "is_published":            { "type": ["boolean", "integer"], "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}
