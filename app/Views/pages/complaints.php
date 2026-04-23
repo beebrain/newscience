@@ -151,6 +151,11 @@
     gap: 1rem;
 }
 
+.complaint-form .form-group {
+    display: grid;
+    gap: 0.45rem;
+}
+
 .complaint-form__grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -187,6 +192,73 @@
 
 .required {
     color: #dc2626;
+}
+
+.complaint-form .form-label {
+    display: inline-block;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.complaint-form .form-control {
+    width: 100%;
+    min-height: 48px;
+    padding: 0.8rem 0.95rem;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #111827;
+    font-size: 1rem;
+    line-height: 1.45;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.complaint-form textarea.form-control {
+    min-height: 180px;
+    resize: vertical;
+}
+
+.complaint-form .form-control::placeholder {
+    color: #94a3b8;
+}
+
+.complaint-form .form-control:hover {
+    border-color: #94a3b8;
+}
+
+.complaint-form .form-control:focus {
+    outline: none;
+    border-color: #eab308;
+    background: #fffdf5;
+    box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.16);
+}
+
+.complaint-form input[type="file"].form-control {
+    padding: 0.55rem 0.65rem;
+    cursor: pointer;
+}
+
+.complaint-form input[type="file"].form-control::file-selector-button {
+    margin-right: 0.75rem;
+    padding: 0.65rem 0.9rem;
+    border: 0;
+    border-radius: 10px;
+    background: #f3f4f6;
+    color: #111827;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.complaint-form input[type="file"].form-control::file-selector-button:hover {
+    background: #e5e7eb;
+}
+
+.complaint-form .form-hint {
+    margin: 0;
+    font-size: 0.92rem;
+    color: #475569;
 }
 
 .complaint-form__actions {
