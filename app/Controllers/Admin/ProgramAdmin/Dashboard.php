@@ -527,7 +527,7 @@ class Dashboard extends BaseController
                 'admission_details_json' => $json,
             ]);
 
-            return redirect()->to(base_url('program-admin/edit/' . $programId) . '?tab=admission')
+            return redirect()->to(base_url('program-admin/edit/' . $programId) . '?tab=content&sub=admission')
                 ->with('success', 'บันทึกข้อมูลการรับสมัครเรียบร้อยแล้ว');
         } catch (\Throwable $e) {
             return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());

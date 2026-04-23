@@ -163,6 +163,15 @@ public/uploads/
 writable/uploads/
 
 #-------------------------
+# Node / Playwright E2E
+#-------------------------
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+#-------------------------
 # Python Backup Tool
 #-------------------------
 newscience-backup/

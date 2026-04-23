@@ -6,7 +6,6 @@
     <div class="news-page-header" style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--color-gray-200);">
         <div class="card-header">
             <h2><?= esc($page_title) ?></h2>
-            <p class="form-text text-muted" style="margin: 0.35rem 0 0; font-size: 0.875rem; max-width: 52rem;">แนะนำ: แก้ไขบนหน้านี้ แล้วใช้ปุ่ม <strong>ดูตัวอย่าง</strong> เพื่อตรวจหน้าเว็บ</p>
             <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                 <a href="<?= base_url('program-admin') ?>" class="btn btn-secondary btn-sm">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -88,15 +87,6 @@
                     <path d="M16 3.13a4 4 0 010 7.75" />
                 </svg>
                 บุคลากร
-            </button>
-            <button type="button" class="tab-button" data-tab="admission" onclick="switchTab('admission')">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <path d="M9 13h6" />
-                    <path d="M9 17h6" />
-                </svg>
-                การรับสมัคร
             </button>
             <button type="button" class="tab-button" data-tab="website" onclick="switchTab('website')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -215,12 +205,12 @@
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ตารางรายวิชาในระบบยัง<strong>ไม่เท่า</strong> course spec ครบ (CLO/mapping) — อย่า<strong>ตัด</strong> แต่เสริมข้อ 5 ในช่อง HTML หรือเอกสารดาวน์โหลด; ข้อ 6–8 ยัง<strong>ไม่มีฟิลด์เฉพาะ</strong> ใส่ในช่อง HTML/ไฟล์</td>
                         </tr>
                         <tr>
-                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ 4 อาชีพ / ค่าใช้จ่าย / รับสมัคร / ติดต่อ + อัปโหลดแทรก + ลิงก์วิดีโอ</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ 4 อาชีพ (การ์ด) · แท็บ 5 ค่าใช้จ่าย / รับสมัคร (ข้อความ) / ติดต่อ / วิดีโอ</td>
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">11, 12, 4 บางส่วน (ค่า/โครง)</td>
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;"><strong>วิดีโอ</strong> ไม่นับแทน ข้อ 6/7/8; <strong>อาชีพ HTML</strong> กับ <strong>การ์ดอาชีพ</strong> บนหน้า (ถ้ามี) อย่าให้ซ้ำสาระโดยไม่จำเป็น</td>
                         </tr>
                         <tr>
-                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ 5 เผยแพร่ &amp; SEO + Hero ในฟอร์มนี้</td>
+                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">แท็บ 5 เผยแพร่ &amp; SEO + Hero + ค่าใช้จ่าย / รับสมัคร (ข้อความ) / ติดต่อ / วิดีโอ</td>
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">2, เชิงเทคนิค</td>
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;"><strong>ไม่นับ</strong> เป็น 6–8 — ลดงาน<strong>ซ้ำ</strong> รูป Hero กับแท็บพื้นฐาน ใช้แหล่งเดียวเท่าที่ทำได้</td>
                         </tr>
@@ -353,16 +343,13 @@
                     $ls_initial = parse_learning_standards_json($program_page['learning_standards_json'] ?? null);
                     ?>
 
-                    <p class="content-tab-intro" style="margin: 0; padding: 0.75rem 1.5rem; font-size: 0.875rem; color: var(--color-gray-600); background: var(--color-gray-50); border-bottom: 1px solid var(--color-gray-200);">
-                        แนะนำ: แท็บย่อยแยกหัวข้อ — บันทึกท้ายฟอร์มหรือบันทึกเฉพาะส่วนตามปุ่ม
-                    </p>
-
                     <div class="content-subtab-bar" role="tablist" aria-label="แท็บย่อยเนื้อหาหลักสูตร">
                         <button type="button" class="content-subtab-btn active" data-content-sub="overview" role="tab" aria-selected="true" onclick="switchContentSubTab('overview')">1. ภาพรวม</button>
                         <button type="button" class="content-subtab-btn" data-content-sub="quality" role="tab" aria-selected="false" onclick="switchContentSubTab('quality')">2. มาตรฐาน &amp; PLO</button>
                         <button type="button" class="content-subtab-btn" data-content-sub="curriculum" role="tab" aria-selected="false" onclick="switchContentSubTab('curriculum')">3. แผนการเรียน</button>
-                        <button type="button" class="content-subtab-btn" data-content-sub="pages" role="tab" aria-selected="false" onclick="switchContentSubTab('pages')">4. อาชีพ · รับสมัคร · ติดต่อ</button>
+                        <button type="button" class="content-subtab-btn" data-content-sub="pages" role="tab" aria-selected="false" onclick="switchContentSubTab('pages')">4. อาชีพ</button>
                         <button type="button" class="content-subtab-btn" data-content-sub="publish" role="tab" aria-selected="false" onclick="switchContentSubTab('publish')">5. เผยแพร่ &amp; หน้าเว็บ</button>
+                        <button type="button" class="content-subtab-btn" data-content-sub="admission" role="tab" aria-selected="false" onclick="switchContentSubTab('admission')">6. การรับสมัคร</button>
                     </div>
 
                     <div class="content-subtab-panels" style="padding: 1.5rem;">
@@ -454,7 +441,6 @@
                         ?>
                         <div class="form-group curriculum-editor-wrap">
                             <label class="form-label">รายวิชาโครงสร้างหลักสูตร (แยกตามปี/ภาค)</label>
-                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เพิ่มปี → ภาคเรียน → รายวิชา (หน่วยกิต) ใช้แสดงตารางบนหน้าเว็บ — คนละส่วนกับกล่อง &quot;แผนการเรียน (คำอธิบาย)&quot; ด้านล่าง</p>
                             <div id="curriculum-list" class="curriculum-list" data-initial="<?= htmlspecialchars(json_encode($curriculum_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
                             <div class="curriculum-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button type="button" class="btn btn-outline btn-sm" id="curriculum-add-year-btn">+ เพิ่มปี</button>
@@ -467,13 +453,6 @@
                         <div class="form-group">
                             <label class="form-label">โครงสร้างหลักสูตร</label>
                             <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เพิ่มเป็นหัวข้อย่อยและรายละเอียด — กรอกข้อความธรรมดาได้ แทรกรูป/ลิงก์ที่ช่องรายละเอียด (คลิกในช่องก่อน แล้วใช้อัปโหลดแทรกหรือปุ่มด้านล่าง)</p>
-                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรก (โครงสร้าง)" style="margin-bottom: 0.5rem;">
-                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="curriculum_structure" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
-                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="curriculum_structure" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
-                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="curriculum_structure" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
-                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="curriculum_structure" data-insert="<hr>">เส้นคั่น</button>
-                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="curriculum_structure" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
-                            </div>
                             <div id="ptb-wrap-curriculum_structure" class="ptb-editor-wrap" data-ptb-kind="curriculum"></div>
                             <button type="button" class="btn btn-outline btn-sm" id="ptb-add-curriculum_structure" style="margin-top:0.5rem">+ เพิ่มหัวข้อ</button>
                             <textarea id="curriculum_structure" name="curriculum_structure" class="ptb-serialized-field" hidden aria-hidden="true"><?= esc($program_page['curriculum_structure'] ?? '') ?></textarea>
@@ -486,13 +465,6 @@
                         <div class="form-group">
                             <label class="form-label">แผนการเรียน (คำอธิบาย)</label>
                             <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">อธิบายแนวทาง/ลำดับการเรียน (แยกจากตารางรายวิชารายปีด้านบน)</p>
-                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรก (แผนการเรียน)" style="margin-bottom: 0.5rem;">
-                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="study_plan" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
-                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="study_plan" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
-                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="study_plan" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
-                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="study_plan" data-insert="<hr>">เส้นคั่น</button>
-                                <button type="button" class="btn btn-outline btn-sm ptb-insert-btn" data-ptb-field="study_plan" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
-                            </div>
                             <div id="ptb-wrap-study_plan" class="ptb-editor-wrap" data-ptb-kind="study"></div>
                             <button type="button" class="btn btn-outline btn-sm" id="ptb-add-study_plan" style="margin-top:0.5rem">+ เพิ่มหัวข้อ</button>
                             <textarea id="study_plan" name="study_plan" class="ptb-serialized-field" hidden aria-hidden="true"><?= esc($program_page['study_plan'] ?? '') ?></textarea>
@@ -502,52 +474,15 @@
 
                     <div id="content-sub-pages" class="content-subpanel" role="tabpanel">
                         <div class="form-section">
-                            <h4 class="form-section-title">อาชีพ · ค่าใช้จ่าย · รับสมัคร · ติดต่อ · วิดีโอ</h4>
+                            <h4 class="form-section-title">อาชีพ</h4>
 
                         <?php helper('career_cards'); ?>
                         <div class="form-group career-cards-admin">
-                            <label class="form-label">อาชีพที่สามารถประกอบได้ (การ์ด)</label>
+                            <label class="form-label">ข้อมูลอาชีพที่สามารถประกอบได้</label>
                             <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เพิ่มทีละอาชีพ — ชื่อ คำอธิบายสั้น และไอคอน (แสดงเป็นบัตรบนหน้าเว็บ)</p>
                             <div id="career-cards-editor" class="career-cards-editor"></div>
                             <button type="button" class="btn btn-outline btn-sm" id="career-card-add-btn" style="margin-top: 0.5rem;">+ เพิ่มอาชีพ</button>
                             <textarea name="careers_json" id="careers_json" style="display: none !important;" aria-hidden="true"><?= htmlspecialchars($program_page['careers_json'] ?? '[]', ENT_QUOTES, 'UTF-8') ?></textarea>
-                        </div>
-
-                        <div class="form-group tuition-fees-items-admin">
-                            <label class="form-label">ค่าเล่าเรียน/ค่าธรรมเนียม (รายการ)</label>
-                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เพิ่มทีละรายการ — ชื่อรายการ จำนวนเงินหรือข้อความกำหนด หมายเหตุ (ไม่บังคับ)</p>
-                            <div id="tuition-fees-editor"></div>
-                            <button type="button" class="btn btn-outline btn-sm" id="tuition-fee-add-btn" style="margin-top: 0.5rem;">+ เพิ่มรายการ</button>
-                            <textarea name="tuition_fees_json" id="tuition_fees_json" style="display: none !important;" aria-hidden="true"><?= htmlspecialchars($program_page['tuition_fees_json'] ?? '[]', ENT_QUOTES, 'UTF-8') ?></textarea>
-                        </div>
-
-                        <div class="form-group content-with-toolbar">
-                            <label for="admission_info" class="form-label">การรับสมัคร</label>
-                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<hr>">เส้นคั่น</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
-                            </div>
-                            <textarea id="admission_info" name="admission_info" class="form-control" rows="4"><?= esc($program_page['admission_info'] ?? '') ?></textarea>
-                        </div>
-
-                        <div class="form-group content-with-toolbar">
-                            <label for="contact_info" class="form-label">ข้อมูลติดต่อ</label>
-                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<hr>">เส้นคั่น</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
-                            </div>
-                            <textarea id="contact_info" name="contact_info" class="form-control" rows="4"><?= esc($program_page['contact_info'] ?? '') ?></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="intro_video_url" class="form-label">วิดีโอแนะนำ</label>
-                            <input type="url" id="intro_video_url" name="intro_video_url" class="form-control" value="<?= esc($program_page['intro_video_url'] ?? '') ?>" placeholder="https://youtube.com/watch?v=...">
                         </div>
                         </div>
                     </div>
@@ -600,6 +535,33 @@
                             <label for="meta_description" class="form-label">คำอธิบายสำหรับ SEO</label>
                             <textarea id="meta_description" name="meta_description" class="form-control" rows="2" placeholder="คำอธิบายสำหรับแสดงในผลการค้นหา"><?= esc($program_page['meta_description'] ?? '') ?></textarea>
                         </div>
+
+                        <div class="form-section" style="margin-top: 1.25rem;">
+                            <h5 class="form-section-title" style="font-size: 1rem;">ค่าใช้จ่าย · รับสมัคร (ข้อความ) · ติดต่อ · วิดีโอ</h5>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">รายละเอียดแบบฟอร์ม (จำนวนรับ คุณสมบัติ ฯลฯ) อยู่ที่แท็บย่อย <strong>6. การรับสมัคร</strong> ภายใต้เนื้อหาเว็บหลักสูตร — ช่องด้านล่างเป็นข้อความแสดงบนหน้าเว็บหลักสูตร (ถ้ามี)</p>
+                        <div class="form-group tuition-fees-items-admin">
+                            <label class="form-label">ค่าเล่าเรียน/ค่าธรรมเนียม (รายการ)</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เพิ่มทีละรายการ — ชื่อรายการ จำนวนเงินหรือข้อความกำหนด หมายเหตุ (ไม่บังคับ)</p>
+                            <div id="tuition-fees-editor"></div>
+                            <button type="button" class="btn btn-outline btn-sm" id="tuition-fee-add-btn" style="margin-top: 0.5rem;">+ เพิ่มรายการ</button>
+                            <textarea name="tuition_fees_json" id="tuition_fees_json" style="display: none !important;" aria-hidden="true"><?= htmlspecialchars($program_page['tuition_fees_json'] ?? '[]', ENT_QUOTES, 'UTF-8') ?></textarea>
+                        </div>
+
+                        <div class="form-group content-with-toolbar">
+                            <label for="admission_info" class="form-label">การรับสมัคร (ข้อความบนหน้าเว็บ)</label>
+                            <textarea id="admission_info" name="admission_info" class="form-control" rows="4"><?= esc($program_page['admission_info'] ?? '') ?></textarea>
+                        </div>
+
+                        <div class="form-group content-with-toolbar">
+                            <label for="contact_info" class="form-label">ข้อมูลติดต่อ</label>
+                            <textarea id="contact_info" name="contact_info" class="form-control" rows="4"><?= esc($program_page['contact_info'] ?? '') ?></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="intro_video_url" class="form-label">วิดีโอแนะนำ</label>
+                            <input type="url" id="intro_video_url" name="intro_video_url" class="form-control" value="<?= esc($program_page['intro_video_url'] ?? '') ?>" placeholder="https://youtube.com/watch?v=...">
+                        </div>
+                        </div>
                         </div>
                     </div>
 
@@ -618,6 +580,89 @@
                             <span id="content-ajax-msg" class="ajax-msg" aria-live="polite"></span>
                         </div>
                 </form>
+
+            <!-- การรับสมัคร — แท็บย่อยภายใต้เนื้อหาเว็บหลักสูตร (ฟอร์มแยกจากบันทึกเนื้อหา) -->
+            <?php
+                helper('admission_details');
+                $admissionDetails = admission_details_decode($program_page['admission_details_json'] ?? null);
+            ?>
+            <div id="content-sub-admission" class="content-subpanel" role="tabpanel" style="padding: 1.5rem;">
+                <form id="program-admission-form" action="<?= base_url('program-admin/update-admission/' . (int) $program['id']) ?>" method="post">
+                    <?= csrf_field() ?>
+
+                    <div class="form-section">
+                        <h4 class="form-section-title">จำนวนการรับนักศึกษา</h4>
+                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">จำนวนที่เปิดรับตามแผนการศึกษา (แสดงในหน้าเว็บหลักสูตร)</p>
+                        <div class="form-group">
+                            <label for="ad_plan_seats" class="form-label">จำนวนการรับนักศึกษาตามแผน</label>
+                            <input type="text" id="ad_plan_seats" name="plan_seats" class="form-control" maxlength="200"
+                                placeholder="เช่น 30 คน" value="<?= esc($admissionDetails['plan_seats']) ?>">
+                        </div>
+                    </div>
+
+                    <div class="form-section" style="margin-top: 1.5rem;">
+                        <h4 class="form-section-title">คุณสมบัติของผู้เข้าเรียน</h4>
+                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">กรอกรายละเอียดตามที่ประกาศรับสมัคร — เว้นว่างได้หากยังไม่ประกาศ</p>
+                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="ad_study_plan" class="form-label">แผนการเรียน</label>
+                                <input type="text" id="ad_study_plan" name="requirements[study_plan]" class="form-control" maxlength="500"
+                                    placeholder="เช่น วิทย์-คณิต" value="<?= esc($admissionDetails['requirements']['study_plan']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_mor_kor_2_url" class="form-label">มคอ 2. ฉบับย่อ (URL)</label>
+                                <input type="url" id="ad_mor_kor_2_url" name="requirements[mor_kor_2_url]" class="form-control" maxlength="500"
+                                    placeholder="https://..." value="<?= esc($admissionDetails['requirements']['mor_kor_2_url']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_english_grade" class="form-label">ผลการเรียนเฉลี่ยวิชาภาษาอังกฤษ</label>
+                                <input type="text" id="ad_english_grade" name="requirements[english_grade]" class="form-control" maxlength="500"
+                                    placeholder="เช่น ไม่จำกัด" value="<?= esc($admissionDetails['requirements']['english_grade']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_selection_criteria" class="form-label">เกณฑ์การคัดเลือก</label>
+                                <input type="text" id="ad_selection_criteria" name="requirements[selection_criteria]" class="form-control" maxlength="500"
+                                    placeholder="เช่น สัมภาษณ์" value="<?= esc($admissionDetails['requirements']['selection_criteria']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_tuition_per_term" class="form-label">ค่าเทอม</label>
+                                <input type="text" id="ad_tuition_per_term" name="requirements[tuition_per_term]" class="form-control" maxlength="500"
+                                    placeholder="เช่น 10,400 บาท" value="<?= esc($admissionDetails['requirements']['tuition_per_term']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_duration" class="form-label">ระยะเวลาเรียน</label>
+                                <input type="text" id="ad_duration" name="requirements[duration]" class="form-control" maxlength="500"
+                                    placeholder="เช่น 8 ภาคการศึกษา" value="<?= esc($admissionDetails['requirements']['duration']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_credits_note" class="form-label">จำนวนหน่วยกิต</label>
+                                <input type="text" id="ad_credits_note" name="requirements[credits_note]" class="form-control" maxlength="500"
+                                    placeholder="เช่น ไม่น้อยกว่า 120 หน่วยกิต" value="<?= esc($admissionDetails['requirements']['credits_note']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_program_type" class="form-label">ประเภทการศึกษา</label>
+                                <input type="text" id="ad_program_type" name="requirements[program_type]" class="form-control" maxlength="500"
+                                    placeholder="เช่น ภาคปกติ" value="<?= esc($admissionDetails['requirements']['program_type']) ?>">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions" style="margin-top: 1.5rem;">
+                        <button type="submit" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                                <polyline points="17 21 17 13 7 13 7 21" />
+                                <polyline points="7 3 7 8 15 8" />
+                            </svg>
+                            บันทึกข้อมูลการรับสมัคร
+                        </button>
+                    </div>
+
+                    <p class="form-text text-muted" style="font-size: 0.8125rem; margin-top: 1rem;">
+                        หมายเหตุ: "สิ่งสนับสนุนการเรียน" (ทุนการศึกษา 5 ประเภท + หอพักของมหาวิทยาลัย) ถูกตั้งเป็น <strong>"มี"</strong> โดย default สำหรับทุกหลักสูตร
+                    </p>
+                </form>
+            </div>
             </div>
 
             <!-- ศิษย์เก่าถึงรุ่นน้อง Tab -->
@@ -932,89 +977,6 @@
                 </div>
             </div>
 
-            <!-- Admission Tab — การรับสมัคร (plan_seats + requirements, supports = default) -->
-            <?php
-                helper('admission_details');
-                $admissionDetails = admission_details_decode($program_page['admission_details_json'] ?? null);
-            ?>
-            <div id="admission-tab" class="tab-content">
-                <form action="<?= base_url('program-admin/update-admission/' . (int) $program['id']) ?>" method="post" style="padding: 1.5rem;">
-                    <?= csrf_field() ?>
-
-                    <div class="form-section">
-                        <h4 class="form-section-title">จำนวนการรับนักศึกษา</h4>
-                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">จำนวนที่เปิดรับตามแผนการศึกษา (แสดงในหน้าเว็บหลักสูตร)</p>
-                        <div class="form-group">
-                            <label for="ad_plan_seats" class="form-label">จำนวนการรับนักศึกษาตามแผน</label>
-                            <input type="text" id="ad_plan_seats" name="plan_seats" class="form-control" maxlength="200"
-                                placeholder="เช่น 30 คน" value="<?= esc($admissionDetails['plan_seats']) ?>">
-                        </div>
-                    </div>
-
-                    <div class="form-section" style="margin-top: 1.5rem;">
-                        <h4 class="form-section-title">คุณสมบัติของผู้เข้าเรียน</h4>
-                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">กรอกรายละเอียดตามที่ประกาศรับสมัคร — เว้นว่างได้หากยังไม่ประกาศ</p>
-                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                            <div class="form-group">
-                                <label for="ad_study_plan" class="form-label">แผนการเรียน</label>
-                                <input type="text" id="ad_study_plan" name="requirements[study_plan]" class="form-control" maxlength="500"
-                                    placeholder="เช่น วิทย์-คณิต" value="<?= esc($admissionDetails['requirements']['study_plan']) ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="ad_mor_kor_2_url" class="form-label">มคอ 2. ฉบับย่อ (URL)</label>
-                                <input type="url" id="ad_mor_kor_2_url" name="requirements[mor_kor_2_url]" class="form-control" maxlength="500"
-                                    placeholder="https://..." value="<?= esc($admissionDetails['requirements']['mor_kor_2_url']) ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="ad_english_grade" class="form-label">ผลการเรียนเฉลี่ยวิชาภาษาอังกฤษ</label>
-                                <input type="text" id="ad_english_grade" name="requirements[english_grade]" class="form-control" maxlength="500"
-                                    placeholder="เช่น ไม่จำกัด" value="<?= esc($admissionDetails['requirements']['english_grade']) ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="ad_selection_criteria" class="form-label">เกณฑ์การคัดเลือก</label>
-                                <input type="text" id="ad_selection_criteria" name="requirements[selection_criteria]" class="form-control" maxlength="500"
-                                    placeholder="เช่น สัมภาษณ์" value="<?= esc($admissionDetails['requirements']['selection_criteria']) ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="ad_tuition_per_term" class="form-label">ค่าเทอม</label>
-                                <input type="text" id="ad_tuition_per_term" name="requirements[tuition_per_term]" class="form-control" maxlength="500"
-                                    placeholder="เช่น 10,400 บาท" value="<?= esc($admissionDetails['requirements']['tuition_per_term']) ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="ad_duration" class="form-label">ระยะเวลาเรียน</label>
-                                <input type="text" id="ad_duration" name="requirements[duration]" class="form-control" maxlength="500"
-                                    placeholder="เช่น 8 ภาคการศึกษา" value="<?= esc($admissionDetails['requirements']['duration']) ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="ad_credits_note" class="form-label">จำนวนหน่วยกิต</label>
-                                <input type="text" id="ad_credits_note" name="requirements[credits_note]" class="form-control" maxlength="500"
-                                    placeholder="เช่น ไม่น้อยกว่า 120 หน่วยกิต" value="<?= esc($admissionDetails['requirements']['credits_note']) ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="ad_program_type" class="form-label">ประเภทการศึกษา</label>
-                                <input type="text" id="ad_program_type" name="requirements[program_type]" class="form-control" maxlength="500"
-                                    placeholder="เช่น ภาคปกติ" value="<?= esc($admissionDetails['requirements']['program_type']) ?>">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-actions" style="margin-top: 1.5rem;">
-                        <button type="submit" class="btn btn-primary">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-                                <polyline points="17 21 17 13 7 13 7 21" />
-                                <polyline points="7 3 7 8 15 8" />
-                            </svg>
-                            บันทึกข้อมูลการรับสมัคร
-                        </button>
-                    </div>
-
-                    <p class="form-text text-muted" style="font-size: 0.8125rem; margin-top: 1rem;">
-                        หมายเหตุ: "สิ่งสนับสนุนการเรียน" (ทุนการศึกษา 5 ประเภท + หอพักของมหาวิทยาลัย) ถูกตั้งเป็น <strong>"มี"</strong> โดย default สำหรับทุกหลักสูตร
-                    </p>
-                </form>
-            </div>
-
             <!-- Website Settings Tab -->
             <div id="website-tab" class="tab-content">
                 <form action="<?= base_url('program-admin/update-website/' . $program['id']) ?>" method="post" style="padding: 1.5rem;">
@@ -1243,6 +1205,10 @@
             btn.classList.add('active');
             btn.setAttribute('aria-selected', 'true');
         }
+        var contentSaveBar = document.querySelector('#content-page-form .form-actions');
+        if (contentSaveBar) {
+            contentSaveBar.style.display = (sub === 'admission') ? 'none' : '';
+        }
         try {
             sessionStorage.setItem('programEditContentSub', sub);
         } catch (e) { /* ignore */ }
@@ -1253,6 +1219,10 @@
 
     function switchTab(tabName, opts) {
         opts = opts || {};
+        if (tabName === 'admission') {
+            try { sessionStorage.setItem('programEditContentSub', 'admission'); } catch (e) {}
+            tabName = 'content';
+        }
         if (!document.getElementById(tabName + '-tab')) { return; }
         // Hide all tabs
         document.querySelectorAll('.tab-content').forEach(function (tab) {
@@ -1527,8 +1497,14 @@
         var params = new URLSearchParams(window.location.search);
         var tab = params.get('tab');
         var sub = params.get('sub');
+        if (tab === 'admission') {
+            tab = 'content';
+            if (!sub) {
+                sub = 'admission';
+            }
+        }
         var validTabs = ['basic', 'content', 'alumni', 'downloads', 'news', 'personnel', 'website'];
-        var contentSubs = ['overview', 'quality', 'curriculum', 'pages', 'publish'];
+        var contentSubs = ['overview', 'quality', 'curriculum', 'pages', 'publish', 'admission'];
         if (tab === 'content' && sub && contentSubs.indexOf(sub) >= 0) {
             try { sessionStorage.setItem('programEditContentSub', sub); } catch (e) { /* ignore */ }
         }
@@ -1879,7 +1855,6 @@
     .curriculum-course-table { width: 100%; border-collapse: collapse; margin-bottom: 0.5rem; font-size: 0.875rem; }
     .curriculum-course-table th, .curriculum-course-table td { padding: 0.35rem 0.5rem; text-align: left; }
     .curriculum-course-table th { font-weight: 600; color: var(--color-gray-700); }
-    .structure-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; }
     .ajax-msg { font-size: 0.875rem; font-weight: 500; margin-left: 0.5rem; transition: color 0.2s; }
 </style>
 
@@ -2244,30 +2219,6 @@
             document.getElementById('ptb-add-study_plan') && document.getElementById('ptb-add-study_plan').addEventListener('click', function () {
                 var w = document.getElementById('ptb-wrap-study_plan');
                 if (w) addPtbRow(w, 'study_plan', {});
-            });
-            document.querySelectorAll('.ptb-insert-btn').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    var fid = this.getAttribute('data-ptb-field');
-                    if (!fid) return;
-                    var ins = this.getAttribute('data-insert') || '';
-                    var body = window._ptbLastBody;
-                    if (!body || body.getAttribute('data-ptb-field') !== fid) {
-                        var w = document.getElementById('ptb-wrap-' + fid);
-                        body = w ? w.querySelector('.ptb-block-body') : null;
-                    }
-                    if (body) {
-                        var start = typeof body.selectionStart === 'number' ? body.selectionStart : body.value.length;
-                        var end = typeof body.selectionEnd === 'number' ? body.selectionEnd : body.value.length;
-                        var v = body.value;
-                        body.value = v.substring(0, start) + ins + v.substring(end);
-                        if (typeof body.setSelectionRange === 'function') {
-                            var p = start + ins.length;
-                            body.setSelectionRange(p, p);
-                        }
-                        body.focus();
-                        syncPtbField(fid);
-                    }
-                });
             });
             document.addEventListener('focusin', function (e) {
                 if (e.target && e.target.classList && e.target.classList.contains('ptb-block-body')) {
@@ -2817,22 +2768,6 @@
         contentForm.addEventListener('submit', function () { buildCurriculumJson(); });
     }
 
-    // --- Toolbar แทรกข้อความ: ใช้กับโครงสร้างหลักสูตร และแผนการเรียน/อาชีพ/ค่าเล่าเรียน/การรับสมัคร/ข้อมูลติดต่อ ---
-    function applyStructureTool(btn, targetTextarea) {
-        if (!targetTextarea) return;
-        var insert = btn.getAttribute('data-insert') || '';
-        var start = targetTextarea.selectionStart, end = targetTextarea.selectionEnd, val = targetTextarea.value;
-        targetTextarea.value = val.substring(0, start) + insert + val.substring(end);
-        targetTextarea.selectionStart = targetTextarea.selectionEnd = start + insert.length;
-        targetTextarea.focus();
-    }
-    document.querySelectorAll('.structure-tool').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var group = this.closest('.form-group') || this.closest('.content-with-toolbar');
-            var ta = group ? group.querySelector('textarea') : null;
-            if (ta) applyStructureTool(this, ta);
-        });
-    });
     var structureTa = document.getElementById('curriculum_structure');
     if (structureTa) {
         document.getElementById('curriculum-structure-save-ajax-btn') && document.getElementById('curriculum-structure-save-ajax-btn').addEventListener('click', function () {
