@@ -87,6 +87,17 @@ use App\Libraries\AccessControl; ?>
                     </a>
                 <?php endif; ?>
 
+                <?php if ($sidebarAdminId && $sidebarRole === 'super_admin'): ?>
+                    <a href="<?= base_url('admin/complaints') ?>" class="<?= (strpos(uri_string(), 'admin/complaints') === 0) ? 'active' : '' ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                            <path d="M8 9h8" />
+                            <path d="M8 13h5" />
+                        </svg>
+                        รายการร้องเรียน
+                    </a>
+                <?php endif; ?>
+
                 <?php if ($sidebarAdminId): ?>
                     <div class="sidebar-submenu" data-submenu="edoc">
                         <button type="button" class="submenu-header" aria-expanded="false">

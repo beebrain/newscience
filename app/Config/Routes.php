@@ -17,6 +17,8 @@ $routes->get('/events', 'Pages::events');
 $routes->get('/events/(:num)', 'Pages::eventDetail/$1');
 $routes->get('/calendar', 'Pages::calendar');
 $routes->get('/contact', 'Pages::contact');
+$routes->get('/complaints', 'ComplaintController::index');
+$routes->post('/complaints/submit', 'ComplaintController::submit', ['filter' => 'csrf']);
 $routes->get('/personnel', 'Pages::personnel');
 $routes->get('/executives', 'Pages::executives');
 $routes->get('/documents', 'Pages::documents');
@@ -358,6 +360,10 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->post('settings/store-new', 'Admin\Settings::storeNew');
     $routes->get('settings/delete/(:num)', 'Admin\Settings::delete/$1');
     $routes->get('settings/init-defaults', 'Admin\Settings::initDefaults');
+
+    // Complaints inbox (Super Admin only - enforced in controller)
+    $routes->get('complaints', 'Admin\Complaints::index');
+    $routes->post('complaints/update-status/(:num)', 'Admin\Complaints::updateStatus/$1', ['filter' => 'csrf']);
 
     // ไป Research Record โดยไม่ต้อง login ซ้ำ (ส่ง signed token จาก email)
     $routes->get('go-research-record', 'Admin\Auth::goResearchRecord');

@@ -181,9 +181,10 @@
                         </ul>
                     </li>
                     <li class="nav__item--has-dropdown">
-                        <a href="<?= base_url('documents') ?>" class="nav__link <?= ($active_page ?? '') === 'documents' ? 'active' : '' ?>">บริการ <?= $navSvg ?></a>
+                        <a href="<?= base_url('documents') ?>" class="nav__link <?= in_array($active_page ?? '', ['documents', 'complaints'], true) ? 'active' : '' ?>">บริการ <?= $navSvg ?></a>
                         <ul class="nav__dropdown">
                             <li><a href="<?= base_url('documents') ?>" class="nav__dropdown-link">บริการด้านเอกสาร</a></li>
+                            <li><a href="<?= base_url('complaints') ?>" class="nav__dropdown-link">แจ้งข้อร้องเรียน</a></li>
                             <li class="nav__item--has-dropdown nav__item--has-subdropdown">
                                 <span class="nav__dropdown-link nav__dropdown-link--subtrigger">ระบบและวารสาร</span>
                                 <ul class="nav__dropdown nav__dropdown--sub">
@@ -318,6 +319,7 @@
                 </button>
                 <ul class="mobile-nav__sub" id="mn-sub-services" hidden>
                     <li><a href="<?= base_url('documents') ?>" class="mobile-nav__sublink">บริการด้านเอกสาร</a></li>
+                    <li><a href="<?= base_url('complaints') ?>" class="mobile-nav__sublink">แจ้งข้อร้องเรียน</a></li>
                     <li class="mobile-nav__item mobile-nav__item--has-sub">
                         <button type="button" class="mobile-nav__subtoggle mobile-nav__subtoggle--nested" aria-expanded="false" aria-controls="mn-sub-services-sys">
                             <span class="mobile-nav__subtoggle-text">ระบบและวารสาร</span>
