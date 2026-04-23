@@ -5,7 +5,6 @@
 <div class="card">
     <div class="card-header">
         <h2>ประกาศด่วน (ป๊อปอัปหน้าแรก)</h2>
-        <?php if ($can_add): ?>
         <a href="<?= base_url('admin/urgent-popups/create') ?>" class="btn btn-primary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -13,10 +12,25 @@
             </svg>
             เพิ่มประกาศ
         </a>
-        <?php else: ?>
-        <span class="text-muted" style="font-size: 0.9rem;">ประกาศด่วนมีได้สูงสุด <?= $max_items ?> รายการ — ลบหรือปิดการแสดงผลก่อนเพิ่มใหม่</span>
-        <?php endif; ?>
     </div>
+
+    <?php if (($active_count ?? 0) > $max_items): ?>
+    <div class="alert alert-warning" style="margin: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span>
+            ขณะนี้มีประกาศที่เปิดแสดงผล <strong><?= (int)$active_count ?></strong> รายการ แต่หน้าแรกจะแสดงเพียง
+            <strong><?= (int)$max_items ?></strong> รายการแรกตามลำดับ <code>sort_order</code> เท่านั้น
+        </span>
+    </div>
+    <?php else: ?>
+    <div class="alert alert-info" style="margin: 1rem; font-size: 0.9rem;">
+        เพิ่มได้ไม่จำกัดจำนวน แต่หน้าแรกจะแสดงป๊อปอัปสูงสุด <strong><?= (int)$max_items ?></strong> รายการ (เรียงตาม <code>sort_order</code>)
+    </div>
+    <?php endif; ?>
 
     <div class="card-body" style="padding: 0;">
         <?php if (session('success')): ?>
@@ -34,10 +48,8 @@
                     <line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
                 <h3>ยังไม่มีประกาศด่วน</h3>
-                <p>เพิ่มประกาศด่วนเพื่อแสดงป๊อปอัปบนหน้าแรก (สูงสุด <?= $max_items ?> รายการ)</p>
-                <?php if ($can_add): ?>
+                <p>เพิ่มประกาศด่วนเพื่อแสดงป๊อปอัปบนหน้าแรก (หน้าแรกแสดงสูงสุด <?= (int)$max_items ?> รายการ)</p>
                 <a href="<?= base_url('admin/urgent-popups/create') ?>" class="btn btn-primary" style="margin-top: 1rem;">เพิ่มประกาศ</a>
-                <?php endif; ?>
             </div>
         <?php else: ?>
             <table class="table" id="popupsTable">

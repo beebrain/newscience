@@ -15,7 +15,7 @@ class UrgentPopups extends BaseController
     }
 
     /**
-     * รายการประกาศด่วน (สูงสุด 3 รายการ)
+     * รายการประกาศด่วน (เพิ่มได้ไม่จำกัด แต่หน้าแรกจะแสดงสูงสุด MAX_ACTIVE รายการ)
      */
     public function index()
     {
@@ -23,6 +23,7 @@ class UrgentPopups extends BaseController
             'page_title' => 'ประกาศด่วน (ป๊อปอัปหน้าแรก)',
             'popups' => $this->popupModel->getAllForAdmin(),
             'max_items' => UrgentPopupModel::MAX_ACTIVE,
+            'active_count' => $this->popupModel->countActive(),
             'can_add' => $this->popupModel->canAdd(),
         ];
 
@@ -34,11 +35,6 @@ class UrgentPopups extends BaseController
      */
     public function create()
     {
-        if (!$this->popupModel->canAdd()) {
-            return redirect()->to(base_url('admin/urgent-popups'))
-                ->with('error', 'ประกาศด่วนมีได้สูงสุด ' . UrgentPopupModel::MAX_ACTIVE . ' รายการ กรุณาลบหรือปิดการแสดงผลก่อนเพิ่มใหม่');
-        }
-
         $data = [
             'page_title' => 'เพิ่มประกาศด่วน',
             'popup' => null,
@@ -52,11 +48,6 @@ class UrgentPopups extends BaseController
      */
     public function store()
     {
-        if (!$this->popupModel->canAdd()) {
-            return redirect()->to(base_url('admin/urgent-popups'))
-                ->with('error', 'ประกาศด่วนมีได้สูงสุด ' . UrgentPopupModel::MAX_ACTIVE . ' รายการ');
-        }
-
         $rules = [
             'title' => 'required|max_length[255]',
         ];

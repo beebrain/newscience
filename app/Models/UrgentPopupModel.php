@@ -27,11 +27,11 @@ class UrgentPopupModel extends Model
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
 
-    /** จำนวนสูงสุดที่แสดงบนหน้าแรก */
-    public const MAX_ACTIVE = 3;
+    /** จำนวนสูงสุดที่แสดงบนหน้าแรก (ไม่จำกัดการเพิ่ม) */
+    public const MAX_ACTIVE = 5;
 
     /**
-     * ดึงประกาศด่วนที่เปิดอยู่ (สูงสุด 3 รายการ) สำหรับแสดงป๊อปอัปหน้าแรก
+     * ดึงประกาศด่วนที่เปิดอยู่ (สูงสุด MAX_ACTIVE รายการ) สำหรับแสดงป๊อปอัปหน้าแรก
      */
     public function getActivePopups(): array
     {
@@ -63,10 +63,18 @@ class UrgentPopupModel extends Model
     }
 
     /**
-     * ตรวจสอบว่าสามารถเพิ่มได้หรือไม่ (ไม่เกิน 3 รายการ)
+     * สามารถเพิ่มได้เสมอ (ไม่จำกัดจำนวน — แต่หน้าแรกจะแสดงไม่เกิน MAX_ACTIVE รายการ)
      */
     public function canAdd(): bool
     {
-        return $this->countAll() < self::MAX_ACTIVE;
+        return true;
+    }
+
+    /**
+     * นับจำนวนที่ "เปิด" (is_active = 1) — ใช้เตือนแอดมินว่าเกินจำนวนแสดงผลหรือยัง
+     */
+    public function countActive(): int
+    {
+        return $this->where('is_active', 1)->countAllResults();
     }
 }
