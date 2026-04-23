@@ -448,6 +448,7 @@ $routes->group('program-admin', ['filter' => 'programadmin'], function ($routes)
     $routes->post('update-page/(:num)', 'Admin\ProgramAdmin\Dashboard::updatePage/$1');
     $routes->post('update-page-json/(:num)', 'Admin\ProgramAdmin\Dashboard::updatePageJson/$1');
     $routes->post('update-website/(:num)', 'Admin\ProgramAdmin\Dashboard::updateWebsite/$1');
+    $routes->post('update-admission/(:num)', 'Admin\ProgramAdmin\Dashboard::updateAdmission/$1');
     $routes->post('upload-hero/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadHero/$1');
     $routes->post('upload-page-media/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadPageMedia/$1');
     $routes->post('upload-alumni-photo/(:num)', 'Admin\ProgramAdmin\Dashboard::uploadAlumniPhoto/$1');

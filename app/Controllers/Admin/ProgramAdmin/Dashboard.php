@@ -485,6 +485,56 @@ class Dashboard extends BaseController
     }
 
     /**
+     * POST program-admin/update-admission/{id} — บันทึก admission_details_json
+     *
+     * รับ: plan_seats (string), requirements[...] (8 keys)
+     * supports ไม่มีใน form — ใช้ default true ทั้งหมดผ่าน helper
+     */
+    public function updateAdmission($programId)
+    {
+        $programId = (int) $programId;
+        $program   = $this->programModel->find($programId);
+        if (! $program) {
+            return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
+        }
+        if (! $this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการหลักสูตรนี้');
+        }
+
+        helper('admission_details');
+
+        $existing = $this->programPageModel->findByProgramId($programId) ?? [];
+        $existingDecoded = admission_details_decode($existing['admission_details_json'] ?? null);
+
+        $reqIn  = $this->request->getPost('requirements');
+        $reqArr = is_array($reqIn) ? $reqIn : [];
+
+        $input = [
+            'plan_seats'   => (string) $this->request->getPost('plan_seats'),
+            'requirements' => array_intersect_key($reqArr, array_flip(admission_details_requirement_keys())),
+            'supports'     => $existingDecoded['supports'], // preserve ค่าเดิม (ไม่มี UI)
+        ];
+
+        $errors = [];
+        $json   = admission_details_normalize($input, $errors);
+
+        if (! empty($errors)) {
+            return redirect()->back()->withInput()->with('error', implode(' / ', $errors));
+        }
+
+        try {
+            $this->programPageModel->updateOrCreate(['program_id' => $programId], [
+                'admission_details_json' => $json,
+            ]);
+
+            return redirect()->to(base_url('program-admin/edit/' . $programId) . '?tab=admission')
+                ->with('success', 'บันทึกข้อมูลการรับสมัครเรียบร้อยแล้ว');
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Upload hero image only (สำหรับ drag-drop + crop จากแท็บข้อมูลพื้นฐาน).
      * POST program-admin/upload-hero/{id}
      * Body: hero_image (file), หรือ hero_image_remove=1 เพื่อลบ

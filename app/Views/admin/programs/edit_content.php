@@ -89,6 +89,15 @@
                 </svg>
                 บุคลากร
             </button>
+            <button type="button" class="tab-button" data-tab="admission" onclick="switchTab('admission')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <path d="M9 13h6" />
+                    <path d="M9 17h6" />
+                </svg>
+                การรับสมัคร
+            </button>
             <button type="button" class="tab-button" data-tab="website" onclick="switchTab('website')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="3" />
@@ -921,6 +930,89 @@
                         </div>
                     <?php endif; ?>
                 </div>
+            </div>
+
+            <!-- Admission Tab — การรับสมัคร (plan_seats + requirements, supports = default) -->
+            <?php
+                helper('admission_details');
+                $admissionDetails = admission_details_decode($program_page['admission_details_json'] ?? null);
+            ?>
+            <div id="admission-tab" class="tab-content">
+                <form action="<?= base_url('program-admin/update-admission/' . (int) $program['id']) ?>" method="post" style="padding: 1.5rem;">
+                    <?= csrf_field() ?>
+
+                    <div class="form-section">
+                        <h4 class="form-section-title">จำนวนการรับนักศึกษา</h4>
+                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">จำนวนที่เปิดรับตามแผนการศึกษา (แสดงในหน้าเว็บหลักสูตร)</p>
+                        <div class="form-group">
+                            <label for="ad_plan_seats" class="form-label">จำนวนการรับนักศึกษาตามแผน</label>
+                            <input type="text" id="ad_plan_seats" name="plan_seats" class="form-control" maxlength="200"
+                                placeholder="เช่น 30 คน" value="<?= esc($admissionDetails['plan_seats']) ?>">
+                        </div>
+                    </div>
+
+                    <div class="form-section" style="margin-top: 1.5rem;">
+                        <h4 class="form-section-title">คุณสมบัติของผู้เข้าเรียน</h4>
+                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">กรอกรายละเอียดตามที่ประกาศรับสมัคร — เว้นว่างได้หากยังไม่ประกาศ</p>
+                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="ad_study_plan" class="form-label">แผนการเรียน</label>
+                                <input type="text" id="ad_study_plan" name="requirements[study_plan]" class="form-control" maxlength="500"
+                                    placeholder="เช่น วิทย์-คณิต" value="<?= esc($admissionDetails['requirements']['study_plan']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_mor_kor_2_url" class="form-label">มคอ 2. ฉบับย่อ (URL)</label>
+                                <input type="url" id="ad_mor_kor_2_url" name="requirements[mor_kor_2_url]" class="form-control" maxlength="500"
+                                    placeholder="https://..." value="<?= esc($admissionDetails['requirements']['mor_kor_2_url']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_english_grade" class="form-label">ผลการเรียนเฉลี่ยวิชาภาษาอังกฤษ</label>
+                                <input type="text" id="ad_english_grade" name="requirements[english_grade]" class="form-control" maxlength="500"
+                                    placeholder="เช่น ไม่จำกัด" value="<?= esc($admissionDetails['requirements']['english_grade']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_selection_criteria" class="form-label">เกณฑ์การคัดเลือก</label>
+                                <input type="text" id="ad_selection_criteria" name="requirements[selection_criteria]" class="form-control" maxlength="500"
+                                    placeholder="เช่น สัมภาษณ์" value="<?= esc($admissionDetails['requirements']['selection_criteria']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_tuition_per_term" class="form-label">ค่าเทอม</label>
+                                <input type="text" id="ad_tuition_per_term" name="requirements[tuition_per_term]" class="form-control" maxlength="500"
+                                    placeholder="เช่น 10,400 บาท" value="<?= esc($admissionDetails['requirements']['tuition_per_term']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_duration" class="form-label">ระยะเวลาเรียน</label>
+                                <input type="text" id="ad_duration" name="requirements[duration]" class="form-control" maxlength="500"
+                                    placeholder="เช่น 8 ภาคการศึกษา" value="<?= esc($admissionDetails['requirements']['duration']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_credits_note" class="form-label">จำนวนหน่วยกิต</label>
+                                <input type="text" id="ad_credits_note" name="requirements[credits_note]" class="form-control" maxlength="500"
+                                    placeholder="เช่น ไม่น้อยกว่า 120 หน่วยกิต" value="<?= esc($admissionDetails['requirements']['credits_note']) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="ad_program_type" class="form-label">ประเภทการศึกษา</label>
+                                <input type="text" id="ad_program_type" name="requirements[program_type]" class="form-control" maxlength="500"
+                                    placeholder="เช่น ภาคปกติ" value="<?= esc($admissionDetails['requirements']['program_type']) ?>">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions" style="margin-top: 1.5rem;">
+                        <button type="submit" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                                <polyline points="17 21 17 13 7 13 7 21" />
+                                <polyline points="7 3 7 8 15 8" />
+                            </svg>
+                            บันทึกข้อมูลการรับสมัคร
+                        </button>
+                    </div>
+
+                    <p class="form-text text-muted" style="font-size: 0.8125rem; margin-top: 1rem;">
+                        หมายเหตุ: "สิ่งสนับสนุนการเรียน" (ทุนการศึกษา 5 ประเภท + หอพักของมหาวิทยาลัย) ถูกตั้งเป็น <strong>"มี"</strong> โดย default สำหรับทุกหลักสูตร
+                    </p>
+                </form>
             </div>
 
             <!-- Website Settings Tab -->
