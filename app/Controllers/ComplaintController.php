@@ -141,6 +141,6 @@ class ComplaintController extends BaseController
 
     private function getRateLimitKey(): string
     {
-        return 'complaint_submit:' . md5((string) $this->request->getIPAddress());
+        return 'complaint_submit_' . md5((string) $this->request->getIPAddress());
     }
 }
