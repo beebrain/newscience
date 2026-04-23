@@ -284,7 +284,7 @@ class Pages extends BaseController
         return view('pages/news', $data);
     }
 
-    public function newsDetail($id = null): string
+    public function newsDetail($id = null): \CodeIgniter\HTTP\ResponseInterface
     {
         $siteInfo = $this->siteSettingModel->getAll();
 
@@ -331,7 +331,7 @@ class Pages extends BaseController
             'related_news' => $relatedNews,
         ]);
 
-        return view('pages/news_detail', $data);
+        return $this->response->setBody(view('pages/news_detail', $data));
     }
 
     public function events(): string
@@ -396,7 +396,6 @@ class Pages extends BaseController
             'fax' => $siteInfo['fax'] ?? '',
             'email' => $siteInfo['email'] ?? '',
             'address_th' => $siteInfo['address_th'] ?? '',
-            'address_en' => $siteInfo['address_en'] ?? '',
             'facebook' => $siteInfo['facebook'] ?? '',
             'website' => $siteInfo['website'] ?? '',
         ]);

@@ -24,6 +24,11 @@ class Settings extends BaseController
         // จัดกลุ่ม settings ตาม category
         $groupedSettings = [];
         foreach ($settings as $setting) {
+            // ซ่อนฟิลด์ภาษาอังกฤษทั้งหมด (key ลงท้ายด้วย _en) จากหน้า settings
+            $key = (string) ($setting['setting_key'] ?? '');
+            if ($key !== '' && substr($key, -3) === '_en') {
+                continue;
+            }
             $category = $setting['category'] ?? 'general';
             if (!isset($groupedSettings[$category])) {
                 $groupedSettings[$category] = [];
@@ -233,6 +238,7 @@ class Settings extends BaseController
             ['meta_keywords', '', 'textarea', 'seo', 'คำค้นหา SEO'],
             ['footer_text', '© ' . date('Y') . ' All rights reserved.', 'textarea', 'appearance', 'ข้อความท้ายเว็บ'],
             // เกี่ยวกับคณะ
+            ['history_th', '', 'textarea', 'about', 'ประวัติคณะ'],
             ['philosophy_th', 'สร้างองค์ความรู้และพัฒนาคนในชาติ ด้วยวิทยาศาสตร์และเทคโนโลยี', 'textarea', 'about', 'ปรัชญา'],
             ['vision_th', 'คณะวิทยาศาสตร์และเทคโนโลยี เป็นองค์กรแห่งความสุข มุ่งพัฒนาและผลิตบัณฑิตให้เป็นคนดี คนเก่ง มีจิตอาสา นำพาสังคม พร้อมทั้งเป็นแหล่งเรียนรู้และบริการวิชาการแก่ชุมชน ท้องถิ่น ระดับชาติและนานาชาติ', 'textarea', 'about', 'วิสัยทัศน์'],
             ['identity_th', 'เป็นคนดี คนเก่ง มีจิตอาสา มุ่งมั่นก้าวหน้า พัฒนาชุมชนและท้องถิ่น ก้าวทันการเปลี่ยนแปลงของเทคโนโลยี มุ่งสู่วิถีพอเพียงตามแนวพระราชดำริ', 'textarea', 'about', 'อัตลักษณ์'],

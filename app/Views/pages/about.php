@@ -14,6 +14,26 @@
     </div>
 </section>
 
+<!-- History Section -->
+<?php if (!empty($history)): ?>
+<section class="section section-light">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-header__subtitle">ประวัติ</span>
+            <h2 class="section-header__title">ประวัติคณะ</h2>
+        </div>
+        <?php
+        $historyParagraphs = array_values(array_filter(array_map('trim', preg_split("/\r\n|\r|\n/", (string) $history))));
+        ?>
+        <div class="about-prose animate-on-scroll">
+            <?php foreach ($historyParagraphs as $p): ?>
+                <p class="about-prose__p"><?= esc($p) ?></p>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
 <!-- Philosophy & Vision Section -->
 <section class="section">
     <div class="container">
@@ -24,10 +44,6 @@
             <div class="feature-section__content animate-on-scroll">
                 <span class="feature-section__subtitle">ปรัชญา</span>
                 <h2 class="feature-section__title"><?= esc($philosophy ?? 'สร้างองค์ความรู้และพัฒนาคนในชาติ ด้วยวิทยาศาสตร์และเทคโนโลยี') ?></h2>
-                <div class="about-badge">
-                    <span class="about-badge__label">อัตลักษณ์</span>
-                    <span class="about-badge__value"><?= esc($identity ?? 'บัณฑิตนักปฏิบัติ') ?></span>
-                </div>
             </div>
         </div>
     </div>
@@ -42,9 +58,14 @@
             </div>
             <div class="feature-section__content animate-on-scroll">
                 <span class="feature-section__subtitle">วิสัยทัศน์</span>
-                <h2 class="feature-section__title">องค์กรแห่งความสุข</h2>
+                <h2 class="feature-section__title">วิสัยทัศน์คณะ</h2>
                 <p class="feature-section__description">
-                    <?= esc($vision ?? 'คณะวิทยาศาสตร์และเทคโนโลยี เป็นองค์กรแห่งความสุข มุ่งพัฒนาและผลิตบัณฑิตให้เป็นคนดี คนเก่ง มีจิตอาสา นำพาสังคม พร้อมทั้งเป็นแหล่งเรียนรู้และบริการวิชาการแก่ชุมชน ท้องถิ่น ระดับชาติและนานาชาติ') ?>
+                    <?php
+                    $visionText = (string) ($vision ?? 'คณะวิทยาศาสตร์และเทคโนโลยี มุ่งพัฒนาและผลิตบัณฑิตให้เป็นคนดี คนเก่ง มีจิตอาสา นำพาสังคม พร้อมทั้งเป็นแหล่งเรียนรู้และบริการวิชาการแก่ชุมชน ท้องถิ่น ระดับชาติและนานาชาติ');
+                    $visionText = str_replace('องค์กรแห่งความสุข', '', $visionText);
+                    $visionText = trim(preg_replace('/\s+/', ' ', $visionText) ?? $visionText);
+                    ?>
+                    <?= esc($visionText) ?>
                 </p>
             </div>
         </div>
@@ -237,35 +258,6 @@
     </div>
 </section>
 
-<!-- Departments Section -->
-<?php if (!empty($departments)): ?>
-    <section class="section section-light">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-header__subtitle">สาขาวิชา</span>
-                <h2 class="section-header__title">หน่วยงานภายในคณะ</h2>
-            </div>
-
-            <div class="grid grid-3">
-                <?php foreach ($departments as $dept): ?>
-                    <div class="card animate-on-scroll">
-                        <div class="card__content text-center">
-                            <div class="dept-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;">
-                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                                </svg>
-                            </div>
-                            <h3 class="card__title"><?= esc($dept['name_th'] ?? $dept['name_en'] ?? 'สาขาวิชา') ?></h3>
-                            <p class="card__excerpt text-muted"><?= esc($dept['name_en'] ?? '') ?></p>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </section>
-<?php endif; ?>
-
 <!-- Contact CTA -->
 <section class="cta-section">
     <div class="container">
@@ -278,27 +270,6 @@
 </section>
 
 <style>
-    .about-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-top: 1.5rem;
-        padding: 0.75rem 1.5rem;
-        background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-        border-radius: 50px;
-        color: white;
-    }
-
-    .about-badge__label {
-        font-size: 0.85rem;
-        opacity: 0.9;
-    }
-
-    .about-badge__value {
-        font-weight: 600;
-        font-size: 1.1rem;
-    }
-
     .mission-number {
         width: 50px;
         height: 50px;
@@ -346,6 +317,18 @@
     }
     .about-list--mission .about-list__item,
     .about-list--policy .about-list__item { margin-bottom: 0.5rem; }
+
+    .about-prose {
+        max-width: 900px;
+        margin: 0 auto;
+        color: var(--text-primary, #1e293b);
+        line-height: 1.8;
+    }
+    .about-prose__p {
+        margin: 0 0 0.9rem;
+        color: inherit;
+    }
+    .about-prose__p:last-child { margin-bottom: 0; }
 
     /* Executives Section */
     .executives-section {
