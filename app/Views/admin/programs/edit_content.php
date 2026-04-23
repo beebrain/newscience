@@ -348,33 +348,6 @@
                         แนะนำ: แท็บย่อยแยกหัวข้อ — บันทึกท้ายฟอร์มหรือบันทึกเฉพาะส่วนตามปุ่ม
                     </p>
 
-                    <div class="program-bundle-panel" style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--color-gray-200); background: #fff; font-size: 0.875rem;">
-                        <h4 class="form-section-title" style="margin: 0 0 0.5rem 0; font-size: 1rem;">นำเข้า / ส่งออก JSON (เนื้อหา program_pages)</h4>
-                        <p class="form-text text-muted" style="margin: 0 0 0.75rem 0; font-size: 0.8125rem;">ดาวน์โหลด snapshot ก่อนแก้ หรือเตรียมย้ายเครื่อง — เอกสารต้องระบุ <code>schema_version</code> กับ <code>program_id</code> ให้ตรงหลักสูตรนี้ (<?= (int) $program['id'] ?>) — หลังส่งออกหรือหลังนำเข้าสำเร็จ ระบบจะบันทึกสำเนาไว้ที่ <code style="font-size:0.75rem;">writable/uploads/programs/<?= (int) $program['id'] ?>/data/content-bundle-latest.json</code> (แหล่งความจริงยังเป็นฐานข้อมูล)</p>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;">
-                            <a href="<?= base_url('program-admin/bundle-export/' . (int) $program['id']) ?>" class="btn btn-outline btn-sm" download>ดาวน์โหลด JSON ปัจจุบัน</a>
-                            <a href="<?= base_url('program-admin/bundle-template/' . (int) $program['id']) ?>" class="btn btn-outline btn-sm" download>ดาวน์โหลดแม่แบบว่าง</a>
-                            <button type="button" class="btn btn-outline btn-sm" id="bundle-preview-current-btn">ดูสรุปฐานปัจจุบันต่อหัวข้อ</button>
-                        </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end; margin-bottom: 0.5rem;">
-                            <div class="form-group" style="margin: 0;">
-                                <label for="bundle-file-input" class="form-label" style="font-size: 0.8125rem;">นำเข้าไฟล์ .json</label>
-                                <input type="file" id="bundle-file-input" accept=".json,application/json" class="form-control" style="max-width: 22rem; font-size: 0.875rem;">
-                            </div>
-                            <button type="button" class="btn btn-primary btn-sm" id="bundle-import-preview-btn">ตรวจก่อนนำเข้า</button>
-                        </div>
-                        <p id="bundle-import-msg" class="ajax-msg" style="min-height: 1.2em; margin: 0 0 0.5rem 0;" aria-live="polite"></p>
-                        <ul id="bundle-import-errors" class="bundle-error-list" aria-live="polite" style="display: none; margin: 0 0 0.5rem 0; padding: 0.5rem 0.75rem 0.5rem 1.25rem; border: 1px solid var(--color-error, #c92a2a); border-radius: 6px; background: #fff5f5; color: var(--color-error, #c92a2a); font-size: 0.8125rem; list-style: disc;"></ul>
-                        <div id="bundle-preview-wrap" style="display: none; margin-top: 0.5rem; max-height: 420px; overflow: auto; border: 1px solid var(--color-gray-200); border-radius: 8px; padding: 0.75rem; background: var(--color-gray-50);">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.8125rem;" id="bundle-compare-grid">
-                            </div>
-                        </div>
-                        <div id="bundle-commit-row" style="display: none; margin-top: 0.5rem;">
-                            <button type="button" class="btn btn-primary btn-sm" id="bundle-import-commit-btn">ยืนยันบันทึกลงฐานข้อมูล</button>
-                            <span class="form-text text-muted" style="font-size: 0.75rem; margin-left: 0.5rem;">token อายุ ~10 นาที</span>
-                        </div>
-                    </div>
-
                     <div class="content-subtab-bar" role="tablist" aria-label="แท็บย่อยเนื้อหาหลักสูตร">
                         <button type="button" class="content-subtab-btn active" data-content-sub="overview" role="tab" aria-selected="true" onclick="switchContentSubTab('overview')">1. ภาพรวม</button>
                         <button type="button" class="content-subtab-btn" data-content-sub="quality" role="tab" aria-selected="false" onclick="switchContentSubTab('quality')">2. มาตรฐาน &amp; PLO</button>
@@ -522,38 +495,6 @@
                         <div class="form-section">
                             <h4 class="form-section-title">อาชีพ · ค่าใช้จ่าย · รับสมัคร · ติดต่อ · วิดีโอ</h4>
 
-                        <div class="form-section admin-upload-panel" style="background: var(--color-gray-50); border: 1px solid var(--color-gray-200); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
-                            <h5 class="form-section-title" style="font-size: 1rem; margin-top: 0;">อัปโหลดแทรกในเนื้อหา (รูปหรือ PDF)</h5>
-                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เลือกช่อง อัปโหลด แล้วบันทึก — ไฟล์อื่นอัปโหลดที่แท็บ <a href="javascript:void(0)" class="link-to-downloads-tab" style="color: var(--color-primary, #2563eb); font-weight: 500;">ดาวน์โหลด</a> แล้ววางลิงก์</p>
-                            <p class="admin-upload-hint" style="font-size: 0.8125rem; color: var(--color-gray-600); margin: 0 0 0.75rem;">รองรับเฉพาะ: JPG, PNG, WEBP, GIF, PDF — ไม่เกิน 15 MB ต่อไฟล์</p>
-                            <div class="form-row" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
-                                <div class="form-group" style="flex: 1; min-width: 200px;">
-                                    <label for="page-media-insert-target" class="form-label">แทรกในช่อง</label>
-                                    <select id="page-media-insert-target" class="form-control">
-                                        <option value="curriculum_structure">โครงสร้างหลักสูตร</option>
-                                        <option value="study_plan">แผนการเรียน</option>
-                                        <option value="career_prospects">อาชีพที่สามารถประกอบได้</option>
-                                        <option value="tuition_fees">ค่าเล่าเรียน/ค่าธรรมเนียม</option>
-                                        <option value="admission_info">การรับสมัคร</option>
-                                        <option value="contact_info">ข้อมูลติดต่อ</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="flex: 1; min-width: 200px;">
-                                    <label for="page-media-file" class="form-label">เลือกไฟล์</label>
-                                    <input type="file" id="page-media-file" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf">
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.5rem;">
-                                <button type="button" class="btn btn-primary btn-sm" id="page-media-upload-btn">อัปโหลดและแทรก</button>
-                                <span id="page-media-msg" class="ajax-msg" aria-live="polite"></span>
-                            </div>
-                            <div id="page-media-result" style="display: none; margin-top: 0.75rem; padding: 0.75rem; background: #fff; border-radius: 6px; border: 1px solid var(--color-gray-200); font-size: 0.8125rem;">
-                                <div style="word-break: break-all; margin-bottom: 0.5rem;"><strong>URL:</strong> <code id="page-media-url"></code></div>
-                                <button type="button" class="btn btn-outline btn-sm" id="page-media-copy-img">คัดลอกโค้ด &lt;img&gt;</button>
-                                <button type="button" class="btn btn-outline btn-sm" id="page-media-copy-link">คัดลอกโค้ดลิงก์</button>
-                            </div>
-                        </div>
-
                         <?php helper('career_cards'); ?>
                         <div class="form-group career-cards-admin">
                             <label class="form-label">อาชีพที่สามารถประกอบได้ (การ์ด)</label>
@@ -562,18 +503,6 @@
                             <button type="button" class="btn btn-outline btn-sm" id="career-card-add-btn" style="margin-top: 0.5rem;">+ เพิ่มอาชีพ</button>
                             <textarea name="careers_json" id="careers_json" style="display: none !important;" aria-hidden="true"><?= htmlspecialchars($program_page['careers_json'] ?? '[]', ENT_QUOTES, 'UTF-8') ?></textarea>
                         </div>
-                        <div class="form-group content-with-toolbar">
-                            <label for="career_prospects" class="form-label">รายละเอียดเพิ่มเติม (HTML ไม่บังคับ)</label>
-                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">ย่อหน้า/รูป/รายการยาว — แสดงใต้การ์ดเมื่อกรอก</p>
-                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<hr>">เส้นคั่น</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
-                            </div>
-                            <textarea id="career_prospects" name="career_prospects" class="form-control" rows="4"><?= esc($program_page['career_prospects'] ?? '') ?></textarea>
-                        </div>
 
                         <div class="form-group tuition-fees-items-admin">
                             <label class="form-label">ค่าเล่าเรียน/ค่าธรรมเนียม (รายการ)</label>
@@ -581,18 +510,6 @@
                             <div id="tuition-fees-editor"></div>
                             <button type="button" class="btn btn-outline btn-sm" id="tuition-fee-add-btn" style="margin-top: 0.5rem;">+ เพิ่มรายการ</button>
                             <textarea name="tuition_fees_json" id="tuition_fees_json" style="display: none !important;" aria-hidden="true"><?= htmlspecialchars($program_page['tuition_fees_json'] ?? '[]', ENT_QUOTES, 'UTF-8') ?></textarea>
-                        </div>
-                        <div class="form-group content-with-toolbar">
-                            <label for="tuition_fees" class="form-label">รายละเอียดเพิ่มเติม (HTML ไม่บังคับ)</label>
-                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">ตารางยาว เงื่อนไขพิเศษ หรือลิงก์ประกาศ — แสดงใต้รายการเมื่อกรอก</p>
-                            <div class="structure-toolbar" role="toolbar" aria-label="เครื่องมือแทรกข้อความ">
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<h3>หัวข้อ</h3>">หัวข้อ</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ul>\n<li>รายการ</li>\n</ul>">รายการจุด</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<ol>\n<li>รายการ</li>\n</ol>">รายการเลข</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<hr>">เส้นคั่น</button>
-                                <button type="button" class="btn btn-outline btn-sm structure-tool" data-insert="<p>ย่อหน้า</p>">ย่อหน้า</button>
-                            </div>
-                            <textarea id="tuition_fees" name="tuition_fees" class="form-control" rows="4"><?= esc($program_page['tuition_fees'] ?? '') ?></textarea>
                         </div>
 
                         <div class="form-group content-with-toolbar">
@@ -1056,6 +973,34 @@
                         </div>
                     </div>
                 </form>
+
+                <!-- นำเข้า / ส่งออก JSON — 3 namespace: ข้อมูลพื้นฐาน + เนื้อหาหลักสูตร + การตั้งค่า -->
+                <div class="program-bundle-panel" style="margin: 0 1.5rem 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--color-gray-200); border-radius: 8px; background: #fff; font-size: 0.875rem;">
+                    <h4 class="form-section-title" style="margin: 0 0 0.5rem 0; font-size: 1rem;">นำเข้า / ส่งออก JSON (ข้อมูลพื้นฐาน · เนื้อหาหลักสูตร · การตั้งค่า)</h4>
+                    <p class="form-text text-muted" style="margin: 0 0 0.75rem 0; font-size: 0.8125rem;">เอกสาร JSON ครอบ 3 ส่วน (<code>basic</code>/<code>content</code>/<code>settings</code>) — single source per field ไม่มีข้อมูลซ้ำ. ไฟล์ต้องระบุ <code>schema_version</code> กับ <code>program_id</code> ให้ตรงหลักสูตรนี้ (<?= (int) $program['id'] ?>). หลังส่งออกหรือหลังนำเข้าสำเร็จ ระบบบันทึกสำเนาไว้ที่ <code style="font-size:0.75rem;">writable/uploads/programs/<?= (int) $program['id'] ?>/data/content-bundle-latest.json</code> (แหล่งความจริงยังเป็นฐานข้อมูล — รองรับนำเข้ารูปแบบเดิม <code>{program, page}</code> อัตโนมัติ)</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;">
+                        <a href="<?= base_url('program-admin/bundle-export/' . (int) $program['id']) ?>" class="btn btn-outline btn-sm" download>ดาวน์โหลด JSON ปัจจุบัน</a>
+                        <a href="<?= base_url('program-admin/bundle-template/' . (int) $program['id']) ?>" class="btn btn-outline btn-sm" download>ดาวน์โหลดแม่แบบว่าง</a>
+                        <button type="button" class="btn btn-outline btn-sm" id="bundle-preview-current-btn">ดูสรุปฐานปัจจุบันต่อหัวข้อ</button>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end; margin-bottom: 0.5rem;">
+                        <div class="form-group" style="margin: 0;">
+                            <label for="bundle-file-input" class="form-label" style="font-size: 0.8125rem;">นำเข้าไฟล์ .json</label>
+                            <input type="file" id="bundle-file-input" accept=".json,application/json" class="form-control" style="max-width: 22rem; font-size: 0.875rem;">
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" id="bundle-import-preview-btn">ตรวจก่อนนำเข้า</button>
+                    </div>
+                    <p id="bundle-import-msg" class="ajax-msg" style="min-height: 1.2em; margin: 0 0 0.5rem 0;" aria-live="polite"></p>
+                    <ul id="bundle-import-errors" class="bundle-error-list" aria-live="polite" style="display: none; margin: 0 0 0.5rem 0; padding: 0.5rem 0.75rem 0.5rem 1.25rem; border: 1px solid var(--color-error, #c92a2a); border-radius: 6px; background: #fff5f5; color: var(--color-error, #c92a2a); font-size: 0.8125rem; list-style: disc;"></ul>
+                    <div id="bundle-preview-wrap" style="display: none; margin-top: 0.5rem; max-height: 420px; overflow: auto; border: 1px solid var(--color-gray-200); border-radius: 8px; padding: 0.75rem; background: var(--color-gray-50);">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.8125rem;" id="bundle-compare-grid">
+                        </div>
+                    </div>
+                    <div id="bundle-commit-row" style="display: none; margin-top: 0.5rem;">
+                        <button type="button" class="btn btn-primary btn-sm" id="bundle-import-commit-btn">ยืนยันบันทึกลงฐานข้อมูล</button>
+                        <span class="form-text text-muted" style="font-size: 0.75rem; margin-left: 0.5rem;">token อายุ ~10 นาที — บันทึกครอบทั้ง <code>programs</code> + <code>program_pages</code> ใน transaction เดียว</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1247,96 +1192,6 @@
             syncProgramEditUrl();
         }
     }
-
-    (function initPageMediaUpload() {
-        var uploadUrl = '<?= base_url('program-admin/upload-page-media/' . (int)($program['id'] ?? 0)) ?>';
-        var lastSnippetImg = '';
-        var lastSnippetLink = '';
-        function insertAtCursorTextarea(el, text) {
-            if (!el || text == null || text === '') return;
-            el.focus();
-            var start = typeof el.selectionStart === 'number' ? el.selectionStart : el.value.length;
-            var end = typeof el.selectionEnd === 'number' ? el.selectionEnd : el.value.length;
-            el.value = el.value.slice(0, start) + text + el.value.slice(end);
-            var pos = start + text.length;
-            if (typeof el.setSelectionRange === 'function') el.setSelectionRange(pos, pos);
-        }
-        function focusTargetSubpanel(targetId) {
-            if (targetId === 'curriculum_structure' || targetId === 'study_plan') {
-                switchContentSubTab('curriculum');
-            } else {
-                switchContentSubTab('pages');
-            }
-        }
-        document.getElementById('page-media-upload-btn') && document.getElementById('page-media-upload-btn').addEventListener('click', function () {
-            var fileInput = document.getElementById('page-media-file');
-            var targetSel = document.getElementById('page-media-insert-target');
-            var msg = document.getElementById('page-media-msg');
-            var result = document.getElementById('page-media-result');
-            if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-                if (msg) { msg.textContent = 'กรุณาเลือกไฟล์'; msg.style.color = 'var(--color-error)'; }
-                return;
-            }
-            var form = document.getElementById('content-page-form');
-            var csrf = form && form.querySelector('input[name*="csrf"]');
-            var fd = new FormData();
-            fd.append('file', fileInput.files[0]);
-            if (csrf) fd.append(csrf.name, csrf.value);
-            var btn = this;
-            btn.disabled = true;
-            if (msg) { msg.textContent = 'กำลังอัปโหลด...'; msg.style.color = ''; }
-            fetch(uploadUrl, { method: 'POST', body: fd })
-                .then(function (r) { return r.json(); })
-                .then(function (res) {
-                    btn.disabled = false;
-                    if (!res.success) {
-                        if (msg) { msg.textContent = res.message || 'อัปโหลดไม่สำเร็จ'; msg.style.color = 'var(--color-error)'; }
-                        return;
-                    }
-                    lastSnippetImg = res.snippet_img || '';
-                    lastSnippetLink = res.snippet_link || '';
-                    var targetId = targetSel ? targetSel.value : 'contact_info';
-                    var ta = document.getElementById(targetId);
-                    var snippet = res.is_image ? lastSnippetImg : lastSnippetLink;
-                    focusTargetSubpanel(targetId);
-                    if (ta && ta.classList && ta.classList.contains('ptb-serialized-field')) {
-                        var b = window._ptbLastBody;
-                        if (!b || b.getAttribute('data-ptb-field') !== targetId) {
-                            var w = document.getElementById('ptb-wrap-' + targetId);
-                            b = w ? w.querySelector('.ptb-block-body') : null;
-                        }
-                        if (b) {
-                            insertAtCursorTextarea(b, snippet);
-                            if (typeof window.syncPtbField === 'function') window.syncPtbField(targetId);
-                        }
-                    } else if (ta) {
-                        insertAtCursorTextarea(ta, snippet);
-                    }
-                    if (msg) { msg.textContent = 'อัปโหลดแล้ว — แทรกในช่องที่เลือกแล้ว (อย่าลืมกดบันทึกเนื้อหา)'; msg.style.color = 'var(--secondary)'; }
-                    if (result) {
-                        result.style.display = 'block';
-                        var urlEl = document.getElementById('page-media-url');
-                        if (urlEl) urlEl.textContent = res.url || '';
-                    }
-                    fileInput.value = '';
-                })
-                .catch(function () {
-                    btn.disabled = false;
-                    if (msg) { msg.textContent = 'เชื่อมต่อไม่สำเร็จ'; msg.style.color = 'var(--color-error)'; }
-                });
-        });
-        function copyText(t) {
-            if (!t) return;
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(t).then(function () {
-                    var msg = document.getElementById('page-media-msg');
-                    if (msg) { msg.textContent = 'คัดลอกแล้ว'; msg.style.color = 'var(--secondary)'; }
-                });
-            }
-        }
-        document.getElementById('page-media-copy-img') && document.getElementById('page-media-copy-img').addEventListener('click', function () { copyText(lastSnippetImg); });
-        document.getElementById('page-media-copy-link') && document.getElementById('page-media-copy-link').addEventListener('click', function () { copyText(lastSnippetLink); });
-    })();
 
     function confirmDelete(url) {
         swalConfirm({ title: 'คุณแน่ใจว่าต้องการลบไฟล์นี้?', confirmText: 'ลบ', cancelText: 'ยกเลิก' }).then(function(ok) {
