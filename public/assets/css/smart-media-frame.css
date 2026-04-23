@@ -1,0 +1,128 @@
+/**
+ * Smart Media Frame — กรอบรูปภาพแบบยืดหยุ่นรองรับรูปหลายอัตราส่วน
+ *
+ * โครงสร้าง HTML:
+ *   <div class="smart-media-frame" style="--media-aspect: 1600/900;">
+ *     <img class="smart-media-frame__backdrop" src="..." aria-hidden="true">
+ *     <img class="smart-media-frame__image" src="..." alt="...">
+ *   </div>
+ *
+ * พฤติกรรม:
+ *   - มี --media-aspect → ใช้ aspect-ratio ตามรูป (ไม่ crop, ไม่สั่น)
+ *   - ไม่มี --media-aspect → fluid ตาม --media-max-height
+ *   - backdrop เป็นรูปเดียวกันเบลอ 30px เติมพื้นที่ letterbox
+ *   - ถ้า <img.smart-media-frame__backdrop> ไม่มี (รูปเก่า metadata=NULL) → fallback gradient เรียบ
+ *
+ * Customize ต่อจุดใช้งาน (override ผ่าน inline style หรือ modifier class):
+ *   --media-max-width, --media-max-height, --media-min-height, --media-radius, --media-bg
+ */
+
+.smart-media-frame {
+    --media-max-width: 100%;
+    --media-max-height: 75vh;
+    --media-min-height: 240px;
+    --media-radius: 12px;
+    --media-bg: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+
+    position: relative;
+    width: 100%;
+    max-width: var(--media-max-width);
+    max-height: var(--media-max-height);
+    min-height: var(--media-min-height);
+    aspect-ratio: var(--media-aspect, auto);
+    overflow: hidden;
+    border-radius: var(--media-radius);
+    background: var(--media-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    isolation: isolate;
+}
+
+/* รูปเบลอด้านหลัง (letterbox fill) */
+.smart-media-frame__backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(30px) saturate(1.15);
+    transform: scale(1.15);
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 1;
+    user-select: none;
+}
+
+/* รูปหลักด้านหน้า */
+.smart-media-frame__image {
+    position: relative;
+    z-index: 2;
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    transition: opacity 0.2s ease;
+}
+
+/* Modifier: เติมกรอบเต็ม (สำหรับการ์ด/แบนเนอร์ที่ยอมให้ crop ได้) */
+.smart-media-frame--cover .smart-media-frame__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.smart-media-frame--cover .smart-media-frame__backdrop {
+    display: none;
+}
+
+/* Modifier: ไม่มี min-height (สำหรับ thumbnail/การ์ดเล็ก) */
+.smart-media-frame--compact {
+    --media-min-height: 0;
+}
+
+/* Modifier: ขนาด popup (ใช้ใน urgent popup) */
+.smart-media-frame--popup {
+    --media-max-width: 580px;
+    --media-max-height: 75vh;
+    --media-min-height: 280px;
+    --media-radius: 20px;
+}
+
+/* Modifier: ขนาด banner รายละเอียดข่าว/event */
+.smart-media-frame--banner {
+    --media-max-height: 500px;
+    --media-min-height: 260px;
+    --media-radius: 16px;
+}
+
+/* Link wrapper ไม่ควรสร้าง padding เพิ่มเติม */
+a.smart-media-frame,
+.smart-media-frame a {
+    display: flex;
+    text-decoration: none;
+    color: inherit;
+}
+
+a.smart-media-frame:hover .smart-media-frame__image,
+.smart-media-frame a:hover .smart-media-frame__image {
+    opacity: 0.94;
+}
+
+/* Responsive ปรับขนาดบนจอเล็ก */
+@media (max-width: 640px) {
+    .smart-media-frame {
+        --media-max-height: 65vh;
+        --media-min-height: 200px;
+    }
+    .smart-media-frame--popup {
+        --media-max-height: 70vh;
+        --media-min-height: 220px;
+    }
+}
+
+/* ป้องกัน layout shift ระหว่างโหลด — ถ้ารูปยังไม่พร้อมใช้ gradient bg เปล่า */
+.smart-media-frame__image[loading] {
+    min-height: 100px;
+}

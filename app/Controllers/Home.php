@@ -95,16 +95,14 @@ class Home extends BaseController
             $heroSlides = [];
         }
 
-        // ประกาศด่วน (ป๊อปอัปหน้าแรก สูงสุด 3 รายการ)
+        // ประกาศด่วน (ป๊อปอัปหน้าแรก สูงสุด MAX_ACTIVE รายการ)
         $urgentPopups = [];
         try {
+            helper('image_manager');
             $popupModel = new UrgentPopupModel();
             $urgentPopups = $popupModel->getActivePopups();
             foreach ($urgentPopups as &$p) {
-                $p['image_url'] = '';
-                if (!empty($p['image'])) {
-                    $p['image_url'] = base_url('serve/uploads/urgent_popups/' . basename($p['image']));
-                }
+                $p['image_url'] = !empty($p['image']) ? image_manager_serve_url('popup', $p['image']) : '';
             }
             unset($p);
         } catch (\Exception $e) {

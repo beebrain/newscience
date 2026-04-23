@@ -112,14 +112,28 @@ $urgentPopupsWithImage = array_values(array_filter($urgentPopups, function ($p) 
             <?php endif; ?>
             <div class="urgent-popup-carousel">
                 <?php foreach ($urgentPopupsWithImage as $idx => $p): ?>
+                    <?php
+                    $pw = (int)($p['image_width']  ?? 0);
+                    $ph = (int)($p['image_height'] ?? 0);
+                    $hasDims = $pw > 0 && $ph > 0;
+                    $aspectStyle = $hasDims ? 'style="--media-aspect:' . $pw . '/' . $ph . ';"' : '';
+                    $imgUrl = esc($p['image_url']);
+                    $imgAlt = esc($p['title'] ?? '');
+                    ?>
                 <div class="urgent-popup-slide <?= $idx === 0 ? 'active' : '' ?>" data-popup-id="<?= (int)($p['id'] ?? 0) ?>">
                     <?php if (!empty($p['link_url'])): ?>
-                    <a href="<?= esc($p['link_url']) ?>" class="urgent-popup-image-link" target="_blank" rel="noopener noreferrer">
-                        <img src="<?= esc($p['image_url']) ?>" alt="<?= esc($p['title'] ?? '') ?>">
+                    <a href="<?= esc($p['link_url']) ?>" class="smart-media-frame smart-media-frame--popup" <?= $aspectStyle ?> target="_blank" rel="noopener noreferrer">
+                        <?php if ($hasDims): ?>
+                        <img class="smart-media-frame__backdrop" src="<?= $imgUrl ?>" alt="" aria-hidden="true" loading="lazy">
+                        <?php endif; ?>
+                        <img class="smart-media-frame__image" src="<?= $imgUrl ?>" alt="<?= $imgAlt ?>">
                     </a>
                     <?php else: ?>
-                    <div class="urgent-popup-image-wrap">
-                        <img src="<?= esc($p['image_url']) ?>" alt="<?= esc($p['title'] ?? '') ?>">
+                    <div class="smart-media-frame smart-media-frame--popup" <?= $aspectStyle ?>>
+                        <?php if ($hasDims): ?>
+                        <img class="smart-media-frame__backdrop" src="<?= $imgUrl ?>" alt="" aria-hidden="true" loading="lazy">
+                        <?php endif; ?>
+                        <img class="smart-media-frame__image" src="<?= $imgUrl ?>" alt="<?= $imgAlt ?>">
                     </div>
                     <?php endif; ?>
                 </div>
@@ -221,22 +235,20 @@ $urgentPopupsWithImage = array_values(array_filter($urgentPopups, function ($p) 
 .urgent-popup-carousel {
     position: relative;
     width: 100%;
-    aspect-ratio: 4/3;
-    min-height: 220px;
-    overflow: hidden;
     background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    transition: min-height 0.3s ease;
 }
-.urgent-popup-slide { display: none; position: absolute; inset: 0; }
-.urgent-popup-slide.active { display: block; position: relative; }
-.urgent-popup-image-link, .urgent-popup-image-wrap {
-    display: block; width: 100%; height: 100%;
+.urgent-popup-slide { display: none; }
+.urgent-popup-slide.active { display: block; }
+.urgent-popup-slide .smart-media-frame {
+    --media-max-width: 100%;
+    border-radius: 0;
+    min-height: 280px;
 }
-.urgent-popup-image-link img, .urgent-popup-image-wrap img {
-    width: 100%; height: 100%;
-    object-fit: contain;
-    display: block;
+/* Fallback สำหรับรูปเก่าที่ไม่มี dimensions — carousel ใช้ aspect 4:3 */
+.urgent-popup-slide .smart-media-frame:not([style*="--media-aspect"]) {
+    aspect-ratio: 4/3;
 }
-.urgent-popup-image-link:hover img { opacity: 0.96; }
 .urgent-popup-dots {
     display: flex; justify-content: center; align-items: center;
     gap: 0.5rem;

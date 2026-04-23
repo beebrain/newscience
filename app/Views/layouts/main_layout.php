@@ -47,6 +47,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>?v=<?= $css_ver ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/base.css') ?>?v=<?= $css_ver ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/components.css') ?>?v=<?= $css_ver ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/smart-media-frame.css') ?>?v=<?= $css_ver ?>">
     <?php if ($is_home): ?>
         <link rel="stylesheet" href="<?= base_url('assets/css/home.css') ?>?v=<?= $css_ver ?>">
     <?php else: ?>

@@ -15,7 +15,7 @@ use CodeIgniter\HTTP\ResponseInterface;
  */
 class Serve extends BaseController
 {
-    private const ALLOWED_TYPES = ['news', 'events', 'hero', 'staff', 'programs', 'personnel', 'faculty-downloads'];
+    private const ALLOWED_TYPES = ['news', 'events', 'hero', 'staff', 'programs', 'personnel', 'faculty-downloads', 'popups', 'urgent_popups'];
 
     /**
      * Serve a file by type and filename.
@@ -198,6 +198,36 @@ class Serve extends BaseController
                     if (is_file($fullPathAlt)) {
                         $fullPath = $fullPathAlt;
                         $found = true;
+                    }
+                }
+                // Backward-compat: urgent_popups/ → popups/ (หลัง rename โฟลเดอร์ Step 3)
+                if (!$found && strpos($path, 'urgent_popups/') === 0) {
+                    $altPath = 'popups/' . substr($path, strlen('urgent_popups/'));
+                    $fullPathAlt = $writableBase . str_replace('/', $sep, $altPath);
+                    if (is_file($fullPathAlt)) {
+                        $fullPath = $fullPathAlt;
+                        $found = true;
+                    } else {
+                        $publicAlt = rtrim(FCPATH, $sep) . $sep . 'uploads' . $sep . str_replace('/', $sep, $altPath);
+                        if (is_file($publicAlt)) {
+                            $fullPath = $publicAlt;
+                            $found = true;
+                        }
+                    }
+                }
+                // Forward-compat: popups/ → urgent_popups/ (กรณียังไม่ได้ย้ายไฟล์แต่โค้ดเก็บ path ใหม่)
+                if (!$found && strpos($path, 'popups/') === 0) {
+                    $altPath = 'urgent_popups/' . substr($path, strlen('popups/'));
+                    $fullPathAlt = $writableBase . str_replace('/', $sep, $altPath);
+                    if (is_file($fullPathAlt)) {
+                        $fullPath = $fullPathAlt;
+                        $found = true;
+                    } else {
+                        $publicAlt = rtrim(FCPATH, $sep) . $sep . 'uploads' . $sep . str_replace('/', $sep, $altPath);
+                        if (is_file($publicAlt)) {
+                            $fullPath = $publicAlt;
+                            $found = true;
+                        }
                     }
                 }
                 if (!$found) {

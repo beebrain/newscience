@@ -69,7 +69,7 @@
                             <td><?= (int)($p['sort_order'] ?? $i) ?></td>
                             <td>
                                 <?php if (!empty($p['image'])): ?>
-                                    <img src="<?= base_url('serve/uploads/urgent_popups/' . basename($p['image'])) ?>"
+                                    <img src="<?= esc(image_manager_serve_url('popup', $p['image'])) ?>"
                                          alt="" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;">
                                 <?php else: ?>
                                     <span class="text-muted">—</span>

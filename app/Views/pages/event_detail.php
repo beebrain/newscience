@@ -2,6 +2,51 @@
 
 <?= $this->section('content') ?>
 
+<style>
+    /* Event detail — ให้รูปโปสเตอร์พอดีกรอบหน้าเว็บ ไม่ล้นทับ footer */
+    .event-detail .news-detail__image {
+        width: 100%;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        background: #f3f4f6;
+        text-align: center;
+    }
+
+    .event-detail .news-detail__image img {
+        display: block;
+        max-width: 100%;
+        width: auto;
+        height: auto;
+        max-height: 75vh;
+        margin: 0 auto;
+        object-fit: contain;
+        border-radius: 12px;
+    }
+
+    /* รูปและสื่อที่ฝังในเนื้อหา (เช่น จาก Quill) ให้ responsive ตามหน้าจอเสมอ */
+    .event-detail .news-detail__content {
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .event-detail .news-detail__content img,
+    .event-detail .news-detail__content video,
+    .event-detail .news-detail__content iframe {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 1rem auto;
+        border-radius: 8px;
+    }
+
+    .event-detail .news-detail__content table {
+        max-width: 100%;
+        display: block;
+        overflow-x: auto;
+    }
+</style>
+
 <!-- Page Header -->
 <section class="page-header">
     <div class="container">
@@ -16,7 +61,7 @@
 </section>
 
 <!-- Event Detail Section -->
-<section class="section">
+<section class="section event-detail">
     <div class="container">
         <article class="news-detail">
             <?php if (!empty($event['featured_image'])): ?>

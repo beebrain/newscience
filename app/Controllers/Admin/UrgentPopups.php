@@ -12,6 +12,7 @@ class UrgentPopups extends BaseController
     public function __construct()
     {
         $this->popupModel = new UrgentPopupModel();
+        helper(['image_manager', 'content_sanitizer']);
     }
 
     /**
@@ -55,21 +56,17 @@ class UrgentPopups extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        // Insert ก่อนเพื่อให้มี id สำหรับตั้งชื่อไฟล์
         $data = $this->getPopupDataFromRequest();
-        $imageFile = $this->request->getFile('image');
-        if ($imageFile && $imageFile->isValid() && !$imageFile->hasMoved()) {
-            $data['image'] = $this->uploadPopupImage($imageFile);
-        } else {
-            $base64 = $this->request->getPost('image_base64');
-            if (!empty($base64) && is_string($base64)) {
-                $saved = $this->savePopupImageFromBase64($base64);
-                if ($saved !== null) {
-                    $data['image'] = $saved;
-                }
-            }
+        $newId = $this->popupModel->insert($data, true);
+        if (!$newId) {
+            return redirect()->back()->withInput()->with('error', 'บันทึกไม่สำเร็จ');
         }
 
-        $this->popupModel->insert($data);
+        $imageData = $this->handleImageUpload((int) $newId);
+        if ($imageData !== null) {
+            $this->popupModel->update($newId, $imageData);
+        }
 
         return redirect()->to(base_url('admin/urgent-popups'))
             ->with('success', 'เพิ่มประกาศด่วนสำเร็จ');
@@ -111,19 +108,9 @@ class UrgentPopups extends BaseController
         }
 
         $data = $this->getPopupDataFromRequest();
-        $imageFile = $this->request->getFile('image');
-        if ($imageFile && $imageFile->isValid() && !$imageFile->hasMoved()) {
-            $this->deletePopupImage($popup['image'] ?? '');
-            $data['image'] = $this->uploadPopupImage($imageFile);
-        } else {
-            $base64 = $this->request->getPost('image_base64');
-            if (!empty($base64) && is_string($base64)) {
-                $this->deletePopupImage($popup['image'] ?? '');
-                $saved = $this->savePopupImageFromBase64($base64);
-                if ($saved !== null) {
-                    $data['image'] = $saved;
-                }
-            }
+        $imageData = $this->handleImageUpload((int) $id, $popup['image'] ?? null);
+        if ($imageData !== null) {
+            $data = array_merge($data, $imageData);
         }
 
         $this->popupModel->update($id, $data);
@@ -141,7 +128,7 @@ class UrgentPopups extends BaseController
         if (!$popup) {
             return redirect()->to(base_url('admin/urgent-popups'))->with('error', 'ไม่พบข้อมูล');
         }
-        $this->deletePopupImage($popup['image'] ?? '');
+        image_manager_delete('popup', $popup['image'] ?? null);
         $this->popupModel->delete($id);
         return redirect()->to(base_url('admin/urgent-popups'))
             ->with('success', 'ลบประกาศด่วนสำเร็จ');
@@ -172,7 +159,7 @@ class UrgentPopups extends BaseController
     {
         return [
             'title' => $this->request->getPost('title'),
-            'content' => $this->request->getPost('content'),
+            'content' => sanitize_html_content($this->request->getPost('content')),
             'link_url' => $this->request->getPost('link_url') ?: null,
             'link_text' => $this->request->getPost('link_text') ?: 'ดูรายละเอียด',
             'sort_order' => (int) $this->request->getPost('sort_order') ?: 0,
@@ -182,54 +169,42 @@ class UrgentPopups extends BaseController
         ];
     }
 
-    private function uploadPopupImage($file): string
-    {
-        $dir = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'urgent_popups';
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        $newName = $file->getRandomName();
-        $file->move($dir, $newName);
-        return 'uploads/urgent_popups/' . $newName;
-    }
-
     /**
-     * บันทึกรูปจาก base64 (หลัง crop ในฟอร์ม) ลง uploads/urgent_popups/
+     * จัดการอัปโหลดรูป — รองรับทั้ง UploadedFile และ base64 จาก crop
+     * ถ้ามีการอัปโหลดรูปใหม่ จะลบรูปเก่าอัตโนมัติ
+     *
+     * @return array|null {image, image_width, image_height} หรือ null ถ้าไม่มีรูปใหม่
      */
-    private function savePopupImageFromBase64(string $base64): ?string
+    private function handleImageUpload(int $popupId, ?string $oldImagePath = null): ?array
     {
-        $raw = $base64;
-        if (strpos($raw, 'base64,') !== false) {
-            $raw = substr($raw, strpos($raw, 'base64,') + 7);
+        // base64 ก่อน (จาก crop client-side)
+        $base64 = $this->request->getPost('image_base64');
+        if (!empty($base64) && is_string($base64) && strpos($base64, 'base64,') !== false) {
+            $result = image_manager_save_base64('popup', $popupId, $base64);
+            if ($result !== null) {
+                if ($oldImagePath) image_manager_delete('popup', $oldImagePath);
+                return [
+                    'image'        => $result['path'],
+                    'image_width'  => $result['width'],
+                    'image_height' => $result['height'],
+                ];
+            }
         }
-        $bin = base64_decode($raw, true);
-        if ($bin === false || strlen($bin) === 0) {
-            return null;
-        }
-        $dir = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'urgent_popups';
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        if (!is_writable($dir)) {
-            return null;
-        }
-        $fileName = 'popup_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.jpg';
-        $fullPath = $dir . DIRECTORY_SEPARATOR . $fileName;
-        if (file_put_contents($fullPath, $bin) === false) {
-            return null;
-        }
-        return 'uploads/urgent_popups/' . $fileName;
-    }
 
-    private function deletePopupImage($path): void
-    {
-        if (empty($path)) {
-            return;
+        // File ปกติ
+        $file = $this->request->getFile('image');
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            $result = image_manager_save_file('popup', $popupId, $file);
+            if ($result !== null) {
+                if ($oldImagePath) image_manager_delete('popup', $oldImagePath);
+                return [
+                    'image'        => $result['path'],
+                    'image_width'  => $result['width'],
+                    'image_height' => $result['height'],
+                ];
+            }
         }
-        $base = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-        $full = $base . $path;
-        if (file_exists($full)) {
-            @unlink($full);
-        }
+
+        return null;
     }
 }
