@@ -58,6 +58,46 @@
         "tuition_fees_json":       { "type": ["array", "string", "null"] },
         "tuition_fees":            { "type": "string", "maxLength": 5000 },
         "admission_info":          { "type": "string", "maxLength": 5000 },
+        "admission_details_json": {
+          "description": "การรับสมัคร: plan_seats + requirements (8) + supports (6, default true)",
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "plan_seats": { "type": "string", "maxLength": 200 },
+                "requirements": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "study_plan":         { "type": "string", "maxLength": 500 },
+                    "mor_kor_2_url":      { "type": "string", "maxLength": 500, "pattern": "^(|https?://.+)$" },
+                    "english_grade":      { "type": "string", "maxLength": 500 },
+                    "selection_criteria": { "type": "string", "maxLength": 500 },
+                    "tuition_per_term":   { "type": "string", "maxLength": 500 },
+                    "duration":           { "type": "string", "maxLength": 500 },
+                    "credits_note":       { "type": "string", "maxLength": 500 },
+                    "program_type":       { "type": "string", "maxLength": 500 }
+                  }
+                },
+                "supports": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "scholarship":       { "type": "boolean" },
+                    "first_term_loan":   { "type": "boolean" },
+                    "ksl_loan":          { "type": "boolean" },
+                    "study_scholarship": { "type": "boolean" },
+                    "entrepreneur_fund": { "type": "boolean" },
+                    "dormitory":         { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          ]
+        },
         "contact_info":            { "type": "string", "maxLength": 5000 },
         "intro_video_url":         { "type": "string", "maxLength": 500 },
         "alumni_messages_json":    { "type": ["array", "object", "string", "null"] }

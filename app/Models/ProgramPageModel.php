@@ -25,6 +25,7 @@ class ProgramPageModel extends Model
         'careers_json',
         'tuition_fees',
         'tuition_fees_json',
+        'admission_details_json',
         'admission_info',
         'contact_info',
         'intro_video_url',

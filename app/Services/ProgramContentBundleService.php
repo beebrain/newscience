@@ -40,7 +40,8 @@ class ProgramContentBundleService
         'curriculum_structure', 'study_plan', 'curriculum_json',
         'careers_json', 'career_prospects',
         'tuition_fees_json', 'tuition_fees',
-        'admission_info', 'contact_info', 'intro_video_url',
+        'admission_info', 'admission_details_json',
+        'contact_info', 'intro_video_url',
         'alumni_messages_json',
     ];
 
@@ -84,6 +85,7 @@ class ProgramContentBundleService
         'tuition_fees'            => ['string'],
         'tuition_fees_json'       => ['jsonish'],
         'admission_info'          => ['string'],
+        'admission_details_json'  => ['jsonish'],
         'contact_info'            => ['string'],
         'intro_video_url'         => ['string'],
         'meta_description'        => ['string'],
@@ -161,6 +163,8 @@ class ProgramContentBundleService
      */
     public function buildEmptyTemplateBundle(int $programId, ?array $programRow): array
     {
+        helper('admission_details');
+
         return [
             'schema_version' => self::SCHEMA_VERSION,
             'program_id'     => $programId,
@@ -181,6 +185,7 @@ class ProgramContentBundleService
                 'tuition_fees_json'       => [],
                 'tuition_fees'            => '',
                 'admission_info'          => '',
+                'admission_details_json'  => admission_details_default_structure(),
                 'contact_info'            => '',
                 'intro_video_url'         => '',
                 'alumni_messages_json'    => [],
@@ -222,7 +227,7 @@ class ProgramContentBundleService
      */
     public function buildContentSliceFromPage(array $pageRow): array
     {
-        helper('overview_lists');
+        helper(['overview_lists', 'admission_details']);
         $out = [];
         $out['philosophy']       = (string) ($pageRow['philosophy'] ?? '');
         $out['objectives']       = overview_text_lines_from_db($pageRow['objectives'] ?? null);
@@ -230,13 +235,14 @@ class ProgramContentBundleService
         foreach (['elos_json', 'learning_standards_json', 'curriculum_json', 'alumni_messages_json', 'careers_json', 'tuition_fees_json'] as $k) {
             $out[$k] = $this->decodeJsonField($pageRow[$k] ?? null);
         }
-        $out['curriculum_structure'] = (string) ($pageRow['curriculum_structure'] ?? '');
-        $out['study_plan']           = (string) ($pageRow['study_plan'] ?? '');
-        $out['career_prospects']     = (string) ($pageRow['career_prospects'] ?? '');
-        $out['tuition_fees']         = (string) ($pageRow['tuition_fees'] ?? '');
-        $out['admission_info']       = (string) ($pageRow['admission_info'] ?? '');
-        $out['contact_info']         = (string) ($pageRow['contact_info'] ?? '');
-        $out['intro_video_url']      = (string) ($pageRow['intro_video_url'] ?? '');
+        $out['curriculum_structure']   = (string) ($pageRow['curriculum_structure'] ?? '');
+        $out['study_plan']             = (string) ($pageRow['study_plan'] ?? '');
+        $out['career_prospects']       = (string) ($pageRow['career_prospects'] ?? '');
+        $out['tuition_fees']           = (string) ($pageRow['tuition_fees'] ?? '');
+        $out['admission_info']         = (string) ($pageRow['admission_info'] ?? '');
+        $out['admission_details_json'] = admission_details_decode($pageRow['admission_details_json'] ?? null);
+        $out['contact_info']           = (string) ($pageRow['contact_info'] ?? '');
+        $out['intro_video_url']        = (string) ($pageRow['intro_video_url'] ?? '');
 
         return $out;
     }
@@ -283,10 +289,12 @@ class ProgramContentBundleService
         $out['study_plan']           = (string) ($pageRow['study_plan'] ?? '');
         $out['career_prospects']     = (string) ($pageRow['career_prospects'] ?? '');
         $out['tuition_fees']         = (string) ($pageRow['tuition_fees'] ?? '');
-        $out['admission_info']       = (string) ($pageRow['admission_info'] ?? '');
-        $out['contact_info']         = (string) ($pageRow['contact_info'] ?? '');
-        $out['intro_video_url']      = (string) ($pageRow['intro_video_url'] ?? '');
-        $out['meta_description']     = (string) ($pageRow['meta_description'] ?? '');
+        $out['admission_info']         = (string) ($pageRow['admission_info'] ?? '');
+        helper('admission_details');
+        $out['admission_details_json'] = admission_details_decode($pageRow['admission_details_json'] ?? null);
+        $out['contact_info']           = (string) ($pageRow['contact_info'] ?? '');
+        $out['intro_video_url']        = (string) ($pageRow['intro_video_url'] ?? '');
+        $out['meta_description']       = (string) ($pageRow['meta_description'] ?? '');
 
         $out['gallery_images'] = $this->decodeJsonField($pageRow['gallery_images'] ?? null);
         $out['social_links']   = $this->decodeJsonField($pageRow['social_links'] ?? null);
@@ -634,6 +642,14 @@ class ProgramContentBundleService
         }
         if (array_key_exists('admission_info', $pageIn)) {
             $u['admission_info'] = mb_substr((string) $pageIn['admission_info'], 0, 5000);
+        }
+        if (array_key_exists('admission_details_json', $pageIn)) {
+            helper('admission_details');
+            $adErrors = [];
+            $u['admission_details_json'] = admission_details_normalize($pageIn['admission_details_json'], $adErrors);
+            foreach ($adErrors as $e) {
+                $errors[] = $e;
+            }
         }
         if (array_key_exists('contact_info', $pageIn)) {
             $u['contact_info'] = mb_substr((string) $pageIn['contact_info'], 0, 5000);

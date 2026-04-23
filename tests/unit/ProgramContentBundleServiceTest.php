@@ -613,6 +613,153 @@ final class ProgramContentBundleServiceTest extends CIUnitTestCase
     }
 
     // ------------------------------------------------------------------
+    // admission_details_json (การรับสมัคร — JSON structured)
+    // ------------------------------------------------------------------
+
+    public function testAdmissionDetailsDefaultStructureHasAllKeys(): void
+    {
+        helper('admission_details');
+        $d = admission_details_default_structure();
+
+        $this->assertSame('', $d['plan_seats']);
+        $this->assertCount(8, $d['requirements']);
+        $this->assertCount(6, $d['supports']);
+        foreach ($d['supports'] as $v) {
+            $this->assertTrue($v, 'supports default ต้องเป็น true ทั้ง 6');
+        }
+    }
+
+    public function testAdmissionDetailsDecodeFillsMissingKeys(): void
+    {
+        helper('admission_details');
+        $raw = json_encode([
+            'plan_seats'   => '30 คน',
+            'requirements' => ['study_plan' => 'วิทย์-คณิต'],
+        ]);
+        $d = admission_details_decode($raw);
+
+        $this->assertSame('30 คน', $d['plan_seats']);
+        $this->assertSame('วิทย์-คณิต', $d['requirements']['study_plan']);
+        $this->assertSame('', $d['requirements']['mor_kor_2_url'], 'missing key ได้ default empty');
+        $this->assertTrue($d['supports']['scholarship'], 'missing supports ได้ default true');
+    }
+
+    public function testAdmissionDetailsNormalizeRejectsBadUrl(): void
+    {
+        helper('admission_details');
+        $errors = [];
+        $json = admission_details_normalize([
+            'plan_seats'   => '30 คน',
+            'requirements' => ['mor_kor_2_url' => 'javascript:alert(1)'],
+        ], $errors);
+
+        $this->assertNotEmpty($errors);
+        $dec = json_decode($json, true);
+        $this->assertSame('', $dec['requirements']['mor_kor_2_url']);
+    }
+
+    public function testAdmissionDetailsNormalizeClampsLongStrings(): void
+    {
+        helper('admission_details');
+        $errors = [];
+        $json = admission_details_normalize([
+            'plan_seats'   => str_repeat('a', 300),
+            'requirements' => ['study_plan' => str_repeat('ก', 600)],
+        ], $errors);
+
+        $dec = json_decode($json, true);
+        $this->assertSame(200, mb_strlen($dec['plan_seats']));
+        $this->assertSame(500, mb_strlen($dec['requirements']['study_plan']));
+    }
+
+    public function testPageBundleToUpdateRowHandlesAdmissionDetailsJson(): void
+    {
+        $r = $this->svc->pageBundleToUpdateRow([
+            'admission_details_json' => [
+                'plan_seats'   => '30 คน',
+                'requirements' => ['study_plan' => 'วิทย์-คณิต', 'tuition_per_term' => '10,400 บาท'],
+                'supports'     => ['dormitory' => false],
+            ],
+        ]);
+
+        $this->assertSame([], $r['errors']);
+        $dec = json_decode($r['update']['admission_details_json'], true);
+        $this->assertSame('30 คน', $dec['plan_seats']);
+        $this->assertSame('วิทย์-คณิต', $dec['requirements']['study_plan']);
+        $this->assertFalse($dec['supports']['dormitory']);
+        $this->assertTrue($dec['supports']['scholarship'], 'key ที่ไม่ได้ส่งมา ใช้ default true');
+    }
+
+    public function testPageBundleToUpdateRowSurfacesAdmissionUrlError(): void
+    {
+        $r = $this->svc->pageBundleToUpdateRow([
+            'admission_details_json' => [
+                'requirements' => ['mor_kor_2_url' => 'ftp://nope'],
+            ],
+        ]);
+
+        $this->assertNotEmpty($r['errors']);
+        $this->assertTrue((bool) array_filter($r['errors'], static fn ($e) => str_contains($e, 'mor_kor_2_url')));
+    }
+
+    public function testBuildContentSliceIncludesAdmissionDetailsJson(): void
+    {
+        $page = [
+            'admission_details_json' => json_encode([
+                'plan_seats' => '25 คน',
+                'requirements' => ['program_type' => 'ภาคปกติ'],
+            ]),
+        ];
+        $content = $this->svc->buildContentSliceFromPage($page);
+
+        $this->assertArrayHasKey('admission_details_json', $content);
+        $this->assertSame('25 คน', $content['admission_details_json']['plan_seats']);
+        $this->assertSame('ภาคปกติ', $content['admission_details_json']['requirements']['program_type']);
+        $this->assertTrue($content['admission_details_json']['supports']['scholarship']);
+    }
+
+    public function testBuildEmptyTemplateIncludesAdmissionDetailsDefault(): void
+    {
+        $t = $this->svc->buildEmptyTemplateBundle(1, null);
+
+        $this->assertArrayHasKey('admission_details_json', $t['content']);
+        $this->assertSame('', $t['content']['admission_details_json']['plan_seats']);
+        foreach ($t['content']['admission_details_json']['supports'] as $v) {
+            $this->assertTrue($v);
+        }
+    }
+
+    public function testAdmissionDetailsRoundTripsFromBundle(): void
+    {
+        $page = [
+            'admission_details_json' => json_encode([
+                'plan_seats' => '30 คน',
+                'requirements' => [
+                    'study_plan' => 'วิทย์-คณิต',
+                    'mor_kor_2_url' => 'https://shorturl.asia/gpIcn',
+                    'english_grade' => 'ไม่จำกัด',
+                    'selection_criteria' => 'สัมภาษณ์',
+                    'tuition_per_term' => '10,400 บาท',
+                    'duration' => '8 ภาคการศึกษา',
+                    'credits_note' => 'ไม่น้อยกว่า 120 หน่วยกิต',
+                    'program_type' => 'ภาคปกติ',
+                ],
+                'supports' => ['scholarship' => true, 'dormitory' => true],
+            ]),
+        ];
+        $bundle = $this->svc->buildBundleFromDatabase(1, null, $page);
+        $json   = json_encode($bundle);
+        $parsed = $this->svc->parseBundleJsonString($json);
+        $back   = $this->svc->pageBundleToUpdateRow($parsed['content'] + $parsed['settings']);
+
+        $this->assertSame([], $back['errors']);
+        $dec = json_decode($back['update']['admission_details_json'], true);
+        $this->assertSame('30 คน', $dec['plan_seats']);
+        $this->assertSame('https://shorturl.asia/gpIcn', $dec['requirements']['mor_kor_2_url']);
+        $this->assertSame('ไม่น้อยกว่า 120 หน่วยกิต', $dec['requirements']['credits_note']);
+    }
+
+    // ------------------------------------------------------------------
     // Schema file
     // ------------------------------------------------------------------
 
