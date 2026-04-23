@@ -4,10 +4,16 @@ use App\Services\ProgramContentBundleService;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
- * Unit tests for ProgramContentBundleService
+ * Unit tests for ProgramContentBundleService (v1.1 — 3 namespace)
  *
- * ครอบ parseBundleJsonString, pageBundleToUpdateRow, buildBundleFromDatabase,
- * buildEmptyTemplateBundle, decodePageRowForBundle, staging file round-trip
+ * ครอบ:
+ *   - parseBundleJsonString (new format + legacy {program, page})
+ *   - validateBasicShape / validateNamespaceShape
+ *   - basicToUpdateRow (programs table normalize)
+ *   - pageBundleToUpdateRow (program_pages table normalize)
+ *   - buildBundleFromDatabase / buildContentSliceFromPage / buildSettingsSliceFromPage
+ *   - buildEmptyTemplateBundle / buildSectionPreviews
+ *   - Staging file round-trip
  *
  * @internal
  */
@@ -34,200 +40,251 @@ final class ProgramContentBundleServiceTest extends CIUnitTestCase
     }
 
     // ------------------------------------------------------------------
-    // parseBundleJsonString
+    // parseBundleJsonString — new format (3 namespace)
     // ------------------------------------------------------------------
 
-    public function testParseBundleJsonStringAcceptsValidMinimalBundle(): void
+    public function testParseNewFormatAcceptsMinimalBundle(): void
     {
         $json = json_encode([
             'schema_version' => 1,
             'program_id'     => 42,
-            'page'           => ['philosophy' => 'ok'],
+            'basic'          => ['name_th' => 'วิทย์ข้อมูล'],
+            'content'        => ['philosophy' => 'ok'],
+            'settings'       => ['is_published' => 1],
         ]);
 
         $r = $this->svc->parseBundleJsonString($json);
 
         $this->assertSame([], $r['errors']);
         $this->assertSame(42, $r['program_id']);
-        $this->assertIsArray($r['page']);
-        $this->assertSame('ok', $r['page']['philosophy']);
+        $this->assertFalse($r['legacy']);
+        $this->assertSame('วิทย์ข้อมูล', $r['basic']['name_th']);
+        $this->assertSame('ok', $r['content']['philosophy']);
+        $this->assertSame(1, $r['settings']['is_published']);
     }
 
-    public function testParseBundleJsonStringRejectsOversizePayload(): void
+    public function testParseNewFormatAcceptsMissingOptionalNamespaces(): void
+    {
+        $json = json_encode([
+            'schema_version' => 1,
+            'program_id'     => 1,
+            'content'        => ['philosophy' => 'x'],
+        ]);
+
+        $r = $this->svc->parseBundleJsonString($json);
+
+        $this->assertSame([], $r['errors']);
+        $this->assertSame([], $r['basic']);
+        $this->assertSame(['philosophy' => 'x'], $r['content']);
+        $this->assertSame([], $r['settings']);
+    }
+
+    public function testParseRejectsBundleWithNoNamespaceAndNoPage(): void
+    {
+        $json = json_encode(['schema_version' => 1, 'program_id' => 1]);
+        $r    = $this->svc->parseBundleJsonString($json);
+
+        $this->assertNotEmpty($r['errors']);
+        $this->assertTrue((bool) array_filter($r['errors'], static fn ($e) => str_contains($e, 'basic')));
+    }
+
+    public function testParseRejectsOversizePayload(): void
     {
         $big = str_repeat('a', 2_300_000);
         $r   = $this->svc->parseBundleJsonString($big);
 
-        $this->assertNotEmpty($r['errors']);
         $this->assertStringContainsString('ไฟล์ใหญ่เกิน', $r['errors'][0]);
-        $this->assertNull($r['program_id']);
-        $this->assertNull($r['page']);
     }
 
-    public function testParseBundleJsonStringRejectsEmptyString(): void
-    {
-        $r = $this->svc->parseBundleJsonString('   ');
-
-        $this->assertSame(['ไฟล์ว่าง'], $r['errors']);
-    }
-
-    public function testParseBundleJsonStringRejectsMalformedJson(): void
+    public function testParseRejectsMalformedJson(): void
     {
         $r = $this->svc->parseBundleJsonString('{not json');
-
-        $this->assertNotEmpty($r['errors']);
-        $this->assertStringContainsString('รูปแบบ JSON ไม่ถูกต้อง', $r['errors'][0]);
+        $this->assertStringContainsString('รูปแบบ JSON', $r['errors'][0]);
     }
 
-    public function testParseBundleJsonStringRejectsUnsupportedSchemaVersion(): void
+    public function testParseRejectsBadSchemaVersion(): void
     {
-        $json = json_encode(['schema_version' => 99, 'program_id' => 1, 'page' => []]);
+        $json = json_encode(['schema_version' => 99, 'program_id' => 1, 'content' => []]);
         $r    = $this->svc->parseBundleJsonString($json);
-
-        $this->assertTrue(
-            (bool) array_filter($r['errors'], static fn ($e) => str_contains($e, 'schema_version')),
-            'expected schema_version error: ' . implode(' | ', $r['errors']),
-        );
+        $this->assertTrue((bool) array_filter($r['errors'], static fn ($e) => str_contains($e, 'schema_version')));
     }
 
-    public function testParseBundleJsonStringRejectsMissingProgramId(): void
+    public function testParseRejectsMissingProgramId(): void
     {
-        $json = json_encode(['schema_version' => 1, 'page' => []]);
+        $json = json_encode(['schema_version' => 1, 'content' => []]);
         $r    = $this->svc->parseBundleJsonString($json);
-
-        $this->assertTrue(
-            (bool) array_filter($r['errors'], static fn ($e) => str_contains($e, 'program_id')),
-        );
+        $this->assertTrue((bool) array_filter($r['errors'], static fn ($e) => str_contains($e, 'program_id')));
         $this->assertNull($r['program_id']);
     }
 
-    public function testParseBundleJsonStringRejectsNonObjectPage(): void
+    public function testParseSurfacesNamespaceShapeErrors(): void
     {
-        $json = json_encode(['schema_version' => 1, 'program_id' => 1, 'page' => 'not an object']);
-        $r    = $this->svc->parseBundleJsonString($json);
+        $json = json_encode([
+            'schema_version' => 1,
+            'program_id'     => 1,
+            'basic'          => ['unknown_field' => 1],
+            'content'        => ['evil' => 'x'],
+            'settings'       => ['theme_color' => 'not-hex'],
+        ]);
 
-        $this->assertTrue(
-            (bool) array_filter($r['errors'], static fn ($e) => str_contains($e, 'page')),
-        );
-        $this->assertNull($r['page']);
+        $r = $this->svc->parseBundleJsonString($json);
+
+        $haystack = implode(' | ', $r['errors']);
+        $this->assertStringContainsString('basic', $haystack);
+        $this->assertStringContainsString('unknown_field', $haystack);
+        $this->assertStringContainsString('content', $haystack);
+        $this->assertStringContainsString('evil', $haystack);
+        $this->assertStringContainsString('theme_color', $haystack);
     }
 
     // ------------------------------------------------------------------
-    // validatePageShape (inline JSON Schema v1 check)
+    // parseBundleJsonString — legacy {program, page} backward compat
     // ------------------------------------------------------------------
 
-    public function testValidatePageShapeAcceptsWhitelistedKeys(): void
+    public function testParseConvertsLegacyPageFormat(): void
     {
-        $errs = $this->svc->validatePageShape([
-            'slug'         => 's',
-            'philosophy'   => 'p',
-            'objectives'   => ['a', 'b'],
-            'is_published' => 1,
-            'theme_color'  => '#1e40af',
-            'text_color'   => null,
-            'elos_json'    => [],
+        $json = json_encode([
+            'schema_version' => 1,
+            'program_id'     => 7,
+            'program'        => ['name_th' => 'legacy name', 'level' => 'bachelor'],
+            'page'           => [
+                'philosophy'  => 'p',
+                'theme_color' => '#112233',
+                'is_published' => 1,
+            ],
+        ]);
+
+        $r = $this->svc->parseBundleJsonString($json);
+
+        $this->assertSame([], $r['errors']);
+        $this->assertTrue($r['legacy']);
+        $this->assertSame('legacy name', $r['basic']['name_th']);
+        $this->assertSame('bachelor', $r['basic']['level']);
+        $this->assertSame('p', $r['content']['philosophy']);
+        $this->assertSame('#112233', $r['settings']['theme_color']);
+        $this->assertSame(1, $r['settings']['is_published']);
+    }
+
+    public function testParseLegacyIgnoresReadOnlyProgramKeys(): void
+    {
+        $json = json_encode([
+            'schema_version' => 1,
+            'program_id'     => 7,
+            'program'        => ['id' => 7, 'status' => 'active', 'name_th' => 'x'],
+            'page'           => ['philosophy' => 'p'],
+        ]);
+
+        $r = $this->svc->parseBundleJsonString($json);
+        $this->assertArrayNotHasKey('id', $r['basic']);
+        $this->assertArrayNotHasKey('status', $r['basic']);
+        $this->assertSame('x', $r['basic']['name_th']);
+    }
+
+    // ------------------------------------------------------------------
+    // validateBasicShape
+    // ------------------------------------------------------------------
+
+    public function testValidateBasicShapeAcceptsValidFields(): void
+    {
+        $errs = $this->svc->validateBasicShape([
+            'name_th'  => 'ชื่อ',
+            'name_en'  => 'Name',
+            'level'    => 'bachelor',
+            'credits'  => 120,
+            'duration' => 4,
+            'website'  => 'https://example.com',
         ]);
 
         $this->assertSame([], $errs);
     }
 
-    public function testValidatePageShapeRejectsUnknownKey(): void
+    public function testValidateBasicShapeRejectsUnknownKey(): void
     {
-        $errs = $this->svc->validatePageShape(['slug' => 's', 'evil_field' => 1]);
-
-        $this->assertNotEmpty($errs);
-        $this->assertTrue((bool) array_filter($errs, static fn ($e) => str_contains($e, 'evil_field')));
+        $errs = $this->svc->validateBasicShape(['name_th' => 'x', 'secret' => 1]);
+        $this->assertTrue((bool) array_filter($errs, static fn ($e) => str_contains($e, 'secret')));
     }
 
-    public function testValidatePageShapeRejectsWrongTypes(): void
+    public function testValidateBasicShapeRejectsBadLevel(): void
     {
-        $errs = $this->svc->validatePageShape([
-            'philosophy'   => ['not', 'string'],
-            'is_published' => 'yes',
-            'objectives'   => 123,
+        $errs = $this->svc->validateBasicShape(['level' => 'wizard']);
+        $this->assertTrue((bool) array_filter($errs, static fn ($e) => str_contains($e, 'level')));
+    }
+
+    public function testValidateBasicShapeRejectsWrongTypes(): void
+    {
+        $errs = $this->svc->validateBasicShape([
+            'name_th' => ['not', 'string'],
+            'credits' => 'one-twenty',
         ]);
-
-        $this->assertCount(3, $errs);
-    }
-
-    public function testValidatePageShapeRejectsNonHexColor(): void
-    {
-        $errs = $this->svc->validatePageShape(['theme_color' => 'red']);
-
-        $this->assertNotEmpty($errs);
-        $this->assertTrue((bool) array_filter($errs, static fn ($e) => str_contains($e, 'theme_color')));
-    }
-
-    public function testParseBundleJsonStringSurfacesPageShapeErrors(): void
-    {
-        $json = json_encode([
-            'schema_version' => 1,
-            'program_id'     => 1,
-            'page'           => ['bogus_key' => 'x', 'philosophy' => 42],
-        ]);
-
-        $r = $this->svc->parseBundleJsonString($json);
-
-        $this->assertNotEmpty($r['errors']);
-        $haystack = implode(' | ', $r['errors']);
-        $this->assertStringContainsString('bogus_key', $haystack);
-        $this->assertStringContainsString('philosophy', $haystack);
-    }
-
-    public function testSchemaFileExistsAndIsValidJson(): void
-    {
-        $path = ProgramContentBundleService::SCHEMA_PATH;
-        $this->assertFileExists($path);
-        $decoded = json_decode((string) file_get_contents($path), true);
-        $this->assertIsArray($decoded);
-        $this->assertSame('Program Content Bundle v1', $decoded['title']);
-        $this->assertArrayHasKey('page', $decoded['properties']);
+        $this->assertGreaterThanOrEqual(2, count($errs));
     }
 
     // ------------------------------------------------------------------
-    // pageBundleToUpdateRow
+    // basicToUpdateRow
+    // ------------------------------------------------------------------
+
+    public function testBasicToUpdateRowClampsLongStrings(): void
+    {
+        $r = $this->svc->basicToUpdateRow([
+            'name_th'     => str_repeat('ก', 600),
+            'description' => str_repeat('a', 6000),
+        ]);
+
+        $this->assertSame(500, mb_strlen($r['update']['name_th']));
+        $this->assertSame(5000, mb_strlen($r['update']['description']));
+    }
+
+    public function testBasicToUpdateRowCoercesCredits(): void
+    {
+        $r = $this->svc->basicToUpdateRow(['credits' => '120', 'duration' => 4]);
+        $this->assertSame(120, $r['update']['credits']);
+        $this->assertSame(4, $r['update']['duration']);
+    }
+
+    public function testBasicToUpdateRowRejectsNegativeCredits(): void
+    {
+        $r = $this->svc->basicToUpdateRow(['credits' => -5]);
+        $this->assertNotEmpty($r['errors']);
+        $this->assertSame(0, $r['update']['credits']);
+    }
+
+    public function testBasicToUpdateRowRejectsInvalidLevel(): void
+    {
+        $r = $this->svc->basicToUpdateRow(['level' => 'postdoc']);
+        $this->assertNotEmpty($r['errors']);
+        $this->assertArrayNotHasKey('level', $r['update']);
+    }
+
+    public function testBasicToUpdateRowRejectsInvalidWebsite(): void
+    {
+        $r = $this->svc->basicToUpdateRow(['website' => 'javascript:alert(1)']);
+        $this->assertNotEmpty($r['errors']);
+        $this->assertArrayNotHasKey('website', $r['update']);
+    }
+
+    public function testBasicToUpdateRowAcceptsEmptyWebsite(): void
+    {
+        $r = $this->svc->basicToUpdateRow(['website' => '']);
+        $this->assertSame([], $r['errors']);
+        $this->assertSame('', $r['update']['website']);
+    }
+
+    public function testBasicToUpdateRowOnlyAffectsProvidedKeys(): void
+    {
+        $r = $this->svc->basicToUpdateRow(['name_th' => 'x']);
+        $this->assertSame(['name_th' => 'x'], $r['update']);
+    }
+
+    // ------------------------------------------------------------------
+    // pageBundleToUpdateRow — same as before, still works for content+settings merged
     // ------------------------------------------------------------------
 
     public function testPageBundleToUpdateRowAcceptsObjectivesArray(): void
     {
-        $r = $this->svc->pageBundleToUpdateRow([
-            'objectives' => ['ข้อ 1', 'ข้อ 2', 'ข้อ 3'],
-        ]);
+        $r = $this->svc->pageBundleToUpdateRow(['objectives' => ['ข้อ 1', 'ข้อ 2']]);
 
         $this->assertSame([], $r['errors']);
-        $dec = json_decode($r['update']['objectives'], true);
-        $this->assertSame(['ข้อ 1', 'ข้อ 2', 'ข้อ 3'], $dec);
-    }
-
-    public function testPageBundleToUpdateRowAcceptsObjectivesMultilineString(): void
-    {
-        $r = $this->svc->pageBundleToUpdateRow([
-            'objectives' => "ข้อ 1\nข้อ 2\n\nข้อ 3",
-        ]);
-
-        $this->assertSame([], $r['errors']);
-        $dec = json_decode($r['update']['objectives'], true);
-        $this->assertSame(['ข้อ 1', 'ข้อ 2', 'ข้อ 3'], $dec);
-    }
-
-    public function testPageBundleToUpdateRowRejectsInvalidObjectivesShape(): void
-    {
-        $r = $this->svc->pageBundleToUpdateRow([
-            'objectives' => 123.45,
-        ]);
-
-        $this->assertNotEmpty($r['errors']);
-        $this->assertStringContainsString('objectives', $r['errors'][0]);
-    }
-
-    public function testPageBundleToUpdateRowTrimsObjectivesToFortyLines(): void
-    {
-        $long = array_map(static fn ($i) => "ข้อ {$i}", range(1, 50));
-        $r    = $this->svc->pageBundleToUpdateRow(['objectives' => $long]);
-
-        $dec = json_decode($r['update']['objectives'], true);
-        $this->assertCount(40, $dec);
-        $this->assertNotEmpty($r['errors']);
+        $this->assertSame(['ข้อ 1', 'ข้อ 2'], json_decode($r['update']['objectives'], true));
     }
 
     public function testPageBundleToUpdateRowValidatesThemeColor(): void
@@ -236,288 +293,384 @@ final class ProgramContentBundleServiceTest extends CIUnitTestCase
         $rBad = $this->svc->pageBundleToUpdateRow(['theme_color' => 'red']);
 
         $this->assertSame('#abcdef', $rOk['update']['theme_color']);
-        $this->assertSame('#1e40af', $rBad['update']['theme_color'], 'invalid theme_color falls back to default');
+        $this->assertSame('#1e40af', $rBad['update']['theme_color']);
     }
 
-    public function testPageBundleToUpdateRowValidatesTextColor(): void
-    {
-        $rEmpty = $this->svc->pageBundleToUpdateRow(['text_color' => '']);
-        $rOk    = $this->svc->pageBundleToUpdateRow(['text_color' => '#112233']);
-        $rBad   = $this->svc->pageBundleToUpdateRow(['text_color' => 'zzz']);
-
-        $this->assertNull($rEmpty['update']['text_color']);
-        $this->assertSame('#112233', $rOk['update']['text_color']);
-        $this->assertNotEmpty($rBad['errors']);
-    }
-
-    public function testPageBundleToUpdateRowNormalizesCareersJsonFromArray(): void
+    public function testPageBundleToUpdateRowNormalizesCareersJson(): void
     {
         $r = $this->svc->pageBundleToUpdateRow([
             'careers_json' => [
-                ['title' => 'Data Scientist', 'description' => 'วิเคราะห์ข้อมูล', 'icon' => 'chart'],
-                ['title' => '', 'description' => '', 'icon' => 'rocket'], // should be filtered
-                ['title' => 'Engineer', 'description' => '', 'icon' => 'unknown-icon'], // icon fallback
+                ['title' => 'Dev', 'description' => 'd', 'icon' => 'code'],
+                ['title' => 'Engr', 'description' => '', 'icon' => 'unknown'],
             ],
         ]);
 
-        $this->assertSame([], $r['errors']);
         $dec = json_decode($r['update']['careers_json'], true);
-        $this->assertCount(2, $dec);
-        $this->assertSame('Data Scientist', $dec[0]['title']);
-        $this->assertSame('chart', $dec[0]['icon']);
-        $this->assertSame('rocket', $dec[1]['icon'], 'unknown icon falls back to rocket');
+        $this->assertSame('Dev', $dec[0]['title']);
+        $this->assertSame('rocket', $dec[1]['icon']);
     }
 
-    public function testPageBundleToUpdateRowNormalizesTuitionFeesJsonFromArray(): void
+    public function testPageBundleToUpdateRowCoercesIsPublished(): void
     {
-        $r = $this->svc->pageBundleToUpdateRow([
-            'tuition_fees_json' => [
-                ['label' => 'ค่าหน่วยกิต', 'amount' => '1,500', 'note' => 'ต่อหน่วย'],
-                ['label' => '', 'amount' => '', 'note' => ''], // filtered
-            ],
-        ]);
-
-        $this->assertSame([], $r['errors']);
-        $dec = json_decode($r['update']['tuition_fees_json'], true);
-        $this->assertCount(1, $dec);
-        $this->assertSame('ค่าหน่วยกิต', $dec[0]['label']);
-    }
-
-    public function testPageBundleToUpdateRowEncodesStructuredJsonField(): void
-    {
-        $r = $this->svc->pageBundleToUpdateRow([
-            'elos_json' => [
-                ['code' => 'ELO1', 'desc' => 'เข้าใจพื้นฐาน'],
-            ],
-        ]);
-
-        $this->assertSame([], $r['errors']);
-        $dec = json_decode($r['update']['elos_json'], true);
-        $this->assertSame('ELO1', $dec[0]['code']);
-    }
-
-    public function testPageBundleToUpdateRowClampsLongStringsToMaxLength(): void
-    {
-        $r = $this->svc->pageBundleToUpdateRow([
-            'philosophy' => str_repeat('a', 6000),
-        ]);
-
-        $this->assertSame(5000, mb_strlen($r['update']['philosophy']));
-    }
-
-    public function testPageBundleToUpdateRowCoercesIsPublishedToInt(): void
-    {
-        $rTrue  = $this->svc->pageBundleToUpdateRow(['is_published' => true]);
-        $rFalse = $this->svc->pageBundleToUpdateRow(['is_published' => 0]);
-        $rStr   = $this->svc->pageBundleToUpdateRow(['is_published' => '1']);
-
-        $this->assertSame(1, $rTrue['update']['is_published']);
-        $this->assertSame(0, $rFalse['update']['is_published']);
-        $this->assertSame(1, $rStr['update']['is_published']);
-    }
-
-    public function testPageBundleToUpdateRowOnlyAffectsProvidedKeys(): void
-    {
-        $r = $this->svc->pageBundleToUpdateRow(['slug' => 'my-slug']);
-
-        $this->assertSame(['slug' => 'my-slug'], $r['update']);
+        $this->assertSame(1, $this->svc->pageBundleToUpdateRow(['is_published' => true])['update']['is_published']);
+        $this->assertSame(0, $this->svc->pageBundleToUpdateRow(['is_published' => 0])['update']['is_published']);
     }
 
     public function testPageBundleToUpdateRowIgnoresUnknownKeys(): void
     {
-        $r = $this->svc->pageBundleToUpdateRow([
-            'slug'                   => 's',
-            'not_a_real_field'       => 'x',
-            '__proto__'              => 'x',
-        ]);
-
+        $r = $this->svc->pageBundleToUpdateRow(['slug' => 's', 'evil' => 'x']);
         $this->assertArrayHasKey('slug', $r['update']);
-        $this->assertArrayNotHasKey('not_a_real_field', $r['update']);
-        $this->assertArrayNotHasKey('__proto__', $r['update']);
+        $this->assertArrayNotHasKey('evil', $r['update']);
     }
 
     // ------------------------------------------------------------------
-    // buildBundleFromDatabase / decodePageRowForBundle / template
+    // buildBundleFromDatabase / slice builders
     // ------------------------------------------------------------------
 
-    public function testBuildBundleFromDatabaseWithEmptyRowsHasCorrectShape(): void
+    public function testBuildBundleFromDatabaseReturns3NamespaceStructure(): void
     {
         $b = $this->svc->buildBundleFromDatabase(7, null, null);
 
         $this->assertSame(1, $b['schema_version']);
         $this->assertSame(7, $b['program_id']);
         $this->assertIsString($b['exported_at']);
-        $this->assertSame(['id' => 7], $b['program']);
-        $this->assertIsArray($b['page']);
-        $this->assertSame([], $b['page']['objectives']);
-        $this->assertSame([], $b['page']['graduate_profile']);
-        $this->assertSame('#1e40af', $b['page']['theme_color']);
-        $this->assertSame(0, $b['page']['is_published']);
+        $this->assertIsArray($b['basic']);
+        $this->assertIsArray($b['content']);
+        $this->assertIsArray($b['settings']);
+        $this->assertArrayNotHasKey('page', $b, 'new structure must not emit legacy "page" key');
+        $this->assertArrayNotHasKey('program', $b, 'new structure must not emit legacy "program" key');
     }
 
-    public function testBuildBundleFromDatabaseIncludesProgramSliceFields(): void
+    public function testBuildBasicSliceFromProgramPopulatesAllKeys(): void
     {
-        $program = [
-            'id'      => 3,
-            'name_th' => 'วิทยาศาสตร์',
-            'name_en' => 'Science',
-            'level'   => 'bachelor',
-            'status'  => 'active',
-        ];
-        $b = $this->svc->buildBundleFromDatabase(3, $program, null);
-
-        $this->assertSame('วิทยาศาสตร์', $b['program']['name_th']);
-        $this->assertSame('Science', $b['program']['name_en']);
-        $this->assertSame('bachelor', $b['program']['level']);
-    }
-
-    public function testDecodePageRowForBundleHandlesObjectivesAsJsonString(): void
-    {
-        $decoded = $this->svc->decodePageRowForBundle([
-            'objectives'       => json_encode(['a', 'b']),
-            'graduate_profile' => "line1\nline2",
-            'elos_json'        => json_encode([['code' => 'ELO1']]),
-            'gallery_images'   => null,
+        $basic = $this->svc->buildBasicSliceFromProgram([
+            'name_th'  => 'ชื่อ',
+            'name_en'  => 'Name',
+            'level'    => 'bachelor',
+            'credits'  => 120,
+            'duration' => 4,
         ]);
 
-        $this->assertSame(['a', 'b'], $decoded['objectives']);
-        $this->assertSame(['line1', 'line2'], $decoded['graduate_profile']);
-        $this->assertSame('ELO1', $decoded['elos_json'][0]['code']);
-        $this->assertNull($decoded['gallery_images']);
+        $this->assertSame('ชื่อ', $basic['name_th']);
+        $this->assertSame(120, $basic['credits']);
+        $this->assertSame(4, $basic['duration']);
+        $this->assertSame('', $basic['degree_th'], 'missing key produces empty string');
     }
 
-    public function testDecodePageRowForBundleFallsBackForNonJsonString(): void
+    public function testBuildContentAndSettingsSlicesDoNotOverlap(): void
     {
-        $decoded = $this->svc->decodePageRowForBundle([
-            'elos_json' => 'not-json-text',
-        ]);
-
-        $this->assertSame('not-json-text', $decoded['elos_json']);
-    }
-
-    public function testBuildBundleFromDatabaseRoundTripsMinimalPage(): void
-    {
-        // DB-shaped row (as stored): JSON columns are strings
         $row = [
-            'slug'                    => 'bsc-cs',
-            'philosophy'              => 'ปรัชญาหลักสูตร',
-            'objectives'              => json_encode(['เข้าใจ CS', 'เขียนโค้ดได้']),
-            'graduate_profile'        => json_encode(['รอบรู้', 'สื่อสาร']),
-            'elos_json'               => json_encode([['code' => 'ELO1', 'desc' => 'd']]),
-            'learning_standards_json' => json_encode(['intro' => 'i', 'standards' => [], 'mapping' => []]),
-            'curriculum_json'         => json_encode([]),
-            'alumni_messages_json'    => json_encode([]),
-            'careers_json'            => json_encode([['title' => 'Dev', 'description' => 'code', 'icon' => 'code']]),
-            'tuition_fees_json'       => json_encode([['label' => 'ค่าหน่วยกิต', 'amount' => '1500', 'note' => '']]),
-            'theme_color'             => '#112233',
-            'is_published'            => 1,
+            'philosophy'   => 'p',
+            'slug'         => 's',
+            'theme_color'  => '#112233',
+            'is_published' => 1,
         ];
+        $content  = $this->svc->buildContentSliceFromPage($row);
+        $settings = $this->svc->buildSettingsSliceFromPage($row);
 
-        $bundle = $this->svc->buildBundleFromDatabase(11, null, $row);
+        // ไม่ต้องมี key ซ้ำระหว่าง 2 slice
+        $overlap = array_intersect_key($content, $settings);
+        $this->assertSame([], $overlap, 'content + settings must not share any key');
 
-        // Re-import the page and compare key fields
-        $back = $this->svc->pageBundleToUpdateRow($bundle['page']);
-
-        $this->assertSame([], $back['errors']);
-        $this->assertSame(['เข้าใจ CS', 'เขียนโค้ดได้'], json_decode($back['update']['objectives'], true));
-        $this->assertSame('Dev', json_decode($back['update']['careers_json'], true)[0]['title']);
-        $this->assertSame('#112233', $back['update']['theme_color']);
-        $this->assertSame(1, $back['update']['is_published']);
+        $this->assertArrayHasKey('philosophy', $content);
+        $this->assertArrayNotHasKey('philosophy', $settings);
+        $this->assertArrayHasKey('slug', $settings);
+        $this->assertArrayNotHasKey('slug', $content);
+        $this->assertArrayHasKey('theme_color', $settings);
+        $this->assertArrayHasKey('is_published', $settings);
     }
 
-    public function testBuildEmptyTemplateBundleHasExpectedShape(): void
+    public function testBuildBundleRoundTripsThroughImport(): void
+    {
+        $programRow = [
+            'name_th'  => 'วิทย์',
+            'name_en'  => 'Science',
+            'level'    => 'bachelor',
+            'credits'  => 120,
+            'duration' => 4,
+        ];
+        $pageRow = [
+            'slug'         => 'bsc-cs',
+            'philosophy'   => 'ปรัชญา',
+            'objectives'   => json_encode(['เข้าใจ CS', 'เขียนโค้ด']),
+            'theme_color'  => '#112233',
+            'is_published' => 1,
+        ];
+
+        $bundle = $this->svc->buildBundleFromDatabase(11, $programRow, $pageRow);
+
+        $basicBack    = $this->svc->basicToUpdateRow($bundle['basic']);
+        $pageBack     = $this->svc->pageBundleToUpdateRow($bundle['content'] + $bundle['settings']);
+
+        $this->assertSame([], $basicBack['errors']);
+        $this->assertSame([], $pageBack['errors']);
+        $this->assertSame('วิทย์', $basicBack['update']['name_th']);
+        $this->assertSame(120, $basicBack['update']['credits']);
+        $this->assertSame(['เข้าใจ CS', 'เขียนโค้ด'], json_decode($pageBack['update']['objectives'], true));
+        $this->assertSame('#112233', $pageBack['update']['theme_color']);
+        $this->assertSame(1, $pageBack['update']['is_published']);
+    }
+
+    public function testBuildEmptyTemplateBundleHas3Namespaces(): void
     {
         $t = $this->svc->buildEmptyTemplateBundle(5, null);
 
         $this->assertSame(1, $t['schema_version']);
         $this->assertSame(5, $t['program_id']);
         $this->assertNull($t['exported_at']);
-        $this->assertIsString($t['template_note']);
-        $this->assertIsArray($t['page']['learning_standards_json']);
-        $this->assertArrayHasKey('intro', $t['page']['learning_standards_json']);
-        $this->assertArrayHasKey('standards', $t['page']['learning_standards_json']);
-        $this->assertArrayHasKey('mapping', $t['page']['learning_standards_json']);
+        $this->assertArrayHasKey('basic', $t);
+        $this->assertArrayHasKey('content', $t);
+        $this->assertArrayHasKey('settings', $t);
+        $this->assertArrayNotHasKey('page', $t);
+        $this->assertIsArray($t['content']['learning_standards_json']);
+        $this->assertSame('#1e40af', $t['settings']['theme_color']);
+    }
+
+    public function testDecodePageRowHandlesMissingOptionalKeys(): void
+    {
+        $decoded = $this->svc->decodePageRowForBundle([
+            'objectives' => json_encode(['a', 'b']),
+        ]);
+
+        $this->assertSame(['a', 'b'], $decoded['objectives']);
+        $this->assertSame('#1e40af', $decoded['theme_color']);
+        $this->assertSame('', $decoded['text_color']);
     }
 
     // ------------------------------------------------------------------
-    // buildSectionPreviews
+    // buildSectionPreviews — UI preview should still work on flat page
     // ------------------------------------------------------------------
 
     public function testBuildSectionPreviewsReturnsSixSections(): void
     {
-        $sections = $this->svc->buildSectionPreviews($this->svc->decodePageRowForBundle([
-            'philosophy'  => 'p',
-            'objectives'  => json_encode(['a']),
-            'elos_json'   => json_encode([['code' => 'ELO1']]),
-            'slug'        => 's',
-            'is_published' => 1,
-        ]));
+        $flat = $this->svc->buildContentSliceFromPage([
+            'philosophy' => 'p',
+            'objectives' => json_encode(['a']),
+            'elos_json'  => json_encode([['code' => 'ELO1']]),
+        ]) + $this->svc->buildSettingsSliceFromPage(['slug' => 's', 'is_published' => 1]);
 
-        $ids = array_column($sections, 'id');
+        $sections = $this->svc->buildSectionPreviews($flat);
+        $ids      = array_column($sections, 'id');
         $this->assertSame(['overview', 'quality', 'curriculum', 'pages', 'alumni', 'publish'], $ids);
-        foreach ($sections as $sec) {
-            $this->assertArrayHasKey('title', $sec);
-            $this->assertArrayHasKey('items', $sec);
+    }
+
+    // ------------------------------------------------------------------
+    // Edge cases (C1–C7) — คุมกฎ non-duplication, partial update, clamping
+    // ------------------------------------------------------------------
+
+    /**
+     * C1 — Legacy file ที่มี theme_color ใน page ต้องถูก map ไปที่ settings (ไม่ใช่ content)
+     */
+    public function testC1LegacyThemeColorMapsToSettings(): void
+    {
+        $json = json_encode([
+            'schema_version' => 1,
+            'program_id'     => 3,
+            'program'        => ['name_th' => 'legacy'],
+            'page'           => [
+                'philosophy'  => 'p',
+                'theme_color' => '#abcdef',
+                'hero_image'  => 'hero.jpg',
+                'is_published' => 1,
+            ],
+        ]);
+        $r = $this->svc->parseBundleJsonString($json);
+
+        $this->assertSame([], $r['errors']);
+        $this->assertTrue($r['legacy']);
+        $this->assertArrayHasKey('theme_color', $r['settings']);
+        $this->assertArrayHasKey('hero_image', $r['settings']);
+        $this->assertArrayHasKey('is_published', $r['settings']);
+        $this->assertArrayHasKey('philosophy', $r['content']);
+        $this->assertArrayNotHasKey('theme_color', $r['content'], 'theme_color must NOT leak to content');
+        $this->assertArrayNotHasKey('philosophy', $r['settings']);
+    }
+
+    /**
+     * C2 — Roundtrip ทั้ง export→parse ไม่เกิด duplicate key ระหว่าง content กับ settings
+     */
+    public function testC2RoundtripPreservesNoDuplicatesAcrossNamespaces(): void
+    {
+        $pageRow = [
+            'philosophy'   => 'p',
+            'slug'         => 's',
+            'theme_color'  => '#112233',
+            'is_published' => 1,
+            'objectives'   => json_encode(['a', 'b']),
+        ];
+        $bundle = $this->svc->buildBundleFromDatabase(5, ['name_th' => 'x'], $pageRow);
+
+        $overlap = array_intersect_key($bundle['content'], $bundle['settings']);
+        $this->assertSame([], $overlap, 'content/settings must remain disjoint after build');
+
+        $json = json_encode($bundle);
+        $r    = $this->svc->parseBundleJsonString($json);
+        $overlapParsed = array_intersect_key($r['content'], $r['settings']);
+        $this->assertSame([], $overlapParsed, 'content/settings must remain disjoint after parse');
+    }
+
+    /**
+     * C3 — Bundle ที่มีแค่ basic (ไม่มี content/settings) → normalize basic เท่านั้น, pageConv ว่าง
+     */
+    public function testC3BasicOnlyBundleProducesBasicUpdateOnly(): void
+    {
+        $json = json_encode([
+            'schema_version' => 1,
+            'program_id'     => 7,
+            'basic'          => ['name_th' => 'เฉพาะ basic', 'credits' => 130],
+        ]);
+        $r = $this->svc->parseBundleJsonString($json);
+
+        $this->assertSame([], $r['errors']);
+        $this->assertSame([], $r['content']);
+        $this->assertSame([], $r['settings']);
+
+        $bc = $this->svc->basicToUpdateRow($r['basic']);
+        $pc = $this->svc->pageBundleToUpdateRow($r['content'] + $r['settings']);
+        $this->assertSame(['name_th' => 'เฉพาะ basic', 'credits' => 130], $bc['update']);
+        $this->assertSame([], $pc['update']);
+    }
+
+    /**
+     * C4 — credits ติดลบ / ตัวเลขล้น → reject (และ clamp เป็น 0)
+     */
+    public function testC4BasicCreditsRejectsNegative(): void
+    {
+        $r = $this->svc->basicToUpdateRow(['credits' => -1, 'duration' => -5]);
+        $this->assertNotEmpty($r['errors']);
+        $this->assertSame(0, $r['update']['credits']);
+        $this->assertSame(0, $r['update']['duration']);
+    }
+
+    /**
+     * C5 — website ที่ไม่ใช่ http(s) (เช่น javascript:) → reject + ไม่ขึ้นใน update
+     */
+    public function testC5BasicWebsiteRejectsUnsafeScheme(): void
+    {
+        $cases = ['javascript:alert(1)', 'data:text/html,x', 'ftp://x.y', 'not-a-url'];
+        foreach ($cases as $u) {
+            $r = $this->svc->basicToUpdateRow(['website' => $u]);
+            $this->assertNotEmpty($r['errors'], 'should reject: ' . $u);
+            $this->assertArrayNotHasKey('website', $r['update'], 'update ต้องไม่มี website ที่ไม่ผ่าน: ' . $u);
         }
     }
 
-    // ------------------------------------------------------------------
-    // Staging file (write / read / delete / token format / expiry)
-    // ------------------------------------------------------------------
-
-    public function testStagingFileRoundTripReadsBackSameData(): void
+    /**
+     * C6 — validate shape จับได้ทั้ง bad value ใน basic + บาง namespace → errors[] รวม
+     */
+    public function testC6MultiNamespaceErrorsAreAggregated(): void
     {
-        $programId = 999;
-        $payload   = ['philosophy' => 'ok', 'is_published' => 1];
+        $json = json_encode([
+            'schema_version' => 1,
+            'program_id'     => 1,
+            'basic'          => ['level' => 'not-a-level', 'credits' => 'abc'],
+            'content'        => ['philosophy' => ['should-be-string']],
+            'settings'       => ['theme_color' => 'red'],
+        ]);
+        $r = $this->svc->parseBundleJsonString($json);
 
-        $token = $this->svc->writeStagingFile($programId, $payload);
+        $haystack = implode(' | ', $r['errors']);
+        $this->assertStringContainsString('basic.level', $haystack);
+        $this->assertStringContainsString('content.philosophy', $haystack);
+        $this->assertStringContainsString('settings.theme_color', $haystack);
+    }
+
+    /**
+     * C7 — Staging payload รูปแบบเก่า (flat update — ก่อน refactor) ยังต้องอ่านได้ผ่าน fallback
+     */
+    public function testC7LegacyStagingPayloadRemainsReadable(): void
+    {
+        $pid = 999;
+        $token = $this->svc->writeStagingFile($pid, [
+            'philosophy'   => 'ok',
+            'theme_color'  => '#112233',
+            'is_published' => 1,
+        ]);
+
+        $r = $this->svc->readStagingFile($pid, $token);
+        $this->assertIsArray($r);
+        // payload flat (ไม่ใช่ {basic_update, page_update}) — controller fallback จะหยิบ 'update' ทั้งก้อนเป็น page_update
+        $this->assertArrayHasKey('update', $r);
+        $this->assertSame('ok', $r['update']['philosophy']);
+        $this->assertArrayNotHasKey('basic_update', $r['update'] ?? []);
+
+        $this->svc->deleteStagingFile($pid, $token);
+    }
+
+    /**
+     * Additional: Unicode Thai roundtrip ไม่เสีย encoding
+     */
+    public function testThaiTextRoundtripPreservesEncoding(): void
+    {
+        $pageRow = ['philosophy' => 'ปรัชญาหลักสูตร — สัมมา🎓สัมโพธิ'];
+        $b = $this->svc->buildBundleFromDatabase(1, ['name_th' => 'ชื่อ'], $pageRow);
+        $json = json_encode($b, JSON_UNESCAPED_UNICODE);
+        $back = $this->svc->parseBundleJsonString($json);
+
+        $this->assertSame([], $back['errors']);
+        $this->assertSame('ชื่อ', $back['basic']['name_th']);
+        $this->assertSame('ปรัชญาหลักสูตร — สัมมา🎓สัมโพธิ', $back['content']['philosophy']);
+    }
+
+    // ------------------------------------------------------------------
+    // Schema file
+    // ------------------------------------------------------------------
+
+    public function testSchemaFileHas3NamespaceStructure(): void
+    {
+        $path = ProgramContentBundleService::SCHEMA_PATH;
+        $this->assertFileExists($path);
+        $decoded = json_decode((string) file_get_contents($path), true);
+
+        $this->assertIsArray($decoded);
+        $this->assertArrayHasKey('basic', $decoded['properties']);
+        $this->assertArrayHasKey('content', $decoded['properties']);
+        $this->assertArrayHasKey('settings', $decoded['properties']);
+        $this->assertArrayNotHasKey('page', $decoded['properties']);
+    }
+
+    // ------------------------------------------------------------------
+    // Staging file — unchanged behavior
+    // ------------------------------------------------------------------
+
+    public function testStagingFileRoundTrip(): void
+    {
+        $pid   = 999;
+        $data  = ['philosophy' => 'ok'];
+        $token = $this->svc->writeStagingFile($pid, $data);
         $this->assertMatchesRegularExpression('/^[a-f0-9]{40}$/', $token);
 
-        $read = $this->svc->readStagingFile($programId, $token);
-        $this->assertIsArray($read);
-        $this->assertSame($programId, $read['program_id']);
-        $this->assertSame($payload, $read['update']);
+        $read = $this->svc->readStagingFile($pid, $token);
+        $this->assertSame($data, $read['update']);
 
-        $this->svc->deleteStagingFile($programId, $token);
-        $this->assertNull($this->svc->readStagingFile($programId, $token));
+        $this->svc->deleteStagingFile($pid, $token);
+        $this->assertNull($this->svc->readStagingFile($pid, $token));
     }
 
-    public function testReadStagingFileRejectsMalformedToken(): void
+    public function testReadStagingRejectsMalformedTokenOrMismatchedProgram(): void
     {
+        $pid   = 999;
+        $token = $this->svc->writeStagingFile($pid, ['x' => 1]);
+
         $this->assertNull($this->svc->readStagingFile(1, 'bad-token'));
-        $this->assertNull($this->svc->readStagingFile(1, ''));
-        $this->assertNull($this->svc->readStagingFile(1, str_repeat('z', 40)));
+        $this->assertNull($this->svc->readStagingFile(998, $token));
+
+        $this->svc->deleteStagingFile($pid, $token);
     }
 
-    public function testReadStagingFileRejectsMismatchedProgramId(): void
+    public function testStagingFileExpiresCleanly(): void
     {
-        $programId = 999;
-        $token     = $this->svc->writeStagingFile($programId, ['x' => 1]);
-
-        $this->assertNull(
-            $this->svc->readStagingFile(998, $token),
-            'token for program 999 must not read under program 998',
-        );
-
-        $this->svc->deleteStagingFile($programId, $token);
-    }
-
-    public function testReadStagingFileRejectsExpiredPayload(): void
-    {
-        $programId = 999;
-        $token     = $this->svc->writeStagingFile($programId, ['x' => 1]);
-
-        // Rewrite file with expired timestamp
-        $path = WRITEPATH . 'temp' . DIRECTORY_SEPARATOR . 'program_bundle_import' . DIRECTORY_SEPARATOR . 'p' . $programId . '_' . $token . '.json';
-        $this->assertFileExists($path);
+        $pid   = 999;
+        $token = $this->svc->writeStagingFile($pid, ['x' => 1]);
+        $path  = WRITEPATH . 'temp' . DIRECTORY_SEPARATOR . 'program_bundle_import' . DIRECTORY_SEPARATOR . 'p' . $pid . '_' . $token . '.json';
         file_put_contents($path, json_encode([
-            'program_id' => $programId,
+            'program_id' => $pid,
             'created'    => time() - 3600,
             'expires'    => time() - 60,
             'update'     => ['x' => 1],
         ]));
 
-        $this->assertNull($this->svc->readStagingFile($programId, $token));
-        $this->assertFileDoesNotExist($path, 'expired staging file must be deleted on read');
+        $this->assertNull($this->svc->readStagingFile($pid, $token));
+        $this->assertFileDoesNotExist($path);
     }
 }

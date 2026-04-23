@@ -20,9 +20,39 @@ class ProgramContentBundleService
     public const SCHEMA_PATH = APPPATH . 'Config/program_content_bundle.v1.schema.json';
 
     /**
-     * Whitelist key ที่อนุญาตใน `page` — ตรงกับ ProgramPageModel::$allowedFields
-     * (ไม่รวม program_id/id/timestamps เพราะกำหนดโดยระบบ)
+     * 3 namespace structure (v1.1) — single source per field, ไม่มี data ซ้ำซ้อน
+     *
+     *   basic    → ตาราง programs (ข้อมูลพื้นฐานหลักสูตร)
+     *   content  → ตาราง program_pages เฉพาะส่วนเนื้อหา
+     *   settings → ตาราง program_pages เฉพาะส่วน UI/เผยแพร่
+     *
+     * Legacy format {program, page} — รองรับนำเข้าผ่าน convertLegacyToNamespaces
      */
+    private const BASIC_ALLOWED_KEYS = [
+        'name_th', 'name_en', 'degree_th', 'degree_en',
+        'level', 'credits', 'duration',
+        'description', 'description_en', 'website',
+    ];
+
+    private const CONTENT_ALLOWED_KEYS = [
+        'philosophy', 'objectives', 'graduate_profile',
+        'elos_json', 'learning_standards_json',
+        'curriculum_structure', 'study_plan', 'curriculum_json',
+        'careers_json', 'career_prospects',
+        'tuition_fees_json', 'tuition_fees',
+        'admission_info', 'contact_info', 'intro_video_url',
+        'alumni_messages_json',
+    ];
+
+    private const SETTINGS_ALLOWED_KEYS = [
+        'slug', 'hero_image',
+        'theme_color', 'text_color', 'background_color',
+        'meta_description',
+        'gallery_images', 'social_links',
+        'is_published',
+    ];
+
+    /** Union ของ content + settings — ตรงกับ ProgramPageModel::$allowedFields */
     private const PAGE_ALLOWED_KEYS = [
         'slug', 'philosophy', 'objectives', 'graduate_profile',
         'elos_json', 'learning_standards_json', 'curriculum_json', 'alumni_messages_json',
@@ -66,6 +96,22 @@ class ProgramContentBundleService
         'is_published'            => ['bool', 'int'],
     ];
 
+    private const BASIC_TYPE_RULES = [
+        'name_th'        => ['string'],
+        'name_en'        => ['string'],
+        'degree_th'      => ['string'],
+        'degree_en'      => ['string'],
+        'level'          => ['string'],
+        'credits'        => ['int'],
+        'duration'       => ['int'],
+        'description'    => ['string'],
+        'description_en' => ['string'],
+        'website'        => ['string'],
+    ];
+
+    /** enum ที่ยอมรับสำหรับ basic.level */
+    private const BASIC_LEVEL_VALUES = ['bachelor', 'master', 'doctorate'];
+
     /**
      * บันทึก snapshot ลง uploads ต่อหลักสูตร (ไม่แทน DB — สำรอง/อ้างอิง)
      */
@@ -92,90 +138,132 @@ class ProgramContentBundleService
     }
 
     /**
-     * สร้าง bundle สำหรับ export (อ่านง่าย — decode json fields)
+     * สร้าง bundle สำหรับ export — 3 namespace (basic/content/settings) ไม่มีข้อมูลซ้ำ
      *
-     * @return array{schema_version: int, program_id: int, exported_at: string, program: array, page: array}
+     * @return array{schema_version: int, program_id: int, exported_at: string, basic: array, content: array, settings: array}
      */
     public function buildBundleFromDatabase(int $programId, ?array $programRow, ?array $pageRow): array
     {
         helper('overview_lists');
-        $page = $this->decodePageRowForBundle($pageRow ?? []);
 
         return [
-            'schema_version'  => self::SCHEMA_VERSION,
-            'program_id'      => $programId,
-            'exported_at'     => gmdate('c'),
-            'program'         => $this->programSlice($programId, $programRow),
-            'page'            => $page,
+            'schema_version' => self::SCHEMA_VERSION,
+            'program_id'     => $programId,
+            'exported_at'    => gmdate('c'),
+            'basic'          => $this->buildBasicSliceFromProgram($programRow),
+            'content'        => $this->buildContentSliceFromPage($pageRow ?? []),
+            'settings'       => $this->buildSettingsSliceFromPage($pageRow ?? []),
         ];
     }
 
     /**
-     * แม่แบบ JSON สำหรับกรอกนอกระบบหรือ initial import (ค่า page เป็นค่าว่าง/ค่าเริ่มต้น)
-     *
-     * @return array{schema_version: int, program_id: int, exported_at: null, template_note: string, program: array, page: array}
+     * แม่แบบ JSON ว่างสำหรับกรอกนอกระบบ (3 namespace)
      */
     public function buildEmptyTemplateBundle(int $programId, ?array $programRow): array
     {
-        $page = [
-            'slug'                 => '',
-            'philosophy'          => '',
-            'objectives'          => [],
-            'graduate_profile'     => [],
-            'elos_json'           => [],
-            'learning_standards_json' => [
-                'intro'     => '',
-                'standards' => [],
-                'mapping'   => [],
+        return [
+            'schema_version' => self::SCHEMA_VERSION,
+            'program_id'     => $programId,
+            'exported_at'    => null,
+            'template_note'  => 'แม่แบบว่าง — กรอก key ใน basic / content / settings แล้วนำเข้า (program_id ต้องตรงหลักสูตรนี้; ไม่รวมรูป/ไฟล์แนบ ต้องอัปโหลดแยก)',
+            'basic'          => $this->buildBasicSliceFromProgram($programRow),
+            'content' => [
+                'philosophy'              => '',
+                'objectives'              => [],
+                'graduate_profile'        => [],
+                'elos_json'               => [],
+                'learning_standards_json' => ['intro' => '', 'standards' => [], 'mapping' => []],
+                'curriculum_structure'    => '',
+                'study_plan'              => '',
+                'curriculum_json'         => [],
+                'careers_json'            => [],
+                'career_prospects'        => '',
+                'tuition_fees_json'       => [],
+                'tuition_fees'            => '',
+                'admission_info'          => '',
+                'contact_info'            => '',
+                'intro_video_url'         => '',
+                'alumni_messages_json'    => [],
             ],
-            'curriculum_json'         => [],
-            'alumni_messages_json'   => [],
-            'curriculum_structure'    => '',
-            'study_plan'              => '',
-            'career_prospects'        => '',
-            'careers_json'            => [],
-            'tuition_fees'            => '',
-            'tuition_fees_json'       => [],
-            'admission_info'          => '',
-            'contact_info'            => '',
-            'intro_video_url'         => '',
-            'meta_description'        => '',
-            'gallery_images'         => [],
-            'social_links'            => [],
-            'hero_image'              => '',
-            'theme_color'             => '#1e40af',
-            'text_color'              => '',
-            'background_color'        => '',
-            'is_published'            => 0,
-        ];
-
-        return [
-            'schema_version'  => self::SCHEMA_VERSION,
-            'program_id'      => $programId,
-            'exported_at'     => null,
-            'template_note'   => 'แม่แบบว่าง — กรอก key ใน page แล้วนำเข้า (program_id ต้องตรงหลักสูตรนี้; ไม่รวมรูป/ไฟล์แนบ ต้องอัปโหลดแยก)',
-            'program'         => $this->programSlice($programId, $programRow),
-            'page'            => $page,
-        ];
-    }
-
-    public function programSlice(int $programId, ?array $programRow): array
-    {
-        if (! is_array($programRow)) {
-            return ['id' => $programId];
-        }
-
-        return [
-            'id'      => (int) ($programRow['id'] ?? $programId),
-            'name_th' => (string) ($programRow['name_th'] ?? ''),
-            'name_en' => (string) ($programRow['name_en'] ?? ''),
-            'level'   => (string) ($programRow['level'] ?? ''),
-            'status'  => (string) ($programRow['status'] ?? ''),
+            'settings' => [
+                'slug'             => '',
+                'hero_image'       => '',
+                'theme_color'      => '#1e40af',
+                'text_color'       => '',
+                'background_color' => '',
+                'meta_description' => '',
+                'gallery_images'   => [],
+                'social_links'     => [],
+                'is_published'     => 0,
+            ],
         ];
     }
 
     /**
-     * แปลงแถว DB เป็นค่าใน bundle (objectives/graduate เป็น list, *_json เป็น array/object)
+     * basic slice — เลือก 10 editable keys จากตาราง programs
+     */
+    public function buildBasicSliceFromProgram(?array $programRow): array
+    {
+        $src = is_array($programRow) ? $programRow : [];
+        $out = [];
+        foreach (self::BASIC_ALLOWED_KEYS as $k) {
+            if (in_array($k, ['credits', 'duration'], true)) {
+                $out[$k] = isset($src[$k]) && $src[$k] !== '' ? (int) $src[$k] : 0;
+            } else {
+                $out[$k] = (string) ($src[$k] ?? '');
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * content slice — เฉพาะเนื้อหาหลักสูตร (ไม่รวม settings)
+     */
+    public function buildContentSliceFromPage(array $pageRow): array
+    {
+        helper('overview_lists');
+        $out = [];
+        $out['philosophy']       = (string) ($pageRow['philosophy'] ?? '');
+        $out['objectives']       = overview_text_lines_from_db($pageRow['objectives'] ?? null);
+        $out['graduate_profile'] = overview_text_lines_from_db($pageRow['graduate_profile'] ?? '');
+        foreach (['elos_json', 'learning_standards_json', 'curriculum_json', 'alumni_messages_json', 'careers_json', 'tuition_fees_json'] as $k) {
+            $out[$k] = $this->decodeJsonField($pageRow[$k] ?? null);
+        }
+        $out['curriculum_structure'] = (string) ($pageRow['curriculum_structure'] ?? '');
+        $out['study_plan']           = (string) ($pageRow['study_plan'] ?? '');
+        $out['career_prospects']     = (string) ($pageRow['career_prospects'] ?? '');
+        $out['tuition_fees']         = (string) ($pageRow['tuition_fees'] ?? '');
+        $out['admission_info']       = (string) ($pageRow['admission_info'] ?? '');
+        $out['contact_info']         = (string) ($pageRow['contact_info'] ?? '');
+        $out['intro_video_url']      = (string) ($pageRow['intro_video_url'] ?? '');
+
+        return $out;
+    }
+
+    /**
+     * settings slice — เฉพาะส่วน UI / publish
+     */
+    public function buildSettingsSliceFromPage(array $pageRow): array
+    {
+        $out                = [];
+        $out['slug']        = (string) ($pageRow['slug'] ?? '');
+        $out['hero_image']  = (string) ($pageRow['hero_image'] ?? '');
+        $out['theme_color'] = (string) ($pageRow['theme_color'] ?? '#1e40af');
+        $tc                 = $pageRow['text_color'] ?? null;
+        $out['text_color']  = $tc !== null && $tc !== '' ? (string) $tc : '';
+        $bc                 = $pageRow['background_color'] ?? null;
+        $out['background_color'] = $bc !== null && $bc !== '' ? (string) $bc : '';
+        $out['meta_description'] = (string) ($pageRow['meta_description'] ?? '');
+        $out['gallery_images']   = $this->decodeJsonField($pageRow['gallery_images'] ?? null);
+        $out['social_links']     = $this->decodeJsonField($pageRow['social_links'] ?? null);
+        $out['is_published']     = isset($pageRow['is_published']) ? (int) (bool) $pageRow['is_published'] : 0;
+
+        return $out;
+    }
+
+    /**
+     * flat decode page row — ใช้กับ buildSectionPreviews (UI preview) + legacy export
      */
     public function decodePageRowForBundle(array $pageRow): array
     {
@@ -238,31 +326,36 @@ class ProgramContentBundleService
     }
 
     /**
-     * อ่าน JSON ไฟล์นำเข้า — ตรวจ shape พื้นฐาน
+     * อ่าน JSON ไฟล์นำเข้า — ตรวจ shape พื้นฐาน + แยกเป็น 3 namespace
      *
-     * @return array{errors: list<string>, program_id: int|null, page: ?array, raw: ?array}
+     * รองรับทั้งรูปแบบใหม่ {basic, content, settings} และรูปแบบเดิม {program, page}
+     * (legacy convert ก่อน validate เพื่อ error message สอดคล้อง new structure)
+     *
+     * @return array{errors: list<string>, program_id: int|null, basic: array, content: array, settings: array, raw: ?array, legacy: bool}
      */
     public function parseBundleJsonString(string $json): array
     {
-        $errors = [];
+        $empty = ['errors' => [], 'program_id' => null, 'basic' => [], 'content' => [], 'settings' => [], 'raw' => null, 'legacy' => false];
+
         if (strlen($json) > 2_200_000) {
-            $errors[] = 'ไฟล์ใหญ่เกิน (จำกัด ~2.1MB)';
+            $empty['errors'] = ['ไฟล์ใหญ่เกิน (จำกัด ~2.1MB)'];
 
-            return ['errors' => $errors, 'program_id' => null, 'page' => null, 'raw' => null];
+            return $empty;
         }
-        $trim = trim($json);
-        if ($trim === '') {
-            $errors[] = 'ไฟล์ว่าง';
+        if (trim($json) === '') {
+            $empty['errors'] = ['ไฟล์ว่าง'];
 
-            return ['errors' => $errors, 'program_id' => null, 'page' => null, 'raw' => null];
+            return $empty;
         }
         $data = json_decode($json, true);
         if (! is_array($data)) {
-            $errors[] = 'รูปแบบ JSON ไม่ถูกต้อง';
+            $empty['errors'] = ['รูปแบบ JSON ไม่ถูกต้อง'];
 
-            return ['errors' => $errors, 'program_id' => null, 'page' => null, 'raw' => null];
+            return $empty;
         }
-        $v = (int) ($data['schema_version'] ?? 0);
+
+        $errors = [];
+        $v      = (int) ($data['schema_version'] ?? 0);
         if ($v < 1 || $v > self::SCHEMA_VERSION) {
             $errors[] = 'schema_version ไม่รองรับ (รองรับ 1–' . self::SCHEMA_VERSION . ')';
         }
@@ -270,52 +363,120 @@ class ProgramContentBundleService
         if ($pid <= 0) {
             $errors[] = 'program_id ไม่ถูกต้อง';
         }
-        $page = $data['page'] ?? null;
-        if (! is_array($page)) {
-            $errors[] = 'ต้องมี key "page" เป็น object';
-            $page = null;
-        } else {
-            foreach ($this->validatePageShape($page) as $err) {
-                $errors[] = $err;
+
+        $isNew = isset($data['basic']) || isset($data['content']) || isset($data['settings']);
+        $isLegacy = ! $isNew && isset($data['page']);
+
+        $basic    = [];
+        $content  = [];
+        $settings = [];
+
+        if ($isLegacy) {
+            // Convert legacy {program, page} → {basic, content, settings} ก่อน validate
+            [$basic, $content, $settings] = $this->convertLegacyToNamespaces($data);
+        } elseif ($isNew) {
+            $basic    = is_array($data['basic'] ?? null) ? $data['basic'] : [];
+            $content  = is_array($data['content'] ?? null) ? $data['content'] : [];
+            $settings = is_array($data['settings'] ?? null) ? $data['settings'] : [];
+            if (! isset($data['basic']) && ! isset($data['content']) && ! isset($data['settings'])) {
+                $errors[] = 'ต้องมี key "basic" / "content" / "settings" อย่างน้อยหนึ่ง';
             }
+        } else {
+            $errors[] = 'ต้องมี key "basic" / "content" / "settings" (หรือรูปแบบเดิม "page")';
+        }
+
+        foreach ($this->validateBasicShape($basic) as $err) {
+            $errors[] = $err;
+        }
+        foreach ($this->validateNamespaceShape($content, 'content', self::CONTENT_ALLOWED_KEYS) as $err) {
+            $errors[] = $err;
+        }
+        foreach ($this->validateNamespaceShape($settings, 'settings', self::SETTINGS_ALLOWED_KEYS) as $err) {
+            $errors[] = $err;
         }
 
         return [
             'errors'     => $errors,
             'program_id' => $pid > 0 ? $pid : null,
-            'page'       => $page,
+            'basic'      => $basic,
+            'content'    => $content,
+            'settings'   => $settings,
             'raw'        => $data,
+            'legacy'     => $isLegacy,
         ];
     }
 
     /**
-     * ตรวจ shape ของ `page` ตาม JSON Schema v1 (inline — ไม่มี dep composer)
+     * แปลง legacy {program, page} → 3 namespace
      *
-     * - ปฏิเสธ key นอก whitelist
-     * - ตรวจ type ต่อ key (string / list / jsonish / bool|int / null)
-     * - ตรวจ hex สี (theme_color / text_color / background_color)
+     * @return array{0: array, 1: array, 2: array} [basic, content, settings]
+     */
+    public function convertLegacyToNamespaces(array $data): array
+    {
+        $program = is_array($data['program'] ?? null) ? $data['program'] : [];
+        $page    = is_array($data['page'] ?? null) ? $data['page'] : [];
+
+        // basic จาก program slice เก่า (มีแค่ name_th/name_en/level — ข้อมูลอื่นว่าง)
+        $basic = [];
+        foreach (self::BASIC_ALLOWED_KEYS as $k) {
+            if (array_key_exists($k, $program)) {
+                $basic[$k] = $program[$k];
+            }
+        }
+
+        // แยก page เป็น content/settings ตาม allowed keys
+        $content  = [];
+        $settings = [];
+        foreach ($page as $k => $v) {
+            if (in_array($k, self::CONTENT_ALLOWED_KEYS, true)) {
+                $content[$k] = $v;
+            } elseif (in_array($k, self::SETTINGS_ALLOWED_KEYS, true)) {
+                $settings[$k] = $v;
+            }
+            // key ที่ไม่รู้จัก — ข้าม (ให้ validate จับใน phase ต่อไปถ้าต้องการ strict)
+        }
+
+        return [$basic, $content, $settings];
+    }
+
+    /**
+     * ตรวจ shape ของ `page` (flat structure — ใช้กับ test/legacy compat)
      *
-     * ไม่ได้ตรวจเชิงลึก (maxLength / nested shape) เพราะ pageBundleToUpdateRow จะ clamp/normalize อีกชั้น
+     * - ปฏิเสธ key นอก whitelist (union ของ content + settings)
+     * - ตรวจ type ต่อ key
+     * - ตรวจ hex สี
      *
      * @return list<string>
      */
     public function validatePageShape(array $page): array
     {
+        return $this->validateNamespaceShape($page, 'page', self::PAGE_ALLOWED_KEYS);
+    }
+
+    /**
+     * ตรวจ shape namespace เดียว (content หรือ settings หรือ page)
+     *
+     * @param list<string> $allowedKeys
+     *
+     * @return list<string>
+     */
+    public function validateNamespaceShape(array $ns, string $nsLabel, array $allowedKeys): array
+    {
         $errors = [];
-        foreach ($page as $key => $val) {
+        foreach ($ns as $key => $val) {
             if (! is_string($key)) {
-                $errors[] = 'page: key ต้องเป็น string';
+                $errors[] = $nsLabel . ': key ต้องเป็น string';
 
                 continue;
             }
-            if (! in_array($key, self::PAGE_ALLOWED_KEYS, true)) {
-                $errors[] = 'page: key ต้องห้าม "' . $key . '"';
+            if (! in_array($key, $allowedKeys, true)) {
+                $errors[] = $nsLabel . ': key ต้องห้าม "' . $key . '"';
 
                 continue;
             }
             $rule = self::PAGE_TYPE_RULES[$key] ?? [];
             if ($rule !== [] && ! $this->matchesTypeRule($val, $rule)) {
-                $errors[] = 'page.' . $key . ': รูปแบบไม่ตรง (' . implode('|', $rule) . ')';
+                $errors[] = $nsLabel . '.' . $key . ': รูปแบบไม่ตรง (' . implode('|', $rule) . ')';
 
                 continue;
             }
@@ -323,7 +484,42 @@ class ProgramContentBundleService
                 && is_string($val) && $val !== ''
                 && ! preg_match('/^#[0-9A-Fa-f]{6}$/', $val)
             ) {
-                $errors[] = 'page.' . $key . ': ต้องเป็น #RRGGBB หรือว่าง';
+                $errors[] = $nsLabel . '.' . $key . ': ต้องเป็น #RRGGBB หรือว่าง';
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * ตรวจ shape ของ `basic` — คอลัมน์ editable ของตาราง programs
+     *
+     * @return list<string>
+     */
+    public function validateBasicShape(array $basic): array
+    {
+        $errors = [];
+        foreach ($basic as $key => $val) {
+            if (! is_string($key)) {
+                $errors[] = 'basic: key ต้องเป็น string';
+
+                continue;
+            }
+            if (! in_array($key, self::BASIC_ALLOWED_KEYS, true)) {
+                $errors[] = 'basic: key ต้องห้าม "' . $key . '"';
+
+                continue;
+            }
+            $rule = self::BASIC_TYPE_RULES[$key] ?? [];
+            if ($rule !== [] && ! $this->matchesTypeRule($val, $rule)) {
+                $errors[] = 'basic.' . $key . ': รูปแบบไม่ตรง (' . implode('|', $rule) . ')';
+
+                continue;
+            }
+            if ($key === 'level' && is_string($val) && $val !== ''
+                && ! in_array($val, self::BASIC_LEVEL_VALUES, true)
+            ) {
+                $errors[] = 'basic.level: ต้องเป็น ' . implode('/', self::BASIC_LEVEL_VALUES);
             }
         }
 
@@ -482,6 +678,67 @@ class ProgramContentBundleService
         }
         if (array_key_exists('is_published', $pageIn)) {
             $u['is_published'] = (int) (bool) $pageIn['is_published'];
+        }
+
+        return ['errors' => $errors, 'update' => $u];
+    }
+
+    /**
+     * แปลง basic namespace → update row สำหรับ ProgramModel
+     *
+     * @return array{errors: list<string>, update: array<string, mixed>}
+     */
+    public function basicToUpdateRow(array $basicIn): array
+    {
+        $errors = [];
+        $u      = [];
+
+        foreach (self::BASIC_ALLOWED_KEYS as $k) {
+            if (! array_key_exists($k, $basicIn)) {
+                continue;
+            }
+            $v = $basicIn[$k];
+            switch ($k) {
+                case 'name_th':
+                case 'name_en':
+                case 'degree_th':
+                case 'degree_en':
+                    $u[$k] = mb_substr((string) $v, 0, 500);
+                    break;
+
+                case 'level':
+                    $sv = trim((string) $v);
+                    if ($sv !== '' && ! in_array($sv, self::BASIC_LEVEL_VALUES, true)) {
+                        $errors[] = 'basic.level: ต้องเป็น ' . implode('/', self::BASIC_LEVEL_VALUES);
+                        break;
+                    }
+                    $u[$k] = $sv;
+                    break;
+
+                case 'credits':
+                case 'duration':
+                    $iv = is_numeric($v) ? (int) $v : 0;
+                    if ($iv < 0) {
+                        $errors[] = 'basic.' . $k . ': ต้องไม่เป็นค่าลบ';
+                        $iv = 0;
+                    }
+                    $u[$k] = $iv;
+                    break;
+
+                case 'description':
+                case 'description_en':
+                    $u[$k] = mb_substr((string) $v, 0, 5000);
+                    break;
+
+                case 'website':
+                    $sv = trim((string) $v);
+                    if ($sv !== '' && ! preg_match('~^https?://~i', $sv)) {
+                        $errors[] = 'basic.website: ต้องขึ้นต้นด้วย http:// หรือ https://';
+                        break;
+                    }
+                    $u[$k] = mb_substr($sv, 0, 500);
+                    break;
+            }
         }
 
         return ['errors' => $errors, 'update' => $u];
