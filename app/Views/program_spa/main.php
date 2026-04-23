@@ -447,6 +447,35 @@
     </div>
 </section>
 
+<!-- ==================== ADMISSION (การรับสมัคร) ==================== -->
+<section id="admission" class="relative py-24 md:py-32 section-bg-tint-4" style="display:none;">
+    <div class="max-w-5xl mx-auto px-6">
+        <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-800 mb-4 text-center reveal">การ<span class="section-accent">รับสมัคร</span></h2>
+        <p class="text-center text-slate-500 text-sm mb-10 max-w-2xl mx-auto reveal">จำนวนที่เปิดรับ · คุณสมบัติผู้เข้าเรียน · สิ่งสนับสนุนการเรียน</p>
+
+        <div id="admission-plan-seats-wrap" class="mb-8 text-center reveal" style="display:none;">
+            <div class="inline-flex flex-col items-center justify-center gap-1 px-8 py-5 rounded-2xl bg-white/90 border border-slate-200 shadow-sm">
+                <span class="text-xs tracking-[0.25em] uppercase text-slate-500">จำนวนรับตามแผน</span>
+                <span id="admission-plan-seats" class="text-3xl md:text-4xl font-bold section-accent"></span>
+            </div>
+        </div>
+
+        <div id="admission-requirements-wrap" class="mb-8 reveal" style="display:none;">
+            <h3 class="text-xl font-semibold section-accent mb-4 text-center">คุณสมบัติของผู้เข้าเรียน</h3>
+            <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white/90 shadow-sm">
+                <table class="w-full text-sm text-left text-slate-700 min-w-[320px]">
+                    <tbody id="admission-requirements-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="admission-supports-wrap" class="reveal" style="display:none;">
+            <h3 class="text-xl font-semibold section-accent mb-4 text-center">สิ่งสนับสนุนการเรียน</h3>
+            <ul id="admission-supports-list" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl mx-auto"></ul>
+        </div>
+    </div>
+</section>
+
 <!-- ==================== VIDEO (คลิปวิดีโอ สนับสนุน AUN-QA) ==================== -->
 <section id="video" class="relative py-24 md:py-32 section-bg-tint-3" style="display:none;">
     <div class="max-w-4xl mx-auto px-6">
@@ -994,6 +1023,79 @@
         } else {
             document.getElementById('documents-empty').classList.remove('hidden');
         }
+
+        // การรับสมัคร (admission) — แสดงถ้ามี plan_seats, requirements, หรือ supports (มี default ทั้ง 6)
+        (function renderAdmission() {
+            var sec       = document.getElementById('admission');
+            var planWrap  = document.getElementById('admission-plan-seats-wrap');
+            var planEl    = document.getElementById('admission-plan-seats');
+            var reqWrap   = document.getElementById('admission-requirements-wrap');
+            var reqBody   = document.getElementById('admission-requirements-body');
+            var supWrap   = document.getElementById('admission-supports-wrap');
+            var supList   = document.getElementById('admission-supports-list');
+            if (!sec || !planWrap || !reqWrap || !supWrap) return;
+
+            var ad = d.admission_details || null;
+            if (!ad || typeof ad !== 'object') { sec.style.display = 'none'; return; }
+
+            var planSeats = (ad.plan_seats || '').trim();
+            var req       = (ad.requirements && typeof ad.requirements === 'object') ? ad.requirements : {};
+            var sup       = (ad.supports && typeof ad.supports === 'object') ? ad.supports : {};
+
+            var reqLabels = [
+                ['study_plan', 'แผนการเรียน'],
+                ['mor_kor_2_url', 'มคอ 2. ฉบับย่อ'],
+                ['english_grade', 'ผลการเรียนเฉลี่ยวิชาภาษาอังกฤษ'],
+                ['selection_criteria', 'เกณฑ์การคัดเลือก'],
+                ['tuition_per_term', 'ค่าเทอม'],
+                ['duration', 'ระยะเวลาเรียน'],
+                ['credits_note', 'จำนวนหน่วยกิต'],
+                ['program_type', 'ประเภทการศึกษา']
+            ];
+            var supLabels = [
+                ['scholarship', 'ทุนการศึกษา'],
+                ['first_term_loan', 'กองทุนยืมเงินค่าเทอมแรกเข้า'],
+                ['ksl_loan', 'กองทุนกู้ยืมเพื่อการศึกษา (กยศ.)'],
+                ['study_scholarship', 'ทุนการศึกษาระหว่างเรียน'],
+                ['entrepreneur_fund', 'ทุนสนับสนุนการเป็นผู้ประกอบการ'],
+                ['dormitory', 'หอพักนักศึกษาของมหาวิทยาลัย']
+            ];
+
+            var hasPlan = planSeats !== '';
+            var hasReq  = reqLabels.some(function (p) { return (req[p[0]] || '').trim() !== ''; });
+            var enabledSup = supLabels.filter(function (p) { return sup[p[0]] === true; });
+            var hasSup  = enabledSup.length > 0;
+
+            if (!hasPlan && !hasReq && !hasSup) { sec.style.display = 'none'; return; }
+            sec.style.display = 'block';
+
+            if (hasPlan) { planEl.textContent = planSeats; planWrap.style.display = 'block'; }
+            else         { planWrap.style.display = 'none'; }
+
+            if (hasReq) {
+                var rows = '';
+                reqLabels.forEach(function (p) {
+                    var v = (req[p[0]] || '').trim();
+                    if (v === '') return;
+                    var cell = v;
+                    if (p[0] === 'mor_kor_2_url') {
+                        cell = '<a href="' + esc(v) + '" target="_blank" rel="noopener" class="section-accent underline">เปิดเอกสาร</a>';
+                    } else {
+                        cell = esc(v);
+                    }
+                    rows += '<tr class="border-b border-slate-100 last:border-0"><th scope="row" class="px-4 py-3 align-top font-medium text-slate-800 w-[45%] bg-slate-50/60">' + esc(p[1]) + '</th><td class="px-4 py-3 align-top">' + cell + '</td></tr>';
+                });
+                reqBody.innerHTML = rows;
+                reqWrap.style.display = 'block';
+            } else { reqWrap.style.display = 'none'; }
+
+            if (hasSup) {
+                supList.innerHTML = enabledSup.map(function (p) {
+                    return '<li class="flex items-center gap-2 px-4 py-3 rounded-xl bg-white/90 border border-slate-200 shadow-sm text-slate-700 text-sm"><svg class="w-5 h-5 flex-shrink-0 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span>' + esc(p[1]) + '</span></li>';
+                }).join('');
+                supWrap.style.display = 'block';
+            } else { supWrap.style.display = 'none'; }
+        })();
 
         // วิดีโอแนะนำ (คลิปสนับสนุน AUN-QA)
         var videoSection = document.getElementById('video');

@@ -349,10 +349,12 @@ class ProgramSpaController extends BaseController
         helper('career_cards');
         helper('tuition_fees');
         helper('overview_lists');
+        helper('admission_details');
         $careers = career_items_from_json_string($page['careers_json'] ?? null);
         $tuitionItems = tuition_fee_items_from_json_string($page['tuition_fees_json'] ?? null);
         $objectivesList = overview_text_lines_from_db($page['objectives'] ?? null);
         $graduateProfileList = overview_text_lines_from_db($page['graduate_profile'] ?? null);
+        $admissionDetails = admission_details_decode($page['admission_details_json'] ?? null);
 
         $data = [
             'id'                   => $id,
@@ -379,6 +381,7 @@ class ProgramSpaController extends BaseController
             'tuition_fees'         => $page['tuition_fees'] ?? '',
             'tuition_items'        => $tuitionItems,
             'admission_info'       => $page['admission_info'] ?? '',
+            'admission_details'    => $admissionDetails,
             'contact_info'         => $page['contact_info'] ?? '',
             'intro_video_url'      => $page['intro_video_url'] ?? '',
             'elos'                 => $elos,
