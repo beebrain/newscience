@@ -312,9 +312,7 @@ class Dashboard extends BaseController
             'curriculum_json' => 'max_length[65000]',
             'curriculum_structure' => 'max_length[10000]',
             'study_plan' => 'max_length[10000]',
-            'career_prospects' => 'max_length[5000]',
             'careers_json' => 'max_length[65000]',
-            'tuition_fees' => 'max_length[5000]',
             'tuition_fees_json' => 'max_length[65000]',
             'admission_info' => 'max_length[5000]',
             'contact_info' => 'max_length[5000]',
@@ -344,9 +342,7 @@ class Dashboard extends BaseController
             'curriculum_json' => $this->request->getPost('curriculum_json'),
             'curriculum_structure' => $this->request->getPost('curriculum_structure'),
             'study_plan' => $this->request->getPost('study_plan'),
-            'career_prospects' => $this->request->getPost('career_prospects'),
             'careers_json' => $careersJson,
-            'tuition_fees' => $this->request->getPost('tuition_fees'),
             'tuition_fees_json' => $tuitionFeesJson,
             'admission_info' => $this->request->getPost('admission_info'),
             'contact_info' => $this->request->getPost('contact_info'),
@@ -1117,46 +1113,56 @@ class Dashboard extends BaseController
         if ($p['program_id'] !== $programId) {
             $allErr[] = 'program_id ในไฟล์ต้องตรง ' . $programId;
         }
-        if (! empty($allErr) || $p['page'] === null) {
-            return $this->response->setJSON(['success' => false, 'message' => implode(' ', $allErr), 'errors' => $allErr]);
-        }
-
-        $conv = $svc->pageBundleToUpdateRow($p['page']);
-        $allErr = array_merge($allErr, $conv['errors']);
         if (! empty($allErr)) {
             return $this->response->setJSON(['success' => false, 'message' => implode(' ', $allErr), 'errors' => $allErr]);
         }
-        if (empty($conv['update'])) {
-            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีข้อมูลใน key page สำหรับนำเข้า']);
+
+        // แปลง 3 namespaces → 2 update rows (programs + program_pages)
+        $basicConv = $svc->basicToUpdateRow($p['basic']);
+        $pageIn    = $p['content'] + $p['settings']; // content + settings ไป table เดียวกัน ไม่ซ้ำ key
+        $pageConv  = $svc->pageBundleToUpdateRow($pageIn);
+
+        $allErr = array_merge($allErr, $basicConv['errors'], $pageConv['errors']);
+        if (! empty($allErr)) {
+            return $this->response->setJSON(['success' => false, 'message' => implode(' ', $allErr), 'errors' => $allErr]);
+        }
+        if (empty($basicConv['update']) && empty($pageConv['update'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีข้อมูลใน bundle สำหรับนำเข้า']);
         }
 
-        $allowed  = $this->programPageModel->allowedFields;
-        $existing = $this->programPageModel->findByProgramId($programId) ?? [];
-        $importU  = $conv['update'];
-        $merged   = ['program_id' => $programId];
+        // Merge page update กับค่าปัจจุบัน (preserve fields ที่ bundle ไม่ได้ส่งมา)
+        $allowed    = $this->programPageModel->allowedFields;
+        $existing   = $this->programPageModel->findByProgramId($programId) ?? [];
+        $importU    = $pageConv['update'];
+        $pageMerged = ['program_id' => $programId];
         foreach ($allowed as $field) {
             if (in_array($field, ['id', 'created_at', 'updated_at'], true)) {
                 continue;
             }
             if (array_key_exists($field, $importU)) {
-                $merged[$field] = $importU[$field];
+                $pageMerged[$field] = $importU[$field];
             } elseif (array_key_exists($field, $existing)) {
-                $merged[$field] = $existing[$field];
+                $pageMerged[$field] = $existing[$field];
             }
         }
 
-        $token  = $svc->writeStagingFile($programId, $merged);
-        $pageDec = $p['page'];
+        $staging = [
+            'basic_update' => $basicConv['update'],
+            'page_update'  => $pageMerged,
+        ];
+        $token   = $svc->writeStagingFile($programId, $staging);
         $fileSha = sha1($raw);
         $uid     = session()->get('admin_id');
-        log_message('info', "program bundle import preview program_id={$programId} sha1={$fileSha} user=" . (string) $uid);
+        log_message('info', "program bundle import preview program_id={$programId} sha1={$fileSha} legacy=" . ($p['legacy'] ? '1' : '0') . " user=" . (string) $uid);
 
         return $this->response->setJSON([
             'success'          => true,
             'token'            => $token,
-            'expires_in_sec'  => 600,
+            'expires_in_sec'   => 600,
             'file_sha1'        => $fileSha,
-            'preview_sections' => $svc->buildSectionPreviews($pageDec),
+            'legacy'           => $p['legacy'],
+            'basic_keys'       => array_keys($basicConv['update']),
+            'preview_sections' => $svc->buildSectionPreviews($pageIn),
             'current_sections' => $svc->buildSectionPreviews($svc->decodePageRowForBundle($existing)),
         ]);
     }
@@ -1181,25 +1187,40 @@ class Dashboard extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'รหัสนำเข้าไม่ถูกต้องหรือหมดอายุ ให้เพรสส่งไฟล์อีกครั้ง'])->setStatusCode(400);
         }
 
-        $update = $data['update'] ?? [];
-        unset($update['id'], $update['created_at'], $update['updated_at']);
-        if (empty($update)) {
+        $payload     = $data['update'] ?? [];
+        $basicUpdate = is_array($payload['basic_update'] ?? null) ? $payload['basic_update'] : [];
+        $pageUpdate  = is_array($payload['page_update'] ?? null) ? $payload['page_update'] : $payload; // legacy staging: ทั้งก้อน = page
+        unset($pageUpdate['id'], $pageUpdate['created_at'], $pageUpdate['updated_at']);
+
+        if (empty($basicUpdate) && count($pageUpdate) <= 1) { // <=1 เพราะเหลือแค่ program_id
             $svc->deleteStagingFile($programId, $token);
 
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีข้อมูลที่บันทึก']);
         }
 
+        $db = \Config\Database::connect();
+        $db->transStart();
         try {
-            $this->programPageModel->updateOrCreate(['program_id' => $programId], $update);
+            if (! empty($basicUpdate)) {
+                $this->programModel->update($programId, $basicUpdate);
+            }
+            if (count($pageUpdate) > 1) {
+                $this->programPageModel->updateOrCreate(['program_id' => $programId], $pageUpdate);
+            }
         } catch (\Throwable $e) {
+            $db->transRollback();
             log_message('error', 'importContentBundleCommit: ' . $e->getMessage());
 
             return $this->response->setJSON(['success' => false, 'message' => 'บันทึกไม่สำเร็จ: ' . $e->getMessage()])->setStatusCode(500);
         }
+        $db->transComplete();
+        if ($db->transStatus() === false) {
+            return $this->response->setJSON(['success' => false, 'message' => 'บันทึกไม่สำเร็จ (transaction failed)'])->setStatusCode(500);
+        }
 
         $svc->deleteStagingFile($programId, $token);
         $uid = session()->get('admin_id');
-        log_message('info', "program bundle import committed program_id={$programId} user=" . (string) $uid);
+        log_message('info', "program bundle import committed program_id={$programId} user=" . (string) $uid . ' basic=' . count($basicUpdate) . ' page=' . (count($pageUpdate) - 1));
 
         $program = $this->programModel->find($programId);
         $page    = $this->programPageModel->findByProgramId($programId);

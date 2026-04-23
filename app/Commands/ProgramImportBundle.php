@@ -85,20 +85,18 @@ class ProgramImportBundle extends BaseCommand
 
             return;
         }
-        if (! is_array($p['page'])) {
-            CLI::error('ไม่มี key page ในไฟล์');
+
+        $basicConv = $svc->basicToUpdateRow($p['basic']);
+        $pageIn    = $p['content'] + $p['settings'];
+        $pageConv  = $svc->pageBundleToUpdateRow($pageIn);
+        $errors    = array_merge($basicConv['errors'], $pageConv['errors']);
+        if (! empty($errors)) {
+            $this->printErrors('convert', $errors);
 
             return;
         }
-
-        $conv = $svc->pageBundleToUpdateRow($p['page']);
-        if (! empty($conv['errors'])) {
-            $this->printErrors('convert', $conv['errors']);
-
-            return;
-        }
-        if (empty($conv['update'])) {
-            CLI::error('ไม่มี field ใน page สำหรับนำเข้า');
+        if (empty($basicConv['update']) && empty($pageConv['update'])) {
+            CLI::error('ไม่มี field ใน bundle สำหรับนำเข้า');
 
             return;
         }
@@ -114,21 +112,22 @@ class ProgramImportBundle extends BaseCommand
         $pageModel = new ProgramPageModel();
         $existing  = $pageModel->findByProgramId($programId) ?? [];
 
-        $merged = ['program_id' => $programId];
+        $pageMerged = ['program_id' => $programId];
         foreach ($pageModel->allowedFields as $field) {
             if (in_array($field, ['id', 'created_at', 'updated_at'], true)) {
                 continue;
             }
-            if (array_key_exists($field, $conv['update'])) {
-                $merged[$field] = $conv['update'][$field];
+            if (array_key_exists($field, $pageConv['update'])) {
+                $pageMerged[$field] = $pageConv['update'][$field];
             } elseif (array_key_exists($field, $existing)) {
-                $merged[$field] = $existing[$field];
+                $pageMerged[$field] = $existing[$field];
             }
         }
 
-        CLI::write('Field ที่จะเปลี่ยน: ' . count($conv['update']), 'yellow');
-        foreach (array_keys($conv['update']) as $k) {
-            CLI::write('  - ' . $k, 'light_gray');
+        CLI::write('basic fields: ' . count($basicConv['update']) . ' — ' . implode(', ', array_keys($basicConv['update'])), 'yellow');
+        CLI::write('page fields: ' . count($pageConv['update']) . ' — ' . implode(', ', array_keys($pageConv['update'])), 'yellow');
+        if ($p['legacy']) {
+            CLI::write('[legacy format {program, page}] แปลงเป็น 3 namespace แล้ว', 'light_cyan');
         }
 
         if ($dryRun) {
@@ -137,18 +136,31 @@ class ProgramImportBundle extends BaseCommand
             return;
         }
 
-        unset($merged['id'], $merged['created_at'], $merged['updated_at']);
-
+        $db = \Config\Database::connect();
+        $db->transStart();
         try {
-            $pageModel->updateOrCreate(['program_id' => $programId], $merged);
+            if (! empty($basicConv['update'])) {
+                $programModel->update($programId, $basicConv['update']);
+            }
+            if (count($pageMerged) > 1) {
+                $pageModel->updateOrCreate(['program_id' => $programId], $pageMerged);
+            }
         } catch (\Throwable $e) {
+            $db->transRollback();
             CLI::error('บันทึกไม่สำเร็จ: ' . $e->getMessage());
 
             return;
         }
+        $db->transComplete();
+        if ($db->transStatus() === false) {
+            CLI::error('บันทึกไม่สำเร็จ (transaction failed)');
 
-        $pageAfter = $pageModel->findByProgramId($programId);
-        $jsonAfter = json_encode($svc->buildBundleFromDatabase($programId, $program, $pageAfter), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            return;
+        }
+
+        $programAfter = $programModel->find($programId);
+        $pageAfter    = $pageModel->findByProgramId($programId);
+        $jsonAfter    = json_encode($svc->buildBundleFromDatabase($programId, $programAfter, $pageAfter), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         if ($jsonAfter !== false) {
             $svc->writeSnapshotToUploads($programId, ProgramContentBundleService::SNAPSHOT_LATEST, $jsonAfter);
         }
