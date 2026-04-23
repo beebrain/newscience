@@ -26,12 +26,17 @@ class Complaints extends BaseController
         $status = trim((string) $this->request->getGet('status'));
         $search = trim((string) $this->request->getGet('search'));
         $selectedId = (int) ($this->request->getGet('selected') ?? 0);
+        $page = max(1, (int) ($this->request->getGet('page') ?? 1));
+        $perPage = 20;
 
         $listModel = new ComplaintModel();
+        $countModel = new ComplaintModel();
         $builder = $listModel->orderBy('created_at', 'DESC');
+        $countBuilder = $countModel;
 
         if (ComplaintModel::isValidStatus($status)) {
             $builder->where('status', $status);
+            $countBuilder->where('status', $status);
         } else {
             $status = '';
         }
@@ -42,9 +47,20 @@ class Complaints extends BaseController
                 ->orLike('complainant_email', $search)
                 ->orLike('subject', $search)
                 ->groupEnd();
+
+            $countBuilder->groupStart()
+                ->like('complainant_name', $search)
+                ->orLike('complainant_email', $search)
+                ->orLike('subject', $search)
+                ->groupEnd();
         }
 
-        $complaints = $builder->paginate(20);
+        $total = $countBuilder->countAllResults();
+        $totalPages = max(1, (int) ceil($total / $perPage));
+        $page = min($page, $totalPages);
+        $offset = ($page - 1) * $perPage;
+
+        $complaints = $builder->findAll($perPage, $offset);
         $selectedComplaint = null;
 
         if ($selectedId > 0) {
@@ -62,7 +78,10 @@ class Complaints extends BaseController
             'statusOptions' => ComplaintModel::getStatusOptions(),
             'currentStatus' => $status,
             'search' => $search,
-            'pager' => $listModel->pager,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'hasPreviousPage' => $page > 1,
+            'hasNextPage' => $page < $totalPages,
         ]);
     }
 

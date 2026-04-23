@@ -4,10 +4,11 @@
 
 <?php
 $selectedId = (int) ($selectedComplaint['id'] ?? 0);
-$buildQuery = static function (array $overrides = []) use ($currentStatus, $search) {
+$buildQuery = static function (array $overrides = []) use ($currentStatus, $search, $currentPage) {
     $params = array_merge([
         'status' => $currentStatus,
         'search' => $search,
+        'page' => $currentPage,
     ], $overrides);
 
     $params = array_filter($params, static fn($value) => $value !== '' && $value !== null);
@@ -85,9 +86,15 @@ $statusClassMap = [
                         <?php endforeach; ?>
                     </div>
 
-                    <?php if (isset($pager) && $pager): ?>
+                    <?php if (($totalPages ?? 1) > 1): ?>
                         <div class="complaint-pagination">
-                            <?= $pager->links() ?>
+                            <?php if (!empty($hasPreviousPage)): ?>
+                                <a href="<?= esc($buildQuery(['page' => $currentPage - 1, 'selected' => $selectedId ?: null])) ?>" class="btn btn-secondary btn-sm">หน้าก่อน</a>
+                            <?php endif; ?>
+                            <span class="complaint-pagination__info">หน้า <?= (int) $currentPage ?> / <?= (int) $totalPages ?></span>
+                            <?php if (!empty($hasNextPage)): ?>
+                                <a href="<?= esc($buildQuery(['page' => $currentPage + 1, 'selected' => $selectedId ?: null])) ?>" class="btn btn-secondary btn-sm">หน้าถัดไป</a>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 <?php endif; ?>
@@ -319,6 +326,16 @@ $statusClassMap = [
 
 .complaint-pagination {
     margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.complaint-pagination__info {
+    color: var(--color-gray-600);
+    font-size: 0.92rem;
 }
 
 @media (max-width: 1100px) {
