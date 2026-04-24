@@ -25,9 +25,21 @@
             <!-- Main Content -->
             <article id="news-detail-main" class="news-detail" tabindex="-1">
                 <?php if (!empty($news['featured_image'])): ?>
-                    <?php $imgUrl = featured_image_serve_url($news['featured_image'], false); ?>
+                    <?php
+                    $imgUrl = featured_image_serve_url($news['featured_image'], false);
+                    $fw = (int)($news['featured_image_width']  ?? 0);
+                    $fh = (int)($news['featured_image_height'] ?? 0);
+                    $hasDims = $fw > 0 && $fh > 0;
+                    $aspectStyle = $hasDims ? 'style="--media-aspect:' . $fw . '/' . $fh . ';"' : '';
+                    $imgAlt = esc($news['title']);
+                    ?>
                     <div class="news-detail__image">
-                        <img src="<?= $imgUrl ?>" alt="<?= esc($news['title']) ?>" width="1200" height="630" loading="lazy" decoding="async">
+                        <div class="smart-media-frame smart-media-frame--banner" <?= $aspectStyle ?>>
+                            <?php if ($hasDims): ?>
+                                <img class="smart-media-frame__backdrop" src="<?= $imgUrl ?>" alt="" aria-hidden="true" loading="lazy">
+                            <?php endif; ?>
+                            <img class="smart-media-frame__image" src="<?= $imgUrl ?>" alt="<?= $imgAlt ?>" loading="lazy" decoding="async">
+                        </div>
                     </div>
                 <?php endif; ?>
 
@@ -296,15 +308,10 @@ function thaiDateFull($date)
 
     .news-detail__image {
         width: 100%;
-        aspect-ratio: 1200 / 630;
-        max-height: 500px;
-        overflow: hidden;
     }
 
-    .news-detail__image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+    .news-detail__image .smart-media-frame {
+        --media-radius: 0;
     }
 
     .news-detail__header {

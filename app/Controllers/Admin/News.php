@@ -18,6 +18,7 @@ class News extends BaseController
         $this->newsModel = new NewsModel();
         $this->newsImageModel = new NewsImageModel();
         $this->newsTagModel = new NewsTagModel();
+        helper('image_manager');
     }
 
     /**
@@ -140,73 +141,10 @@ class News extends BaseController
                 ->with('error', 'Failed to create news article.');
         }
 
-        // Handle featured image — ชื่อรูปแบบ Feature_364_xxx.jpg
-        $featuredImage = $this->request->getFile('featured_image');
-        if ($featuredImage && $featuredImage->isValid() && !$featuredImage->hasMoved()) {
-            $uploadPath = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'news';
-            if (!is_dir($uploadPath)) {
-                if (!@mkdir($uploadPath, 0755, true)) {
-                    log_message('error', "News Upload Error: Failed to create upload directory for News ID $newsId");
-                    return redirect()->back()->withInput()->with('error', 'ไม่สามารถสร้างโฟลเดอร์สำหรับอัปโหลดภาพได้');
-                }
-            }
-            if (!is_writable($uploadPath)) {
-                log_message('error', "News Upload Error: Upload directory not writable for News ID $newsId");
-                return redirect()->back()->withInput()->with('error', 'โฟลเดอร์อัปโหลดไม่มีสิทธิ์เขียน');
-            }
-            helper('program_upload');
-            $featuredFileName = featured_image_filename($featuredImage, null, $newsId);
-            try {
-                $featuredImage->move($uploadPath, $featuredFileName);
-                $this->newsModel->update($newsId, ['featured_image' => 'news/' . $featuredFileName]);
-                helper('image');
-                $fullPath = $uploadPath . DIRECTORY_SEPARATOR . $featuredFileName;
-                if (is_file($fullPath) && create_news_thumbnail($fullPath)) {
-                    log_message('info', "News Upload Success: Thumbnail created for News ID $newsId");
-                }
-                log_message('info', "News Upload Success: Featured image uploaded for News ID $newsId ($featuredFileName)");
-            } catch (\Throwable $e) {
-                log_message('error', "News Upload Error: Featured image upload failed for News ID $newsId. Error: " . $e->getMessage());
-                return redirect()->back()->withInput()->with('error', 'อัปโหลดภาพปกไม่สำเร็จ: ' . $e->getMessage());
-            }
-        } elseif ($featuredImage && !$featuredImage->isValid() && $featuredImage->getError() !== UPLOAD_ERR_NO_FILE) {
-            log_message('error', "News Upload Error: Invalid featured image for News ID $newsId. Error: " . $featuredImage->getErrorString());
-            return redirect()->back()->withInput()->with('error', 'ภาพที่เลือกไม่ถูกต้อง: ' . $featuredImage->getErrorString());
-        } else {
-            // ภาพที่ crop จากฝั่งลูกค้า ส่งมาเป็น base64 (เมื่อไม่มีการอัปโหลดไฟล์ปกติ)
-            $base64 = $this->request->getPost('featured_image_base64');
-            if (!empty($base64) && is_string($base64)) {
-                $raw = $base64;
-                if (strpos($raw, 'base64,') !== false) {
-                    $raw = substr($raw, strpos($raw, 'base64,') + 7);
-                }
-                $bin = base64_decode($raw, true);
-                if ($bin !== false && strlen($bin) > 0) {
-                    $uploadPath = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'news';
-                    if (!is_dir($uploadPath)) {
-                        if (!@mkdir($uploadPath, 0755, true)) {
-                            log_message('error', "News Upload Error: Failed to create upload directory for News ID $newsId");
-                            return redirect()->back()->withInput()->with('error', 'ไม่สามารถสร้างโฟลเดอร์สำหรับอัปโหลดภาพได้');
-                        }
-                    }
-                    if (is_writable($uploadPath)) {
-                        $part = date('Ymd_His') . '_' . bin2hex(random_bytes(4));
-                        $featuredFileName = 'Feature_' . (int) $newsId . '_' . $part . '.jpg';
-                        $fullPath = $uploadPath . DIRECTORY_SEPARATOR . $featuredFileName;
-                        if (file_put_contents($fullPath, $bin) !== false) {
-                            $this->newsModel->update($newsId, ['featured_image' => 'news/' . $featuredFileName]);
-                            helper('image');
-                            if (function_exists('create_news_thumbnail') && is_file($fullPath)) {
-                                create_news_thumbnail($fullPath);
-                            }
-                            log_message('info', "News Upload Success: Featured image (cropped base64) saved for News ID $newsId ($featuredFileName)");
-                        } else {
-                            log_message('error', "News Upload Error: Failed to write cropped image for News ID $newsId");
-                            return redirect()->back()->withInput()->with('error', 'บันทึกภาพปกไม่สำเร็จ');
-                        }
-                    }
-                }
-            }
+        // Handle featured image (ไฟล์ปกติหรือ base64 crop) ผ่าน image_manager
+        $imageData = $this->handleFeaturedImage((int) $newsId);
+        if ($imageData !== null) {
+            $this->newsModel->update($newsId, $imageData);
         }
 
         // Save tags (1 ข่าวมีได้หลาย tag)
@@ -342,105 +280,10 @@ class News extends BaseController
             $newsData['published_at'] = null;
         }
 
-        // Handle featured image — ตั้งชื่อเป็นรหัสข่าว (id)
-        $featuredImage = $this->request->getFile('featured_image');
-        if ($featuredImage && $featuredImage->isValid() && !$featuredImage->hasMoved()) {
-            $uploadPath = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'news';
-            if (!is_dir($uploadPath)) {
-                if (!@mkdir($uploadPath, 0755, true)) {
-                    log_message('error', "News Update Error: Failed to create upload directory for News ID $id");
-                    return redirect()->back()
-                        ->withInput()
-                        ->with('error', 'ไม่สามารถสร้างโฟลเดอร์สำหรับอัปโหลดภาพได้');
-                }
-            }
-            if (!is_writable($uploadPath)) {
-                log_message('error', "News Update Error: Upload directory not writable for News ID $id");
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', 'โฟลเดอร์อัปโหลดไม่มีสิทธิ์เขียน');
-            }
-            helper('program_upload');
-            $featuredFileName = featured_image_filename($featuredImage, null, $id);
-            try {
-                if ($news['featured_image']) {
-                    $oldFilename = basename($news['featured_image']);
-                    $oldPath = $uploadPath . DIRECTORY_SEPARATOR . $oldFilename;
-                    $oldThumb = $uploadPath . DIRECTORY_SEPARATOR . 'thumbs' . DIRECTORY_SEPARATOR . $oldFilename;
-                    if (file_exists($oldPath)) {
-                        @unlink($oldPath);
-                    } else {
-                        $publicPath = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'news' . DIRECTORY_SEPARATOR . $oldFilename;
-                        if (file_exists($publicPath)) {
-                            @unlink($publicPath);
-                        }
-                    }
-                    if (file_exists($oldThumb)) {
-                        @unlink($oldThumb);
-                    }
-                }
-                $featuredImage->move($uploadPath, $featuredFileName);
-                $newsData['featured_image'] = 'news/' . $featuredFileName;
-                helper('image');
-                $fullPath = $uploadPath . DIRECTORY_SEPARATOR . $featuredFileName;
-                if (is_file($fullPath) && create_news_thumbnail($fullPath)) {
-                    log_message('info', "News Update Success: Thumbnail created for News ID $id");
-                }
-                log_message('info', "News Update Success: Featured image updated for News ID $id ($featuredFileName)");
-            } catch (\Throwable $e) {
-                log_message('error', "News Update Error: Featured image update failed for News ID $id. Error: " . $e->getMessage());
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', 'อัปโหลดภาพปกไม่สำเร็จ: ' . $e->getMessage());
-            }
-        } elseif ($featuredImage && !$featuredImage->isValid() && $featuredImage->getError() !== UPLOAD_ERR_NO_FILE) {
-            log_message('error', "News Update Error: Invalid featured image for News ID $id. Error: " . $featuredImage->getErrorString());
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'ภาพที่เลือกไม่ถูกต้อง: ' . $featuredImage->getErrorString());
-        } else {
-            // ภาพที่ crop จากฝั่งลูกค้า ส่งมาเป็น base64 (เมื่อไม่มีการอัปโหลดไฟล์ปกติ)
-            $base64 = $this->request->getPost('featured_image_base64');
-            if (!empty($base64) && is_string($base64)) {
-                $raw = $base64;
-                if (strpos($raw, 'base64,') !== false) {
-                    $raw = substr($raw, strpos($raw, 'base64,') + 7);
-                }
-                $bin = base64_decode($raw, true);
-                if ($bin !== false && strlen($bin) > 0) {
-                    $uploadPath = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'news';
-                    if (!is_dir($uploadPath)) {
-                        @mkdir($uploadPath, 0755, true);
-                    }
-                    if (is_writable($uploadPath)) {
-                        if ($news['featured_image']) {
-                            $oldFilename = basename($news['featured_image']);
-                            $oldPath = $uploadPath . DIRECTORY_SEPARATOR . $oldFilename;
-                            $oldThumb = $uploadPath . DIRECTORY_SEPARATOR . 'thumbs' . DIRECTORY_SEPARATOR . $oldFilename;
-                            if (file_exists($oldPath)) {
-                                @unlink($oldPath);
-                            }
-                            if (file_exists($oldThumb)) {
-                                @unlink($oldThumb);
-                            }
-                        }
-                        $part = date('Ymd_His') . '_' . bin2hex(random_bytes(4));
-                        $featuredFileName = 'Feature_' . (int) $id . '_' . $part . '.jpg';
-                        $fullPath = $uploadPath . DIRECTORY_SEPARATOR . $featuredFileName;
-                        if (file_put_contents($fullPath, $bin) !== false) {
-                            $newsData['featured_image'] = 'news/' . $featuredFileName;
-                            helper('image');
-                            if (function_exists('create_news_thumbnail') && is_file($fullPath)) {
-                                create_news_thumbnail($fullPath);
-                            }
-                            log_message('info', "News Update Success: Featured image (cropped base64) saved for News ID $id ($featuredFileName)");
-                        } else {
-                            log_message('error', "News Update Error: Failed to write cropped image for News ID $id");
-                            return redirect()->back()->withInput()->with('error', 'บันทึกภาพปกไม่สำเร็จ');
-                        }
-                    }
-                }
-            }
+        // Handle featured image (ไฟล์ปกติหรือ base64 crop) ผ่าน image_manager
+        $imageData = $this->handleFeaturedImage((int) $id, $news['featured_image'] ?? null);
+        if ($imageData !== null) {
+            $newsData = array_merge($newsData, $imageData);
         }
 
         $this->newsModel->update($id, $newsData);
@@ -504,24 +347,8 @@ class News extends BaseController
                 ->with('error', 'News article not found.');
         }
 
-        // Delete featured image และ thumbnail (writable first, then public fallback)
-        if ($news['featured_image']) {
-            $oldFilename = basename($news['featured_image']);
-            $uploadPathNews = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'news';
-            $filePath = $uploadPathNews . DIRECTORY_SEPARATOR . $oldFilename;
-            $thumbPath = $uploadPathNews . DIRECTORY_SEPARATOR . 'thumbs' . DIRECTORY_SEPARATOR . $oldFilename;
-            if (file_exists($filePath)) {
-                @unlink($filePath);
-            } else {
-                $publicPath = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'news' . DIRECTORY_SEPARATOR . $oldFilename;
-                if (file_exists($publicPath)) {
-                    @unlink($publicPath);
-                }
-            }
-            if (file_exists($thumbPath)) {
-                @unlink($thumbPath);
-            }
-        }
+        // Delete featured image + thumbnail
+        image_manager_delete('news', $news['featured_image'] ?? null);
 
 
 
@@ -536,20 +363,41 @@ class News extends BaseController
     }
 
     /**
-     * คืนนามสกุลไฟล์ที่ปลอดภัยสำหรับภาพหน้าปก (jpg, jpeg, png, gif, webp)
+     * จัดการอัปโหลด featured image — รองรับทั้ง UploadedFile และ base64 จาก crop
+     * ถ้ามีรูปใหม่ จะลบรูปเก่า (+ thumb) อัตโนมัติ
+     *
+     * @return array|null {featured_image, featured_image_width, featured_image_height} หรือ null ถ้าไม่มีรูปใหม่
      */
-    private function featuredImageExtension($uploadedFile): string
+    private function handleFeaturedImage(int $newsId, ?string $oldImagePath = null): ?array
     {
-        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        $ext = strtolower($uploadedFile->getClientExtension() ?? '');
-        if (in_array($ext, $allowed, true)) {
-            return $ext === 'jpeg' ? 'jpg' : $ext;
+        $base64 = $this->request->getPost('featured_image_base64');
+        if (!empty($base64) && is_string($base64) && strpos($base64, 'base64,') !== false) {
+            $result = image_manager_save_base64('news', $newsId, $base64);
+            if ($result !== null) {
+                if ($oldImagePath) image_manager_delete('news', $oldImagePath);
+                return [
+                    'featured_image'        => $result['path'],
+                    'featured_image_width'  => $result['width'],
+                    'featured_image_height' => $result['height'],
+                ];
+            }
         }
-        $guessed = strtolower($uploadedFile->guessExtension() ?? '');
-        return in_array($guessed, $allowed, true) ? ($guessed === 'jpeg' ? 'jpg' : $guessed) : 'jpg';
+
+        $file = $this->request->getFile('featured_image');
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            $result = image_manager_save_file('news', $newsId, $file);
+            if ($result !== null) {
+                if ($oldImagePath) image_manager_delete('news', $oldImagePath);
+                return [
+                    'featured_image'        => $result['path'],
+                    'featured_image_width'  => $result['width'],
+                    'featured_image_height' => $result['height'],
+                ];
+            }
+        }
+
+        return null;
     }
-
-
 
     /**
      * ตรวจสอบไฟล์แนบ (images + docs)
