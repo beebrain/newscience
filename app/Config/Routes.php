@@ -232,6 +232,11 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     // Executive Dashboard (คณบดี/รองคณบดี — ตรวจ role ใน controller)
     $routes->get('executive-dashboard', 'Admin\ExecutiveDashboard::index');
 
+    // Website visit reports
+    $routes->get('visit-reports', 'Admin\VisitReports::index');
+    $routes->get('visit-reports/data', 'Admin\VisitReports::data');
+    $routes->get('visit-reports/export', 'Admin\VisitReports::export');
+
     // ปฏิทินนัดหมายกิจกรรมผู้บริหาร
     $routes->get('calendar', 'Admin\Calendar::index');
 

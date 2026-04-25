@@ -25,6 +25,7 @@ use App\Libraries\AccessControl;
  * - admin/users -> user_management
  * - admin/settings -> site_settings
  * - admin/cert-events -> ecert
+ * - admin/visit-reports -> visit_reports
  */
 class AdminSystemAccessFilter implements FilterInterface
 {
@@ -43,6 +44,7 @@ class AdminSystemAccessFilter implements FilterInterface
         'cert-events'    => 'ecert',
         'calendar'       => 'calendar',   // ปฏิทินนัดหมายกิจกรรมผู้บริหาร
         'exam'           => 'exam_admin', // จัดการตารางคุมสอบ
+        'visit-reports'  => 'visit_reports',
     ];
 
     public function before(RequestInterface $request, $arguments = null): ?ResponseInterface

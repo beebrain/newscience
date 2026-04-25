@@ -62,6 +62,7 @@ use App\Libraries\AccessControl; ?>
                 $hasAdminUrgentPopup = $sidebarAdminId && (AccessControl::hasAccess($sid, 'admin_urgent_popup') || AccessControl::hasAccess($sid, 'admin_core'));
                 $hasAcademicService = $sidebarAdminId && (AccessControl::hasAccess($sid, 'academic_service') || AccessControl::hasAccess($sid, 'admin_core'));
                 $hasExam = $sidebarAdminId && (AccessControl::hasAccess($sid, 'exam') || AccessControl::hasAccess($sid, 'exam_admin'));
+                $hasVisitReports = $sidebarAdminId && AccessControl::hasAccess($sid, 'visit_reports');
                 $showContentMenu = $hasAdminCore || $hasAdminNews || $hasAdminDownloads || $hasAdminUrgentPopup;
                 $canManageEvaluate = $sidebarAdminId && in_array($sidebarRole, ['super_admin', 'faculty_admin'], true);
                 ?>
@@ -84,6 +85,17 @@ use App\Libraries\AccessControl; ?>
                             <path d="M8 7v8" />
                         </svg>
                         Dashboard ผู้บริหาร
+                    </a>
+                <?php endif; ?>
+
+                <?php if ($hasVisitReports): ?>
+                    <a href="<?= base_url('admin/visit-reports') ?>" class="<?= (strpos(uri_string(), 'admin/visit-reports') === 0) ? 'active' : '' ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M3 3v18h18" />
+                            <path d="M7 15l3-3 3 2 5-7" />
+                            <path d="M7 18h10" />
+                        </svg>
+                        รายงานผู้เข้าชมเว็บไซต์
                     </a>
                 <?php endif; ?>
 
