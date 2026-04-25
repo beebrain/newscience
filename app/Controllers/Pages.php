@@ -60,6 +60,7 @@ class Pages extends BaseController
 
     public function about(): string
     {
+        helper('image_manager');
         $siteInfo = $this->siteSettingModel->getAll();
 
         // โหลดโปสเตอร์ผู้บริหารที่เปิดใช้งาน (ตารางอาจยังไม่ migrate — guard ไว้)
