@@ -329,9 +329,9 @@
             <p class="text-sm text-slate-500 mb-6">รายวิชาตามปีการศึกษาและภาคเรียน (จากแผนการเรียนที่บันทึกในระบบผู้ดูแล)</p>
             <div id="spa-curriculum-by-year" class="max-w-4xl"></div>
         </div>
-        <div id="main-topics" class="mt-16 reveal hidden">
+        <div id="main-topics" class="mt-16 reveal">
             <h3 class="text-xl font-semibold section-accent mb-2">หัวข้อหลักของหลักสูตร</h3>
-            <p class="text-sm text-slate-500 mb-6">รายละเอียดเพิ่มเติมสำหรับรายวิชา รูปแบบการเรียน การประเมิน เกณฑ์จบ และความสำเร็จ</p>
+            <p class="text-sm text-slate-500 mb-6">แสดงครบทั้ง 12 หัวข้อหลัก หากหัวข้อใดยังไม่กรอกจะแสดงสถานะว่ายังไม่มีข้อมูล</p>
             <div id="main-topics-grid" class="grid lg:grid-cols-2 gap-6"></div>
         </div>
     </div>
@@ -544,6 +544,23 @@
         if (raw == null) return '';
         var s = String(raw);
         return /<[^>]+>/.test(s) ? s : esc(s).replace(/\n/g, '<br>');
+    }
+    function emptyTopicHtml() {
+        return '<p class="text-slate-400 italic">ยังไม่มีข้อมูล</p>';
+    }
+    function listHtml(items, ordered) {
+        items = (Array.isArray(items) ? items : []).map(function (x) { return String(x || '').trim(); }).filter(Boolean);
+        if (!items.length) return '';
+        var tag = ordered ? 'ol' : 'ul';
+        var cls = ordered ? 'list-decimal pl-5 space-y-1' : 'list-disc pl-5 space-y-1';
+        return '<' + tag + ' class="' + cls + '">' + items.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</' + tag + '>';
+    }
+    function topicCardHtml(no, title, body) {
+        var content = hasRichContent(body) ? body : emptyTopicHtml();
+        return '<article class="glass rounded-2xl p-6 text-slate-600 leading-relaxed spa-main-topic-prose overflow-x-auto">' +
+            '<h4 class="text-lg font-semibold section-accent mb-3">' + esc(no + '. ' + title) + '</h4>' +
+            content +
+            '</article>';
     }
 
     var CAREER_ICONS = {
@@ -868,24 +885,85 @@
         var mainTopicsSection = document.getElementById('main-topics');
         var mainTopicsGrid = document.getElementById('main-topics-grid');
         if (mainTopicsSection && mainTopicsGrid) {
-            var mainTopicItems = [
-                { key: 'course_details', title: '5. รายละเอียดวิชา' },
-                { key: 'teaching_methods', title: '6. รูปแบบการเรียนสอน' },
-                { key: 'assessment_methods', title: '7. การวัดและประเมินผล' },
-                { key: 'graduation_requirements', title: '8. เกณฑ์การจบ' },
-                { key: 'success_outcomes', title: '11. ความสำเร็จ' }
+            var generalRows = [
+                ['ชื่อหลักสูตร', d.name_th || d.name_en || ''],
+                ['ชื่อปริญญา/วุฒิการศึกษา', d.degree_th || d.degree_en || ''],
+                ['ระดับ', d.level || ''],
+                ['จำนวนหน่วยกิตรวม', d.credits ? (d.credits + ' หน่วยกิต') : ''],
+                ['ระยะเวลาศึกษา', d.duration ? (d.duration + ' ปี') : '']
+            ].filter(function (r) { return String(r[1] || '').trim() !== ''; });
+            var generalHtml = generalRows.length
+                ? '<table class="w-full text-sm"><tbody>' + generalRows.map(function (r) {
+                    return '<tr><th class="text-left w-40 align-top">' + esc(r[0]) + '</th><td>' + esc(r[1]) + '</td></tr>';
+                }).join('') + '</tbody></table>'
+                : '';
+
+            var objectiveHtml = listHtml(objList, true);
+            var elosHtml = Array.isArray(d.elos) && d.elos.length
+                ? '<h5 class="font-semibold text-slate-700 mt-4 mb-2">PLO / ELO</h5>' + listHtml(d.elos.map(function (el) {
+                    return (typeof el === 'string') ? el : (el.detail || el.title || el.text || el.name || el.description || el.category || '');
+                }), true)
+                : '';
+            var targetHtml = (objectiveHtml ? '<h5 class="font-semibold text-slate-700 mb-2">วัตถุประสงค์</h5>' + objectiveHtml : '') + elosHtml;
+
+            var curriculumHtml = '';
+            if (hasRichContent(d.curriculum_structure)) {
+                curriculumHtml += '<h5 class="font-semibold text-slate-700 mb-2">โครงสร้างหลักสูตร</h5>' + renderRichContent(d.curriculum_structure);
+            }
+            if (hasRichContent(d.study_plan)) {
+                curriculumHtml += '<h5 class="font-semibold text-slate-700 mt-4 mb-2">แผนการเรียน</h5>' + renderRichContent(d.study_plan);
+            }
+            if (Array.isArray(d.curriculum) && d.curriculum.length) {
+                curriculumHtml += '<p class="text-sm text-slate-500 mt-4">มีข้อมูลรายวิชาแยกตามปี/ภาคเรียน ' + d.curriculum.length + ' ปีการศึกษา</p>';
+            }
+
+            var staffHtml = Array.isArray(d.staff) && d.staff.length
+                ? listHtml(d.staff.map(function (s) {
+                    return [s.name, s.role || s.position].filter(Boolean).join(' - ');
+                }), false)
+                : '';
+
+            var supportItems = [];
+            var ad = d.admission_details || {};
+            var sup = (ad.supports && typeof ad.supports === 'object') ? ad.supports : {};
+            var supLabels = {
+                scholarship: 'ทุนการศึกษา',
+                first_term_loan: 'กองทุนยืมเงินค่าเทอมแรกเข้า',
+                ksl_loan: 'กองทุนกู้ยืมเพื่อการศึกษา (กยศ.)',
+                study_scholarship: 'ทุนการศึกษาระหว่างเรียน',
+                entrepreneur_fund: 'ทุนสนับสนุนการเป็นผู้ประกอบการ',
+                dormitory: 'หอพักนักศึกษาของมหาวิทยาลัย'
+            };
+            Object.keys(supLabels).forEach(function (k) { if (sup[k] === true) supportItems.push(supLabels[k]); });
+            if (Array.isArray(d.facilities) && d.facilities.length) {
+                d.facilities.forEach(function (f) { if (f.title) supportItems.push(f.title); });
+            }
+            var supportHtml = listHtml(supportItems, false);
+
+            var successHtml = hasRichContent(d.success_outcomes) ? renderRichContent(d.success_outcomes) : '';
+            if (!successHtml && Array.isArray(d.news) && d.news.length) {
+                successHtml = '<p>มีข่าวสาร/กิจกรรมล่าสุดที่เกี่ยวข้องกับหลักสูตร ' + d.news.length + ' รายการ</p>';
+            }
+
+            var contactHtml = hasRichContent(d.contact_info) ? renderRichContent(d.contact_info) : '';
+
+            var topics = [
+                [1, 'ปรัชญาและแนวคิด', hasRichContent(d.philosophy) ? renderRichContent(d.philosophy) : ''],
+                [2, 'ข้อมูลทั่วไป', generalHtml],
+                [3, 'เป้าหมายหลักสูตร', targetHtml],
+                [4, 'โครงสร้างหลักสูตร', curriculumHtml],
+                [5, 'รายละเอียดวิชา', hasRichContent(d.course_details) ? renderRichContent(d.course_details) : ''],
+                [6, 'รูปแบบการเรียนสอน', hasRichContent(d.teaching_methods) ? renderRichContent(d.teaching_methods) : ''],
+                [7, 'การวัดและประเมินผล', hasRichContent(d.assessment_methods) ? renderRichContent(d.assessment_methods) : ''],
+                [8, 'เกณฑ์การจบ', hasRichContent(d.graduation_requirements) ? renderRichContent(d.graduation_requirements) : ''],
+                [9, 'บุคลากร', staffHtml],
+                [10, 'การสนับสนุน', supportHtml],
+                [11, 'ความสำเร็จ', successHtml],
+                [12, 'การติดต่อ', contactHtml]
             ];
-            var mainTopicsHtml = '';
-            mainTopicItems.forEach(function (item) {
-                if (!hasRichContent(d[item.key])) return;
-                mainTopicsHtml += '<article class="glass rounded-2xl p-6 text-slate-600 leading-relaxed spa-main-topic-prose overflow-x-auto">' +
-                    '<h4 class="text-lg font-semibold section-accent mb-3">' + esc(item.title) + '</h4>' +
-                    renderRichContent(d[item.key]) +
-                    '</article>';
-            });
-            mainTopicsGrid.innerHTML = mainTopicsHtml;
-            mainTopicsSection.classList.toggle('hidden', mainTopicsHtml === '');
-            toggleMainTopicsNav(mainTopicsHtml !== '');
+            mainTopicsGrid.innerHTML = topics.map(function (t) { return topicCardHtml(t[0], t[1], t[2]); }).join('');
+            mainTopicsSection.classList.remove('hidden');
+            toggleMainTopicsNav(true);
         }
 
         // อาชีพ (การ์ดจาก careers JSON + รายละเอียด HTML career_prospects ถ้ามี)
