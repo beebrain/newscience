@@ -238,6 +238,14 @@ use App\Libraries\AccessControl; ?>
                                         </svg>
                                         ประกาศด่วน (ป๊อปอัป)
                                     </a>
+                                    <a href="<?= base_url('admin/executive-posters') ?>" class="<?= (uri_string() == 'admin/executive-posters' || strpos(uri_string(), 'admin/executive-posters') === 0) ? 'active' : '' ?>">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                            <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+                                            <circle cx="12" cy="9" r="3" />
+                                            <path d="M7 18c0-2.5 2.5-4 5-4s5 1.5 5 4" />
+                                        </svg>
+                                        โปสเตอร์ผู้บริหาร
+                                    </a>
                                 <?php endif; ?>
                                 <a href="<?= base_url('admin/events') ?>" class="<?= (uri_string() == 'admin/events' || strpos(uri_string(), 'admin/events') === 0) ? 'active' : '' ?>">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

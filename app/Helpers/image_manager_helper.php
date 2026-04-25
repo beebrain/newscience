@@ -37,6 +37,12 @@ if (!defined('IMAGE_MANAGER_ENTITIES')) {
             'prefix'  => 'event',
             'thumbs'  => true,
         ],
+        'executive_poster' => [
+            'folder'  => 'executive_posters',
+            'legacy'  => null,
+            'prefix'  => 'exec_poster',
+            'thumbs'  => true,
+        ],
     ]);
 }
 

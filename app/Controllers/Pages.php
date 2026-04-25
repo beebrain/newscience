@@ -15,6 +15,7 @@ use App\Models\EventModel;
 use App\Models\ProgramPageModel;
 use App\Models\DownloadCategoryModel;
 use App\Models\DownloadDocumentModel;
+use App\Models\ExecutivePosterModel;
 
 class Pages extends BaseController
 {
@@ -61,6 +62,14 @@ class Pages extends BaseController
     {
         $siteInfo = $this->siteSettingModel->getAll();
 
+        // โหลดโปสเตอร์ผู้บริหารที่เปิดใช้งาน (ตารางอาจยังไม่ migrate — guard ไว้)
+        $executivePosters = [];
+        $db = \Config\Database::connect();
+        if ($db->tableExists('executive_posters')) {
+            $posterModel = new ExecutivePosterModel();
+            $executivePosters = $posterModel->getActivePosters();
+        }
+
         $data = array_merge($this->getCommonData(), [
             'page_title' => 'เกี่ยวกับคณะ | ' . ($siteInfo['site_name_th'] ?? 'About'),
             'meta_description' => $siteInfo['vision_th'] ?? 'เรียนรู้เกี่ยวกับประวัติ ปรัชญา วิสัยทัศน์ และพันธกิจของคณะ',
@@ -83,6 +92,7 @@ class Pages extends BaseController
                 $siteInfo['strategy_8_th'] ?? '',
             ]),
             'departments' => $this->organizationUnitModel->getOrdered(),
+            'executive_posters' => $executivePosters,
         ]);
 
         return view('pages/about', $data);

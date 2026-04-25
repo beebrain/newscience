@@ -301,6 +301,15 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->get('urgent-popups/delete/(:num)', 'Admin\UrgentPopups::delete/$1');
     $routes->post('urgent-popups/toggle-active/(:num)', 'Admin\UrgentPopups::toggleActive/$1');
 
+    // Executive Posters (โปสเตอร์ผู้บริหาร — สไลด์หน้า About)
+    $routes->get('executive-posters', 'Admin\ExecutivePosters::index');
+    $routes->get('executive-posters/create', 'Admin\ExecutivePosters::create');
+    $routes->post('executive-posters/store', 'Admin\ExecutivePosters::store');
+    $routes->get('executive-posters/edit/(:num)', 'Admin\ExecutivePosters::edit/$1');
+    $routes->post('executive-posters/update/(:num)', 'Admin\ExecutivePosters::update/$1');
+    $routes->get('executive-posters/delete/(:num)', 'Admin\ExecutivePosters::delete/$1');
+    $routes->post('executive-posters/toggle-active/(:num)', 'Admin\ExecutivePosters::toggleActive/$1');
+
     // Certificate Events (กิจกรรม/อบรมที่จะออก Certificate)
     $routes->get('cert-events/issued-report', 'Admin\CertEvents::issuedReport');
     $routes->get('cert-events', 'Admin\CertEvents::index');
