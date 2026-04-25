@@ -38,9 +38,10 @@ class ProgramContentBundleService
         'philosophy', 'objectives', 'graduate_profile',
         'elos_json', 'learning_standards_json',
         'curriculum_structure', 'study_plan', 'curriculum_json',
+        'course_details', 'teaching_methods', 'assessment_methods', 'graduation_requirements',
         'careers_json', 'career_prospects',
         'tuition_fees_json', 'tuition_fees',
-        'admission_info', 'admission_details_json',
+        'admission_info', 'admission_details_json', 'success_outcomes',
         'contact_info', 'intro_video_url',
         'alumni_messages_json',
     ];
@@ -57,9 +58,11 @@ class ProgramContentBundleService
     private const PAGE_ALLOWED_KEYS = [
         'slug', 'philosophy', 'objectives', 'graduate_profile',
         'elos_json', 'learning_standards_json', 'curriculum_json', 'alumni_messages_json',
-        'curriculum_structure', 'study_plan', 'career_prospects',
+        'curriculum_structure', 'study_plan', 'course_details',
+        'teaching_methods', 'assessment_methods', 'graduation_requirements',
+        'career_prospects',
         'careers_json', 'tuition_fees', 'tuition_fees_json',
-        'admission_info', 'contact_info', 'intro_video_url', 'meta_description',
+        'admission_info', 'admission_details_json', 'success_outcomes', 'contact_info', 'intro_video_url', 'meta_description',
         'gallery_images', 'social_links',
         'hero_image', 'theme_color', 'text_color', 'background_color',
         'is_published',
@@ -80,12 +83,17 @@ class ProgramContentBundleService
         'alumni_messages_json'    => ['jsonish'],
         'curriculum_structure'    => ['string'],
         'study_plan'              => ['string'],
+        'course_details'          => ['string'],
+        'teaching_methods'        => ['string'],
+        'assessment_methods'      => ['string'],
+        'graduation_requirements' => ['string'],
         'career_prospects'        => ['string'],
         'careers_json'            => ['jsonish'],
         'tuition_fees'            => ['string'],
         'tuition_fees_json'       => ['jsonish'],
         'admission_info'          => ['string'],
         'admission_details_json'  => ['jsonish'],
+        'success_outcomes'        => ['string'],
         'contact_info'            => ['string'],
         'intro_video_url'         => ['string'],
         'meta_description'        => ['string'],
@@ -179,6 +187,10 @@ class ProgramContentBundleService
                 'learning_standards_json' => ['intro' => '', 'standards' => [], 'mapping' => []],
                 'curriculum_structure'    => '',
                 'study_plan'              => '',
+                'course_details'          => '',
+                'teaching_methods'        => '',
+                'assessment_methods'      => '',
+                'graduation_requirements' => '',
                 'curriculum_json'         => [],
                 'careers_json'            => [],
                 'career_prospects'        => '',
@@ -186,6 +198,7 @@ class ProgramContentBundleService
                 'tuition_fees'            => '',
                 'admission_info'          => '',
                 'admission_details_json'  => admission_details_default_structure(),
+                'success_outcomes'        => '',
                 'contact_info'            => '',
                 'intro_video_url'         => '',
                 'alumni_messages_json'    => [],
@@ -237,10 +250,15 @@ class ProgramContentBundleService
         }
         $out['curriculum_structure']   = (string) ($pageRow['curriculum_structure'] ?? '');
         $out['study_plan']             = (string) ($pageRow['study_plan'] ?? '');
+        $out['course_details']         = (string) ($pageRow['course_details'] ?? '');
+        $out['teaching_methods']       = (string) ($pageRow['teaching_methods'] ?? '');
+        $out['assessment_methods']     = (string) ($pageRow['assessment_methods'] ?? '');
+        $out['graduation_requirements'] = (string) ($pageRow['graduation_requirements'] ?? '');
         $out['career_prospects']       = (string) ($pageRow['career_prospects'] ?? '');
         $out['tuition_fees']           = (string) ($pageRow['tuition_fees'] ?? '');
         $out['admission_info']         = (string) ($pageRow['admission_info'] ?? '');
         $out['admission_details_json'] = admission_details_decode($pageRow['admission_details_json'] ?? null);
+        $out['success_outcomes']       = (string) ($pageRow['success_outcomes'] ?? '');
         $out['contact_info']           = (string) ($pageRow['contact_info'] ?? '');
         $out['intro_video_url']        = (string) ($pageRow['intro_video_url'] ?? '');
 
@@ -287,11 +305,16 @@ class ProgramContentBundleService
         }
         $out['curriculum_structure'] = (string) ($pageRow['curriculum_structure'] ?? '');
         $out['study_plan']           = (string) ($pageRow['study_plan'] ?? '');
+        $out['course_details']       = (string) ($pageRow['course_details'] ?? '');
+        $out['teaching_methods']     = (string) ($pageRow['teaching_methods'] ?? '');
+        $out['assessment_methods']   = (string) ($pageRow['assessment_methods'] ?? '');
+        $out['graduation_requirements'] = (string) ($pageRow['graduation_requirements'] ?? '');
         $out['career_prospects']     = (string) ($pageRow['career_prospects'] ?? '');
         $out['tuition_fees']         = (string) ($pageRow['tuition_fees'] ?? '');
         $out['admission_info']         = (string) ($pageRow['admission_info'] ?? '');
         helper('admission_details');
         $out['admission_details_json'] = admission_details_decode($pageRow['admission_details_json'] ?? null);
+        $out['success_outcomes']       = (string) ($pageRow['success_outcomes'] ?? '');
         $out['contact_info']           = (string) ($pageRow['contact_info'] ?? '');
         $out['intro_video_url']        = (string) ($pageRow['intro_video_url'] ?? '');
         $out['meta_description']       = (string) ($pageRow['meta_description'] ?? '');
@@ -626,6 +649,11 @@ class ProgramContentBundleService
         if (array_key_exists('study_plan', $pageIn)) {
             $u['study_plan'] = mb_substr((string) $pageIn['study_plan'], 0, 10000);
         }
+        foreach (['course_details', 'teaching_methods', 'assessment_methods', 'graduation_requirements'] as $f) {
+            if (array_key_exists($f, $pageIn)) {
+                $u[$f] = mb_substr((string) $pageIn[$f], 0, 10000);
+            }
+        }
         if (array_key_exists('career_prospects', $pageIn)) {
             $u['career_prospects'] = mb_substr((string) $pageIn['career_prospects'], 0, 5000);
         }
@@ -650,6 +678,9 @@ class ProgramContentBundleService
             foreach ($adErrors as $e) {
                 $errors[] = $e;
             }
+        }
+        if (array_key_exists('success_outcomes', $pageIn)) {
+            $u['success_outcomes'] = mb_substr((string) $pageIn['success_outcomes'], 0, 10000);
         }
         if (array_key_exists('contact_info', $pageIn)) {
             $u['contact_info'] = mb_substr((string) $pageIn['contact_info'], 0, 5000);
@@ -906,13 +937,25 @@ class ProgramContentBundleService
             ],
         ];
 
+        $sections[] = [
+            'id'    => 'academic',
+            'title' => '4. รายละเอียดหลักสูตร',
+            'items' => [
+                ['label' => 'รายละเอียดวิชา', 'value' => $this->clip((string) ($pageDecoded['course_details'] ?? ''), 1200)],
+                ['label' => 'รูปแบบการเรียนสอน', 'value' => $this->clip((string) ($pageDecoded['teaching_methods'] ?? ''), 1200)],
+                ['label' => 'การวัดและประเมินผล', 'value' => $this->clip((string) ($pageDecoded['assessment_methods'] ?? ''), 1200)],
+                ['label' => 'เกณฑ์การจบ', 'value' => $this->clip((string) ($pageDecoded['graduation_requirements'] ?? ''), 1200)],
+                ['label' => 'ความสำเร็จ', 'value' => $this->clip((string) ($pageDecoded['success_outcomes'] ?? ''), 1200)],
+            ],
+        ];
+
         $careerNote = is_array($pageDecoded['careers_json'] ?? null)
             ? json_encode($pageDecoded['careers_json'], JSON_UNESCAPED_UNICODE)
             : (string) ($pageDecoded['careers_json'] ?? '');
 
         $sections[] = [
             'id'    => 'pages',
-            'title' => '4. อาชีพ · รับสมัคร · ติดต่อ',
+            'title' => '5. อาชีพ · รับสมัคร · ติดต่อ',
             'items' => [
                 ['label' => 'อาชีพหลังจบ (ข้อความ)', 'value' => $this->clip((string) ($pageDecoded['career_prospects'] ?? ''), 800)],
                 ['label' => 'careers_json', 'value' => $this->clip($careerNote, 1200)],

@@ -176,7 +176,10 @@
             border-color: rgba(var(--theme-rgb), 0.45); transform: translateY(-3px);
             box-shadow: 0 10px 22px rgba(0,0,0,0.08), 0 0 16px rgba(var(--theme-rgb), 0.08);
         }
-        .spa-career-prose a, .spa-tuition-prose a { color: var(--theme); text-decoration: underline; }
+        .spa-career-prose a, .spa-tuition-prose a, .spa-study-plan-prose a, .spa-admission-prose a, .spa-main-topic-prose a { color: var(--theme); text-decoration: underline; }
+        .spa-study-plan-prose table, .spa-admission-prose table, .spa-main-topic-prose table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        .spa-study-plan-prose th, .spa-study-plan-prose td, .spa-admission-prose th, .spa-admission-prose td, .spa-main-topic-prose th, .spa-main-topic-prose td { border: 1px solid #e2e8f0; padding: 0.6rem 0.75rem; vertical-align: top; }
+        .spa-study-plan-prose th, .spa-admission-prose th, .spa-main-topic-prose th { background: color-mix(in srgb, var(--theme) 6%, #fff); color: #334155; font-weight: 600; }
         #curriculum-structure-block .ptb-block { margin-bottom: 1.25rem; }
         #curriculum-structure-block .ptb-block:last-child { margin-bottom: 0; }
         #curriculum-structure-block .ptb-title { font-size: 1.125rem; font-weight: 600; color: var(--theme); margin: 0 0 0.5rem; }
@@ -234,6 +237,7 @@
                 <a href="#about" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">เกี่ยวกับ</a>
                 <a href="#careers" id="nav-careers" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">อาชีพ</a>
                 <a href="#curriculum-courses" id="nav-curriculum-courses" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">รายวิชา</a>
+                <a href="#main-topics" id="nav-main-topics" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">หัวข้อหลัก</a>
                 <a href="#faculty" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">คณาจารย์</a>
                 <a href="#news" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">ข่าวสาร</a>
                 <a href="#alumni" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">ศิษย์เก่า</a>
@@ -241,6 +245,7 @@
                 <a href="#facilities" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">สิ่งอำนวยความสะดวก</a>
                 <a href="#documents" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">เอกสาร</a>
                 <a href="#tuition" id="nav-tuition" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">ค่าเล่าเรียน</a>
+                <a href="#admission" id="nav-admission" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">การรับสมัคร</a>
                 <a href="#video" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">วิดีโอ</a>
             </div>
         </div>
@@ -248,6 +253,7 @@
             <a href="#about" class="block text-slate-600 nav-link-theme">เกี่ยวกับ</a>
             <a href="#careers" id="nav-careers-mobile" class="block text-slate-600 nav-link-theme hidden">อาชีพ</a>
             <a href="#curriculum-courses" id="nav-curriculum-courses-mobile" class="block text-slate-600 nav-link-theme hidden">รายวิชา</a>
+            <a href="#main-topics" id="nav-main-topics-mobile" class="block text-slate-600 nav-link-theme hidden">หัวข้อหลัก</a>
             <a href="#faculty" class="block text-slate-600 nav-link-theme">คณาจารย์</a>
             <a href="#news" class="block text-slate-600 nav-link-theme">ข่าวสาร</a>
             <a href="#activities" class="block text-slate-600 nav-link-theme">กิจกรรม</a>
@@ -255,6 +261,7 @@
             <a href="#facilities" class="block text-slate-600 nav-link-theme">สิ่งอำนวยความสะดวก</a>
             <a href="#documents" class="block text-slate-600 nav-link-theme">เอกสาร</a>
             <a href="#tuition" id="nav-tuition-mobile" class="block text-slate-600 nav-link-theme hidden">ค่าเล่าเรียน</a>
+            <a href="#admission" id="nav-admission-mobile" class="block text-slate-600 nav-link-theme hidden">การรับสมัคร</a>
             <a href="#video" class="block text-slate-600 nav-link-theme">วิดีโอ</a>
         </div>
     </div>
@@ -313,10 +320,19 @@
             <h3 class="text-xl font-semibold section-accent mb-6">โครงสร้างหลักสูตร</h3>
             <div id="curriculum-structure-block" class="glass rounded-2xl p-8 text-slate-600 leading-relaxed mb-10"></div>
         </div>
+        <div id="about-study-plan" class="mt-10 reveal hidden">
+            <h3 class="text-xl font-semibold section-accent mb-6">แผนการเรียน</h3>
+            <div id="study-plan-block" class="glass rounded-2xl p-8 text-slate-600 leading-relaxed mb-10 spa-study-plan-prose overflow-x-auto"></div>
+        </div>
         <div id="curriculum-courses" class="mt-4 reveal hidden">
             <h3 class="text-xl font-semibold section-accent mb-2">รายวิชาโครงสร้างหลักสูตร</h3>
             <p class="text-sm text-slate-500 mb-6">รายวิชาตามปีการศึกษาและภาคเรียน (จากแผนการเรียนที่บันทึกในระบบผู้ดูแล)</p>
             <div id="spa-curriculum-by-year" class="max-w-4xl"></div>
+        </div>
+        <div id="main-topics" class="mt-16 reveal hidden">
+            <h3 class="text-xl font-semibold section-accent mb-2">หัวข้อหลักของหลักสูตร</h3>
+            <p class="text-sm text-slate-500 mb-6">รายละเอียดเพิ่มเติมสำหรับรายวิชา รูปแบบการเรียน การประเมิน เกณฑ์จบ และความสำเร็จ</p>
+            <div id="main-topics-grid" class="grid lg:grid-cols-2 gap-6"></div>
         </div>
     </div>
 </section>
@@ -473,6 +489,11 @@
             <h3 class="text-xl font-semibold section-accent mb-4 text-center">สิ่งสนับสนุนการเรียน</h3>
             <ul id="admission-supports-list" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl mx-auto"></ul>
         </div>
+
+        <div id="admission-fallback-wrap" class="mt-8 reveal" style="display:none;">
+            <h3 class="text-xl font-semibold section-accent mb-4 text-center">รายละเอียดการรับสมัคร</h3>
+            <div id="admission-fallback" class="glass rounded-2xl p-8 text-slate-600 leading-relaxed spa-admission-prose overflow-x-auto"></div>
+        </div>
     </div>
 </section>
 
@@ -513,6 +534,17 @@
     var dataUrl = <?= json_encode($dataUrl) ?>;
 
     function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function hasRichContent(raw) {
+        if (raw == null) return false;
+        var s = String(raw);
+        if (/<(img|table|iframe|video|ul|ol|li)\b/i.test(s)) return true;
+        return s.replace(/&nbsp;/gi, ' ').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '').replace(/\s/g, '').length > 0;
+    }
+    function renderRichContent(raw) {
+        if (raw == null) return '';
+        var s = String(raw);
+        return /<[^>]+>/.test(s) ? s : esc(s).replace(/\n/g, '<br>');
+    }
 
     var CAREER_ICONS = {
         cpu: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>',
@@ -610,6 +642,13 @@
         if (nm) nm.classList.toggle('hidden', !show);
     }
 
+    function toggleMainTopicsNav(show) {
+        var n = document.getElementById('nav-main-topics');
+        var nm = document.getElementById('nav-main-topics-mobile');
+        if (n) n.classList.toggle('hidden', !show);
+        if (nm) nm.classList.toggle('hidden', !show);
+    }
+
     function toggleCareersNav(show) {
         var n = document.getElementById('nav-careers');
         var nm = document.getElementById('nav-careers-mobile');
@@ -620,6 +659,13 @@
     function toggleTuitionNav(show) {
         var n = document.getElementById('nav-tuition');
         var nm = document.getElementById('nav-tuition-mobile');
+        if (n) n.classList.toggle('hidden', !show);
+        if (nm) nm.classList.toggle('hidden', !show);
+    }
+
+    function toggleAdmissionNav(show) {
+        var n = document.getElementById('nav-admission');
+        var nm = document.getElementById('nav-admission-mobile');
         if (n) n.classList.toggle('hidden', !show);
         if (nm) nm.classList.toggle('hidden', !show);
     }
@@ -797,14 +843,10 @@
         // โครงสร้างหลักสูตร (ข้อความ) + รายวิชาแยกตามปี (จาก curriculum_json)
         var aboutCurriculum = document.getElementById('about-curriculum');
         var structBlock = document.getElementById('curriculum-structure-block');
-        var structText = (d.curriculum_structure && String(d.curriculum_structure).trim()) ? d.curriculum_structure : '';
+        var structText = hasRichContent(d.curriculum_structure) ? String(d.curriculum_structure) : '';
         if (structBlock) {
             if (structText) {
-                if (String(structText).indexOf('ptb-curriculum') !== -1) {
-                    structBlock.innerHTML = structText;
-                } else {
-                    structBlock.innerHTML = esc(structText).replace(/\n/g, '<br>');
-                }
+                structBlock.innerHTML = renderRichContent(structText);
             } else {
                 structBlock.innerHTML = '';
             }
@@ -812,7 +854,39 @@
         if (aboutCurriculum) {
             aboutCurriculum.classList.toggle('hidden', !structText);
         }
+        var aboutStudyPlan = document.getElementById('about-study-plan');
+        var studyBlock = document.getElementById('study-plan-block');
+        var studyText = hasRichContent(d.study_plan) ? String(d.study_plan) : '';
+        if (studyBlock) {
+            studyBlock.innerHTML = studyText ? renderRichContent(studyText) : '';
+        }
+        if (aboutStudyPlan) {
+            aboutStudyPlan.classList.toggle('hidden', !studyText);
+        }
         renderSpaCurriculumByYear(d);
+
+        var mainTopicsSection = document.getElementById('main-topics');
+        var mainTopicsGrid = document.getElementById('main-topics-grid');
+        if (mainTopicsSection && mainTopicsGrid) {
+            var mainTopicItems = [
+                { key: 'course_details', title: '5. รายละเอียดวิชา' },
+                { key: 'teaching_methods', title: '6. รูปแบบการเรียนสอน' },
+                { key: 'assessment_methods', title: '7. การวัดและประเมินผล' },
+                { key: 'graduation_requirements', title: '8. เกณฑ์การจบ' },
+                { key: 'success_outcomes', title: '11. ความสำเร็จ' }
+            ];
+            var mainTopicsHtml = '';
+            mainTopicItems.forEach(function (item) {
+                if (!hasRichContent(d[item.key])) return;
+                mainTopicsHtml += '<article class="glass rounded-2xl p-6 text-slate-600 leading-relaxed spa-main-topic-prose overflow-x-auto">' +
+                    '<h4 class="text-lg font-semibold section-accent mb-3">' + esc(item.title) + '</h4>' +
+                    renderRichContent(d[item.key]) +
+                    '</article>';
+            });
+            mainTopicsGrid.innerHTML = mainTopicsHtml;
+            mainTopicsSection.classList.toggle('hidden', mainTopicsHtml === '');
+            toggleMainTopicsNav(mainTopicsHtml !== '');
+        }
 
         // อาชีพ (การ์ดจาก careers JSON + รายละเอียด HTML career_prospects ถ้ามี)
         var careersSection = document.getElementById('careers');
@@ -822,7 +896,7 @@
         if (careersSection && careersGrid && careersGridWrap && careersFallback) {
             var hasCards = Array.isArray(d.careers) && d.careers.length > 0;
             var rawProspects = d.career_prospects != null ? String(d.career_prospects) : '';
-            var hasProspects = rawProspects.replace(/\s/g, '').length > 0;
+            var hasProspects = hasRichContent(rawProspects);
             if (!hasCards && !hasProspects) {
                 careersSection.style.display = 'none';
                 toggleCareersNav(false);
@@ -863,7 +937,7 @@
         if (tuitionSection && tuitionTbody && tuitionTableWrap && tuitionHtmlEl) {
             var hasTuitionRows = Array.isArray(d.tuition_items) && d.tuition_items.length > 0;
             var rawTuitionHtml = d.tuition_fees != null ? String(d.tuition_fees) : '';
-            var hasTuitionHtml = rawTuitionHtml.replace(/\s/g, '').length > 0;
+            var hasTuitionHtml = hasRichContent(rawTuitionHtml);
             if (!hasTuitionRows && !hasTuitionHtml) {
                 tuitionSection.style.display = 'none';
                 toggleTuitionNav(false);
@@ -1033,10 +1107,30 @@
             var reqBody   = document.getElementById('admission-requirements-body');
             var supWrap   = document.getElementById('admission-supports-wrap');
             var supList   = document.getElementById('admission-supports-list');
+            var fallbackWrap = document.getElementById('admission-fallback-wrap');
+            var fallbackEl = document.getElementById('admission-fallback');
             if (!sec || !planWrap || !reqWrap || !supWrap) return;
 
             var ad = d.admission_details || null;
-            if (!ad || typeof ad !== 'object') { sec.style.display = 'none'; return; }
+            var rawAdmissionInfo = d.admission_info != null ? String(d.admission_info) : '';
+            var hasAdmissionInfo = hasRichContent(rawAdmissionInfo);
+            if (!ad || typeof ad !== 'object') {
+                if (!hasAdmissionInfo) {
+                    sec.style.display = 'none';
+                    toggleAdmissionNav(false);
+                    return;
+                }
+                sec.style.display = 'block';
+                toggleAdmissionNav(true);
+                planWrap.style.display = 'none';
+                reqWrap.style.display = 'none';
+                supWrap.style.display = 'none';
+                if (fallbackWrap && fallbackEl) {
+                    fallbackEl.innerHTML = renderRichContent(rawAdmissionInfo);
+                    fallbackWrap.style.display = 'block';
+                }
+                return;
+            }
 
             var planSeats = (ad.plan_seats || '').trim();
             var req       = (ad.requirements && typeof ad.requirements === 'object') ? ad.requirements : {};
@@ -1066,8 +1160,13 @@
             var enabledSup = supLabels.filter(function (p) { return sup[p[0]] === true; });
             var hasSup  = enabledSup.length > 0;
 
-            if (!hasPlan && !hasReq && !hasSup) { sec.style.display = 'none'; return; }
+            if (!hasPlan && !hasReq && !hasSup && !hasAdmissionInfo) {
+                sec.style.display = 'none';
+                toggleAdmissionNav(false);
+                return;
+            }
             sec.style.display = 'block';
+            toggleAdmissionNav(true);
 
             if (hasPlan) { planEl.textContent = planSeats; planWrap.style.display = 'block'; }
             else         { planWrap.style.display = 'none'; }
@@ -1095,6 +1194,15 @@
                 }).join('');
                 supWrap.style.display = 'block';
             } else { supWrap.style.display = 'none'; }
+            if (fallbackWrap && fallbackEl) {
+                if (hasAdmissionInfo) {
+                    fallbackEl.innerHTML = renderRichContent(rawAdmissionInfo);
+                    fallbackWrap.style.display = 'block';
+                } else {
+                    fallbackEl.innerHTML = '';
+                    fallbackWrap.style.display = 'none';
+                }
+            }
         })();
 
         // วิดีโอแนะนำ (คลิปสนับสนุน AUN-QA)

@@ -52,6 +52,10 @@
         "learning_standards_json": { "type": ["array", "object", "string", "null"] },
         "curriculum_structure":    { "type": "string", "maxLength": 10000 },
         "study_plan":              { "type": "string", "maxLength": 10000 },
+        "course_details":          { "type": "string", "maxLength": 10000 },
+        "teaching_methods":        { "type": "string", "maxLength": 10000 },
+        "assessment_methods":      { "type": "string", "maxLength": 10000 },
+        "graduation_requirements": { "type": "string", "maxLength": 10000 },
         "curriculum_json":         { "type": ["array", "object", "string", "null"] },
         "careers_json":            { "type": ["array", "string", "null"] },
         "career_prospects":        { "type": "string", "maxLength": 5000 },
@@ -98,6 +102,7 @@
             }
           ]
         },
+        "success_outcomes":        { "type": "string", "maxLength": 10000 },
         "contact_info":            { "type": "string", "maxLength": 5000 },
         "intro_video_url":         { "type": "string", "maxLength": 500 },
         "alumni_messages_json":    { "type": ["array", "object", "string", "null"] }

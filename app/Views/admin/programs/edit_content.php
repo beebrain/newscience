@@ -278,6 +278,17 @@
 
                         <div class="form-row">
                             <div class="form-group">
+                                <label for="degree_th" class="form-label">ชื่อปริญญา / วุฒิการศึกษา (ไทย)</label>
+                                <input type="text" id="degree_th" name="degree_th" class="form-control" value="<?= esc($program['degree_th'] ?? '') ?>" placeholder="เช่น วิทยาศาสตรบัณฑิต (วท.บ.)">
+                            </div>
+                            <div class="form-group">
+                                <label for="degree_en" class="form-label">ชื่อปริญญา / วุฒิการศึกษา (อังกฤษ)</label>
+                                <input type="text" id="degree_en" name="degree_en" class="form-control" value="<?= esc($program['degree_en'] ?? '') ?>" placeholder="เช่น Bachelor of Science (B.Sc.)">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label for="level" class="form-label">ระดับ *</label>
                                 <select id="level" name="level" class="form-control" required>
                                     <option value="bachelor" <?= $program['level'] === 'bachelor' ? 'selected' : '' ?>>ปริญญาตรี</option>
@@ -291,6 +302,17 @@
                                     <option value="active" <?= $program['status'] === 'active' ? 'selected' : '' ?>>ใช้งาน</option>
                                     <option value="inactive" <?= $program['status'] === 'inactive' ? 'selected' : '' ?>>ไม่ใช้งาน</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="credits" class="form-label">จำนวนหน่วยกิตรวม</label>
+                                <input type="number" id="credits" name="credits" class="form-control" min="0" value="<?= esc((string) ($program['credits'] ?? 0)) ?>" placeholder="เช่น 120">
+                            </div>
+                            <div class="form-group">
+                                <label for="duration" class="form-label">ระยะเวลาศึกษา (ปี)</label>
+                                <input type="number" id="duration" name="duration" class="form-control" min="0" value="<?= esc((string) ($program['duration'] ?? 0)) ?>" placeholder="เช่น 4">
                             </div>
                         </div>
 
@@ -347,9 +369,10 @@
                         <button type="button" class="content-subtab-btn active" data-content-sub="overview" role="tab" aria-selected="true" onclick="switchContentSubTab('overview')">1. ภาพรวม</button>
                         <button type="button" class="content-subtab-btn" data-content-sub="quality" role="tab" aria-selected="false" onclick="switchContentSubTab('quality')">2. มาตรฐาน &amp; PLO</button>
                         <button type="button" class="content-subtab-btn" data-content-sub="curriculum" role="tab" aria-selected="false" onclick="switchContentSubTab('curriculum')">3. แผนการเรียน</button>
-                        <button type="button" class="content-subtab-btn" data-content-sub="pages" role="tab" aria-selected="false" onclick="switchContentSubTab('pages')">4. อาชีพ</button>
-                        <button type="button" class="content-subtab-btn" data-content-sub="publish" role="tab" aria-selected="false" onclick="switchContentSubTab('publish')">5. เผยแพร่ &amp; หน้าเว็บ</button>
-                        <button type="button" class="content-subtab-btn" data-content-sub="admission" role="tab" aria-selected="false" onclick="switchContentSubTab('admission')">6. การรับสมัคร</button>
+                        <button type="button" class="content-subtab-btn" data-content-sub="academic" role="tab" aria-selected="false" onclick="switchContentSubTab('academic')">4. รายละเอียดหลักสูตร</button>
+                        <button type="button" class="content-subtab-btn" data-content-sub="pages" role="tab" aria-selected="false" onclick="switchContentSubTab('pages')">5. อาชีพ</button>
+                        <button type="button" class="content-subtab-btn" data-content-sub="publish" role="tab" aria-selected="false" onclick="switchContentSubTab('publish')">6. เผยแพร่ &amp; หน้าเว็บ</button>
+                        <button type="button" class="content-subtab-btn" data-content-sub="admission" role="tab" aria-selected="false" onclick="switchContentSubTab('admission')">7. การรับสมัคร</button>
                     </div>
 
                     <div class="content-subtab-panels" style="padding: 1.5rem;">
@@ -469,6 +492,43 @@
                             <button type="button" class="btn btn-outline btn-sm" id="ptb-add-study_plan" style="margin-top:0.5rem">+ เพิ่มหัวข้อ</button>
                             <textarea id="study_plan" name="study_plan" class="ptb-serialized-field" hidden aria-hidden="true"><?= esc($program_page['study_plan'] ?? '') ?></textarea>
                         </div>
+                        </div>
+                    </div>
+
+                    <div id="content-sub-academic" class="content-subpanel" role="tabpanel">
+                        <div class="form-section">
+                            <h4 class="form-section-title">หัวข้อหลักเพิ่มเติมของหลักสูตร</h4>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">เติมข้อมูลสำหรับหัวข้อหลักข้อ 5–8 และ 11 เพื่อให้หน้าเว็บหลักสูตรครบตามกรอบข้อมูลที่ควรเผยแพร่</p>
+
+                            <div class="form-group content-with-toolbar">
+                                <label for="course_details" class="form-label">5. รายละเอียดวิชา</label>
+                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">คำอธิบายรายวิชา, CLO, และ Curriculum Mapping ระหว่างรายวิชากับ PLO</p>
+                                <textarea id="course_details" name="course_details" class="form-control" rows="5"><?= esc($program_page['course_details'] ?? '') ?></textarea>
+                            </div>
+
+                            <div class="form-group content-with-toolbar">
+                                <label for="teaching_methods" class="form-label">6. รูปแบบการเรียนสอน</label>
+                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">เช่น Active Learning, Project-based, CWIE, ฝึกงาน หรือการเรียนรู้ในสถานประกอบการ</p>
+                                <textarea id="teaching_methods" name="teaching_methods" class="form-control" rows="5"><?= esc($program_page['teaching_methods'] ?? '') ?></textarea>
+                            </div>
+
+                            <div class="form-group content-with-toolbar">
+                                <label for="assessment_methods" class="form-label">7. การวัดและประเมินผล</label>
+                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">วิธีให้คะแนน, Rubrics, นโยบายสอบ และขั้นตอนการอุทธรณ์ผลการเรียน</p>
+                                <textarea id="assessment_methods" name="assessment_methods" class="form-control" rows="5"><?= esc($program_page['assessment_methods'] ?? '') ?></textarea>
+                            </div>
+
+                            <div class="form-group content-with-toolbar">
+                                <label for="graduation_requirements" class="form-label">8. เกณฑ์การจบ</label>
+                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">GPA ขั้นต่ำ, คะแนนภาษาอังกฤษ, ผลงาน/ข้อกำหนดพิเศษ และเงื่อนไขสำเร็จการศึกษา</p>
+                                <textarea id="graduation_requirements" name="graduation_requirements" class="form-control" rows="5"><?= esc($program_page['graduation_requirements'] ?? '') ?></textarea>
+                            </div>
+
+                            <div class="form-group content-with-toolbar">
+                                <label for="success_outcomes" class="form-label">11. ความสำเร็จ</label>
+                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">อัตราการได้งานทำ, เงินเดือนเริ่มต้นเฉลี่ย, รางวัลนักศึกษา, ผลงานเด่น หรือกิจกรรมล่าสุด</p>
+                                <textarea id="success_outcomes" name="success_outcomes" class="form-control" rows="5"><?= esc($program_page['success_outcomes'] ?? '') ?></textarea>
+                            </div>
                         </div>
                     </div>
 

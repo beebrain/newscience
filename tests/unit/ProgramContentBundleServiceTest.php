@@ -441,7 +441,7 @@ final class ProgramContentBundleServiceTest extends CIUnitTestCase
     // buildSectionPreviews — UI preview should still work on flat page
     // ------------------------------------------------------------------
 
-    public function testBuildSectionPreviewsReturnsSixSections(): void
+    public function testBuildSectionPreviewsReturnsMainTopicSections(): void
     {
         $flat = $this->svc->buildContentSliceFromPage([
             'philosophy' => 'p',
@@ -451,7 +451,7 @@ final class ProgramContentBundleServiceTest extends CIUnitTestCase
 
         $sections = $this->svc->buildSectionPreviews($flat);
         $ids      = array_column($sections, 'id');
-        $this->assertSame(['overview', 'quality', 'curriculum', 'pages', 'alumni', 'publish'], $ids);
+        $this->assertSame(['overview', 'quality', 'curriculum', 'academic', 'pages', 'alumni', 'publish'], $ids);
     }
 
     // ------------------------------------------------------------------

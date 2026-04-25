@@ -277,9 +277,14 @@
         var sections = [
             { key: 'curriculum_structure', title: 'โครงสร้างหลักสูตร' },
             { key: 'study_plan', title: 'แผนการเรียน' },
+            { key: 'course_details', title: 'รายละเอียดวิชา' },
+            { key: 'teaching_methods', title: 'รูปแบบการเรียนสอน' },
+            { key: 'assessment_methods', title: 'การวัดและประเมินผล' },
+            { key: 'graduation_requirements', title: 'เกณฑ์การจบ' },
             { key: 'career_prospects', title: 'อาชีพที่สามารถประกอบได้' },
             { key: 'tuition_fees', title: 'ค่าเล่าเรียน/ค่าธรรมเนียม' },
             { key: 'admission_info', title: 'การรับสมัคร' },
+            { key: 'success_outcomes', title: 'ความสำเร็จ' },
             { key: 'contact_info', title: 'ข้อมูลติดต่อ' }
         ];
 
@@ -289,6 +294,72 @@
 
         $.each(sections, function (i, sec) {
             var content = data[sec.key];
+            if (sec.key === 'admission_info') {
+                var ad = (data.admission_details && typeof data.admission_details === 'object') ? data.admission_details : {};
+                var req = (ad.requirements && typeof ad.requirements === 'object') ? ad.requirements : {};
+                var sup = (ad.supports && typeof ad.supports === 'object') ? ad.supports : {};
+                var planSeats = ad.plan_seats ? String(ad.plan_seats).trim() : '';
+                var htmlPart = (content && String(content).replace(/\s/g, '') !== '') ? String(content) : '';
+                var reqLabels = [
+                    ['study_plan', 'แผนการเรียน'],
+                    ['mor_kor_2_url', 'มคอ 2. ฉบับย่อ'],
+                    ['english_grade', 'ผลการเรียนเฉลี่ยวิชาภาษาอังกฤษ'],
+                    ['selection_criteria', 'เกณฑ์การคัดเลือก'],
+                    ['tuition_per_term', 'ค่าเทอม'],
+                    ['duration', 'ระยะเวลาเรียน'],
+                    ['credits_note', 'จำนวนหน่วยกิต'],
+                    ['program_type', 'ประเภทการศึกษา']
+                ];
+                var supLabels = [
+                    ['scholarship', 'ทุนการศึกษา'],
+                    ['first_term_loan', 'กองทุนยืมเงินค่าเทอมแรกเข้า'],
+                    ['ksl_loan', 'กองทุนกู้ยืมเพื่อการศึกษา (กยศ.)'],
+                    ['study_scholarship', 'ทุนการศึกษาระหว่างเรียน'],
+                    ['entrepreneur_fund', 'ทุนสนับสนุนการเป็นผู้ประกอบการ'],
+                    ['dormitory', 'หอพักนักศึกษาของมหาวิทยาลัย']
+                ];
+                var reqRows = '';
+                $.each(reqLabels, function (j, pair) {
+                    var v = req[pair[0]] ? String(req[pair[0]]).trim() : '';
+                    if (!v) return;
+                    var cell = pair[0] === 'mor_kor_2_url'
+                        ? '<a href="' + escAttr(v) + '" target="_blank" rel="noopener">เปิดเอกสาร</a>'
+                        : escHtml(v);
+                    reqRows += '<tr><td>' + escHtml(pair[1]) + '</td><td>' + cell + '</td></tr>';
+                });
+                var enabledSup = supLabels.filter(function (pair) { return sup[pair[0]] === true; });
+
+                if (!planSeats && !reqRows && !enabledSup.length && !htmlPart) {
+                    return;
+                }
+
+                hasContent = true;
+                var body = '';
+                if (planSeats) {
+                    body += '<p class="pd-content-block__body"><strong>จำนวนรับตามแผน:</strong> ' + escHtml(planSeats) + '</p>';
+                }
+                if (reqRows) {
+                    body += '<table class="pd-tuition-table"><tbody>' + reqRows + '</tbody></table>';
+                }
+                if (enabledSup.length) {
+                    body += '<ul class="pd-content-block__body">';
+                    $.each(enabledSup, function (j, pair) {
+                        body += '<li>' + escHtml(pair[1]) + '</li>';
+                    });
+                    body += '</ul>';
+                }
+                if (htmlPart) {
+                    body += '<div class="pd-content-block__body">' + htmlPart + '</div>';
+                }
+
+                $container.append(
+                    '<div class="pd-content-block">' +
+                    '<h3 class="pd-content-block__title">' + escHtml(sec.title) + '</h3>' +
+                    '<div class="pd-content-block__body">' + body + '</div>' +
+                    '</div>'
+                );
+                return;
+            }
             if (sec.key === 'tuition_fees') {
                 var items = data.tuition_items || [];
                 var htmlPart = (content && String(content).replace(/\s/g, '') !== '') ? String(content) : '';

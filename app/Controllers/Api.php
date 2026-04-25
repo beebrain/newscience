@@ -728,10 +728,12 @@ class Api extends BaseController
         helper('career_cards');
         helper('tuition_fees');
         helper('overview_lists');
+        helper('admission_details');
         $careers = career_items_from_json_string($page['careers_json'] ?? null);
         $tuitionItems = tuition_fee_items_from_json_string($page['tuition_fees_json'] ?? null);
         $objectivesList = overview_text_lines_from_db($page['objectives'] ?? null);
         $graduateProfileList = overview_text_lines_from_db($page['graduate_profile'] ?? null);
+        $admissionDetails = admission_details_decode($page['admission_details_json'] ?? null);
 
         // Facilities (สิ่งอำนวยความสะดวก) สำหรับ AUN-QA / สนับสนุนการเรียน
         $facilities = [];
@@ -791,11 +793,17 @@ class Api extends BaseController
             'graduate_profile_list' => $graduateProfileList,
             'curriculum_structure' => $page['curriculum_structure'] ?? '',
             'study_plan'           => $page['study_plan'] ?? '',
+            'course_details'       => $page['course_details'] ?? '',
+            'teaching_methods'     => $page['teaching_methods'] ?? '',
+            'assessment_methods'   => $page['assessment_methods'] ?? '',
+            'graduation_requirements' => $page['graduation_requirements'] ?? '',
             'career_prospects'     => $page['career_prospects'] ?? '',
             'careers'              => $careers,
             'tuition_fees'         => $page['tuition_fees'] ?? '',
             'tuition_items'        => $tuitionItems,
             'admission_info'       => $page['admission_info'] ?? '',
+            'admission_details'    => $admissionDetails,
+            'success_outcomes'     => $page['success_outcomes'] ?? '',
             'contact_info'         => $page['contact_info'] ?? '',
             'intro_video_url'      => $page['intro_video_url'] ?? '',
             'elos'                 => $elos,

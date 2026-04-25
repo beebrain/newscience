@@ -257,7 +257,11 @@ class Dashboard extends BaseController
         $rules = [
             'name_th' => 'required|min_length[1]|max_length[255]',
             'name_en' => 'max_length[255]',
+            'degree_th' => 'max_length[255]',
+            'degree_en' => 'max_length[255]',
             'level' => 'required|in_list[bachelor,master,doctorate]',
+            'credits' => 'permit_empty|integer',
+            'duration' => 'permit_empty|integer',
             'status' => 'required|in_list[active,inactive]',
         ];
 
@@ -269,7 +273,11 @@ class Dashboard extends BaseController
         $updateData = [
             'name_th' => $this->request->getPost('name_th'),
             'name_en' => $this->request->getPost('name_en'),
+            'degree_th' => $this->request->getPost('degree_th'),
+            'degree_en' => $this->request->getPost('degree_en'),
             'level' => $this->request->getPost('level'),
+            'credits' => (int) ($this->request->getPost('credits') ?: 0),
+            'duration' => (int) ($this->request->getPost('duration') ?: 0),
             'status' => $this->request->getPost('status'),
         ];
 
@@ -312,9 +320,14 @@ class Dashboard extends BaseController
             'curriculum_json' => 'max_length[65000]',
             'curriculum_structure' => 'max_length[10000]',
             'study_plan' => 'max_length[10000]',
+            'course_details' => 'max_length[10000]',
+            'teaching_methods' => 'max_length[10000]',
+            'assessment_methods' => 'max_length[10000]',
+            'graduation_requirements' => 'max_length[10000]',
             'careers_json' => 'max_length[65000]',
             'tuition_fees_json' => 'max_length[65000]',
             'admission_info' => 'max_length[5000]',
+            'success_outcomes' => 'max_length[10000]',
             'contact_info' => 'max_length[5000]',
             'intro_video_url' => 'max_length[500]',
             'meta_description' => 'max_length[500]',
@@ -342,9 +355,14 @@ class Dashboard extends BaseController
             'curriculum_json' => $this->request->getPost('curriculum_json'),
             'curriculum_structure' => $this->request->getPost('curriculum_structure'),
             'study_plan' => $this->request->getPost('study_plan'),
+            'course_details' => $this->request->getPost('course_details'),
+            'teaching_methods' => $this->request->getPost('teaching_methods'),
+            'assessment_methods' => $this->request->getPost('assessment_methods'),
+            'graduation_requirements' => $this->request->getPost('graduation_requirements'),
             'careers_json' => $careersJson,
             'tuition_fees_json' => $tuitionFeesJson,
             'admission_info' => $this->request->getPost('admission_info'),
+            'success_outcomes' => $this->request->getPost('success_outcomes'),
             'contact_info' => $this->request->getPost('contact_info'),
             'intro_video_url' => $this->request->getPost('intro_video_url'),
             'meta_description' => $this->request->getPost('meta_description'),
