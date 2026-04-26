@@ -180,15 +180,12 @@
         .spa-study-plan-prose table, .spa-admission-prose table, .spa-main-topic-prose table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
         .spa-study-plan-prose th, .spa-study-plan-prose td, .spa-admission-prose th, .spa-admission-prose td, .spa-main-topic-prose th, .spa-main-topic-prose td { border: 1px solid #e2e8f0; padding: 0.6rem 0.75rem; vertical-align: top; }
         .spa-study-plan-prose th, .spa-admission-prose th, .spa-main-topic-prose th { background: color-mix(in srgb, var(--theme) 6%, #fff); color: #334155; font-weight: 600; }
-        .spa-topic-group-label { display: flex; align-items: center; gap: 0.75rem; margin: 2rem 0 1rem; color: #475569; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
-        .spa-topic-group-label::after { content: ''; height: 1px; flex: 1; background: rgba(148, 163, 184, 0.35); }
-        .spa-topic-compact { min-height: 100%; }
-        .spa-topic-panel, .spa-topic-compact, .spa-topic-contact { background: color-mix(in srgb, var(--theme) 4%, #ffffff); border: 1px solid rgba(var(--theme-rgb), 0.16); }
-        .spa-topic-wide { grid-column: 1 / -1; }
-        .spa-topic-summary { list-style: none; }
-        .spa-topic-summary::-webkit-details-marker { display: none; }
-        .spa-topic-panel[open] .spa-topic-chevron { transform: rotate(180deg); }
-        .spa-topic-prose-readable { max-width: 72rem; }
+        .spa-topic-section {
+            background: color-mix(in srgb, var(--theme) 4%, #ffffff); border: 1px solid rgba(var(--theme-rgb), 0.16);
+            scroll-margin-top: 5rem;
+        }
+        .spa-topic-section:nth-child(even) { background: color-mix(in srgb, var(--theme) 7%, #ffffff); }
+        .spa-topic-section__body { max-width: 76rem; }
         #curriculum-structure-block .ptb-block { margin-bottom: 1.25rem; }
         #curriculum-structure-block .ptb-block:last-child { margin-bottom: 0; }
         #curriculum-structure-block .ptb-title { font-size: 1.125rem; font-weight: 600; color: var(--theme); margin: 0 0 0.5rem; }
@@ -340,15 +337,8 @@
         </div>
         <div id="main-topics" class="mt-16 reveal">
             <h3 class="text-xl font-semibold section-accent mb-2">หัวข้อหลักของหลักสูตร</h3>
-            <p class="text-sm text-slate-500 mb-6">แสดงครบทั้ง 12 หัวข้อหลัก หากหัวข้อใดยังไม่กรอกจะแสดงสถานะว่ายังไม่มีข้อมูล</p>
-            <div class="spa-topic-group-label">ภาพรวม</div>
-            <div id="main-topics-summary" class="grid md:grid-cols-2 xl:grid-cols-3 gap-5"></div>
-            <div class="spa-topic-group-label">รายละเอียดเชิงลึก</div>
-            <div id="main-topics-depth" class="space-y-4"></div>
-            <div class="spa-topic-group-label">ทรัพยากรและผลลัพธ์</div>
-            <div id="main-topics-support" class="grid lg:grid-cols-2 gap-5"></div>
-            <div class="spa-topic-group-label">ช่องทางติดต่อ</div>
-            <div id="main-topics-contact"></div>
+            <p class="text-sm text-slate-500 mb-8">แสดงครบทั้ง 12 หัวข้อหลัก โดยแยกเป็น section ทีละหัวข้อเพื่อรองรับเนื้อหายาว</p>
+            <div id="main-topics-sections" class="space-y-8"></div>
         </div>
     </div>
 </section>
@@ -574,40 +564,17 @@
     function topicContentHtml(body) {
         return hasRichContent(body) ? body : emptyTopicHtml();
     }
-    function compactTopicCardHtml(no, title, body) {
+    function topicSectionHtml(no, title, body) {
         var content = topicContentHtml(body);
-        return '<article class="spa-topic-compact rounded-2xl p-5 text-slate-600 leading-relaxed spa-main-topic-prose overflow-x-auto">' +
+        return '<section id="main-topic-' + esc(no) + '" class="spa-topic-section rounded-3xl p-6 md:p-8 text-slate-600 leading-relaxed spa-main-topic-prose overflow-x-auto">' +
+            '<div class="flex flex-col md:flex-row md:items-start gap-4 md:gap-8">' +
+            '<div class="md:w-64 md:flex-shrink-0">' +
             '<p class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-2">หัวข้อ ' + esc(no) + '</p>' +
-            '<h4 class="text-lg font-semibold section-accent mb-3">' + esc(title) + '</h4>' +
-            content +
-            '</article>';
-    }
-    function collapsibleTopicHtml(no, title, body, open) {
-        var content = topicContentHtml(body);
-        return '<details class="spa-topic-panel rounded-2xl overflow-hidden"' + (open ? ' open' : '') + '>' +
-            '<summary class="spa-topic-summary cursor-pointer px-5 md:px-6 py-5 flex items-center justify-between gap-4">' +
-            '<span><span class="block text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-1">หัวข้อ ' + esc(no) + '</span>' +
-            '<span class="text-lg md:text-xl font-semibold section-accent">' + esc(title) + '</span></span>' +
-            '<svg class="spa-topic-chevron w-5 h-5 text-slate-400 shrink-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>' +
-            '</summary>' +
-            '<div class="px-5 md:px-6 pb-6 border-t border-slate-100 text-slate-600 leading-relaxed spa-main-topic-prose spa-topic-prose-readable overflow-x-auto">' + content + '</div>' +
-            '</details>';
-    }
-    function fullTopicPanelHtml(no, title, body) {
-        var content = hasRichContent(body) ? body : emptyTopicHtml();
-        return '<article class="spa-topic-panel spa-topic-wide rounded-2xl p-6 text-slate-600 leading-relaxed spa-main-topic-prose spa-topic-prose-readable overflow-x-auto">' +
-            '<p class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-2">หัวข้อ ' + esc(no) + '</p>' +
-            '<h4 class="text-xl font-semibold section-accent mb-3">' + esc(title) + '</h4>' +
-            content +
-            '</article>';
-    }
-    function contactTopicPanelHtml(no, title, body) {
-        var content = topicContentHtml(body);
-        return '<article class="spa-topic-contact rounded-2xl p-6 md:p-8 text-slate-600 leading-relaxed spa-main-topic-prose overflow-x-auto">' +
-            '<p class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-2">หัวข้อ ' + esc(no) + '</p>' +
-            '<h4 class="text-xl font-semibold section-accent mb-3">' + esc(title) + '</h4>' +
-            content +
-            '</article>';
+            '<h4 class="text-2xl font-semibold section-accent leading-snug">' + esc(title) + '</h4>' +
+            '</div>' +
+            '<div class="spa-topic-section__body flex-1 min-w-0">' + content + '</div>' +
+            '</div>' +
+            '</section>';
     }
 
     var CAREER_ICONS = {
@@ -930,11 +897,8 @@
         renderSpaCurriculumByYear(d);
 
         var mainTopicsSection = document.getElementById('main-topics');
-        var mainTopicsSummary = document.getElementById('main-topics-summary');
-        var mainTopicsDepth = document.getElementById('main-topics-depth');
-        var mainTopicsSupport = document.getElementById('main-topics-support');
-        var mainTopicsContact = document.getElementById('main-topics-contact');
-        if (mainTopicsSection && mainTopicsSummary && mainTopicsDepth && mainTopicsSupport && mainTopicsContact) {
+        var mainTopicsSections = document.getElementById('main-topics-sections');
+        if (mainTopicsSection && mainTopicsSections) {
             var generalRows = [
                 ['ชื่อหลักสูตร', d.name_th || d.name_en || ''],
                 ['ชื่อปริญญา/วุฒิการศึกษา', d.degree_th || d.degree_en || ''],
@@ -1011,21 +975,9 @@
                 [11, 'ความสำเร็จ', successHtml],
                 [12, 'การติดต่อ', contactHtml]
             ];
-            var byNo = {};
-            topics.forEach(function (t) { byNo[t[0]] = { no: t[0], title: t[1], body: t[2] }; });
-            mainTopicsSummary.innerHTML = [1, 2, 3].map(function (no) {
-                var t = byNo[no];
-                return compactTopicCardHtml(t.no, t.title, t.body);
+            mainTopicsSections.innerHTML = topics.map(function (t) {
+                return topicSectionHtml(t[0], t[1], t[2]);
             }).join('');
-            mainTopicsDepth.innerHTML = [4, 5, 6, 7, 8].map(function (no, i) {
-                var t = byNo[no];
-                return collapsibleTopicHtml(t.no, t.title, t.body, i === 0);
-            }).join('');
-            mainTopicsSupport.innerHTML = [9, 10].map(function (no) {
-                var t = byNo[no];
-                return compactTopicCardHtml(t.no, t.title, t.body);
-            }).join('') + fullTopicPanelHtml(byNo[11].no, byNo[11].title, byNo[11].body);
-            mainTopicsContact.innerHTML = contactTopicPanelHtml(byNo[12].no, byNo[12].title, byNo[12].body);
             mainTopicsSection.classList.remove('hidden');
             toggleMainTopicsNav(true);
         }
