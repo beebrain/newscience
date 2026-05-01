@@ -358,9 +358,11 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->get('academic-services/create', 'Admin\AcademicServices::create');
     $routes->get('academic-services/form-view/(:num)', 'Admin\AcademicServices::formView/$1');
     $routes->get('academic-services/form-view', 'Admin\AcademicServices::formView');
+    $routes->get('academic-services/detail-view/(:num)', 'Admin\AcademicServices::detailView/$1');
     $routes->post('academic-services/store', 'Admin\AcademicServices::store');
     $routes->get('academic-services/edit/(:num)', 'Admin\AcademicServices::edit/$1');
     $routes->post('academic-services/update/(:num)', 'Admin\AcademicServices::update/$1');
+    $routes->post('academic-services/delete-attachment/(:num)', 'Admin\AcademicServices::deleteAttachment/$1');
     $routes->get('academic-services/delete/(:num)', 'Admin\AcademicServices::delete/$1');
     $routes->get('academic-services/search-users', 'Admin\AcademicServices::searchUsers');
     $routes->get('academic-services/report', 'Admin\AcademicServices::report');

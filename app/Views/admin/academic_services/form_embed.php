@@ -18,6 +18,7 @@ $initial_participants = array_map(function ($p) {
         'role' => $p['role'] ?? 'co_participant',
     ];
 }, $participants);
+$attachments_list = $isEdit ? ($s['attachments'] ?? []) : [];
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -44,7 +45,7 @@ $initial_participants = array_map(function ($p) {
             </div>
         <?php endif; ?>
 
-        <form action="<?= $formAction ?>" method="post" id="academicServiceForm">
+        <form action="<?= $formAction ?>" method="post" id="academicServiceForm" enctype="multipart/form-data">
             <?= csrf_field() ?>
 
             <!-- ส่วนที่ 1 ข้อมูลทั่วไป -->
@@ -213,6 +214,27 @@ $initial_participants = array_map(function ($p) {
                 </div>
             </div>
 
+            <div class="form-section form-section-card">
+                <h3 class="form-section-title">เอกสารประกอบ (ไม่บังคับ)</h3>
+                <div class="form-block">
+                    <p class="form-text" style="margin-bottom: 0.5rem;">อัปโหลดไฟล์ที่เกี่ยวข้องกับรายการนี้ (สูงสุด 10MB ต่อไฟล์; รองรับ pdf, Word, Excel, PowerPoint, รูปภาพ, zip, txt)</p>
+                    <?php if ($isEdit && ! empty($attachments_list)): ?>
+                    <ul id="existingAttachments" style="margin: 0 0 0.75rem 0; padding-left: 1.2rem; list-style: disc;">
+                        <?php foreach ($attachments_list as $att): ?>
+                            <li style="margin-bottom: 0.35rem;">
+                                <a href="<?= esc(\App\Models\AcademicServiceAttachmentModel::serveUrl($att)) ?>" target="_blank" rel="noopener"><?= esc($att['original_name'] ?? 'ไฟล์') ?></a>
+                                <span style="color: var(--color-gray-600); font-size: 0.875rem;">(<?= esc(\App\Models\AcademicServiceAttachmentModel::formatSize((int) ($att['file_size'] ?? 0))) ?>)</span>
+                                <button type="button" class="btn btn-danger btn-sm btn-del-attachment" data-id="<?= (int) ($att['id'] ?? 0) ?>" style="margin-left: 0.5rem;">ลบ</button>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <?php endif; ?>
+                    <label for="service_attachments" class="form-label">เพิ่มไฟล์แนบ</label>
+                    <input type="file" name="service_attachments[]" id="service_attachments" class="form-control" multiple
+                           accept=".pdf,.doc,.docx,.xlsx,.xls,.ppt,.pptx,.zip,.jpg,.jpeg,.png,.gif,.txt">
+                </div>
+            </div>
+
             <div class="form-actions" style="margin-top: 1rem;">
                 <button type="submit" class="btn btn-primary"><?= $isEdit ? 'บันทึกการแก้ไข' : 'บันทึก' ?></button>
                 <button type="button" class="btn btn-secondary" id="btnCancelEmbed">ยกเลิก</button>
@@ -246,8 +268,32 @@ $initial_participants = array_map(function ($p) {
 <script>
 (function() {
     var searchUrl = '<?= base_url('admin/academic-services/search-users') ?>';
+    var deleteAttachBase = '<?= base_url('admin/academic-services/delete-attachment') ?>/';
+    var csrfName = '<?= csrf_token() ?>';
+    var csrfHash = '<?= csrf_hash() ?>';
     var initialResponsible = <?= json_encode($responsible_users) ?>;
     var initialParticipants = <?= json_encode($initial_participants) ?>;
+
+    document.querySelectorAll('.btn-del-attachment').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (!confirm('ลบไฟล์นี้จากระบบ?')) return;
+            var id = btn.getAttribute('data-id');
+            if (!id) return;
+            var fd = new FormData();
+            fd.append(csrfName, csrfHash);
+            fetch(deleteAttachBase + id, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res.success) {
+                        var li = btn.closest('li');
+                        if (li) li.remove();
+                    } else {
+                        alert(res.message || 'ลบไม่สำเร็จ');
+                    }
+                })
+                .catch(function() { alert('เกิดข้อผิดพลาด'); });
+        });
+    });
 
     var $revenueOptionSelect = document.getElementById('revenue_option_select');
     var $revenueAmount = document.getElementById('revenue_amount');
@@ -469,6 +515,7 @@ $initial_participants = array_map(function ($p) {
                 try {
                     var res = JSON.parse(xhr.responseText);
                     if (res.success) {
+                        if (res.warning) alert(res.warning);
                         window.parent.postMessage('academic-service-updated', '*');
                     } else {
                         var msg = res.message || 'บันทึกไม่สำเร็จ';

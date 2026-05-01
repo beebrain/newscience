@@ -3,37 +3,53 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Models\AcademicServiceAttachmentModel;
 use App\Models\AcademicServiceModel;
 use App\Models\AcademicServiceParticipantModel;
 use App\Models\UserModel;
 
 class AcademicServices extends BaseController
 {
+    /** @var string[] */
+    private const ATTACHMENT_ALLOWED_EXT = ['pdf', 'doc', 'docx', 'xlsx', 'xls', 'ppt', 'pptx', 'zip', 'jpg', 'jpeg', 'png', 'gif', 'txt'];
+
+    private const ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
+
     protected AcademicServiceModel $serviceModel;
     protected AcademicServiceParticipantModel $participantModel;
+    protected AcademicServiceAttachmentModel $attachmentModel;
     protected UserModel $userModel;
 
     public function __construct()
     {
         $this->serviceModel     = model(AcademicServiceModel::class);
         $this->participantModel = model(AcademicServiceParticipantModel::class);
+        $this->attachmentModel  = model(AcademicServiceAttachmentModel::class);
         $this->userModel        = model(UserModel::class);
     }
 
     /**
-     * รายการบริการวิชาการ (กรองตามปี + ค้นหา)
+     * รายการบริการวิชาการ (กรองตามปี + ช่วงวันที่ + ค้นหา)
      */
     public function index()
     {
-        $year    = $this->request->getGet('year');
-        $keyword = $this->request->getGet('keyword');
+        $year      = $this->request->getGet('year');
+        $keyword   = $this->request->getGet('keyword');
+        $dateFrom  = $this->request->getGet('date_from');
+        $dateTo    = $this->request->getGet('date_to');
 
-        $list = $this->serviceModel->search($keyword, $year);
+        $list = $this->serviceModel->search($keyword, $year, $dateFrom ?: null, $dateTo ?: null);
 
         $participantCounts = [];
         foreach ($list as $row) {
             $participantCounts[$row['id']] = $this->participantModel->countByServiceId((int) $row['id']);
         }
+
+        $serviceIds = array_map(static fn ($r) => (int) $r['id'], $list);
+        $db           = \Config\Database::connect();
+        $attachmentCounts = $db->tableExists('academic_service_attachments')
+            ? $this->attachmentModel->countsByServiceIds($serviceIds)
+            : [];
 
         $years = $this->serviceModel->getDistinctYears();
         $currentBuddhistYear = (int) date('Y') + 543;
@@ -42,12 +58,15 @@ class AcademicServices extends BaseController
         }
 
         $data = [
-            'page_title'         => 'ข้อมูลการบริการวิชาการ',
-            'list'               => $list,
+            'page_title'          => 'ข้อมูลการบริการวิชาการ',
+            'list'                => $list,
             'participant_counts'  => $participantCounts,
-            'years'              => $years,
-            'selected_year'      => $year,
-            'keyword'            => $keyword,
+            'attachment_counts'   => $attachmentCounts,
+            'years'               => $years,
+            'selected_year'       => $year,
+            'keyword'             => $keyword,
+            'selected_date_from'  => $dateFrom,
+            'selected_date_to'    => $dateTo,
         ];
 
         return view('admin/academic_services/index', $data);
@@ -104,12 +123,23 @@ class AcademicServices extends BaseController
         }
 
         $this->syncParticipantsFromRequest((int) $id);
+        $uploadWarn = $this->saveUploadedFiles((int) $id);
 
         if ($this->request->isAJAX()) {
-            return $this->response->setJSON(['success' => true, 'id' => (int) $id]);
+            $payload = ['success' => true, 'id' => (int) $id];
+            if ($uploadWarn !== null && $uploadWarn !== '') {
+                $payload['warning'] = $uploadWarn;
+            }
+
+            return $this->response->setJSON($payload);
         }
+        $flash = 'เพิ่มรายการสำเร็จ กรุณากรอกข้อมูลเพิ่มเติม (ถ้าต้องการ)';
+        if ($uploadWarn !== null && $uploadWarn !== '') {
+            $flash .= ' (หมายเหตุอัปโหลด: ' . $uploadWarn . ')';
+        }
+
         return redirect()->to(base_url('admin/academic-services/edit/' . $id))
-            ->with('success', 'เพิ่มรายการสำเร็จ กรุณากรอกข้อมูลเพิ่มเติม (ถ้าต้องการ)');
+            ->with('success', $flash);
     }
 
     /**
@@ -143,7 +173,7 @@ class AcademicServices extends BaseController
      * ดึงข้อมูลสรุปตามมิติและปี (สำหรับกราฟ/ตาราง)
      * @return array{labels: string[], data: int[], rows: array}
      */
-    private function getReportDataByDimension(string $dimension, ?string $year): array
+    private function getReportDataByDimension(string $dimension, ?string $year, ?string $dateFrom = null, ?string $dateTo = null): array
     {
         $db = \Config\Database::connect();
         $labelsMap = $this->getDimensionLabels();
@@ -152,6 +182,12 @@ class AcademicServices extends BaseController
         $builder = $db->table('academic_services');
         if ($year !== null && $year !== '') {
             $builder->where('academic_year', $year);
+        }
+        if ($dateFrom !== null && $dateFrom !== '') {
+            $builder->where('service_date >=', $dateFrom);
+        }
+        if ($dateTo !== null && $dateTo !== '') {
+            $builder->where('service_date <=', $dateTo);
         }
 
         $groupColumn = $dimension === 'year' ? 'academic_year' : $dimension;
@@ -213,13 +249,15 @@ class AcademicServices extends BaseController
         }
 
         $dimension = $this->request->getGet('dimension') ?: 'service_type';
-        $year = $this->request->getGet('year');
+        $year        = $this->request->getGet('year');
+        $dateFrom    = $this->request->getGet('date_from');
+        $dateTo      = $this->request->getGet('date_to');
         $allowedDimensions = ['service_type', 'responsible_type', 'target_group_type', 'year'];
         if (! in_array($dimension, $allowedDimensions, true)) {
             $dimension = 'service_type';
         }
 
-        $reportData = $this->getReportDataByDimension($dimension, $year);
+        $reportData = $this->getReportDataByDimension($dimension, $year, $dateFrom ?: null, $dateTo ?: null);
 
         $dimensionLabels = [
             'service_type'      => 'ลักษณะการบริการวิชาการ',
@@ -236,6 +274,8 @@ class AcademicServices extends BaseController
             'dimension'        => $dimension,
             'dimension_label'  => $dimensionLabels[$dimension] ?? $dimension,
             'year_filter'      => $year,
+            'date_from'        => $dateFrom,
+            'date_to'          => $dateTo,
             'chart_labels'     => $reportData['labels'],
             'chart_data'       => $reportData['data'],
             'table_rows'       => $reportData['rows'],
@@ -251,12 +291,14 @@ class AcademicServices extends BaseController
     public function reportData()
     {
         $dimension = $this->request->getGet('dimension') ?: 'service_type';
-        $year = $this->request->getGet('year');
+        $year        = $this->request->getGet('year');
+        $dateFrom    = $this->request->getGet('date_from');
+        $dateTo      = $this->request->getGet('date_to');
         $allowed = ['service_type', 'responsible_type', 'target_group_type', 'year'];
         if (! in_array($dimension, $allowed, true)) {
             $dimension = 'service_type';
         }
-        $result = $this->getReportDataByDimension($dimension, $year);
+        $result = $this->getReportDataByDimension($dimension, $year, $dateFrom ?: null, $dateTo ?: null);
         return $this->response->setJSON($result);
     }
 
@@ -266,13 +308,15 @@ class AcademicServices extends BaseController
     public function reportExport()
     {
         $dimension = $this->request->getGet('dimension') ?: 'service_type';
-        $year = $this->request->getGet('year');
+        $year        = $this->request->getGet('year');
+        $dateFrom    = $this->request->getGet('date_from');
+        $dateTo      = $this->request->getGet('date_to');
         $allowed = ['service_type', 'responsible_type', 'target_group_type', 'year'];
         if (! in_array($dimension, $allowed, true)) {
             $dimension = 'service_type';
         }
 
-        $result = $this->getReportDataByDimension($dimension, $year);
+        $result = $this->getReportDataByDimension($dimension, $year, $dateFrom ?: null, $dateTo ?: null);
         $dimensionLabels = [
             'service_type'      => 'ลักษณะการบริการวิชาการ',
             'responsible_type'  => 'ผู้รับผิดชอบ',
@@ -281,7 +325,8 @@ class AcademicServices extends BaseController
         ];
         $headerLabel = $dimensionLabels[$dimension] ?? $dimension;
 
-        $filename = 'academic-service-report-' . $dimension . ($year ? '-' . $year : '') . '.csv';
+        $suffix = ($year ? '-' . $year : '') . ($dateFrom ? '-from' . $dateFrom : '') . ($dateTo ? '-to' . $dateTo : '');
+        $filename = 'academic-service-report-' . $dimension . $suffix . '.csv';
         $buf = "\xEF\xBB\xBF"; // UTF-8 BOM for Excel
         $out = fopen('php://temp', 'r+');
         fputcsv($out, [$headerLabel, 'จำนวนรายการ']);
@@ -321,6 +366,27 @@ class AcademicServices extends BaseController
         return view('admin/academic_services/form_embed', [
             'service'      => $service,
             'participants' => $participants,
+        ]);
+    }
+
+    /**
+     * รายละเอียดแบบอ่านอย่างเดียว — โหลดใน iframe ภายใน modal หน้า index
+     */
+    public function detailView($id)
+    {
+        $id = (int) $id;
+        if ($id < 1) {
+            return redirect()->to(base_url('admin/academic-services'))->with('error', 'ไม่พบข้อมูล');
+        }
+        $service = $this->serviceModel->getWithParticipants($id);
+        if (! $service) {
+            return redirect()->to(base_url('admin/academic-services'))->with('error', 'ไม่พบข้อมูล');
+        }
+        $service['target_group_users'] = $this->decodeUserTags($service['target_group_spec'] ?? '');
+        $service['responsible_users']  = $this->decodeUserTags($service['responsible_person_text'] ?? '');
+
+        return view('admin/academic_services/detail_embed', [
+            'service' => $service,
         ]);
     }
 
@@ -383,12 +449,23 @@ class AcademicServices extends BaseController
         $payload = $this->getServiceDataFromRequest();
         $this->serviceModel->update($id, $payload);
         $this->syncParticipantsFromRequest((int) $id);
+        $uploadWarn = $this->saveUploadedFiles((int) $id);
 
         if ($this->request->isAJAX()) {
-            return $this->response->setJSON(['success' => true]);
+            $ajaxPayload = ['success' => true];
+            if ($uploadWarn !== null && $uploadWarn !== '') {
+                $ajaxPayload['warning'] = $uploadWarn;
+            }
+
+            return $this->response->setJSON($ajaxPayload);
         }
+        $flash = 'แก้ไขรายการบริการวิชาการสำเร็จ';
+        if ($uploadWarn !== null && $uploadWarn !== '') {
+            $flash .= ' (หมายเหตุอัปโหลด: ' . $uploadWarn . ')';
+        }
+
         return redirect()->to(base_url('admin/academic-services'))
-            ->with('success', 'แก้ไขรายการบริการวิชาการสำเร็จ');
+            ->with('success', $flash);
     }
 
     /**
@@ -400,9 +477,39 @@ class AcademicServices extends BaseController
         if (! $service) {
             return redirect()->to(base_url('admin/academic-services'))->with('error', 'ไม่พบข้อมูล');
         }
+        $db = \Config\Database::connect();
+        if ($db->tableExists('academic_service_attachments')) {
+            helper('program_upload');
+            foreach ($this->attachmentModel->getByServiceId((int) $id) as $att) {
+                $full = upload_resolve_full_path($att['stored_path']);
+                if (is_file($full)) {
+                    @unlink($full);
+                }
+            }
+        }
         $this->serviceModel->delete($id);
         return redirect()->to(base_url('admin/academic-services'))
             ->with('success', 'ลบรายการสำเร็จ');
+    }
+
+    /**
+     * POST: ลบไฟล์แนบรายการเดียว (ใช้จากฟอร์มแก้ไข / iframe)
+     */
+    public function deleteAttachment($attachmentId)
+    {
+        $attachmentId = (int) $attachmentId;
+        $row          = $this->attachmentModel->find($attachmentId);
+        if (! $row) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'ไม่พบไฟล์']);
+        }
+        helper('program_upload');
+        $full = upload_resolve_full_path($row['stored_path']);
+        if (is_file($full)) {
+            @unlink($full);
+        }
+        $this->attachmentModel->delete($attachmentId);
+
+        return $this->response->setJSON(['success' => true]);
     }
 
     /**
@@ -556,5 +663,75 @@ class AcademicServices extends BaseController
             $out[] = ['uid' => $uid, 'label' => $label];
         }
         return $out;
+    }
+
+    /**
+     * บันทึกไฟล์ที่อัปโหลดมากับคำขอ store/update
+     *
+     * @return string|null ข้อความเตือนหากมีไฟล์ถูกข้าม/ผิดพลาด
+     */
+    private function saveUploadedFiles(int $serviceId): ?string
+    {
+        $db = \Config\Database::connect();
+        if (! $db->tableExists('academic_service_attachments')) {
+            return null;
+        }
+
+        helper('program_upload');
+
+        $list = [];
+        if (method_exists($this->request, 'getFileMultiple')) {
+            $list = $this->request->getFileMultiple('service_attachments');
+        }
+        if ($list === [] || $list === null) {
+            $all = $this->request->getFiles();
+            if (! empty($all['service_attachments'])) {
+                $g = $all['service_attachments'];
+                $list = is_array($g) ? $g : [$g];
+            }
+        }
+        if ($list === [] || $list === null) {
+            return null;
+        }
+
+        $dir = upload_path('academic-services');
+        $warnings = [];
+        $sortBase = (int) $db->table('academic_service_attachments')
+            ->where('academic_service_id', $serviceId)
+            ->countAllResults();
+
+        foreach ($list as $file) {
+            if ($file === null || ! $file->isValid() || $file->hasMoved()) {
+                if ($file !== null && $file->getError() !== UPLOAD_ERR_NO_FILE) {
+                    $warnings[] = $file->getClientName() . ' (อัปโหลดไม่สำเร็จ)';
+                }
+                continue;
+            }
+            $ext = strtolower((string) ($file->getExtension() ?: pathinfo($file->getClientName(), PATHINFO_EXTENSION)));
+            if (! in_array($ext, self::ATTACHMENT_ALLOWED_EXT, true)) {
+                $warnings[] = $file->getClientName() . ' (นามสกุลไม่รองรับ)';
+                continue;
+            }
+            if ($file->getSize() > self::ATTACHMENT_MAX_BYTES) {
+                $warnings[] = $file->getClientName() . ' (เกิน 10MB)';
+                continue;
+            }
+            $stored = 'as_' . $serviceId . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            if (! $file->move($dir, $stored)) {
+                $warnings[] = $file->getClientName() . ' (บันทึกไม่สำเร็จ)';
+                continue;
+            }
+            $sortBase++;
+            $this->attachmentModel->insert([
+                'academic_service_id' => $serviceId,
+                'original_name'       => $file->getClientName(),
+                'stored_path'         => 'academic-services/' . $stored,
+                'file_size'           => $file->getSize(),
+                'sort_order'          => $sortBase,
+                'created_at'          => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        return $warnings !== [] ? implode(' ', $warnings) : null;
     }
 }

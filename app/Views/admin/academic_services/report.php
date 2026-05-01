@@ -44,6 +44,16 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <div class="form-group" style="margin: 0;">
+                    <label for="date_from" class="form-label" style="display: block; margin-bottom: 0.25rem;">วันที่บริการ ตั้งแต่</label>
+                    <input type="date" name="date_from" id="date_from" class="form-control" style="min-width: 150px;"
+                           value="<?= esc($date_from ?? '') ?>">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label for="date_to" class="form-label" style="display: block; margin-bottom: 0.25rem;">ถึงวันที่</label>
+                    <input type="date" name="date_to" id="date_to" class="form-control" style="min-width: 150px;"
+                           value="<?= esc($date_to ?? '') ?>">
+                </div>
             </div>
         </div>
 
@@ -57,7 +67,7 @@
         <div class="report-table-section">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
                 <h3 class="form-section-title" style="margin: 0;">ตารางสรุป</h3>
-                <a id="btnExportExcel" href="<?= base_url('admin/academic-services/report/export?dimension=' . urlencode($dimension ?? 'service_type') . ($year_filter ? '&year=' . urlencode($year_filter) : '')) ?>" class="btn btn-success btn-sm" download>
+                <a id="btnExportExcel" href="<?= base_url('admin/academic-services/report/export?dimension=' . urlencode($dimension ?? 'service_type') . ($year_filter ? '&year=' . urlencode($year_filter) : '') . (!empty($date_from) ? '&date_from=' . urlencode($date_from) : '') . (!empty($date_to) ? '&date_to=' . urlencode($date_to) : '')) ?>" class="btn btn-success btn-sm" download>
                     ออกรายงาน Excel (CSV)
                 </a>
             </div>
@@ -139,8 +149,12 @@
     function updateReport() {
         var dim = document.getElementById('dimension').value;
         var yr = document.getElementById('year').value;
+        var df = document.getElementById('date_from') ? document.getElementById('date_from').value : '';
+        var dt = document.getElementById('date_to') ? document.getElementById('date_to').value : '';
         var url = baseUrl + '?dimension=' + encodeURIComponent(dim);
         if (yr) url += '&year=' + encodeURIComponent(yr);
+        if (df) url += '&date_from=' + encodeURIComponent(df);
+        if (dt) url += '&date_to=' + encodeURIComponent(dt);
         fetch(url).then(function(r) { return r.json(); }).then(function(res) {
             reportChart.data.labels = res.labels || [];
             reportChart.data.datasets[0].data = res.data || [];
@@ -157,12 +171,18 @@
 
             var exportUrl = exportBase + '?dimension=' + encodeURIComponent(dim);
             if (yr) exportUrl += '&year=' + encodeURIComponent(yr);
+            if (df) exportUrl += '&date_from=' + encodeURIComponent(df);
+            if (dt) exportUrl += '&date_to=' + encodeURIComponent(dt);
             document.getElementById('btnExportExcel').href = exportUrl;
         });
     }
 
     document.getElementById('dimension').addEventListener('change', updateReport);
     document.getElementById('year').addEventListener('change', updateReport);
+    var dfEl = document.getElementById('date_from');
+    var dtEl = document.getElementById('date_to');
+    if (dfEl) dfEl.addEventListener('change', updateReport);
+    if (dtEl) dtEl.addEventListener('change', updateReport);
 })();
 </script>
 

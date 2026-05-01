@@ -32,6 +32,16 @@
                     <?php endforeach; ?>
                 </select>
             </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="date_from" class="form-label">วันที่บริการ ตั้งแต่</label>
+                <input type="date" name="date_from" id="date_from" class="form-control" style="min-width: 150px;"
+                       value="<?= esc($selected_date_from ?? '') ?>">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="date_to" class="form-label">ถึงวันที่</label>
+                <input type="date" name="date_to" id="date_to" class="form-control" style="min-width: 150px;"
+                       value="<?= esc($selected_date_to ?? '') ?>">
+            </div>
             <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
                 <label for="keyword" class="form-label">ค้นหาชื่อโครงการ/กิจกรรม</label>
                 <input type="text" name="keyword" id="keyword" class="form-control" placeholder="พิมพ์คำค้น..."
@@ -58,7 +68,8 @@
                             <th>ชื่อโครงการ/กิจกรรม</th>
                             <th style="width: 140px;">ลักษณะบริการ</th>
                             <th style="width: 80px;">ผู้ร่วมงาน</th>
-                            <th style="width: 160px;">จัดการ</th>
+                            <th style="width: 90px;">เอกสารแนบ</th>
+                            <th style="min-width: 220px;">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -75,6 +86,7 @@
                         foreach ($list as $row):
                             $typeLabel = $serviceTypeLabels[$row['service_type'] ?? ''] ?? ($row['service_type_spec'] ?? $row['service_type'] ?? '—');
                             $count = $participant_counts[$row['id']] ?? 0;
+                            $attCount = $attachment_counts[$row['id']] ?? 0;
                         ?>
                             <tr>
                                 <td><?= $row['service_date'] ? date('d/m/Y', strtotime($row['service_date'])) : '—' ?></td>
@@ -82,7 +94,9 @@
                                 <td><strong><?= esc($row['title']) ?></strong></td>
                                 <td><?= esc($typeLabel) ?></td>
                                 <td><?= $count ?></td>
+                                <td><?= $attCount > 0 ? (int) $attCount . ' ไฟล์' : '—' ?></td>
                                 <td>
+                                    <button type="button" class="btn btn-secondary btn-sm btn-detail-service" data-id="<?= (int) $row['id'] ?>">รายละเอียด</button>
                                     <button type="button" class="btn btn-secondary btn-sm btn-edit-service" data-id="<?= (int) $row['id'] ?>">แก้ไข</button>
                                     <a href="<?= base_url('admin/academic-services/delete/' . $row['id']) ?>"
                                        class="btn btn-danger btn-sm"
@@ -171,10 +185,14 @@
     var btnClose = document.getElementById('btnCloseAcademicModal');
     var frame = document.getElementById('academicServiceFrame');
     var formViewBase = '<?= base_url('admin/academic-services/form-view') ?>';
+    var detailViewBase = '<?= base_url('admin/academic-services/detail-view') ?>';
 
     function openModal(mode, id) {
         if (!modal || !frame) return;
-        if (mode === 'edit' && id) {
+        if (mode === 'detail' && id) {
+            frame.src = detailViewBase + '/' + id;
+            if (modalTitle) modalTitle.textContent = 'รายละเอียดบริการวิชาการ';
+        } else if (mode === 'edit' && id) {
             frame.src = formViewBase + '/' + id;
             if (modalTitle) modalTitle.textContent = 'แก้ไขรายการบริการวิชาการ';
         } else {
@@ -201,6 +219,12 @@
     });
     if (btnClose) btnClose.addEventListener('click', closeModal);
 
+    [].forEach.call(document.querySelectorAll('.btn-detail-service'), function(b) {
+        b.addEventListener('click', function() {
+            var id = this.getAttribute('data-id');
+            if (id) openModal('detail', id);
+        });
+    });
     [].forEach.call(document.querySelectorAll('.btn-edit-service'), function(b) {
         b.addEventListener('click', function() {
             var id = this.getAttribute('data-id');
@@ -218,9 +242,14 @@
     }
 
     window.addEventListener('message', function(e) {
-        if (e.data === 'academic-service-updated' || e.data === 'academic-close-modal') {
+        var d = e.data;
+        if (d && typeof d === 'object' && d.type === 'academic-open-edit' && d.id) {
+            openModal('edit', String(d.id));
+            return;
+        }
+        if (d === 'academic-service-updated' || d === 'academic-close-modal') {
             closeModal();
-            if (e.data === 'academic-service-updated') window.location.reload();
+            if (d === 'academic-service-updated') window.location.reload();
         }
     });
 

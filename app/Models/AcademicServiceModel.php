@@ -50,9 +50,9 @@ class AcademicServiceModel extends Model
     }
 
     /**
-     * Search by keyword (title) and optional year
+     * Search by keyword (title), optional year, optional service_date range
      */
-    public function search(?string $keyword, ?string $year = null): array
+    public function search(?string $keyword, ?string $year = null, ?string $dateFrom = null, ?string $dateTo = null): array
     {
         $builder = $this->orderBy('service_date', 'DESC');
         if ($keyword !== null && $keyword !== '') {
@@ -60,6 +60,12 @@ class AcademicServiceModel extends Model
         }
         if ($year !== null && $year !== '') {
             $builder->where('academic_year', $year);
+        }
+        if ($dateFrom !== null && $dateFrom !== '') {
+            $builder->where('service_date >=', $dateFrom);
+        }
+        if ($dateTo !== null && $dateTo !== '') {
+            $builder->where('service_date <=', $dateTo);
         }
         return $builder->findAll();
     }
@@ -75,6 +81,12 @@ class AcademicServiceModel extends Model
         }
         $participantModel = model(AcademicServiceParticipantModel::class);
         $service['participants'] = $participantModel->getByServiceId($id);
+        if (\Config\Database::connect()->tableExists('academic_service_attachments')) {
+            $attachmentModel         = model(AcademicServiceAttachmentModel::class);
+            $service['attachments'] = $attachmentModel->getByServiceId($id);
+        } else {
+            $service['attachments'] = [];
+        }
         return $service;
     }
 
