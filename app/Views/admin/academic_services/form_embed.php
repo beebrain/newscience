@@ -19,6 +19,17 @@ $initial_participants = array_map(function ($p) {
     ];
 }, $participants);
 $attachments_list = $isEdit ? ($s['attachments'] ?? []) : [];
+$serviceDateMode = 'single';
+$oldMode = old('service_date_mode');
+if ($oldMode === 'range' || $oldMode === 'single') {
+    $serviceDateMode = $oldMode;
+} elseif ($isEdit) {
+    $e  = $s['service_date_end'] ?? null;
+    $st = $s['service_date'] ?? null;
+    if ($e !== null && $e !== '' && (string) $e !== (string) $st) {
+        $serviceDateMode = 'range';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -53,6 +64,19 @@ $attachments_list = $isEdit ? ($s['attachments'] ?? []) : [];
                 <h3 class="form-section-title">ส่วนที่ 1 ข้อมูลทั่วไปของโครงการ/กิจกรรมบริการวิชาการ</h3>
 
                 <div class="form-block">
+                    <div class="form-group" style="margin-bottom: 0.75rem;">
+                        <span class="form-label" id="serviceDateModeLegend">รูปแบบช่วงเวลา</span>
+                        <div class="service-date-mode-row" role="radiogroup" aria-labelledby="serviceDateModeLegend" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.35rem;">
+                            <label class="form-check-label" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                <input type="radio" name="service_date_mode" value="single" id="service_date_mode_single" <?= $serviceDateMode === 'single' ? 'checked' : '' ?>>
+                                วันเดียว
+                            </label>
+                            <label class="form-check-label" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                <input type="radio" name="service_date_mode" value="range" id="service_date_mode_range" <?= $serviceDateMode === 'range' ? 'checked' : '' ?>>
+                                ช่วงวันที่ (หลายวัน)
+                            </label>
+                        </div>
+                    </div>
                     <div class="form-row">
                         <div class="form-group" style="flex: 1;">
                             <label for="academic_year" class="form-label">ปีการศึกษา (พ.ศ.)</label>
@@ -64,16 +88,19 @@ $attachments_list = $isEdit ? ($s['attachments'] ?? []) : [];
                             </select>
                         </div>
                         <div class="form-group" style="flex: 1; min-width: 160px;">
-                            <label for="service_date" class="form-label">ตั้งแต่วันที่ <span class="required">*</span></label>
+                            <label for="service_date" class="form-label" id="serviceDateStartLabelWrap">
+                                <span id="serviceDateLabelSingle" style="display: <?= $serviceDateMode === 'range' ? 'none' : 'inline' ?>;">วันที่จัดกิจกรรม <span class="required">*</span></span>
+                                <span id="serviceDateLabelRange" style="display: <?= $serviceDateMode === 'range' ? 'inline' : 'none' ?>;">ตั้งแต่วันที่ <span class="required">*</span></span>
+                            </label>
                             <input type="date" id="service_date" name="service_date" class="form-control" required
                                    value="<?= esc($s['service_date'] ?? old('service_date') ?? date('Y-m-d')) ?>">
                         </div>
-                        <div class="form-group" style="flex: 1; min-width: 160px;">
-                            <label for="service_date_end" class="form-label">ถึงวันที่</label>
-                            <input type="date" id="service_date_end" name="service_date_end" class="form-control"
-                                   value="<?= esc($s['service_date_end'] ?? old('service_date_end') ?? '') ?>">
-                            <p class="form-text" style="margin: 0.25rem 0 0; font-size: 0.8125rem;">เว้นว่าง = กิจกรรมวันเดียว</p>
-                        </div>
+                    </div>
+                    <div id="serviceDateEndWrap" class="form-group" style="margin-top: 0.75rem; max-width: 280px; display: <?= $serviceDateMode === 'range' ? 'block' : 'none' ?>;">
+                        <label for="service_date_end" class="form-label">ถึงวันที่ <span class="required">*</span></label>
+                        <input type="date" id="service_date_end" name="service_date_end" class="form-control"
+                               value="<?= esc($s['service_date_end'] ?? old('service_date_end') ?? '') ?>"
+                               <?= $serviceDateMode === 'range' ? 'required' : '' ?>>
                     </div>
                 </div>
 
@@ -507,17 +534,52 @@ $attachments_list = $isEdit ? ($s['attachments'] ?? []) : [];
     });
 
     (function() {
+        var modeSingle = document.getElementById('service_date_mode_single');
+        var modeRange = document.getElementById('service_date_mode_range');
+        var wrap = document.getElementById('serviceDateEndWrap');
         var sd = document.getElementById('service_date');
         var ed = document.getElementById('service_date_end');
+        var lblSingle = document.getElementById('serviceDateLabelSingle');
+        var lblRange = document.getElementById('serviceDateLabelRange');
+        function isRangeMode() {
+            return modeRange && modeRange.checked;
+        }
         function syncEndMin() {
             if (sd && ed && sd.value) {
                 ed.min = sd.value;
             }
         }
+        function applyServiceDateMode() {
+            var range = isRangeMode();
+            if (wrap) {
+                wrap.style.display = range ? 'block' : 'none';
+            }
+            if (lblSingle) {
+                lblSingle.style.display = range ? 'none' : 'inline';
+            }
+            if (lblRange) {
+                lblRange.style.display = range ? 'inline' : 'none';
+            }
+            if (ed) {
+                ed.required = !!range;
+                if (!range) {
+                    ed.value = '';
+                    ed.removeAttribute('min');
+                } else {
+                    syncEndMin();
+                }
+            }
+        }
+        if (modeSingle) {
+            modeSingle.addEventListener('change', applyServiceDateMode);
+        }
+        if (modeRange) {
+            modeRange.addEventListener('change', applyServiceDateMode);
+        }
         if (sd) {
             sd.addEventListener('change', syncEndMin);
-            syncEndMin();
         }
+        applyServiceDateMode();
     })();
 
     var formEl = document.getElementById('academicServiceForm');

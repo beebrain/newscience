@@ -85,12 +85,7 @@ class AcademicServices extends BaseController
      */
     public function store()
     {
-        $rules = [
-            'academic_year'    => 'permit_empty|max_length[20]',
-            'service_date'     => 'required|valid_date',
-            'service_date_end' => 'permit_empty|valid_date',
-            'title'            => 'required|max_length[500]',
-        ];
+        $rules = $this->getServiceFormValidationRules();
         if (! $this->validate($rules)) {
             if ($this->request->isAJAX()) {
                 return $this->response->setStatusCode(422)->setJSON([
@@ -440,12 +435,7 @@ class AcademicServices extends BaseController
             return redirect()->to(base_url('admin/academic-services'))->with('error', 'ไม่พบข้อมูล');
         }
 
-        $rules = [
-            'academic_year'    => 'permit_empty|max_length[20]',
-            'service_date'     => 'required|valid_date',
-            'service_date_end' => 'permit_empty|valid_date',
-            'title'            => 'required|max_length[500]',
-        ];
+        $rules = $this->getServiceFormValidationRules();
         if (! $this->validate($rules)) {
             if ($this->request->isAJAX()) {
                 return $this->response->setStatusCode(422)->setJSON([
@@ -597,10 +587,35 @@ class AcademicServices extends BaseController
     }
 
     /**
-     * ตรวจว่าวันสิ้นสุดไม่ก่อนวันเริ่ม (เมื่อระบุทั้งคู่)
+     * กฎตรวจฟอร์มบริการวิชาการ — เลือกช่วงวันที่เท่านั้นที่บังคับวันสิ้นสุด
+     */
+    private function getServiceFormValidationRules(): array
+    {
+        $mode = $this->request->getPost('service_date_mode') ?: 'single';
+        $rules = [
+            'academic_year'      => 'permit_empty|max_length[20]',
+            'service_date'       => 'required|valid_date',
+            'service_date_mode'  => 'permit_empty|in_list[single,range]',
+            'title'              => 'required|max_length[500]',
+        ];
+        if ($mode === 'range') {
+            $rules['service_date_end'] = 'required|valid_date';
+        } else {
+            $rules['service_date_end'] = 'permit_empty|valid_date';
+        }
+
+        return $rules;
+    }
+
+    /**
+     * ตรวจว่าวันสิ้นสุดไม่ก่อนวันเริ่ม (เฉพาะโหมดช่วงวันที่)
      */
     private function validateServiceDateRangeMessage(): ?string
     {
+        $mode = $this->request->getPost('service_date_mode') ?: 'single';
+        if ($mode !== 'range') {
+            return null;
+        }
         $start = trim((string) $this->request->getPost('service_date'));
         $end   = trim((string) $this->request->getPost('service_date_end'));
         if ($end === '') {
@@ -634,7 +649,11 @@ class AcademicServices extends BaseController
             $compensationAmount = $this->request->getPost('compensation_amount') !== '' ? (float) $this->request->getPost('compensation_amount') : null;
         }
 
-        $endRaw   = $this->request->getPost('service_date_end');
+        $mode   = $this->request->getPost('service_date_mode') ?: 'single';
+        $endRaw = $this->request->getPost('service_date_end');
+        if ($mode !== 'range') {
+            $endRaw = '';
+        }
         $startRaw = $this->request->getPost('service_date');
         if ($endRaw !== null && $endRaw !== '' && $startRaw !== null && $startRaw !== '' && $endRaw === $startRaw) {
             $endRaw = '';

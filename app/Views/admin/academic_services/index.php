@@ -22,34 +22,39 @@
             <div class="alert alert-danger"><?= esc(session('error')) ?></div>
         <?php endif; ?>
 
-        <form method="get" action="<?= base_url('admin/academic-services') ?>" class="form-row" style="margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="year" class="form-label">ปีการศึกษา (พ.ศ.)</label>
-                <select name="year" id="year" class="form-control" style="min-width: 120px;">
-                    <option value="">ทุกปี</option>
-                    <?php foreach ($years as $y): ?>
-                        <option value="<?= esc($y) ?>" <?= ($selected_year ?? '') === $y ? 'selected' : '' ?>><?= esc($y) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="date_from" class="form-label">วันที่บริการ ตั้งแต่</label>
-                <input type="date" name="date_from" id="date_from" class="form-control" style="min-width: 150px;"
-                       value="<?= esc($selected_date_from ?? '') ?>">
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="date_to" class="form-label">ถึงวันที่</label>
-                <input type="date" name="date_to" id="date_to" class="form-control" style="min-width: 150px;"
-                       value="<?= esc($selected_date_to ?? '') ?>">
-            </div>
-            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
-                <label for="keyword" class="form-label">ค้นหาชื่อโครงการ/กิจกรรม</label>
-                <input type="text" name="keyword" id="keyword" class="form-control" placeholder="พิมพ์คำค้น..."
-                       value="<?= esc($keyword ?? '') ?>">
-            </div>
-            <div class="form-group" style="margin-bottom: 0; align-self: flex-end;">
-                <button type="submit" class="btn btn-primary">ค้นหา</button>
-                <a href="<?= base_url('admin/academic-services') ?>" class="btn btn-secondary">ล้าง</a>
+        <form method="get" action="<?= base_url('admin/academic-services') ?>" class="academic-services-filters" aria-label="กรองรายการบริการวิชาการ">
+            <div class="asf-toolbar">
+                <div class="asf-field asf-field--year">
+                    <label for="year" class="asf-label" title="ปีการศึกษา (พ.ศ.)">ปี พ.ศ.</label>
+                    <select name="year" id="year" class="form-control asf-input">
+                        <option value="">ทุกปี</option>
+                        <?php foreach ($years as $y): ?>
+                            <option value="<?= esc($y) ?>" <?= ($selected_year ?? '') === $y ? 'selected' : '' ?>><?= esc($y) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="asf-date-pair" role="group" aria-label="ช่วงวันที่บริการ">
+                    <div class="asf-field">
+                        <label for="date_from" class="asf-label" title="วันที่บริการ ตั้งแต่">ตั้งแต่</label>
+                        <input type="date" name="date_from" id="date_from" class="form-control asf-input asf-input-date"
+                               value="<?= esc($selected_date_from ?? '') ?>">
+                    </div>
+                    <span class="asf-date-sep" aria-hidden="true">–</span>
+                    <div class="asf-field">
+                        <label for="date_to" class="asf-label" title="ถึงวันที่">ถึง</label>
+                        <input type="date" name="date_to" id="date_to" class="form-control asf-input asf-input-date"
+                               value="<?= esc($selected_date_to ?? '') ?>">
+                    </div>
+                </div>
+                <div class="asf-field asf-field--keyword">
+                    <label for="keyword" class="asf-label" title="ค้นหาชื่อโครงการ/กิจกรรม">คำค้น</label>
+                    <input type="search" name="keyword" id="keyword" class="form-control asf-input" placeholder="ชื่อโครงการ…"
+                           value="<?= esc($keyword ?? '') ?>" autocomplete="off">
+                </div>
+                <div class="asf-actions">
+                    <button type="submit" class="btn btn-primary btn-sm">ค้นหา</button>
+                    <a href="<?= base_url('admin/academic-services') ?>" class="btn btn-secondary btn-sm">ล้าง</a>
+                </div>
             </div>
         </form>
 
@@ -136,6 +141,67 @@
 </div>
 
 <style>
+/* แถบกรองแบบกะทัดรัด */
+.academic-services-filters { margin-bottom: 1rem; }
+.asf-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.4rem 0.65rem;
+}
+.asf-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    margin: 0;
+}
+.asf-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--color-gray-600, #4b5563);
+    margin: 0;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+.asf-input {
+    min-height: 2rem;
+    padding: 0.2rem 0.45rem;
+    font-size: 0.8125rem;
+    line-height: 1.35;
+}
+.asf-input-date { min-width: 8.5rem; max-width: 10rem; }
+.asf-field--year { width: 5.75rem; flex-shrink: 0; }
+.asf-date-pair {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.35rem;
+}
+.asf-date-sep {
+    color: var(--color-gray-500, #6b7280);
+    padding-bottom: 0.45rem;
+    font-size: 0.8rem;
+    line-height: 1;
+    user-select: none;
+}
+.asf-field--keyword {
+    flex: 1 1 10rem;
+    min-width: min(100%, 11rem);
+    max-width: 22rem;
+}
+.asf-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+@media (max-width: 640px) {
+    .asf-actions { margin-left: 0; width: 100%; justify-content: flex-start; }
+}
+
 .academic-modal-overlay {
     position: fixed;
     inset: 0;
