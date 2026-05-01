@@ -64,8 +64,8 @@ if ($oldMode === 'range' || $oldMode === 'single') {
                             </label>
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 1;">
+                    <div class="form-row form-row--academic-service-dates">
+                        <div class="form-group form-group--asd-year">
                             <label for="academic_year" class="form-label">ปีการศึกษา (พ.ศ.)</label>
                             <select id="academic_year" name="academic_year" class="form-control">
                                 <option value="">— เลือก —</option>
@@ -74,7 +74,7 @@ if ($oldMode === 'range' || $oldMode === 'single') {
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="form-group" style="flex: 1; min-width: 160px;">
+                        <div class="form-group form-group--asd-start">
                             <label for="service_date" class="form-label" id="serviceDateStartLabelWrap">
                                 <span id="serviceDateLabelSingle" style="display: <?= $serviceDateMode === 'range' ? 'none' : 'inline' ?>;">วันที่จัดกิจกรรม <span class="required">*</span></span>
                                 <span id="serviceDateLabelRange" style="display: <?= $serviceDateMode === 'range' ? 'inline' : 'none' ?>;">ตั้งแต่วันที่ <span class="required">*</span></span>
@@ -82,12 +82,12 @@ if ($oldMode === 'range' || $oldMode === 'single') {
                             <input type="date" id="service_date" name="service_date" class="form-control" required
                                    value="<?= esc($s['service_date'] ?? old('service_date') ?? date('Y-m-d')) ?>">
                         </div>
-                    </div>
-                    <div id="serviceDateEndWrap" class="form-group" style="margin-top: 0.75rem; max-width: 280px; display: <?= $serviceDateMode === 'range' ? 'block' : 'none' ?>;">
-                        <label for="service_date_end" class="form-label">ถึงวันที่ <span class="required">*</span></label>
-                        <input type="date" id="service_date_end" name="service_date_end" class="form-control"
-                               value="<?= esc($s['service_date_end'] ?? old('service_date_end') ?? '') ?>"
-                               <?= $serviceDateMode === 'range' ? 'required' : '' ?>>
+                        <div id="serviceDateEndWrap" class="form-group form-group--asd-end" style="display: <?= $serviceDateMode === 'range' ? 'block' : 'none' ?>;">
+                            <label for="service_date_end" class="form-label">ถึงวันที่ <span class="required">*</span></label>
+                            <input type="date" id="service_date_end" name="service_date_end" class="form-control"
+                                   value="<?= esc($s['service_date_end'] ?? old('service_date_end') ?? '') ?>"
+                                   <?= $serviceDateMode === 'range' ? 'required' : '' ?>>
+                        </div>
                     </div>
                 </div>
 
@@ -281,6 +281,34 @@ if ($oldMode === 'range' || $oldMode === 'single') {
 .participant-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0; border-bottom: 1px solid var(--color-gray-100, #f3f4f6); }
 .participant-row .tag { flex: 1; }
 #revenue_amount_wrap { margin-top: 0.5rem; }
+.form-row.form-row--academic-service-dates {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: 0.5rem 0.75rem;
+}
+.form-row--academic-service-dates .form-group {
+    flex: 1 1 0;
+    min-width: 0;
+    margin-bottom: 0 !important;
+}
+.form-row--academic-service-dates .form-group--asd-year {
+    flex: 0 0 6.75rem;
+    max-width: 8.5rem;
+}
+.form-row--academic-service-dates .form-group--asd-start,
+.form-row--academic-service-dates .form-group--asd-end {
+    min-width: 7.5rem;
+}
+@media (max-width: 640px) {
+    .form-row--academic-service-dates {
+        flex-wrap: wrap;
+    }
+    .form-row--academic-service-dates .form-group--asd-year {
+        flex: 1 1 calc(50% - 0.5rem);
+        max-width: none;
+    }
+}
 </style>
 
 <?= $this->endSection() ?>
