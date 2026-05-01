@@ -95,8 +95,21 @@ if ($targetDetail === '' && ! empty($s['target_group_spec'])) {
             <h3 class="form-section-title">ส่วนที่ 1 ข้อมูลทั่วไป</h3>
             <dl class="detail-dl">
                 <dt>ปีการศึกษา (พ.ศ.)</dt><dd><?= esc($s['academic_year'] ?? '—') ?></dd>
-                <dt>วัน/เดือน/ปี ที่บริการวิชาการ</dt>
-                <dd><?= ! empty($s['service_date']) ? esc(date('d/m/Y', strtotime($s['service_date']))) : '—' ?></dd>
+                <dt>ช่วงวันที่บริการวิชาการ</dt>
+                <dd><?php
+                    $sd = $s['service_date'] ?? '';
+                    $ed = $s['service_date_end'] ?? '';
+                    if ($sd === '' || $sd === null) {
+                        echo '—';
+                    } else {
+                        $ds = date('d/m/Y', strtotime($sd));
+                        if ($ed === '' || $ed === null || $ed === $sd) {
+                            echo esc($ds);
+                        } else {
+                            echo esc($ds . ' – ' . date('d/m/Y', strtotime($ed)));
+                        }
+                    }
+                ?></dd>
                 <dt>ชื่อโครงการ/กิจกรรม/หัวข้อ</dt><dd><strong><?= esc($s['title'] ?? '') ?></strong></dd>
                 <dt>เจ้าของโครงการ/กิจกรรม</dt>
                 <dd><?= esc($projectOwnerLabels[$s['project_owner_type'] ?? ''] ?? ($s['project_owner_type'] ?? '—')) ?>

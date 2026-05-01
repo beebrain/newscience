@@ -50,10 +50,16 @@ $attachments_list = $isEdit ? ($s['attachments'] ?? []) : [];
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="service_date" class="form-label">วัน/เดือน/ปี ที่บริการวิชาการ <span class="required">*</span></label>
+                        <div class="form-group" style="flex: 1; min-width: 160px;">
+                            <label for="service_date" class="form-label">ตั้งแต่วันที่ <span class="required">*</span></label>
                             <input type="date" id="service_date" name="service_date" class="form-control" required
                                    value="<?= esc($s['service_date'] ?? old('service_date') ?? date('Y-m-d')) ?>">
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 160px;">
+                            <label for="service_date_end" class="form-label">ถึงวันที่</label>
+                            <input type="date" id="service_date_end" name="service_date_end" class="form-control"
+                                   value="<?= esc($s['service_date_end'] ?? old('service_date_end') ?? '') ?>">
+                            <p class="form-text" style="margin: 0.25rem 0 0; font-size: 0.8125rem;">เว้นว่าง = กิจกรรมวันเดียว</p>
                         </div>
                     </div>
                 </div>
@@ -293,6 +299,20 @@ $initial_participants = array_map(function ($p) {
                 .catch(function() { alert('เกิดข้อผิดพลาด'); });
         });
     });
+
+    (function() {
+        var sd = document.getElementById('service_date');
+        var ed = document.getElementById('service_date_end');
+        function syncEndMin() {
+            if (sd && ed && sd.value) {
+                ed.min = sd.value;
+            }
+        }
+        if (sd) {
+            sd.addEventListener('change', syncEndMin);
+            syncEndMin();
+        }
+    })();
 
     var $revenueOptionSelect = document.getElementById('revenue_option_select');
     var $revenueAmount = document.getElementById('revenue_amount');

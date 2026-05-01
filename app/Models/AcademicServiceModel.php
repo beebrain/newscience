@@ -13,6 +13,7 @@ class AcademicServiceModel extends Model
     protected $allowedFields    = [
         'academic_year',
         'service_date',
+        'service_date_end',
         'title',
         'project_owner_type',
         'project_owner_spec',
@@ -61,11 +62,20 @@ class AcademicServiceModel extends Model
         if ($year !== null && $year !== '') {
             $builder->where('academic_year', $year);
         }
+        // ช่วงกิจกรรมทับซ้อนกับตัวกรอง [dateFrom, dateTo]
         if ($dateFrom !== null && $dateFrom !== '') {
-            $builder->where('service_date >=', $dateFrom);
+            $builder->where(
+                'COALESCE(service_date_end, service_date) >= ' . $this->db->escape($dateFrom),
+                null,
+                false
+            );
         }
         if ($dateTo !== null && $dateTo !== '') {
-            $builder->where('service_date <=', $dateTo);
+            $builder->where(
+                'service_date <= ' . $this->db->escape($dateTo),
+                null,
+                false
+            );
         }
         return $builder->findAll();
     }

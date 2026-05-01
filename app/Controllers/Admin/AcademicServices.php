@@ -86,9 +86,10 @@ class AcademicServices extends BaseController
     public function store()
     {
         $rules = [
-            'academic_year' => 'permit_empty|max_length[20]',
-            'service_date'  => 'required|valid_date',
-            'title'         => 'required|max_length[500]',
+            'academic_year'    => 'permit_empty|max_length[20]',
+            'service_date'     => 'required|valid_date',
+            'service_date_end' => 'permit_empty|valid_date',
+            'title'            => 'required|max_length[500]',
         ];
         if (! $this->validate($rules)) {
             if ($this->request->isAJAX()) {
@@ -98,6 +99,17 @@ class AcademicServices extends BaseController
                 ]);
             }
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+        $rangeErr = $this->validateServiceDateRangeMessage();
+        if ($rangeErr !== null) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'errors'  => ['service_date_end' => $rangeErr],
+                ]);
+            }
+
+            return redirect()->back()->withInput()->with('errors', ['service_date_end' => $rangeErr]);
         }
         if ($this->request->getPost('has_compensation') === 'yes') {
             $comp = $this->request->getPost('compensation_amount');
@@ -184,10 +196,18 @@ class AcademicServices extends BaseController
             $builder->where('academic_year', $year);
         }
         if ($dateFrom !== null && $dateFrom !== '') {
-            $builder->where('service_date >=', $dateFrom);
+            $builder->where(
+                'COALESCE(service_date_end, service_date) >= ' . $db->escape($dateFrom),
+                null,
+                false
+            );
         }
         if ($dateTo !== null && $dateTo !== '') {
-            $builder->where('service_date <=', $dateTo);
+            $builder->where(
+                'service_date <= ' . $db->escape($dateTo),
+                null,
+                false
+            );
         }
 
         $groupColumn = $dimension === 'year' ? 'academic_year' : $dimension;
@@ -421,9 +441,10 @@ class AcademicServices extends BaseController
         }
 
         $rules = [
-            'academic_year' => 'permit_empty|max_length[20]',
-            'service_date'  => 'required|valid_date',
-            'title'         => 'required|max_length[500]',
+            'academic_year'    => 'permit_empty|max_length[20]',
+            'service_date'     => 'required|valid_date',
+            'service_date_end' => 'permit_empty|valid_date',
+            'title'            => 'required|max_length[500]',
         ];
         if (! $this->validate($rules)) {
             if ($this->request->isAJAX()) {
@@ -433,6 +454,17 @@ class AcademicServices extends BaseController
                 ]);
             }
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+        $rangeErr = $this->validateServiceDateRangeMessage();
+        if ($rangeErr !== null) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'errors'  => ['service_date_end' => $rangeErr],
+                ]);
+            }
+
+            return redirect()->back()->withInput()->with('errors', ['service_date_end' => $rangeErr]);
         }
         if ($this->request->getPost('has_compensation') === 'yes') {
             $comp = $this->request->getPost('compensation_amount');
@@ -564,6 +596,26 @@ class AcademicServices extends BaseController
         return $this->response->setJSON(['status' => 'success', 'data' => $data]);
     }
 
+    /**
+     * ตรวจว่าวันสิ้นสุดไม่ก่อนวันเริ่ม (เมื่อระบุทั้งคู่)
+     */
+    private function validateServiceDateRangeMessage(): ?string
+    {
+        $start = trim((string) $this->request->getPost('service_date'));
+        $end   = trim((string) $this->request->getPost('service_date_end'));
+        if ($end === '') {
+            return null;
+        }
+        if ($start === '') {
+            return null;
+        }
+        if (strtotime($end) < strtotime($start)) {
+            return 'วันสิ้นสุดต้องไม่ก่อนวันเริ่มต้น';
+        }
+
+        return null;
+    }
+
     private function getServiceDataFromRequest(): array
     {
         $revenueOption = $this->request->getPost('revenue_option');
@@ -582,10 +634,17 @@ class AcademicServices extends BaseController
             $compensationAmount = $this->request->getPost('compensation_amount') !== '' ? (float) $this->request->getPost('compensation_amount') : null;
         }
 
+        $endRaw   = $this->request->getPost('service_date_end');
+        $startRaw = $this->request->getPost('service_date');
+        if ($endRaw !== null && $endRaw !== '' && $startRaw !== null && $startRaw !== '' && $endRaw === $startRaw) {
+            $endRaw = '';
+        }
+
         return [
             'academic_year'           => $this->request->getPost('academic_year') ?: null,
-            'service_date'           => $this->request->getPost('service_date'),
-            'title'                  => $this->request->getPost('title'),
+            'service_date'            => $this->request->getPost('service_date'),
+            'service_date_end'        => ($endRaw !== null && $endRaw !== '') ? $endRaw : null,
+            'title'                   => $this->request->getPost('title'),
             'project_owner_type'     => $this->request->getPost('project_owner_type') ?: null,
             'project_owner_spec'     => $this->request->getPost('project_owner_spec') ?: null,
             'venue_type'             => $this->request->getPost('venue_type') ?: null,

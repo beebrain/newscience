@@ -63,13 +63,13 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th style="width: 90px;">วันที่</th>
+                            <th style="min-width: 120px;">ช่วงวันที่</th>
                             <th style="width: 80px;">ปี (พ.ศ.)</th>
                             <th>ชื่อโครงการ/กิจกรรม</th>
                             <th style="width: 140px;">ลักษณะบริการ</th>
                             <th style="width: 80px;">ผู้ร่วมงาน</th>
                             <th style="width: 90px;">เอกสารแนบ</th>
-                            <th style="min-width: 220px;">จัดการ</th>
+                            <th style="min-width: 180px;">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -87,16 +87,27 @@
                             $typeLabel = $serviceTypeLabels[$row['service_type'] ?? ''] ?? ($row['service_type_spec'] ?? $row['service_type'] ?? '—');
                             $count = $participant_counts[$row['id']] ?? 0;
                             $attCount = $attachment_counts[$row['id']] ?? 0;
+                            $sd = $row['service_date'] ?? '';
+                            $ed = $row['service_date_end'] ?? '';
+                            if ($sd) {
+                                $dateCell = date('d/m/Y', strtotime($sd));
+                                if ($ed !== null && $ed !== '' && $ed !== $sd) {
+                                    $dateCell .= ' – ' . date('d/m/Y', strtotime($ed));
+                                }
+                            } else {
+                                $dateCell = '—';
+                            }
                         ?>
                             <tr>
-                                <td><?= $row['service_date'] ? date('d/m/Y', strtotime($row['service_date'])) : '—' ?></td>
+                                <td><?= esc($dateCell) ?></td>
                                 <td><?= esc($row['academic_year'] ?? '—') ?></td>
-                                <td><strong><?= esc($row['title']) ?></strong></td>
+                                <td>
+                                    <button type="button" class="academic-row-title" data-id="<?= (int) $row['id'] ?>"><?= esc($row['title']) ?></button>
+                                </td>
                                 <td><?= esc($typeLabel) ?></td>
                                 <td><?= $count ?></td>
                                 <td><?= $attCount > 0 ? (int) $attCount . ' ไฟล์' : '—' ?></td>
                                 <td>
-                                    <button type="button" class="btn btn-secondary btn-sm btn-detail-service" data-id="<?= (int) $row['id'] ?>">รายละเอียด</button>
                                     <button type="button" class="btn btn-secondary btn-sm btn-edit-service" data-id="<?= (int) $row['id'] ?>">แก้ไข</button>
                                     <a href="<?= base_url('admin/academic-services/delete/' . $row['id']) ?>"
                                        class="btn btn-danger btn-sm"
@@ -174,6 +185,27 @@
     padding: 1rem 1.25rem;
     border-top: 1px solid var(--color-gray-200, #e5e7eb);
 }
+button.academic-row-title {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    font-weight: 600;
+    color: var(--color-primary, #2563eb);
+    text-align: left;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+}
+button.academic-row-title:hover,
+button.academic-row-title:focus-visible {
+    text-decoration-color: currentColor;
+}
 
 </style>
 
@@ -219,7 +251,7 @@
     });
     if (btnClose) btnClose.addEventListener('click', closeModal);
 
-    [].forEach.call(document.querySelectorAll('.btn-detail-service'), function(b) {
+    [].forEach.call(document.querySelectorAll('.academic-row-title'), function(b) {
         b.addEventListener('click', function() {
             var id = this.getAttribute('data-id');
             if (id) openModal('detail', id);
