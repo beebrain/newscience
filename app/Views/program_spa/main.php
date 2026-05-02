@@ -98,6 +98,8 @@
 
         /* Faculty card — เล็กลง ~30% แบบ Meet the team (Major Tom) */
         .faculty-grid-compact .faculty-card { max-width: 180px; margin: 0 auto; }
+        a.faculty-card { display: block; text-decoration: none; color: inherit; -webkit-tap-highlight-color: transparent; }
+        a.faculty-card:focus-visible { outline: 2px solid var(--theme); outline-offset: 3px; }
         .faculty-card { position: relative; overflow: hidden; }
         .faculty-card .faculty-overlay {
             position: absolute; inset: 0; background: linear-gradient(to top, rgba(255,255,255,0.95) 0%, transparent 55%);
@@ -138,9 +140,21 @@
         /* Glass - โทนสว่าง */
         .glass { background: color-mix(in srgb, var(--theme) 4%, #ffffff); backdrop-filter: blur(12px); border: 1px solid rgba(var(--theme-rgb), 0.15); }
 
-        /* Loading screen */
-        .loader-ring { width: 60px; height: 60px; border: 3px solid rgba(var(--theme-rgb), 0.15); border-top-color: var(--theme); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Skeleton loading screen */
+        .skeleton-shell { background: var(--website-bg, #f7f9fb); color: #1e293b; transition: opacity 0.35s ease; }
+        .skeleton-block {
+            position: relative; overflow: hidden; border-radius: 0.875rem;
+            background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 48%, #e2e8f0 100%);
+            background-size: 240% 100%; animation: skeletonShimmer 1.4s ease-in-out infinite;
+        }
+        .skeleton-pill { border-radius: 9999px; }
+        .skeleton-card { background: rgba(255,255,255,0.82); border: 1px solid rgba(148,163,184,0.24); box-shadow: 0 1px 3px rgba(15,23,42,0.06); }
+        @keyframes skeletonShimmer { 0% { background-position: 120% 0; } 100% { background-position: -120% 0; } }
+        @media (prefers-reduced-motion: reduce) {
+            .skeleton-block { animation: none; }
+            .orb, .hero-title-char, .reveal, .reveal-left, .reveal-right, .reveal-scale, .stagger-children > * { transition: none !important; animation: none !important; }
+            .spa-topic-icon-ring, .program-info-intro-icon, .program-info-intro-line { animation: none !important; }
+        }
         .scroll-top-btn { background: rgba(var(--theme-rgb), 0.85) !important; }
         .scroll-top-btn:hover { background: rgba(var(--theme-rgb), 1) !important; }
         /* Hero — ให้รูปเด่นขึ้นแบบ Major Tom (opacity สูงขึ้น, overlay เบาลง) */
@@ -156,10 +170,10 @@
         .section-bg-tint-4 { background: color-mix(in srgb, var(--theme) 12%, var(--website-bg, #f8fafc)); }
         /* ศิษย์เก่า testimonial — ไม่มีกรอบ/การ์ด กลืนกับพื้นหลังแบบ Clean (Major Tom style) */
         .alumni-testimonial-card { background: transparent; border: none; box-shadow: none; }
-        .nav-light { background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); }
+        .nav-light { background: rgba(255,255,255,0.96); backdrop-filter: blur(12px); }
         .nav-brand-theme { color: var(--theme); }
         .nav-link-theme:hover { color: var(--theme); }
-        .hero-title { color: #0f172a; text-shadow: 0 1px 2px rgba(255,255,255,0.8); }
+        .hero-title { color: #fff; text-shadow: 0 1px 12px rgba(0,0,0,0.35); }
         .hero-sub { color: #334155; }
         .hero-arrow { color: var(--theme); opacity: 0.9; }
         .elo-num { background: rgba(var(--theme-rgb), 0.15); color: var(--theme); }
@@ -180,12 +194,136 @@
         .spa-study-plan-prose table, .spa-admission-prose table, .spa-main-topic-prose table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
         .spa-study-plan-prose th, .spa-study-plan-prose td, .spa-admission-prose th, .spa-admission-prose td, .spa-main-topic-prose th, .spa-main-topic-prose td { border: 1px solid #e2e8f0; padding: 0.6rem 0.75rem; vertical-align: top; }
         .spa-study-plan-prose th, .spa-admission-prose th, .spa-main-topic-prose th { background: color-mix(in srgb, var(--theme) 6%, #fff); color: #334155; font-weight: 600; }
-        .spa-topic-section {
-            background: color-mix(in srgb, var(--theme) 4%, #ffffff); border: 1px solid rgba(var(--theme-rgb), 0.16);
-            scroll-margin-top: 5rem;
+        /* ข้อมูลหลักสูตร — แต่ละหัวข้อเป็น section เต็มความกว้าง */
+        .spa-topic-outer {
+            scroll-margin-top: 5.5rem;
+            border-top: 1px solid rgba(226, 232, 240, 0.85);
         }
-        .spa-topic-section:nth-child(even) { background: color-mix(in srgb, var(--theme) 7%, #ffffff); }
+        #main-topics-sections > .spa-topic-outer:first-child { border-top: none; }
+        #main-topics-sections > .spa-topic-outer:nth-child(odd) {
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 55%, #f8fafc 100%);
+        }
+        #main-topics-sections > .spa-topic-outer:nth-child(even) {
+            background: linear-gradient(135deg, rgba(255,255,255,0.98), color-mix(in srgb, var(--theme) 4%, #fff));
+        }
+        .spa-topic-panel {
+            background: rgba(255,255,255,0.82);
+            border: 1px solid rgba(226,232,240,0.9);
+            box-shadow: 0 24px 70px rgba(15,23,42,0.06);
+            border-radius: 1.75rem;
+            padding: 1.5rem 1.35rem;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s;
+        }
+        @media (min-width: 768px) {
+            .spa-topic-panel { padding: 2rem 2.25rem; }
+        }
+        .spa-topic-layout--center .spa-topic-panel {
+            box-shadow: 0 28px 80px rgba(15,23,42,0.08);
+        }
+        /* เข้าแบบมีทิศทาง + ระยะเวลานุ่มขึ้น */
+        .spa-topic-outer.reveal,
+        .spa-topic-outer.reveal-left,
+        .spa-topic-outer.reveal-right,
+        .spa-topic-outer.reveal-scale {
+            transition-duration: 0.95s;
+            transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .spa-topic-outer.visible:hover .spa-topic-panel {
+            transform: translateY(-3px);
+            box-shadow: 0 28px 90px rgba(15,23,42,0.1);
+            border-color: rgba(var(--theme-rgb), 0.22);
+        }
+        .spa-topic-icon-wrap { perspective: 800px; }
+        .spa-topic-icon-ring {
+            width: 3.75rem; height: 3.75rem;
+            border-radius: 1.15rem;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(145deg, color-mix(in srgb, var(--theme) 14%, #fff), color-mix(in srgb, var(--theme) 6%, #fff));
+            border: 1px solid rgba(var(--theme-rgb), 0.22);
+            color: var(--theme);
+            box-shadow: 0 10px 28px rgba(var(--theme-rgb), 0.14), inset 0 1px 0 rgba(255,255,255,0.75);
+            animation: spaTopicIconFloat 4.2s ease-in-out infinite;
+        }
+        @media (min-width: 640px) {
+            .spa-topic-icon-ring { width: 4.25rem; height: 4.25rem; border-radius: 1.25rem; }
+        }
+        .spa-topic-svg { width: 1.65rem; height: 1.65rem; }
+        @media (min-width: 640px) {
+            .spa-topic-svg { width: 1.85rem; height: 1.85rem; }
+        }
+        @keyframes spaTopicIconFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            45% { transform: translateY(-5px) rotate(-2deg); }
+            55% { transform: translateY(-5px) rotate(2deg); }
+        }
+        /* Intro — แถบไอคอนตกแต่ง */
+        .program-info-intro-decor { margin-top: 2.25rem; }
+        .program-info-intro-line {
+            height: 2px; flex: 1; min-width: 2rem; max-width: 6rem;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, transparent, rgba(var(--theme-rgb), 0.35), transparent);
+            animation: programIntroLinePulse 3s ease-in-out infinite;
+        }
+        @keyframes programIntroLinePulse {
+            0%, 100% { opacity: 0.45; transform: scaleX(0.92); }
+            50% { opacity: 1; transform: scaleX(1); }
+        }
+        .program-info-intro-icon {
+            width: 2.75rem; height: 2.75rem;
+            border-radius: 0.85rem;
+            display: flex; align-items: center; justify-content: center;
+            background: color-mix(in srgb, var(--theme) 10%, #fff);
+            border: 1px solid rgba(var(--theme-rgb), 0.14);
+            color: var(--theme);
+            animation: programIntroIconBob 2.8s ease-in-out infinite;
+        }
+        .program-info-intro-icon:nth-child(2) { animation-delay: 0.2s; }
+        .program-info-intro-icon:nth-child(4) { animation-delay: 0.4s; }
+        .program-info-intro-icon:nth-child(6) { animation-delay: 0.6s; }
+        @keyframes programIntroIconBob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        .program-info-intro-icon svg { width: 1.1rem; height: 1.1rem; }
         .spa-topic-section__body { max-width: 76rem; }
+        .spa-topic-section__body table { overflow: hidden; border-radius: 1rem; }
+        .spa-topic-section__body th { color: #64748b; font-weight: 600; }
+        .program-info-intro {
+            background:
+                radial-gradient(circle at 18% 0%, rgba(var(--theme-rgb), 0.1), transparent 34%),
+                radial-gradient(circle at 82% 12%, rgba(15,23,42,0.06), transparent 36%),
+                linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border-bottom: 1px solid rgba(226,232,240,0.85);
+            padding-top: clamp(2rem, 5vw, 3.5rem);
+            padding-bottom: clamp(2rem, 5vw, 3.5rem);
+        }
+        .program-info-kicker { color: var(--theme); letter-spacing: 0.18em; text-transform: uppercase; font-size: 0.72rem; font-weight: 700; }
+        .program-info-title { color: #020617; letter-spacing: -0.055em; line-height: 0.96; }
+        .program-info-subtitle { color: #64748b; line-height: 1.85; }
+        .spa-topic-title {
+            font-size: clamp(1.875rem, 4.2vw, 3.15rem);
+            font-weight: 700;
+            letter-spacing: -0.045em;
+            line-height: 1.12;
+            color: #0f172a;
+            margin: 0;
+        }
+        .spa-topic-title::after {
+            content: '';
+            display: block;
+            width: 3.25rem;
+            height: 0.3rem;
+            margin-top: 1rem;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, var(--theme), color-mix(in srgb, var(--theme) 35%, #94a3b8));
+        }
+        .spa-topic-title--center::after { margin-left: auto; margin-right: auto; }
+        .spa-topic-title--right::after { margin-left: auto; }
+        .topic-empty-state {
+            border: 1px dashed #cbd5e1;
+            background: rgba(248,250,252,0.72);
+            color: #94a3b8;
+        }
         #curriculum-structure-block .ptb-block { margin-bottom: 1.25rem; }
         #curriculum-structure-block .ptb-block:last-child { margin-bottom: 0; }
         #curriculum-structure-block .ptb-title { font-size: 1.125rem; font-weight: 600; color: var(--theme); margin: 0 0 0.5rem; }
@@ -209,15 +347,175 @@
         /* รายวิชาแยกตามปี — details/summary */
         #spa-curriculum-by-year details > summary { list-style: none; }
         #spa-curriculum-by-year details > summary::-webkit-details-marker { display: none; }
+        .sample-card { background: #fff; border: 1px solid #e5e7eb; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.04); }
+        /* Program Structure — การ์ดใหม่ + ไอคอน SVG */
+        #structure.structure-band {
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #fafafa 100%);
+        }
+        .structure-section-head-icon {
+            width: 3rem; height: 3rem; margin: 0 auto 1rem;
+            border-radius: 1rem;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(145deg, color-mix(in srgb, var(--theme) 16%, #fff), color-mix(in srgb, var(--theme) 6%, #f8fafc));
+            border: 1px solid rgba(var(--theme-rgb), 0.18);
+            color: var(--theme);
+            box-shadow: 0 12px 28px rgba(var(--theme-rgb), 0.1), inset 0 1px 0 rgba(255,255,255,0.85);
+        }
+        .structure-section-head-icon svg { width: 1.35rem; height: 1.35rem; }
+        .structure-section-title {
+            color: #0f172a;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+        }
+        .structure-section-lead { color: #64748b; line-height: 1.75; max-width: 36rem; margin-left: auto; margin-right: auto; }
+        .spa-structure-card {
+            position: relative;
+            border-radius: 1.35rem;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            background: linear-gradient(165deg, rgba(255,255,255,0.98) 0%, #ffffff 40%, color-mix(in srgb, var(--theme) 3%, #fff) 100%);
+            box-shadow:
+                0 1px 0 rgba(255,255,255,0.9) inset,
+                0 22px 48px -14px rgba(15, 23, 42, 0.1);
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.45s, border-color 0.35s;
+            overflow: hidden;
+        }
+        .spa-structure-card::before {
+            content: '';
+            position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.45s;
+            background: radial-gradient(120% 80% at 100% 0%, rgba(var(--theme-rgb), 0.09), transparent 55%);
+        }
+        .spa-structure-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(var(--theme-rgb), 0.22);
+            box-shadow:
+                0 1px 0 rgba(255,255,255,0.95) inset,
+                0 28px 56px -12px rgba(15, 23, 42, 0.14),
+                0 0 0 1px rgba(var(--theme-rgb), 0.06);
+        }
+        .spa-structure-card:hover::before { opacity: 1; }
+        .spa-structure-card__inner {
+            position: relative;
+            z-index: 1;
+            padding: 1.5rem 1.35rem 1.4rem;
+            box-sizing: border-box;
+        }
+        @media (min-width: 768px) {
+            .spa-structure-card__inner { padding: 1.65rem 1.5rem 1.5rem; }
+        }
+        .spa-structure-card__header {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.9rem;
+            margin-bottom: 1.1rem;
+            min-width: 0;
+        }
+        .spa-structure-card__icon-wrap {
+            flex-shrink: 0;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            background: linear-gradient(145deg, color-mix(in srgb, var(--theme) 20%, #fff), color-mix(in srgb, var(--theme) 8%, #f8fafc));
+            border: 1px solid rgba(var(--theme-rgb), 0.2);
+            color: var(--theme);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 4px 14px rgba(var(--theme-rgb), 0.07);
+        }
+        .spa-structure-card__icon-wrap .structure-card-svg { width: 1.5rem; height: 1.5rem; }
+        .spa-structure-card__title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: #0f172a;
+            margin: 0;
+            padding-top: 0.2rem;
+            line-height: 1.35;
+            flex: 1;
+            min-width: 0;
+        }
+        .spa-structure-card__list { margin: 0; padding: 0; list-style: none; }
+        .spa-structure-card__list-icon {
+            flex-shrink: 0;
+            width: 1.35rem; height: 1.35rem;
+            border-radius: 9999px;
+            display: flex; align-items: center; justify-content: center;
+            margin-top: 0.1rem;
+            background: color-mix(in srgb, var(--theme) 12%, #fff);
+            color: var(--theme);
+        }
+        .spa-structure-card__list-icon svg { width: 0.65rem; height: 0.65rem; }
+        @media (prefers-reduced-motion: reduce) {
+            .spa-structure-card, .spa-structure-card::before { transition: none !important; }
+            .spa-structure-card:hover { transform: none; }
+        }
+        .sample-section-title { color: #0f172a; font-weight: 500; letter-spacing: -0.01em; }
+        .sample-small { font-size: 0.8125rem; line-height: 1.7; color: #475569; }
     </style>
 </head>
 <body class="min-h-screen antialiased">
 
-<!-- Loading -->
-<div id="loading" class="fixed inset-0 z-[60] flex items-center justify-center page-bg">
-    <div class="text-center">
-        <div class="loader-ring mx-auto mb-6"></div>
-        <p class="text-slate-600 text-sm tracking-widest uppercase">Loading Program</p>
+<!-- Skeleton loading layout -->
+<div id="loading" class="skeleton-shell fixed inset-0 z-[60] overflow-y-auto">
+    <div id="skeleton-state" class="min-h-screen">
+        <div class="fixed top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur border-b border-slate-200">
+            <div class="max-w-7xl mx-auto h-20 px-6 flex items-center justify-between">
+                <div class="skeleton-block h-6 w-48"></div>
+                <div class="hidden md:flex items-center gap-6">
+                    <div class="skeleton-block skeleton-pill h-4 w-16"></div>
+                    <div class="skeleton-block skeleton-pill h-4 w-20"></div>
+                    <div class="skeleton-block skeleton-pill h-4 w-16"></div>
+                    <div class="skeleton-block skeleton-pill h-4 w-20"></div>
+                </div>
+                <div class="skeleton-block skeleton-pill h-10 w-28"></div>
+            </div>
+        </div>
+
+        <section class="relative min-h-[760px] pt-20 flex items-center justify-center overflow-hidden bg-[#001a48]">
+            <div class="absolute inset-0 opacity-20">
+                <div class="skeleton-block h-full w-full rounded-none"></div>
+            </div>
+            <div class="relative z-10 max-w-5xl mx-auto px-6 text-center w-full">
+                <div class="skeleton-block skeleton-pill h-8 w-56 mx-auto mb-8"></div>
+                <div class="skeleton-block h-16 md:h-20 w-11/12 max-w-3xl mx-auto mb-5"></div>
+                <div class="skeleton-block h-8 w-2/3 max-w-xl mx-auto mb-8"></div>
+                <div class="skeleton-block h-5 w-3/4 max-w-2xl mx-auto mb-10"></div>
+                <div class="flex flex-wrap justify-center gap-4 mb-12">
+                    <div class="skeleton-block h-12 w-36"></div>
+                    <div class="skeleton-block h-12 w-40"></div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+                    <div class="skeleton-card rounded-2xl p-5"><div class="skeleton-block h-8 w-16 mx-auto mb-3"></div><div class="skeleton-block h-3 w-20 mx-auto"></div></div>
+                    <div class="skeleton-card rounded-2xl p-5"><div class="skeleton-block h-8 w-16 mx-auto mb-3"></div><div class="skeleton-block h-3 w-20 mx-auto"></div></div>
+                    <div class="skeleton-card rounded-2xl p-5"><div class="skeleton-block h-8 w-16 mx-auto mb-3"></div><div class="skeleton-block h-3 w-20 mx-auto"></div></div>
+                    <div class="skeleton-card rounded-2xl p-5"><div class="skeleton-block h-8 w-16 mx-auto mb-3"></div><div class="skeleton-block h-3 w-20 mx-auto"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12">
+                <div class="space-y-5">
+                    <div class="skeleton-block h-10 w-64"></div>
+                    <div class="skeleton-card rounded-2xl p-6 space-y-4">
+                        <div class="skeleton-block h-5 w-full"></div>
+                        <div class="skeleton-block h-5 w-11/12"></div>
+                        <div class="skeleton-block h-5 w-4/5"></div>
+                        <div class="skeleton-block h-24 w-full"></div>
+                    </div>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-5">
+                    <div class="skeleton-card rounded-2xl p-6"><div class="skeleton-block h-10 w-10 mb-5"></div><div class="skeleton-block h-5 w-3/4 mb-3"></div><div class="skeleton-block h-20 w-full"></div></div>
+                    <div class="skeleton-card rounded-2xl p-6"><div class="skeleton-block h-10 w-10 mb-5"></div><div class="skeleton-block h-5 w-3/4 mb-3"></div><div class="skeleton-block h-20 w-full"></div></div>
+                    <div class="skeleton-card rounded-2xl p-6"><div class="skeleton-block h-10 w-10 mb-5"></div><div class="skeleton-block h-5 w-3/4 mb-3"></div><div class="skeleton-block h-20 w-full"></div></div>
+                    <div class="skeleton-card rounded-2xl p-6"><div class="skeleton-block h-10 w-10 mb-5"></div><div class="skeleton-block h-5 w-3/4 mb-3"></div><div class="skeleton-block h-20 w-full"></div></div>
+                </div>
+            </div>
+        </section>
     </div>
 </div>
 
@@ -232,113 +530,177 @@
 </button>
 
 <!-- Navbar - โทนสว่าง -->
-<nav id="navbar" class="fixed top-0 left-0 right-0 z-40 transition-all duration-500" style="transform:translateY(-100%)">
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-40 transition-all duration-500">
     <div class="nav-light border-b border-slate-200/80">
         <div class="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
-            <a href="#hero" id="nav-brand" class="font-bold text-slate-800 tracking-wide text-lg nav-brand-theme">หลักสูตร</a>
+            <a href="#hero" id="nav-brand" class="font-black text-blue-950 tracking-tight text-sm uppercase nav-brand-theme">หลักสูตร</a>
             <button id="nav-toggle" class="md:hidden text-slate-600 p-2" aria-label="เมนู">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
-            <div id="nav-links" class="hidden md:flex items-center gap-8">
-                <a href="#about" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">เกี่ยวกับ</a>
-                <a href="#careers" id="nav-careers" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">อาชีพ</a>
-                <a href="#curriculum-courses" id="nav-curriculum-courses" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">รายวิชา</a>
-                <a href="#main-topics" id="nav-main-topics" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">หัวข้อหลัก</a>
-                <a href="#faculty" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">คณาจารย์</a>
-                <a href="#news" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">ข่าวสาร</a>
-                <a href="#alumni" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">ศิษย์เก่า</a>
-                <a href="#activities" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">กิจกรรม</a>
-                <a href="#facilities" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">สิ่งอำนวยความสะดวก</a>
-                <a href="#documents" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">เอกสาร</a>
-                <a href="#tuition" id="nav-tuition" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">ค่าเล่าเรียน</a>
-                <a href="#admission" id="nav-admission" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme hidden">การรับสมัคร</a>
-                <a href="#video" class="text-sm text-slate-600 hover:opacity-80 transition nav-link-theme">วิดีโอ</a>
+            <div id="nav-links" class="hidden md:flex items-center gap-8 text-[11px]">
+                <a href="#about" class="text-slate-600 hover:opacity-80 transition nav-link-theme">About</a>
+                <a href="#structure" id="nav-main-topics" class="text-slate-600 hover:opacity-80 transition nav-link-theme">Structure</a>
+                <a href="#faculty" id="nav-faculty" class="text-slate-600 hover:opacity-80 transition nav-link-theme">Faculty</a>
+                <a href="#news" id="nav-news" class="text-slate-600 hover:opacity-80 transition nav-link-theme">News</a>
+                <a href="#documents" id="nav-documents" class="text-slate-600 hover:opacity-80 transition nav-link-theme">Resources</a>
+                <a href="#curriculum-courses" id="nav-curriculum-courses" class="text-slate-600 hover:opacity-80 transition nav-link-theme hidden">Courses</a>
+                <a href="#careers" id="nav-careers" class="text-slate-600 hover:opacity-80 transition nav-link-theme hidden">Careers</a>
+                <a href="#tuition" id="nav-tuition" class="text-slate-600 hover:opacity-80 transition nav-link-theme hidden">Tuition</a>
+                <a href="#admission" id="nav-admission" class="text-slate-600 hover:opacity-80 transition nav-link-theme hidden">Admission</a>
+                <a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener" class="px-5 py-2 rounded-full bg-[#001a48] text-white text-xs font-semibold shadow-sm hover:opacity-90 transition">Apply Now</a>
             </div>
         </div>
         <div id="nav-mobile" class="hidden md:hidden border-t border-slate-200 px-6 py-4 space-y-3 bg-white/95">
             <a href="#about" class="block text-slate-600 nav-link-theme">เกี่ยวกับ</a>
-            <a href="#careers" id="nav-careers-mobile" class="block text-slate-600 nav-link-theme hidden">อาชีพ</a>
+            <a href="#structure" id="nav-main-topics-mobile" class="block text-slate-600 nav-link-theme">โครงสร้าง</a>
             <a href="#curriculum-courses" id="nav-curriculum-courses-mobile" class="block text-slate-600 nav-link-theme hidden">รายวิชา</a>
-            <a href="#main-topics" id="nav-main-topics-mobile" class="block text-slate-600 nav-link-theme hidden">หัวข้อหลัก</a>
-            <a href="#faculty" class="block text-slate-600 nav-link-theme">คณาจารย์</a>
-            <a href="#news" class="block text-slate-600 nav-link-theme">ข่าวสาร</a>
-            <a href="#activities" class="block text-slate-600 nav-link-theme">กิจกรรม</a>
-            <a href="#alumni" class="block text-slate-600 nav-link-theme">ศิษย์เก่า</a>
-            <a href="#facilities" class="block text-slate-600 nav-link-theme">สิ่งอำนวยความสะดวก</a>
-            <a href="#documents" class="block text-slate-600 nav-link-theme">เอกสาร</a>
+            <a href="#careers" id="nav-careers-mobile" class="block text-slate-600 nav-link-theme hidden">อาชีพ</a>
+            <a href="#faculty" id="nav-faculty-mobile" class="block text-slate-600 nav-link-theme">คณาจารย์</a>
+            <a href="#news" id="nav-news-mobile" class="block text-slate-600 nav-link-theme">ข่าวสาร</a>
+            <a href="#activities" id="nav-activities-mobile" class="block text-slate-600 nav-link-theme">กิจกรรม</a>
+            <a href="#alumni" id="nav-alumni-mobile" class="block text-slate-600 nav-link-theme">ศิษย์เก่า</a>
+            <a href="#facilities" id="nav-facilities-mobile" class="block text-slate-600 nav-link-theme">สิ่งอำนวยความสะดวก</a>
+            <a href="#documents" id="nav-documents-mobile" class="block text-slate-600 nav-link-theme">เอกสาร</a>
             <a href="#tuition" id="nav-tuition-mobile" class="block text-slate-600 nav-link-theme hidden">ค่าเล่าเรียน</a>
             <a href="#admission" id="nav-admission-mobile" class="block text-slate-600 nav-link-theme hidden">การรับสมัคร</a>
             <a href="#video" class="block text-slate-600 nav-link-theme">วิดีโอ</a>
+            <a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener" class="inline-flex px-5 py-2 rounded-full bg-[var(--theme)] text-white text-sm font-semibold">สมัครเรียน</a>
         </div>
     </div>
 </nav>
 
 <main id="app" class="hidden">
 
-<!-- ==================== HERO (โครงแบบ Major Tom — Hero image เด่น, ข้อความชัด) ==================== -->
-<section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden section-bg-base">
+<!-- ==================== HERO ==================== -->
+<section id="hero" class="relative min-h-[640px] md:min-h-[720px] pt-16 flex items-center justify-center overflow-hidden bg-[#001a48]">
     <canvas id="neural-canvas"></canvas>
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
     <div class="absolute inset-0 bg-cover bg-center hero-bg-image" id="hero-bg"></div>
-    <div class="absolute inset-0 hero-overlay"></div>
+    <div class="absolute inset-0 bg-[#001a48]/82"></div>
     <div class="relative z-10 text-center max-w-4xl mx-auto px-6">
-        <p id="hero-level" class="hero-sub text-sm tracking-[0.3em] uppercase mb-4 opacity-0" style="transition:opacity 1s 0.3s"></p>
-        <h1 id="hero-title" class="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold hero-title leading-tight mb-4"></h1>
-        <p id="hero-degree" class="text-xl md:text-2xl lg:text-3xl hero-sub font-light mb-10 opacity-0" style="transition:opacity 1s 1.2s"></p>
-        <a href="#about" class="glow-btn inline-block px-8 py-4 text-white font-bold rounded-full text-lg opacity-0" style="transition:opacity 1s 1.6s">
-            สำรวจหลักสูตร
-        </a>
+        <p id="hero-level" class="inline-block bg-blue-900/70 text-blue-100 border border-white/20 rounded-full px-4 py-1.5 text-[11px] mb-5 opacity-0" style="transition:opacity 1s 0.3s"></p>
+        <p id="hero-name-en" class="text-xs md:text-sm text-blue-100/90 font-semibold mb-2 opacity-0" style="transition:opacity 1s 0.8s"></p>
+        <h1 id="hero-title" class="text-3xl md:text-4xl lg:text-5xl font-semibold text-white leading-tight mb-4"></h1>
+        <p id="hero-degree" class="text-sm md:text-base text-blue-100/95 font-light mb-4 opacity-0" style="transition:opacity 1s 1.2s"></p>
+        <p id="hero-description" class="text-xs md:text-sm text-blue-50/85 leading-relaxed max-w-2xl mx-auto mb-8 opacity-0" style="transition:opacity 1s 1.35s"></p>
+        <div class="flex flex-wrap gap-4 justify-center opacity-0" id="hero-actions" style="transition:opacity 1s 1.6s">
+            <a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener" class="inline-block px-7 py-3 rounded bg-amber-300 text-amber-950 text-xs font-semibold hover:bg-amber-200 transition shadow-sm">Apply Now</a>
+            <a href="#structure" class="inline-block px-7 py-3 rounded border border-white/40 text-white text-xs font-semibold hover:bg-white/10 transition">View Curriculum</a>
+            <a id="hero-website" href="#" target="_blank" rel="noopener" class="hidden px-7 py-3 rounded border border-white/30 text-white text-xs font-semibold hover:bg-white/10 transition">Program Website</a>
+        </div>
     </div>
     <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
         <svg class="w-6 h-6 hero-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M19 14l-7 7m0 0l-7-7"/></svg>
     </div>
 </section>
 
-<!-- ==================== ABOUT & AUN-QA ==================== -->
-<section id="about" class="relative py-24 md:py-32 section-bg-base">
+<!-- ==================== ABOUT & INTRO ==================== -->
+<section id="about" class="relative py-24 md:py-32 bg-slate-50">
     <div class="max-w-7xl mx-auto px-6">
-        <div class="grid lg:grid-cols-2 gap-16 items-start">
-            <div class="reveal-left max-w-3xl">
-                <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-800 mb-8">เกี่ยวกับหลักสูตร<br><span class="section-accent">& AUN-QA</span></h2>
-                <div id="about-overview-table-wrap" class="spa-overview-aun-table rounded-2xl overflow-hidden glass shadow-sm hidden" role="region" aria-label="สรุปหลักสูตร">
-                    <table class="w-full border-collapse text-left">
-                        <tbody id="about-overview-tbody"></tbody>
-                    </table>
+        <div class="grid md:grid-cols-12 gap-10 md:gap-16 items-center">
+            <div class="md:col-span-5 reveal-left">
+                <div class="aspect-square bg-white rounded-lg overflow-hidden relative shadow-sm border border-slate-200">
+                    <div id="intro-image" class="absolute inset-0 bg-cover bg-center"></div>
+                    <div id="intro-image-fallback" class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-100 text-blue-900">
+                        <svg class="w-24 h-24 opacity-30" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a5.25 5.25 0 110 10.5 5.25 5.25 0 010-10.5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15M12 4.5v15"/></svg>
+                    </div>
                 </div>
             </div>
-            <div class="reveal-right">
-                <h3 class="text-xl font-semibold section-accent mb-4 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
-                    PLO และมาตรฐานการเรียนรู้
-                </h3>
-                <p class="text-sm text-slate-500 mb-4">Programme Learning Outcomes & Learning Standards</p>
-                <div id="learning-standards-intro-spa" class="text-slate-600 text-sm leading-relaxed mb-4 hidden"></div>
-                <h4 class="text-sm font-semibold text-teal-700 mb-2 hidden" id="learning-standards-heading-spa">มาตรฐานการเรียนรู้</h4>
-                <div id="learning-standards-grid-spa" class="space-y-2 mb-4 hidden"></div>
-                <div id="plo-mapping-spa" class="mb-4 hidden overflow-x-auto text-xs"></div>
-                <h4 class="text-sm font-semibold section-accent mb-3 hidden" id="plo-subheading-spa">PLO / ผลลัพธ์ระดับหลักสูตร</h4>
-                <div id="elos-grid" class="space-y-3 stagger-children"></div>
+            <div class="md:col-span-7 md:pl-8 reveal-right">
+                <h2 id="intro-title" class="sample-section-title text-2xl md:text-3xl mb-5">Excellence in Education</h2>
+                <p id="intro-lead" class="sample-small mb-6"></p>
+                <div class="flex items-start gap-4 bg-white p-6 rounded-lg border-l-4 border-amber-300 shadow-sm">
+                    <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-[#001a48]">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M12 3l7.5 4.5v5.25c0 4.142-3.358 7.5-7.5 7.5s-7.5-3.358-7.5-7.5V7.5L12 3z"/></svg>
+                    </span>
+                    <div>
+                        <h3 id="intro-cert-title" class="text-lg font-semibold text-[#001a48] mb-1">AUN-QA Certified</h3>
+                        <p id="intro-cert-text" class="text-xs leading-relaxed text-slate-500">ข้อมูลผลลัพธ์การเรียนรู้และมาตรฐานของหลักสูตรถูกจัดแสดงเพื่อสนับสนุนการประกันคุณภาพและการตัดสินใจของผู้เรียน</p>
+                    </div>
+                </div>
             </div>
         </div>
+        <div id="about-overview-table-wrap" class="spa-overview-aun-table rounded-2xl overflow-hidden bg-white shadow-sm hidden mt-14" role="region" aria-label="สรุปหลักสูตร">
+            <table class="w-full border-collapse text-left">
+                <tbody id="about-overview-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== PROGRAM STRUCTURE ==================== -->
+<section id="structure" class="structure-band relative py-24 md:py-28 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-14 md:mb-16">
+            <div class="structure-section-head-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 4.5v6c0 5.25-3.75 9.75-9 10.5-5.25-.75-9-5.25-9-10.5v-6L12 3z"/><path d="M9 12l2 2 4-4"/></svg>
+            </div>
+            <h2 class="structure-section-title">Program Structure</h2>
+            <p class="structure-section-lead mt-4 text-sm md:text-base">A comprehensive curriculum designed to build strong foundations and specialized expertise.</p>
+        </div>
+        <div id="structure-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8"></div>
         <div id="about-curriculum" class="mt-16 reveal hidden">
             <h3 class="text-xl font-semibold section-accent mb-6">โครงสร้างหลักสูตร</h3>
-            <div id="curriculum-structure-block" class="glass rounded-2xl p-8 text-slate-600 leading-relaxed mb-10"></div>
+            <div id="curriculum-structure-block" class="bg-slate-50 rounded-2xl p-8 text-slate-600 leading-relaxed mb-10 border border-slate-200"></div>
         </div>
         <div id="about-study-plan" class="mt-10 reveal hidden">
             <h3 class="text-xl font-semibold section-accent mb-6">แผนการเรียน</h3>
-            <div id="study-plan-block" class="glass rounded-2xl p-8 text-slate-600 leading-relaxed mb-10 spa-study-plan-prose overflow-x-auto"></div>
+            <div id="study-plan-block" class="bg-slate-50 rounded-2xl p-8 text-slate-600 leading-relaxed mb-10 spa-study-plan-prose overflow-x-auto border border-slate-200"></div>
         </div>
         <div id="curriculum-courses" class="mt-4 reveal hidden">
             <h3 class="text-xl font-semibold section-accent mb-2">รายวิชาโครงสร้างหลักสูตร</h3>
             <p class="text-sm text-slate-500 mb-6">รายวิชาตามปีการศึกษาและภาคเรียน (จากแผนการเรียนที่บันทึกในระบบผู้ดูแล)</p>
             <div id="spa-curriculum-by-year" class="max-w-4xl"></div>
         </div>
-        <div id="main-topics" class="mt-16 reveal">
-            <h3 class="text-xl font-semibold section-accent mb-2">หัวข้อหลักของหลักสูตร</h3>
-            <p class="text-sm text-slate-500 mb-8">แสดงครบทั้ง 12 หัวข้อหลัก โดยแยกเป็น section ทีละหัวข้อเพื่อรองรับเนื้อหายาว</p>
-            <div id="main-topics-sections" class="space-y-8"></div>
+    </div>
+
+    <!-- ข้อมูลหลักสูตร: intro + แต่ละหัวข้อเป็น section แยกเต็มความกว้าง -->
+    <div id="main-topics" class="w-full mt-20 hidden">
+        <div class="program-info-intro">
+            <div class="max-w-7xl mx-auto px-6">
+                <p class="program-info-kicker mb-4">Program Information</p>
+                <h3 class="program-info-title text-4xl md:text-6xl font-semibold mb-5">ข้อมูลหลักสูตร<br class="hidden md:block">ที่อ่านง่ายขึ้น</h3>
+                <p class="program-info-subtitle text-sm md:text-base max-w-2xl">แต่ละหัวข้อแยกเป็น section ของตัวเอง พร้อมไอคอนประกอบและแอนิเมชันเบา ๆ เพื่อให้อ่านไม่น่าเบื่อ</p>
+                <div class="program-info-intro-decor flex w-full max-w-3xl flex-wrap items-center justify-center gap-3 sm:gap-4 md:justify-start" aria-hidden="true">
+                    <span class="program-info-intro-line hidden md:block flex-1 min-w-[3rem] max-w-[7rem]"></span>
+                    <span class="program-info-intro-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                    </span>
+                    <span class="program-info-intro-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    </span>
+                    <span class="program-info-intro-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                    </span>
+                    <span class="program-info-intro-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                    </span>
+                    <span class="program-info-intro-line hidden md:block flex-1 min-w-[3rem] max-w-[7rem]"></span>
+                </div>
+            </div>
+        </div>
+        <div id="main-topics-sections" class="w-full"></div>
+    </div>
+</section>
+
+<!-- ==================== PLO & LEARNING STANDARDS ==================== -->
+<section id="quality" class="relative py-20 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="grid lg:grid-cols-2 gap-12 items-start">
+            <div>
+                <h2 class="sample-section-title text-2xl md:text-3xl mb-4">PLO & Learning Standards</h2>
+                <p class="sample-small">Programme Learning Outcomes & Learning Standards</p>
+                <div id="learning-standards-intro-spa" class="text-slate-600 text-sm leading-relaxed mt-6 hidden"></div>
+                <div id="plo-mapping-spa" class="mt-6 hidden overflow-x-auto text-xs"></div>
+            </div>
+            <div>
+                <h4 class="text-sm font-semibold text-slate-700 mb-3 hidden" id="learning-standards-heading-spa">มาตรฐานการเรียนรู้</h4>
+                <div id="learning-standards-grid-spa" class="space-y-2 mb-6 hidden"></div>
+                <h4 class="text-sm font-semibold section-accent mb-3 hidden" id="plo-subheading-spa">PLO / ผลลัพธ์ระดับหลักสูตร</h4>
+                <div id="elos-grid" class="space-y-3 stagger-children"></div>
+            </div>
         </div>
     </div>
 </section>
@@ -514,21 +876,32 @@
 <!-- ==================== FOOTER ==================== -->
 <footer id="footer" class="relative py-16 border-t border-slate-200/50 section-bg-tint-4">
     <div class="max-w-7xl mx-auto px-6">
-        <div class="grid md:grid-cols-2 gap-12 mb-12">
-            <div class="reveal-left">
-                <h3 class="text-xl font-bold section-accent mb-4">ติดต่อเรา</h3>
-                <div id="footer-contact" class="text-slate-600 leading-relaxed"></div>
+        <div class="grid md:grid-cols-4 gap-12 mb-12">
+            <div class="md:col-span-2 reveal-left">
+                <h3 id="footer-program-name" class="text-xl font-bold section-accent mb-4">หลักสูตร</h3>
+                <p id="footer-description" class="text-slate-600 text-sm leading-relaxed max-w-lg mb-6"></p>
+                <div id="footer-contact" class="text-slate-600 text-sm leading-relaxed"></div>
+            </div>
+            <div class="reveal">
+                <h3 class="text-sm font-bold section-accent mb-4 uppercase tracking-widest">Quick Links</h3>
+                <ul class="space-y-3 text-sm">
+                    <li><a href="#about" class="text-slate-600 hover:text-[var(--theme)] transition">เกี่ยวกับหลักสูตร</a></li>
+                    <li><a href="#structure" class="text-slate-600 hover:text-[var(--theme)] transition">โครงสร้างหลักสูตร</a></li>
+                    <li><a href="#faculty" class="text-slate-600 hover:text-[var(--theme)] transition">คณาจารย์</a></li>
+                    <li><a href="#documents" class="text-slate-600 hover:text-[var(--theme)] transition">เอกสารดาวน์โหลด</a></li>
+                </ul>
             </div>
             <div class="reveal-right">
-                <h3 class="text-xl font-bold section-accent mb-4">แผนที่</h3>
-                <div class="glass rounded-xl h-48 flex items-center justify-center text-slate-500">
-                    <svg class="w-8 h-8 mr-2 opacity-50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
-                    Map Placeholder
-                </div>
+                <h3 class="text-sm font-bold section-accent mb-4 uppercase tracking-widest">Contact</h3>
+                <ul class="space-y-3 text-sm text-slate-600">
+                    <li><a id="footer-website" href="#" target="_blank" rel="noopener" class="hidden hover:text-[var(--theme)] transition">เว็บไซต์หลักสูตร</a></li>
+                    <li><a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener" class="hover:text-[var(--theme)] transition">สมัครเรียนออนไลน์</a></li>
+                    <li><a href="#admission" class="hover:text-[var(--theme)] transition">ข้อมูลการรับสมัคร</a></li>
+                </ul>
             </div>
         </div>
         <div class="text-center text-slate-600 text-sm">
-            <p>© <?= date('Y') ?> — Program SPA · Luxury Edition</p>
+            <p>© <?= date('Y') ?> <span id="footer-copyright-name">Program</span>. All rights reserved.</p>
         </div>
     </div>
 </footer>
@@ -562,19 +935,83 @@
         return '<' + tag + ' class="' + cls + '">' + items.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</' + tag + '>';
     }
     function topicContentHtml(body) {
-        return hasRichContent(body) ? body : emptyTopicHtml();
+        return hasRichContent(body)
+            ? body
+            : '<div class="topic-empty-state rounded-2xl px-5 py-4 text-sm">ยังไม่มีข้อมูลในหัวข้อนี้</div>';
+    }
+    /** ไอคอนประจับหัวข้อ (stroke ตามสีธีมผ่าน currentColor) */
+    function topicIconSvg(no) {
+        var icons = {
+            1: '<svg class="spa-topic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6"/><path d="M10 21v-3a2 2 0 114 0v3"/><path d="M12 3a6 6 0 016 6c0 2.5-1.5 4.5-3 6v1a2 2 0 01-2 2h-2a2 2 0 01-2-2v-1c-1.5-1.5-3-3.5-3-6a6 6 0 016-6z"/></svg>',
+            2: '<svg class="spa-topic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
+            3: '<svg class="spa-topic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+            4: '<svg class="spa-topic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+            5: '<svg class="spa-topic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>',
+            6: '<svg class="spa-topic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>',
+            7: '<svg class="spa-topic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+            8: '<svg class="spa-topic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+            9: '<svg class="spa-topic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+            10: '<svg class="spa-topic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-8.84 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>',
+            11: '<svg class="spa-topic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 01-10 0V4z"/><path d="M5 4H3a2 2 0 000 4h2"/><path d="M19 4h2a2 2 0 010 4h-2"/><path d="M9 9h6"/></svg>',
+            12: '<svg class="spa-topic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>'
+        };
+        var n = Number(no);
+        return icons[n] || icons[1];
+    }
+    function topicIconWrap(no, align) {
+        var ac = align === 'center' ? 'flex justify-center w-full mb-6' : (align === 'right' ? 'flex justify-start md:justify-end w-full mb-6' : 'flex justify-start w-full mb-6');
+        return '<div class="spa-topic-icon-wrap ' + ac + '" aria-hidden="true"><div class="spa-topic-icon-ring">' + topicIconSvg(no) + '</div></div>';
+    }
+    /** 1,12 = กึ่งกลาง · คู่ = หัวข้อซ้ายเนื้อหาขวา · คี่(>1) = เนื้อหาซ้ายหัวข้อขวา */
+    function topicLayoutKind(no) {
+        var n = Number(no);
+        if (n === 1 || n === 12) return 'center';
+        return (n % 2 === 0) ? 'split' : 'split-reverse';
+    }
+    function topicRevealClass(kind) {
+        if (kind === 'center') return 'spa-topic-outer reveal-scale';
+        if (kind === 'split') return 'spa-topic-outer reveal-left';
+        return 'spa-topic-outer reveal-right';
+    }
+    function topicHeadInner(no, title, align) {
+        var wrap = 'flex flex-col items-start text-left';
+        var titleMod = 'spa-topic-title';
+        if (align === 'center') {
+            wrap = 'flex flex-col items-center text-center';
+            titleMod += ' spa-topic-title--center';
+        }
+        if (align === 'right') {
+            wrap = 'flex flex-col items-start md:items-end text-left md:text-right';
+            titleMod += ' spa-topic-title--right';
+        }
+        return '<div class="' + wrap + '">' + topicIconWrap(no, align) +
+            '<h2 class="' + titleMod + '">' + esc(title) + '</h2>' +
+            '</div>';
     }
     function topicSectionHtml(no, title, body) {
         var content = topicContentHtml(body);
-        return '<section id="main-topic-' + esc(no) + '" class="spa-topic-section rounded-3xl p-6 md:p-8 text-slate-600 leading-relaxed spa-main-topic-prose overflow-x-auto">' +
-            '<div class="flex flex-col md:flex-row md:items-start gap-4 md:gap-8">' +
-            '<div class="md:w-64 md:flex-shrink-0">' +
-            '<p class="text-xs font-bold tracking-[0.18em] uppercase text-slate-400 mb-2">หัวข้อ ' + esc(no) + '</p>' +
-            '<h4 class="text-2xl font-semibold section-accent leading-snug">' + esc(title) + '</h4>' +
-            '</div>' +
-            '<div class="spa-topic-section__body flex-1 min-w-0">' + content + '</div>' +
-            '</div>' +
-            '</section>';
+        var kind = topicLayoutKind(no);
+        var bodyCls = 'spa-topic-section__body spa-topic-panel min-w-0 text-sm md:text-[0.95rem] text-slate-600 leading-relaxed spa-main-topic-prose overflow-x-auto';
+        var base = topicRevealClass(kind);
+        if (kind === 'center') {
+            return '<section id="main-topic-' + esc(no) + '" class="' + base + ' spa-topic-layout--center py-20 md:py-28">' +
+                '<div class="max-w-7xl mx-auto px-6">' +
+                '<div class="max-w-3xl mx-auto">' + topicHeadInner(no, title, 'center') + '</div>' +
+                '<div class="' + bodyCls + ' max-w-3xl mx-auto mt-10">' + content + '</div>' +
+                '</div></section>';
+        }
+        var headBlock = '<header class="spa-topic-head md:sticky md:top-28 shrink-0">' + topicHeadInner(no, title, 'left') + '</header>';
+        var panelBlock = '<div class="' + bodyCls + '">' + content + '</div>';
+        var gridCls = 'grid md:grid-cols-2 gap-10 lg:gap-16 xl:gap-20 items-start';
+        if (kind === 'split') {
+            return '<section id="main-topic-' + esc(no) + '" class="' + base + ' spa-topic-layout--split py-16 md:py-24">' +
+                '<div class="max-w-7xl mx-auto px-6"><div class="' + gridCls + '">' + headBlock + panelBlock + '</div></div></section>';
+        }
+        return '<section id="main-topic-' + esc(no) + '" class="' + base + ' spa-topic-layout--split-reverse py-16 md:py-24">' +
+            '<div class="max-w-7xl mx-auto px-6"><div class="' + gridCls + '">' +
+            '<header class="spa-topic-head md:sticky md:top-28 shrink-0 md:order-2">' + topicHeadInner(no, title, 'right') + '</header>' +
+            '<div class="' + bodyCls + ' md:order-1">' + content + '</div>' +
+            '</div></div></section>';
     }
 
     var CAREER_ICONS = {
@@ -588,6 +1025,13 @@
         target: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
         briefcase: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>',
         book: '<svg class="w-8 h-8 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
+    };
+
+    var STRUCTURE_LIST_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    var STRUCTURE_CARD_SVGS = {
+        foundation: '<svg class="structure-card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+        tracks: '<svg class="structure-card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+        quality: '<svg class="structure-card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>'
     };
 
     // Neural network canvas animation
@@ -632,6 +1076,10 @@
     // Animated hero title
     function animateTitle(text) {
         var el = document.getElementById('hero-title');
+        if (/[\u0E00-\u0E7F]/.test(text || '')) {
+            el.textContent = text || '';
+            return;
+        }
         el.innerHTML = '';
         for (var i = 0; i < text.length; i++) {
             var ch = text[i];
@@ -701,6 +1149,13 @@
         if (nm) nm.classList.toggle('hidden', !show);
     }
 
+    function toggleNavPair(baseId, show) {
+        var desktop = document.getElementById('nav-' + baseId);
+        var mobile = document.getElementById('nav-' + baseId + '-mobile');
+        if (desktop) desktop.classList.toggle('hidden', !show);
+        if (mobile) mobile.classList.toggle('hidden', !show);
+    }
+
     /** แสดงรายวิชาตามปี/ภาคจาก curriculum_json (โครงเดียวกับแผนการเรียนใน Admin) */
     function renderSpaCurriculumByYear(d) {
         var section = document.getElementById('curriculum-courses');
@@ -768,12 +1223,34 @@
         // Hero
         if (d.hero_image) document.getElementById('hero-bg').style.backgroundImage = "url('" + esc(d.hero_image) + "')";
         animateTitle(d.name_th || d.name_en || '');
+        var degreeText = d.degree_th || d.degree_en || '';
+        var descriptionText = d.description || d.description_en || '';
         document.getElementById('hero-level').textContent = d.level || '';
-        document.getElementById('hero-degree').textContent = d.degree_th || d.degree_en || '';
+        document.getElementById('hero-name-en').textContent = d.name_en || '';
+        document.getElementById('hero-degree').textContent = degreeText;
+        document.getElementById('hero-description').textContent = descriptionText;
+        var heroWebsite = document.getElementById('hero-website');
+        if (heroWebsite && d.website) {
+            heroWebsite.href = d.website;
+            heroWebsite.classList.remove('hidden');
+            heroWebsite.classList.add('inline-block');
+        }
         document.getElementById('hero-level').style.opacity = '1';
+        document.getElementById('hero-name-en').style.opacity = d.name_en ? '1' : '0';
         document.getElementById('hero-degree').style.opacity = '1';
-        document.querySelector('.glow-btn').style.opacity = '1';
-        document.getElementById('nav-brand').textContent = d.name_th || 'หลักสูตร';
+        document.getElementById('hero-description').style.opacity = descriptionText ? '1' : '0';
+        document.getElementById('hero-actions').style.opacity = '1';
+        document.getElementById('nav-brand').textContent = d.name_en || d.name_th || 'หลักสูตร';
+
+        // Intro image and lead copy
+        var introImage = document.getElementById('intro-image');
+        var introFallback = document.getElementById('intro-image-fallback');
+        if (introImage && d.hero_image) {
+            introImage.style.backgroundImage = "url('" + esc(d.hero_image) + "')";
+            if (introFallback) introFallback.style.display = 'none';
+        }
+        document.getElementById('intro-title').textContent = d.name_en ? 'Excellence in ' + d.name_en : 'Excellence in Education';
+        document.getElementById('intro-lead').textContent = descriptionText || 'หลักสูตรนี้ออกแบบเพื่อพัฒนาผู้เรียนด้วยองค์ความรู้เชิงลึก ทักษะปฏิบัติ และการประยุกต์ใช้จริงตามมาตรฐานคุณภาพการศึกษา';
 
         // ภาพรวม: ตาราง ปรัชญา / วัตถุประสงค์ (ข้อ) / คุณลักษณะบัณฑิต (ข้อ)
         var overviewWrap = document.getElementById('about-overview-table-wrap');
@@ -801,8 +1278,12 @@
                 }
             }
             var hasPhi = d.philosophy && String(d.philosophy).trim() !== '';
-            var hasRow = hasPhi || objList.length > 0 || gpList.length > 0;
+            var hasDesc = (d.description || d.description_en) && String(d.description || d.description_en).trim() !== '';
+            var hasRow = hasDesc || hasPhi || objList.length > 0 || gpList.length > 0;
             if (hasRow) {
+                if (hasDesc) {
+                    overviewTbody.innerHTML += '<tr><th scope="row">คำอธิบาย<br class="md:hidden" />หลักสูตร</th><td><div class="spa-overview-aun-prose text-slate-700 text-sm sm:text-base leading-relaxed">' + esc(d.description || d.description_en).replace(/\n/g, '<br>') + '</div></td></tr>';
+                }
                 if (hasPhi) {
                     overviewTbody.innerHTML += '<tr><th scope="row">ปรัชญา</th><td><div class="spa-overview-aun-prose text-slate-700 text-sm sm:text-base leading-relaxed">' + esc(d.philosophy).replace(/\n/g, '<br>') + '</div></td></tr>';
                 }
@@ -816,6 +1297,61 @@
                 }
             }
             if (overviewWrap) overviewWrap.classList.toggle('hidden', !hasRow);
+        }
+
+        // Program Structure summary cards (top-level layout matching the sample)
+        var structureCards = document.getElementById('structure-cards');
+        if (structureCards) {
+            var curriculumYears = Array.isArray(d.curriculum) ? d.curriculum.length : 0;
+            var ploCount = Array.isArray(d.elos) ? d.elos.length : 0;
+            var staffCount = Array.isArray(d.staff) ? d.staff.length : 0;
+            var docCount = Array.isArray(d.documents) ? d.documents.length : 0;
+            var structureData = [
+                {
+                    title: 'Core Foundation',
+                    iconKey: 'foundation',
+                    items: [
+                        d.degree_th || d.degree_en || '',
+                        d.level || '',
+                        d.credits ? d.credits + ' หน่วยกิต' : ''
+                    ]
+                },
+                {
+                    title: 'Applied Tracks',
+                    iconKey: 'tracks',
+                    items: [
+                        d.duration ? 'ระยะเวลาเรียน ' + d.duration + ' ปี' : '',
+                        curriculumYears ? 'แผนรายวิชา ' + curriculumYears + ' ปีการศึกษา' : '',
+                        d.website ? 'มีเว็บไซต์หลักสูตร' : ''
+                    ]
+                },
+                {
+                    title: 'Quality & Resources',
+                    iconKey: 'quality',
+                    items: [
+                        ploCount ? 'PLO / ELO ' + ploCount + ' รายการ' : '',
+                        staffCount ? 'คณาจารย์ ' + staffCount + ' คน' : '',
+                        docCount ? 'เอกสารดาวน์โหลด ' + docCount + ' รายการ' : ''
+                    ]
+                }
+            ];
+            structureCards.innerHTML = structureData.map(function (card) {
+                var items = card.items.filter(function (x) { return String(x || '').trim() !== ''; });
+                if (!items.length) items = ['รอข้อมูลจากหลักสูตร'];
+                var iconSvg = STRUCTURE_CARD_SVGS[card.iconKey] || STRUCTURE_CARD_SVGS.foundation;
+                return '<div class="spa-structure-card">' +
+                    '<div class="spa-structure-card__inner">' +
+                    '<div class="spa-structure-card__header">' +
+                    '<div class="spa-structure-card__icon-wrap" aria-hidden="true">' + iconSvg + '</div>' +
+                    '<h3 class="spa-structure-card__title">' + esc(card.title) + '</h3>' +
+                    '</div>' +
+                    '<ul class="spa-structure-card__list space-y-3.5">' + items.map(function (item) {
+                        return '<li class="flex items-start gap-3 text-sm text-slate-600 leading-relaxed">' +
+                            '<span class="spa-structure-card__list-icon" aria-hidden="true">' + STRUCTURE_LIST_CHECK + '</span>' +
+                            '<span>' + esc(item) + '</span></li>';
+                    }).join('') + '</ul>' +
+                    '</div></div>';
+            }).join('');
         }
 
         // PLO + มาตรฐานการเรียนรู้
@@ -904,7 +1440,8 @@
                 ['ชื่อปริญญา/วุฒิการศึกษา', d.degree_th || d.degree_en || ''],
                 ['ระดับ', d.level || ''],
                 ['จำนวนหน่วยกิตรวม', d.credits ? (d.credits + ' หน่วยกิต') : ''],
-                ['ระยะเวลาศึกษา', d.duration ? (d.duration + ' ปี') : '']
+                ['ระยะเวลาศึกษา', d.duration ? (d.duration + ' ปี') : ''],
+                ['เว็บไซต์หลักสูตร', d.website || '']
             ].filter(function (r) { return String(r[1] || '').trim() !== ''; });
             var generalHtml = generalRows.length
                 ? '<table class="w-full text-sm"><tbody>' + generalRows.map(function (r) {
@@ -1063,19 +1600,34 @@
         }
 
         // Faculty
+        var facultySection = document.getElementById('faculty');
         var fg = document.getElementById('faculty-grid'); fg.innerHTML = '';
         if (Array.isArray(d.staff) && d.staff.length) {
+            if (facultySection) facultySection.style.display = 'block';
+            toggleNavPair('faculty', true);
             d.staff.forEach(function(s) {
                 var img = s.image ? '<img src="' + esc(s.image) + '" alt="" class="w-full h-full object-cover">' : '<div class="w-full h-full bg-slate-200 flex items-center justify-center"><svg class="w-12 h-12 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></div>';
-                fg.innerHTML += '<div class="faculty-card luxury-card rounded-2xl overflow-hidden aspect-square max-w-[180px] w-full mx-auto relative group cursor-pointer">' + img + '<div class="faculty-overlay flex flex-col justify-end p-3"><div class="faculty-info"><p class="font-semibold text-slate-800 text-xs leading-tight">' + esc(s.name) + '</p><p class="text-[10px] mt-0.5 faculty-role">' + esc(s.role || s.position) + '</p></div></div></div>';
+                var cvUrl = (s.cv_url || '').trim();
+                var overlay = '<div class="faculty-overlay flex flex-col justify-end p-3"><div class="faculty-info"><p class="font-semibold text-slate-800 text-xs leading-tight">' + esc(s.name) + '</p><p class="text-[10px] mt-0.5 faculty-role">' + esc(s.role || s.position) + '</p></div></div>';
+                var cardCls = 'faculty-card luxury-card rounded-2xl overflow-hidden aspect-square max-w-[180px] w-full mx-auto relative group ' + (cvUrl ? 'cursor-pointer' : 'cursor-default');
+                if (cvUrl) {
+                    var label = 'CV ' + (s.name || '').trim();
+                    fg.innerHTML += '<a class="' + cardCls + '" href="' + esc(cvUrl) + '" target="_blank" rel="noopener noreferrer" title="ดู CV" aria-label="' + esc(label) + '">' + img + overlay + '</a>';
+                } else {
+                    fg.innerHTML += '<div class="' + cardCls + '">' + img + overlay + '</div>';
+                }
             });
         } else {
-            document.getElementById('faculty-empty').classList.remove('hidden');
+            if (facultySection) facultySection.style.display = 'none';
+            toggleNavPair('faculty', false);
         }
 
         // News carousel
+        var newsSection = document.getElementById('news');
         var nt = document.getElementById('news-track'); nt.innerHTML = '';
         if (Array.isArray(d.news) && d.news.length) {
+            if (newsSection) newsSection.style.display = 'block';
+            toggleNavPair('news', true);
             newsTotal = d.news.length;
             d.news.forEach(function(n) {
                 var img = n.image_url || n.thumbnail || '';
@@ -1083,12 +1635,16 @@
                 nt.innerHTML += '<div class="flex-shrink-0 w-full md:w-1/2 lg:w-1/3 px-3"><div class="luxury-card rounded-2xl overflow-hidden h-full">' + imgHtml + '<div class="p-5"><span class="text-xs news-date">' + esc(n.date || '') + '</span><h3 class="font-semibold text-slate-800 mt-2 line-clamp-2">' + esc(n.title || n.title_th || '') + '</h3><p class="text-slate-600 text-sm mt-2 line-clamp-2">' + esc((n.excerpt || '').substring(0, 120)) + '</p></div></div></div>';
             });
         } else {
-            document.getElementById('news-empty').classList.remove('hidden');
+            if (newsSection) newsSection.style.display = 'none';
+            toggleNavPair('news', false);
         }
 
         // Activities masonry
+        var activitiesSection = document.getElementById('activities');
         var ag = document.getElementById('activities-grid'); ag.innerHTML = '';
         if (Array.isArray(d.activities) && d.activities.length) {
+            if (activitiesSection) activitiesSection.style.display = 'block';
+            toggleNavPair('activities', true);
             d.activities.forEach(function(a) {
                 var imgs = a.images || [];
                 var firstImg = (imgs[0] && imgs[0].url) ? imgs[0].url : '';
@@ -1104,7 +1660,8 @@
                 ag.innerHTML += '<div class="break-inside-avoid luxury-card rounded-2xl overflow-hidden p-5 reveal-scale">' + imgHtml + '<h3 class="font-semibold text-slate-800">' + esc(a.title || '') + '</h3><p class="text-slate-600 text-sm mt-2">' + esc((a.description || '').substring(0, 150)) + '</p>' + thumbs + '</div>';
             });
         } else {
-            document.getElementById('activities-empty').classList.remove('hidden');
+            if (activitiesSection) activitiesSection.style.display = 'none';
+            toggleNavPair('activities', false);
         }
 
         // ศิษย์เก่าถึงรุ่นน้อง (Testimonial carousel: แสดงทีละคน — รูปวงกลม + คำพูดเด่น + ตำแหน่ง/ที่ทำงาน)
@@ -1154,6 +1711,7 @@
         }
         if (window.__alumniList.length) {
             alumniSection.style.display = 'block';
+            toggleNavPair('alumni', true);
             renderAlumniSlide();
             if (alumniCarouselNav) alumniCarouselNav.style.display = window.__alumniList.length > 1 ? 'flex' : 'none';
             alumniModalBody.innerHTML = '';
@@ -1163,12 +1721,16 @@
             alumniMoreWrap.style.display = 'block';
         } else {
             alumniSection.style.display = 'none';
+            toggleNavPair('alumni', false);
             if (alumniCarouselNav) alumniCarouselNav.style.display = 'none';
         }
 
         // Facilities
+        var facilitiesSection = document.getElementById('facilities');
         var fl = document.getElementById('facilities-grid'); fl.innerHTML = '';
         if (Array.isArray(d.facilities) && d.facilities.length) {
+            if (facilitiesSection) facilitiesSection.style.display = 'block';
+            toggleNavPair('facilities', true);
             d.facilities.forEach(function(f) {
                 var typeIcons = { lab: 'M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5', server: 'M21.75 17.25v-.228a4.5 4.5 0 00-.12-1.03l-2.268-9.64a3.375 3.375 0 00-3.285-2.602H7.923a3.375 3.375 0 00-3.285 2.602l-2.268 9.64a4.5 4.5 0 00-.12 1.03v.228m19.5 0a3 3 0 01-3 3H5.25a3 3 0 01-3-3m19.5 0a3 3 0 00-3-3H5.25a3 3 0 00-3 3m16.5 0h.008v.008h-.008v-.008zm-3 0h.008v.008h-.008v-.008z', coworking: 'M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3H21m-3.75 3H21' };
                 var icon = typeIcons[f.facility_type] || typeIcons.lab;
@@ -1176,12 +1738,16 @@
                 fl.innerHTML += '<div class="luxury-card rounded-2xl overflow-hidden">' + imgHtml + '<div class="p-6"><h3 class="font-semibold text-slate-800 text-lg">' + esc(f.title || '') + '</h3><p class="text-slate-600 text-sm mt-2 leading-relaxed">' + esc((f.description || '').substring(0, 200)) + '</p></div></div>';
             });
         } else {
-            document.getElementById('facilities-empty').classList.remove('hidden');
+            if (facilitiesSection) facilitiesSection.style.display = 'none';
+            toggleNavPair('facilities', false);
         }
 
         // Documents
+        var documentsSection = document.getElementById('documents');
         var dl = document.getElementById('documents-list'); dl.innerHTML = '';
         if (Array.isArray(d.documents) && d.documents.length) {
+            if (documentsSection) documentsSection.style.display = 'block';
+            toggleNavPair('documents', true);
             d.documents.forEach(function(doc) {
                 dl.innerHTML += '<a href="' + esc(doc.url || '#') + '" target="_blank" rel="noopener" class="doc-row flex items-center gap-4 p-5 rounded-xl glass border border-slate-200 hover:border-[var(--theme)]/50 transition group">' +
                     '<div class="doc-icon flex-shrink-0 w-12 h-12 rounded-lg doc-icon-bg flex items-center justify-center"><svg class="w-6 h-6 doc-icon-fg" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg></div>' +
@@ -1189,7 +1755,8 @@
                     '<svg class="w-5 h-5 text-slate-500 doc-arrow transition flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg></a>';
             });
         } else {
-            document.getElementById('documents-empty').classList.remove('hidden');
+            if (documentsSection) documentsSection.style.display = 'none';
+            toggleNavPair('documents', false);
         }
 
         // การรับสมัคร (admission) — แสดงถ้ามี plan_seats, requirements, หรือ supports (มี default ทั้ง 6)
@@ -1317,7 +1884,16 @@
         }
 
         // Footer
+        var footerName = d.name_th || d.name_en || 'หลักสูตร';
+        document.getElementById('footer-program-name').textContent = footerName;
+        document.getElementById('footer-copyright-name').textContent = footerName;
+        document.getElementById('footer-description').textContent = descriptionText || '';
         if (d.contact_info) document.getElementById('footer-contact').innerHTML = esc(d.contact_info).replace(/\n/g, '<br>');
+        var footerWebsite = document.getElementById('footer-website');
+        if (footerWebsite && d.website) {
+            footerWebsite.href = d.website;
+            footerWebsite.classList.remove('hidden');
+        }
     }
 
     function initReveal() {
@@ -1332,7 +1908,7 @@
     function initNav() {
         var nav = document.getElementById('navbar');
         window.addEventListener('scroll', function() {
-            nav.style.transform = window.scrollY > 300 ? 'translateY(0)' : 'translateY(-100%)';
+            nav.classList.toggle('shadow-md', window.scrollY > 16);
         });
         document.getElementById('nav-toggle').addEventListener('click', function() {
             document.getElementById('nav-mobile').classList.toggle('hidden');
@@ -1402,25 +1978,49 @@
         updateAlumniSlide();
     });
 
+    function showLoadError(message) {
+        var loading = document.getElementById('loading');
+        loading.style.opacity = '1';
+        loading.style.display = 'block';
+        loading.innerHTML = '<div class="min-h-screen flex items-center justify-center px-6 bg-slate-50">' +
+            '<div class="max-w-md w-full rounded-3xl bg-white border border-slate-200 shadow-sm p-8 text-center">' +
+            '<div class="mx-auto mb-5 w-14 h-14 rounded-full bg-red-50 text-red-600 flex items-center justify-center">' +
+            '<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>' +
+            '</div>' +
+            '<h1 class="text-xl font-bold text-slate-900 mb-2">โหลดข้อมูลหลักสูตรไม่สำเร็จ</h1>' +
+            '<p class="text-slate-600 text-sm leading-relaxed mb-6">' + esc(message || 'กรุณาลองใหม่อีกครั้ง') + '</p>' +
+            '<button id="program-retry" type="button" class="px-6 py-3 rounded-full bg-[var(--theme)] text-white font-semibold hover:opacity-90 transition">ลองโหลดอีกครั้ง</button>' +
+            '</div></div>';
+        document.getElementById('program-retry').addEventListener('click', function () {
+            window.location.reload();
+        });
+    }
+
+    function finishLoading(data) {
+        renderData(data);
+        document.getElementById('app').classList.remove('hidden');
+        initNeuralCanvas();
+        initReveal();
+        initNav();
+        initScrollTop();
+
+        var loading = document.getElementById('loading');
+        loading.style.opacity = '0';
+        setTimeout(function() {
+            loading.style.display = 'none';
+        }, 360);
+    }
+
     $.ajax({ url: dataUrl, method: 'GET', dataType: 'json' })
         .done(function(res) {
             if (res.success && res.data) {
-                document.getElementById('loading').style.opacity = '0';
-                setTimeout(function() {
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('app').classList.remove('hidden');
-                    renderData(res.data);
-                    initNeuralCanvas();
-                    initReveal();
-                    initNav();
-                    initScrollTop();
-                }, 500);
+                finishLoading(res.data);
             } else {
-                document.getElementById('loading').innerHTML = '<p class="text-red-400 text-center">ไม่พบข้อมูลหลักสูตร</p>';
+                showLoadError((res && res.message) || 'ไม่พบข้อมูลหลักสูตร');
             }
         })
         .fail(function() {
-            document.getElementById('loading').innerHTML = '<p class="text-red-400 text-center">โหลดข้อมูลไม่สำเร็จ</p>';
+            showLoadError('ระบบไม่สามารถเชื่อมต่อกับข้อมูลหลักสูตรได้ในขณะนี้');
         });
 })();
 </script>

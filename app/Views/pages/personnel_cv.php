@@ -7,6 +7,11 @@ $siteName = $site_info['site_name_th'] ?? $settings['site_name_th'] ?? 'คณ�
 $p = $person ?? [];
 $name = $display_name ?? '';
 $nameEn = $display_name_en ?? '';
+/** แยกคำนำหน้ากับชื่อจริง (บรรทัดละบรรทัด) */
+$cvTitleTh = trim((string) ($p['academic_title'] ?? ''));
+$cvNameTh  = trim((string) ($p['name'] ?? ''));
+$cvTitleEn = trim((string) ($p['academic_title_en'] ?? ''));
+$cvNameEn  = trim((string) ($p['name_en'] ?? ''));
 $img = $profile_image ?? '';
 $email = trim($p['email'] ?? '');
 $phone = trim($p['phone'] ?? '');
@@ -100,11 +105,32 @@ if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) 
     height: 100%;
     object-fit: cover;
   }
+  .personnel-cv-doc .cv-sidebar-academic {
+    font-size: clamp(var(--text-sm, 0.875rem), 1vw, var(--text-base, 1rem));
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: 0.04em;
+    opacity: 0.92;
+    margin-bottom: 0.35rem;
+  }
   .personnel-cv-doc .cv-sidebar-name {
     font-size: clamp(var(--text-base, 1rem), 1.1vw, var(--text-lg, 1.125rem));
     font-weight: 700;
     line-height: 1.35;
     letter-spacing: 0.02em;
+  }
+  .personnel-cv-doc .cv-sidebar-name-en .cv-sidebar-academic-en {
+    display: block;
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    opacity: 0.88;
+    margin-bottom: 0.2rem;
+  }
+  .personnel-cv-doc .cv-sidebar-name-en .cv-sidebar-given-en {
+    font-size: var(--text-sm, 0.875rem);
+    opacity: 0.9;
+    line-height: 1.4;
   }
   .personnel-cv-doc .cv-sidebar-role {
     font-size: var(--text-sm, 0.875rem);
@@ -173,6 +199,14 @@ if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) 
     padding-bottom: 1rem;
     margin-bottom: 1.5rem;
   }
+  .personnel-cv-doc .cv-main-head .cv-main-title-prefix {
+    margin: 0 0 0.35rem;
+    font-size: clamp(var(--text-sm, 0.875rem), 1.5vw, var(--text-lg, 1.125rem));
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1.35;
+    color: var(--cv-muted);
+  }
   .personnel-cv-doc .cv-main-head h1 {
     margin: 0;
     font-size: clamp(var(--text-xl, 1.25rem), 2.2vw, var(--text-3xl, 1.875rem));
@@ -182,10 +216,18 @@ if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) 
     color: var(--text-primary, #1e5c32);
   }
   .personnel-cv-doc .cv-main-head .cv-name-en {
-    margin: 0.35rem 0 0;
+    margin: 0.5rem 0 0;
     font-size: clamp(var(--text-sm, 0.875rem), 1.3vw, var(--text-lg, 1.125rem));
     color: var(--cv-muted);
     font-weight: 500;
+    line-height: 1.45;
+  }
+  .personnel-cv-doc .cv-main-head .cv-name-en .cv-name-en-prefix {
+    display: block;
+    font-size: 0.92em;
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+    letter-spacing: 0.03em;
   }
   .personnel-cv-doc .cv-main-head .cv-position {
     margin: 0.5rem 0 0;
@@ -307,6 +349,7 @@ if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) 
       min-width: 12rem;
       text-align: left;
     }
+    .personnel-cv-doc .cv-sidebar-academic { text-align: left; }
     .personnel-cv-doc .cv-sidebar-name { text-align: left; }
     .personnel-cv-doc .cv-sidebar-role { text-align: left; }
     .personnel-cv-doc .cv-contact-block { border-top: none; padding-top: 0; margin-top: 0; }
@@ -341,7 +384,8 @@ if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) 
     <aside class="cv-sidebar" aria-label="ข้อมูลติดต่อและความเชี่ยวชาญ">
       <div class="cv-photo-wrap">
         <?php if ($img): ?>
-          <img src="<?= esc($img, 'attr') ?>" alt="<?= esc($name, 'attr') ?>" width="152" height="152" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;\'><svg width=40 height=40 viewBox=\'0 0 24 24\' fill=\'#94a3b8\'><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg></div>';">
+          <?php $imgAlt = trim($cvTitleTh . ' ' . $cvNameTh); if ($imgAlt === '') { $imgAlt = $name; } ?>
+          <img src="<?= esc($img, 'attr') ?>" alt="<?= esc($imgAlt, 'attr') ?>" width="152" height="152" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;\'><svg width=40 height=40 viewBox=\'0 0 24 24\' fill=\'#94a3b8\'><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg></div>';">
         <?php else: ?>
           <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="#94a3b8"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -349,8 +393,21 @@ if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) 
         <?php endif; ?>
       </div>
       <div class="cv-sidebar-text">
-        <div class="cv-sidebar-name"><?= esc($name) ?></div>
-        <?php if ($nameEn): ?>
+        <?php if ($cvTitleTh !== ''): ?>
+          <div class="cv-sidebar-academic"><?= esc($cvTitleTh) ?></div>
+        <?php endif; ?>
+        <div class="cv-sidebar-name"><?= esc($cvNameTh !== '' ? $cvNameTh : $name) ?></div>
+        <?php if ($cvTitleEn !== '' || $cvNameEn !== ''): ?>
+          <div class="cv-sidebar-role cv-sidebar-name-en" style="margin-top:0.35rem;">
+            <?php if ($cvTitleEn !== ''): ?>
+              <span class="cv-sidebar-academic-en"><?= esc($cvTitleEn) ?></span>
+            <?php endif; ?>
+            <?php if ($cvTitleEn !== '' && $cvNameEn !== ''): ?><br><?php endif; ?>
+            <?php if ($cvNameEn !== ''): ?>
+              <span class="cv-sidebar-given-en"><?= esc($cvNameEn) ?></span>
+            <?php endif; ?>
+          </div>
+        <?php elseif ($nameEn !== ''): ?>
           <div class="cv-sidebar-role"><?= esc($nameEn) ?></div>
         <?php endif; ?>
         <div class="cv-sidebar-role" style="margin-top:0.35rem;"><?= esc($posLabel) ?></div>
@@ -398,8 +455,21 @@ if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) 
 
     <main class="cv-main">
       <header class="cv-main-head">
-        <h1><?= esc($name) ?></h1>
-        <?php if ($nameEn): ?>
+        <?php if ($cvTitleTh !== ''): ?>
+          <p class="cv-main-title-prefix"><?= esc($cvTitleTh) ?></p>
+        <?php endif; ?>
+        <h1><?= esc($cvNameTh !== '' ? $cvNameTh : $name) ?></h1>
+        <?php if ($cvTitleEn !== '' || $cvNameEn !== ''): ?>
+          <p class="cv-name-en">
+            <?php if ($cvTitleEn !== ''): ?>
+              <span class="cv-name-en-prefix"><?= esc($cvTitleEn) ?></span>
+            <?php endif; ?>
+            <?php if ($cvNameEn !== ''): ?>
+              <?php if ($cvTitleEn !== ''): ?><br><?php endif; ?>
+              <?= esc($cvNameEn) ?>
+            <?php endif; ?>
+          </p>
+        <?php elseif ($nameEn !== ''): ?>
           <p class="cv-name-en"><?= esc($nameEn) ?></p>
         <?php endif; ?>
         <p class="cv-position"><?= esc($posLabel) ?></p>

@@ -672,11 +672,16 @@ class Api extends BaseController
                 if ($img !== '' && strpos($img, 'http') === 0) {
                     $imageUrl = $img;
                 }
+                $emailRaw = trim($p['email'] ?? '');
+                $emailKey = $emailRaw !== '' ? strtolower($emailRaw) : '';
+                $cvUrl    = $emailKey !== '' ? base_url('personnel-cv/' . rawurlencode($emailKey)) : '';
                 $staff[] = [
                     'name'     => trim($p['name'] ?? ''),
                     'position' => trim($p['position'] ?? ''),
                     'role'     => $roleMap[$pid] ?? '',
                     'image'    => $imageUrl,
+                    'email'    => $emailRaw,
+                    'cv_url'   => $cvUrl,
                 ];
             }
             usort($staff, function ($a, $b) {
@@ -784,6 +789,9 @@ class Api extends BaseController
             'level'                => $levelLabel,
             'credits'              => (int) ($program['credits'] ?? 0) ?: null,
             'duration'             => (int) ($program['duration'] ?? 0) ?: null,
+            'description'          => $program['description'] ?? '',
+            'description_en'       => $program['description_en'] ?? '',
+            'website'              => $program['website'] ?? '',
             'hero_image'           => $heroImageUrl,
             'theme_color'          => $page['theme_color'] ?? '#1e40af',
             'philosophy'           => $page['philosophy'] ?? '',
