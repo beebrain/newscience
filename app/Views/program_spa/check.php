@@ -105,8 +105,8 @@ $checkUrl = base_url('p/' . $id . '/check');
                     document.getElementById('status-title').textContent = 'System Ready';
                     document.getElementById('status-title').classList.add('gold-glow');
                     document.getElementById('status-title').style.color = '#daa520';
-                    document.getElementById('status-sub').textContent = 'กำลังเปิดหน้าหลักสูตรในแท็บใหม่...';
-                    setTimeout(function() { window.open(res.spa_url, '_blank'); }, 300);
+                    document.getElementById('status-sub').textContent = 'กำลังเปิดหน้าหลักสูตร...';
+                    setTimeout(function() { window.location.assign(res.spa_url); }, 300);
                 } else {
                     markStep('step-ready', false);
                     document.getElementById('error').classList.remove('hidden');

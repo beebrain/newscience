@@ -67,7 +67,9 @@
 <main id="app" class="hidden">
     <header id="hero" class="relative w-full h-[85vh] min-h-[650px] flex items-center justify-center overflow-hidden bg-primary text-white">
         <div class="absolute inset-0 z-0">
-            <div id="hero-bg" class="w-full h-full bg-cover bg-center opacity-20 mix-blend-overlay"></div>
+            <img id="hero-cover-img" src="" alt="" width="1920" height="1080"
+                 class="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay pointer-events-none hidden"
+                 decoding="async" fetchpriority="high"/>
             <div class="absolute inset-0 bg-gradient-to-b from-primary/90 to-primary"></div>
         </div>
         <div class="relative z-10 max-w-[1280px] mx-auto px-8 text-center flex flex-col items-center">
@@ -451,9 +453,18 @@
             lvlWrap.classList.add('hidden');
         }
 
-        if (d.hero_image) {
-            var hi = String(d.hero_image).replace(/"/g, '\\"');
-            document.getElementById('hero-bg').style.backgroundImage = 'url("' + hi + '")';
+        var coverImg = document.getElementById('hero-cover-img');
+        var hi = text(d.hero_image || '');
+        if (coverImg) {
+            if (hi !== '') {
+                coverImg.src = hi;
+                coverImg.alt = title ? ('ภาพหน้าปก ' + title) : 'ภาพหน้าปกหลักสูตร';
+                coverImg.classList.remove('hidden');
+            } else {
+                coverImg.removeAttribute('src');
+                coverImg.alt = '';
+                coverImg.classList.add('hidden');
+            }
         }
 
         document.getElementById('hero-actions').innerHTML = '';

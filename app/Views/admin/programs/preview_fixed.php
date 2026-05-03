@@ -54,18 +54,43 @@
 
             <!-- Preview Content -->
             <div class="preview-content" style="padding: 2rem; background: white;">
-                <!-- Hero Section -->
-                <div class="hero-section" style="text-align: center; padding: 3rem 0; background: linear-gradient(135deg, <?= $page['theme_color'] ?? '#1e40af' ?> 0%, <?= $page['theme_color'] ?? '#1e40af' ?>dd 100%); color: white; margin: -2rem -2rem 2rem -2rem; border-radius: 0 0 12px 12px;">
-                    <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;"><?= esc($program['name_th']) ?></h1>
-                    <p style="font-size: 1.25rem; margin-bottom: 2rem; opacity: 0.9;"><?= esc($program['degree_th']) ?></p>
-                    <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
-                        <div style="text-align: center;">
-                            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;"><?= esc($program['credits'] ?? '4') ?></div>
-                            <div style="font-size: 0.875rem; opacity: 0.8;">หน่วยกิต</div>
-                        </div>
-                        <div style="text-align: center;">
-                            <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;"><?= esc($program['duration'] ?? '4') ?></div>
-                            <div style="font-size: 0.875rem; opacity: 0.8;">ปี</div>
+                <?php
+                // ปกหลักสูตร: ใช้รูป Hero เดียวกับ SPA (program_pages.hero_image → fallback programs.image)
+                $previewHeroImg = trim((string) ($page['hero_image'] ?? ''));
+                if ($previewHeroImg === '') {
+                    $previewHeroImg = trim((string) ($program['image'] ?? ''));
+                }
+                $previewHeroUrl = '';
+                if ($previewHeroImg !== '') {
+                    $previewHeroUrl = strpos($previewHeroImg, 'http') === 0
+                        ? $previewHeroImg
+                        : base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $previewHeroImg), '/'));
+                }
+                $previewTheme = (string) ($page['theme_color'] ?? '#1e40af');
+                if (! preg_match('/^#[0-9A-Fa-f]{6}$/', $previewTheme)) {
+                    $previewTheme = '#1e40af';
+                }
+                ?>
+                <!-- Hero / หน้าปก -->
+                <div class="hero-section" style="position: relative; text-align: center; padding: 3rem 1.25rem; min-height: <?= $previewHeroUrl !== '' ? '18rem' : 'auto' ?>; color: white; margin: -2rem -2rem 2rem -2rem; border-radius: 0 0 12px 12px; overflow: hidden;">
+                    <?php if ($previewHeroUrl !== '') : ?>
+                        <img src="<?= esc($previewHeroUrl, 'attr') ?>" alt="" width="1600" height="900"
+                             fetchpriority="low" decoding="async"
+                             style="position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;display:block;z-index:0;">
+                    <?php endif; ?>
+                    <div style="position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(135deg, <?= htmlspecialchars($previewTheme, ENT_QUOTES, 'UTF-8') ?> 0%, <?= htmlspecialchars($previewTheme . 'dd', ENT_QUOTES, 'UTF-8') ?> 100%);opacity:<?= $previewHeroUrl !== '' ? '0.88' : '1' ?>;"></div>
+                    <div style="position:relative;z-index:2;">
+                        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;"><?= esc($program['name_th']) ?></h1>
+                        <p style="font-size: 1.25rem; margin-bottom: 2rem; opacity: 0.9;"><?= esc($program['degree_th']) ?></p>
+                        <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;"><?= esc($program['credits'] ?? '4') ?></div>
+                                <div style="font-size: 0.875rem; opacity: 0.8;">หน่วยกิต</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;"><?= esc($program['duration'] ?? '4') ?></div>
+                                <div style="font-size: 0.875rem; opacity: 0.8;">ปี</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -221,12 +246,9 @@
 }
 
 .hero-section {
-    text-align: center;
-    padding: 3rem 0;
-    background: linear-gradient(135deg, #1e40af 0%, #1e40afdd 100%);
-    color: white;
-    margin: -2rem -2rem 2rem -2rem;
-    border-radius: 0 0 12px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .empty-content {
