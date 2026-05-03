@@ -81,3 +81,42 @@ if (! function_exists('parse_learning_standards_json')) {
         return $out;
     }
 }
+
+if (! function_exists('program_hero_public_url')) {
+    /**
+     * URL สาธารณะสำหรับรูปหน้าปก/Hero บนเว็บหลักสูตร
+     * ลำดับ: program_pages.hero_image → fallback programs.image
+     * รองรับ path แบบ programs/{id}/hero/…, ค่าที่มี segment serve/uploads/ แทรก, และลิงก์ http(s)
+     */
+    function program_hero_public_url(?string $pageHeroImage, ?string $programTableImage): string
+    {
+        $raw = trim((string) $pageHeroImage);
+        if ($raw === '') {
+            $raw = trim((string) $programTableImage);
+        }
+        if ($raw === '') {
+            return '';
+        }
+        if (preg_match('#^https?://#i', $raw)) {
+            return $raw;
+        }
+
+        $path = str_replace('\\', '/', $raw);
+        $path = ltrim($path, '/');
+
+        if (preg_match('#(^|/)serve/uploads/(.+)$#i', $path, $m)) {
+            return base_url('serve/uploads/' . ltrim($m[2], '/'));
+        }
+
+        while (stripos($path, 'serve/uploads/') === 0) {
+            $path = substr($path, strlen('serve/uploads/'));
+            $path = ltrim($path, '/');
+        }
+        if (stripos($path, 'writable/uploads/') === 0) {
+            $path = substr($path, strlen('writable/uploads/'));
+            $path = ltrim($path, '/');
+        }
+
+        return base_url('serve/uploads/' . $path);
+    }
+}

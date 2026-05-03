@@ -36,36 +36,6 @@ class ProgramSpaController extends BaseController
     }
 
     /**
-     * สร้าง URL เต็มสำหรับรูป Hero/หน้าปก (program_pages.hero_image หรือ fallback programs.image)
-     * รองรับ path แบบ programs/{id}/hero/…, หรือที่มี prefix serve/uploads/ / writable/uploads/ ซ้ำ
-     */
-    protected function normalizeProgramHeroAssetUrl(?string $pageHero, ?string $programImage): string
-    {
-        $raw = trim((string) $pageHero);
-        if ($raw === '') {
-            $raw = trim((string) $programImage);
-        }
-        if ($raw === '') {
-            return '';
-        }
-        if (preg_match('#^https?://#i', $raw)) {
-            return $raw;
-        }
-        $path = str_replace('\\', '/', $raw);
-        $path = ltrim($path, '/');
-        while (stripos($path, 'serve/uploads/') === 0) {
-            $path = substr($path, strlen('serve/uploads/'));
-            $path = ltrim($path, '/');
-        }
-        if (stripos($path, 'writable/uploads/') === 0) {
-            $path = substr($path, strlen('writable/uploads/'));
-            $path = ltrim($path, '/');
-        }
-
-        return base_url('serve/uploads/' . $path);
-    }
-
-    /**
      * Build minimal program_pages-like array from program row (when no program_pages row)
      */
     protected function minimalPageFromProgram(array $program): array
@@ -238,12 +208,8 @@ class ProgramSpaController extends BaseController
         $level = $program['level'] ?? 'bachelor';
         $levelLabel = $levelLabels[$level] ?? $level;
 
-        $heroImageUrl = $this->normalizeProgramHeroAssetUrl(
-            $page['hero_image'] ?? null,
-            $program['image'] ?? null
-        );
-
         helper('program_page');
+        $heroImageUrl = program_hero_public_url($page['hero_image'] ?? null, $program['image'] ?? null);
 
         $elos = [];
         $elosRaw = $page['elos_json'] ?? '';

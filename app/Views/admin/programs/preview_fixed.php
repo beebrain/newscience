@@ -55,17 +55,9 @@
             <!-- Preview Content -->
             <div class="preview-content" style="padding: 2rem; background: white;">
                 <?php
-                // ปกหลักสูตร: ใช้รูป Hero เดียวกับ SPA (program_pages.hero_image → fallback programs.image)
-                $previewHeroImg = trim((string) ($page['hero_image'] ?? ''));
-                if ($previewHeroImg === '') {
-                    $previewHeroImg = trim((string) ($program['image'] ?? ''));
-                }
-                $previewHeroUrl = '';
-                if ($previewHeroImg !== '') {
-                    $previewHeroUrl = strpos($previewHeroImg, 'http') === 0
-                        ? $previewHeroImg
-                        : base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $previewHeroImg), '/'));
-                }
+                helper('program_page');
+                $previewPage    = is_array($page ?? null) ? $page : [];
+                $previewHeroUrl = program_hero_public_url($previewPage['hero_image'] ?? null, $program['image'] ?? null);
                 $previewTheme = (string) ($page['theme_color'] ?? '#1e40af');
                 if (! preg_match('/^#[0-9A-Fa-f]{6}$/', $previewTheme)) {
                     $previewTheme = '#1e40af';

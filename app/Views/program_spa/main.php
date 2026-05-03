@@ -67,8 +67,8 @@
 <main id="app" class="hidden">
     <header id="hero" class="relative w-full h-[85vh] min-h-[650px] flex items-center justify-center overflow-hidden bg-primary text-white">
         <div class="absolute inset-0 z-0">
-            <div id="hero-bg" class="absolute inset-0 z-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 mix-blend-overlay pointer-events-none hidden" role="presentation"></div>
-            <div class="absolute inset-0 z-[1] bg-gradient-to-b from-primary/90 to-primary pointer-events-none" aria-hidden="true"></div>
+            <div id="hero-bg" class="absolute inset-0 z-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-[0.42] mix-blend-overlay pointer-events-none hidden" role="presentation"></div>
+            <div class="absolute inset-0 z-[1] bg-gradient-to-b from-primary/78 to-primary/95 pointer-events-none" aria-hidden="true"></div>
         </div>
         <div class="relative z-10 max-w-[1280px] mx-auto px-8 text-center flex flex-col items-center">
             <div id="hero-level-wrap" class="inline-flex items-center gap-2 px-5 py-2 rounded-sm border border-gold/50 bg-white/5 backdrop-blur-sm mb-8 hidden">

@@ -316,24 +316,21 @@
                             </div>
                         </div>
 
-                        <?php
-                        $heroBasic = $program_page['hero_image'] ?? '';
-                        $heroBasicUrl = '';
-                        if ($heroBasic !== '') {
-                            $heroBasicUrl = (strpos($heroBasic, 'http') === 0) ? $heroBasic : base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $heroBasic), '/'));
-                        }
+                        <?php helper('program_page');
+                        $programPageSafe = is_array($program_page ?? null) ? $program_page : [];
+                        $heroBasicUrl    = program_hero_public_url($programPageSafe['hero_image'] ?? null, $program['image'] ?? null);
                         ?>
                         <div class="form-group hero-basic-wrap">
                             <label class="form-label">รูปหน้าปกหลักสูตร</label>
                             <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">รูปต้อนรับด้านบน แนะนำ 16:9</p>
                             <p class="admin-upload-hint" style="font-size: 0.8125rem; color: var(--color-gray-600); margin: 0 0 0.5rem;">รองรับ: JPG, PNG, WEBP, GIF</p>
-                            <div id="hero-basic-preview" class="hero-basic-preview" style="<?= $heroBasicUrl ? '' : 'display:none;' ?> margin-bottom: 0.75rem;">
+                            <div id="hero-basic-preview" class="hero-basic-preview" style="<?= $heroBasicUrl !== '' ? '' : 'display:none;' ?> margin-bottom: 0.75rem;">
                                 <img id="hero-basic-img" src="<?= esc($heroBasicUrl) ?>" alt="หน้าปกปัจจุบัน" style="max-width: 100%; max-height: 220px; width: auto; object-fit: contain; border: 1px solid var(--color-gray-200); border-radius: 8px;">
                                 <div style="margin-top: 0.5rem;">
                                     <button type="button" id="hero-basic-remove" class="btn btn-outline btn-sm">ลบรูปหน้าปก</button>
                                 </div>
                             </div>
-                            <div id="hero-basic-drop" class="hero-basic-drop <?= $heroBasicUrl ? 'hero-basic-drop--hidden' : '' ?>">
+                            <div id="hero-basic-drop" class="hero-basic-drop <?= $heroBasicUrl !== '' ? 'hero-basic-drop--hidden' : '' ?>">
                                 <input type="file" id="hero-basic-file" accept="image/jpeg,image/png,image/webp,image/gif" style="position:absolute;opacity:0;width:100%;height:100%;left:0;top:0;cursor:pointer;">
                                 <span class="hero-basic-drop__text">ลากวางรูปที่นี่ หรือคลิกเพื่อเลือกไฟล์</span>
                                 <span class="hero-basic-drop__hint">JPG, PNG, WEBP, GIF</span>
@@ -557,11 +554,9 @@
                                 <label class="form-label">รูปหน้าปกหลักสูตร (Hero)</label>
                                 <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 0.5rem;">แนะนำกว้างประมาณ 1920px</p>
                                 <?php
-                                $hero = $program_page['hero_image'] ?? '';
-                                $heroUrl = '';
-                                if ($hero !== '') {
-                                    $heroUrl = (strpos($hero, 'http') === 0) ? $hero : base_url('serve/uploads/' . ltrim(str_replace('\\', '/', $hero), '/'));
-                                }
+                                helper('program_page');
+                                $ppPub   = is_array($program_page ?? null) ? $program_page : [];
+                                $heroUrl = program_hero_public_url($ppPub['hero_image'] ?? null, $program['image'] ?? null);
                                 ?>
                                 <?php if ($heroUrl !== ''): ?>
                                 <div class="hero-preview-wrap" style="margin-bottom: 0.75rem;">

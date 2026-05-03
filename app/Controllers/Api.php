@@ -620,19 +620,8 @@ class Api extends BaseController
         $level = $program['level'] ?? 'bachelor';
         $levelLabel = $levelLabels[$level] ?? $level;
 
-        // Hero image: prefer page hero_image, then program image
-        $heroImage = trim($page['hero_image'] ?? '');
-        if ($heroImage === '') {
-            $heroImage = trim($program['image'] ?? '');
-        }
-        $heroImageUrl = '';
-        if ($heroImage !== '') {
-            $heroImageUrl = strpos($heroImage, 'http') === 0
-                ? $heroImage
-                : base_url('serve/uploads/programs/' . basename(str_replace('\\', '/', $heroImage)));
-        }
-
         helper('program_page');
+        $heroImageUrl = program_hero_public_url($page['hero_image'] ?? null, $program['image'] ?? null);
 
         // ELOs and curriculum from JSON columns
         $elos = [];
