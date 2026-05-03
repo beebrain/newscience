@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://newscience.local/schema/program_content_bundle.v2.json",
+  "title": "Program Content Bundle v2 (inline source metadata)",
+  "description": "เอกสาร JSON นำเข้า/ส่งออกหลักสูตรแบบ 3 namespace โดยทุก field ถูกห่อด้วย value/source/table/column/importable เพื่อบอกแหล่งข้อมูลและสิทธิ์ update DB. Scope นี้ครอบเฉพาะ programs + program_pages และไม่รวม shared feature tables เช่น บุคลากร ข่าว ดาวน์โหลด กิจกรรม สิ่งอำนวยความสะดวก",
+  "type": "object",
+  "required": ["schema_version", "program_id"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1, "maximum": 2 },
+    "program_id": { "type": "integer", "minimum": 1 },
+    "exported_at": { "type": ["string", "null"] },
+    "template_note": { "type": "string" },
+    "basic": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name_th": { "$ref": "#/definitions/field" },
+        "name_en": { "$ref": "#/definitions/field" },
+        "degree_th": { "$ref": "#/definitions/field" },
+        "degree_en": { "$ref": "#/definitions/field" },
+        "level": { "$ref": "#/definitions/field" },
+        "credits": { "$ref": "#/definitions/field" },
+        "duration": { "$ref": "#/definitions/field" },
+        "description": { "$ref": "#/definitions/field" },
+        "description_en": { "$ref": "#/definitions/field" },
+        "website": { "$ref": "#/definitions/field" }
+      }
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "philosophy": { "$ref": "#/definitions/field" },
+        "objectives": { "$ref": "#/definitions/field" },
+        "graduate_profile": { "$ref": "#/definitions/field" },
+        "elos_json": { "$ref": "#/definitions/field" },
+        "learning_standards_json": { "$ref": "#/definitions/field" },
+        "curriculum_structure": { "$ref": "#/definitions/field" },
+        "study_plan": { "$ref": "#/definitions/field" },
+        "curriculum_json": { "$ref": "#/definitions/field" },
+        "course_details": { "$ref": "#/definitions/field" },
+        "teaching_methods": { "$ref": "#/definitions/field" },
+        "assessment_methods": { "$ref": "#/definitions/field" },
+        "graduation_requirements": { "$ref": "#/definitions/field" },
+        "careers_json": { "$ref": "#/definitions/field" },
+        "career_prospects": { "$ref": "#/definitions/field" },
+        "tuition_fees_json": { "$ref": "#/definitions/field" },
+        "tuition_fees": { "$ref": "#/definitions/field" },
+        "admission_info": { "$ref": "#/definitions/field" },
+        "admission_details_json": { "$ref": "#/definitions/field" },
+        "success_outcomes": { "$ref": "#/definitions/field" },
+        "contact_info": { "$ref": "#/definitions/field" },
+        "intro_video_url": { "$ref": "#/definitions/field" },
+        "alumni_messages_json": { "$ref": "#/definitions/field" }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "slug": { "$ref": "#/definitions/field" },
+        "hero_image": { "$ref": "#/definitions/field" },
+        "theme_color": { "$ref": "#/definitions/field" },
+        "text_color": { "$ref": "#/definitions/field" },
+        "background_color": { "$ref": "#/definitions/field" },
+        "meta_description": { "$ref": "#/definitions/field" },
+        "gallery_images": { "$ref": "#/definitions/field" },
+        "social_links": { "$ref": "#/definitions/field" },
+        "is_published": { "$ref": "#/definitions/field" }
+      }
+    },
+    "derived": {
+      "description": "ข้อมูลประกอบ/คำนวณได้ ไม่ถูก import ลง DB",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/field" }
+    }
+  },
+  "definitions": {
+    "field": {
+      "type": "object",
+      "required": ["value", "source", "importable"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {},
+        "source": {
+          "type": "string",
+          "enum": ["database", "database_json_column", "computed", "external", "snapshot_only"]
+        },
+        "table": { "type": ["string", "null"] },
+        "column": { "type": ["string", "null"] },
+        "importable": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": { "enum": ["database", "database_json_column"] }
+            },
+            "required": ["source"]
+          },
+          "then": {
+            "required": ["table", "column"],
+            "properties": {
+              "table": { "type": "string", "minLength": 1 },
+              "column": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

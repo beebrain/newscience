@@ -1091,7 +1091,7 @@
                 <!-- นำเข้า / ส่งออก JSON — 3 namespace: ข้อมูลพื้นฐาน + เนื้อหาหลักสูตร + การตั้งค่า -->
                 <div class="program-bundle-panel" style="margin: 0 1.5rem 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--color-gray-200); border-radius: 8px; background: #fff; font-size: 0.875rem;">
                     <h4 class="form-section-title" style="margin: 0 0 0.5rem 0; font-size: 1rem;">นำเข้า / ส่งออก JSON (ข้อมูลพื้นฐาน · เนื้อหาหลักสูตร · การตั้งค่า)</h4>
-                    <p class="form-text text-muted" style="margin: 0 0 0.75rem 0; font-size: 0.8125rem;">เอกสาร JSON ครอบ 3 ส่วน (<code>basic</code>/<code>content</code>/<code>settings</code>) — single source per field ไม่มีข้อมูลซ้ำ. ไฟล์ต้องระบุ <code>schema_version</code> กับ <code>program_id</code> ให้ตรงหลักสูตรนี้ (<?= (int) $program['id'] ?>). หลังส่งออกหรือหลังนำเข้าสำเร็จ ระบบบันทึกสำเนาไว้ที่ <code style="font-size:0.75rem;">writable/uploads/programs/<?= (int) $program['id'] ?>/data/content-bundle-latest.json</code> (แหล่งความจริงยังเป็นฐานข้อมูล — รองรับนำเข้ารูปแบบเดิม <code>{program, page}</code> อัตโนมัติ)</p>
+                    <p class="form-text text-muted" style="margin: 0 0 0.75rem 0; font-size: 0.8125rem;">เอกสาร JSON v2 ครอบ 3 ส่วน (<code>basic</code>/<code>content</code>/<code>settings</code>) และทุก field มี <code>value/source/table/column/importable</code>. Export เฉพาะข้อมูลหลักสูตรจาก <code>programs</code> + <code>program_pages</code> ไม่รวมข้อมูลที่ใช้ร่วมกับ feature อื่น เช่น บุคลากร ข่าว ดาวน์โหลด กิจกรรม สิ่งอำนวยความสะดวก. ไฟล์ต้องระบุ <code>schema_version</code> กับ <code>program_id</code> ให้ตรงหลักสูตรนี้ (<?= (int) $program['id'] ?>). หลังส่งออกหรือหลังนำเข้าสำเร็จ ระบบบันทึกสำเนาไว้ที่ <code style="font-size:0.75rem;">writable/uploads/programs/<?= (int) $program['id'] ?>/data/content-bundle-latest.json</code> (รองรับนำเข้า v1 และรูปแบบเดิม <code>{program, page}</code> อัตโนมัติ)</p>
                     <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;">
                         <a href="<?= base_url('program-admin/bundle-export/' . (int) $program['id']) ?>" class="btn btn-outline btn-sm" download>ดาวน์โหลด JSON ปัจจุบัน</a>
                         <a href="<?= base_url('program-admin/bundle-template/' . (int) $program['id']) ?>" class="btn btn-outline btn-sm" download>ดาวน์โหลดแม่แบบว่าง</a>
@@ -1112,7 +1112,7 @@
                     </div>
                     <div id="bundle-commit-row" style="display: none; margin-top: 0.5rem;">
                         <button type="button" class="btn btn-primary btn-sm" id="bundle-import-commit-btn">ยืนยันบันทึกลงฐานข้อมูล</button>
-                        <span class="form-text text-muted" style="font-size: 0.75rem; margin-left: 0.5rem;">token อายุ ~10 นาที — บันทึกครอบทั้ง <code>programs</code> + <code>program_pages</code> ใน transaction เดียว</span>
+                        <span class="form-text text-muted" style="font-size: 0.75rem; margin-left: 0.5rem;">token อายุ ~10 นาที — บันทึกเฉพาะ field ที่ importable และเป็น source ฐานข้อมูล ใน transaction เดียว</span>
                     </div>
                 </div>
             </div>
@@ -2901,6 +2901,26 @@
         });
         return h;
     }
+    function renderImportMeta(res) {
+        var summary = res && res.import_summary ? res.import_summary : {};
+        var sourceSummary = res && res.source_summary ? res.source_summary : {};
+        var ignored = res && res.ignored_fields ? res.ignored_fields : [];
+        var dbCount = (summary.basic_update_count || 0) + (summary.page_update_count || 0);
+        var parts = [
+            'schema v' + esc(res && res.schema_version ? res.schema_version : '-'),
+            'จะอัปเดต DB ' + dbCount + ' fields',
+            'ข้อมูลประกอบ/ไม่ import ' + (summary.ignored_count || ignored.length || 0) + ' fields'
+        ];
+        var sourceParts = [];
+        Object.keys(sourceSummary).forEach(function (k) {
+            sourceParts.push(k + ': ' + sourceSummary[k]);
+        });
+        var h = '<div style="font-size:0.78rem; margin-bottom:0.5rem; padding:0.5rem; border:1px solid var(--color-gray-200); border-radius:6px; background:#fff;">' + esc(parts.join(' · '));
+        if (sourceParts.length) h += '<br><span style="color:var(--color-gray-600);">source: ' + esc(sourceParts.join(', ')) + '</span>';
+        if (ignored.length) h += '<br><span style="color:var(--color-gray-600);">ignored: ' + esc(ignored.slice(0, 8).join(', ')) + (ignored.length > 8 ? '…' : '') + '</span>';
+        h += '</div>';
+        return h;
+    }
     if (currentBtn) {
         currentBtn.addEventListener('click', function () {
             if (msg) { msg.textContent = 'กำลังโหลด...'; msg.style.color = ''; }
@@ -2941,12 +2961,14 @@
                     bundleToken = res.token;
                     if (grid) {
                         grid.innerHTML = '<div><div style="font-weight:600; margin-bottom:0.25rem; color:var(--color-gray-800);">ฐานปัจจุบัน (ต่อหัวข้อ)</div>' + renderSections(res.current_sections) + '</div>' +
-                            '<div><div style="font-weight:600; margin-bottom:0.25rem; color:var(--color-primary);">สิ่งที่นำเข้า (ก่อนบันทึก)</div>' + renderSections(res.preview_sections) + '</div>';
+                            '<div><div style="font-weight:600; margin-bottom:0.25rem; color:var(--color-primary);">สิ่งที่นำเข้า (ก่อนบันทึก)</div>' + renderImportMeta(res) + renderSections(res.preview_sections) + '</div>';
                     }
                     if (wrap) wrap.style.display = 'block';
                     if (commitRow) commitRow.style.display = 'block';
                     if (msg) {
-                        msg.textContent = 'ตรวจผ่าน — sha1: ' + (res.file_sha1 || '').slice(0, 12) + '… กด "ยืนยันบันทึก" หรืออัปโหลดไฟล์ใหม่เพื่อล้าง';
+                        var summary = res.import_summary || {};
+                        var updateCount = (summary.basic_update_count || 0) + (summary.page_update_count || 0);
+                        msg.textContent = 'ตรวจผ่าน — จะอัปเดต DB ' + updateCount + ' fields / ไม่ import ' + (summary.ignored_count || 0) + ' fields — sha1: ' + (res.file_sha1 || '').slice(0, 12) + '…';
                         msg.style.color = 'var(--secondary)';
                     }
                 })

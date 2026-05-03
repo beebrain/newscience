@@ -4,7 +4,7 @@ use App\Services\ProgramContentBundleService;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
- * Unit tests for ProgramContentBundleService (v1.1 — 3 namespace)
+ * Unit tests for ProgramContentBundleService (v2 — 3 namespace, programs + program_pages only)
  *
  * ครอบ:
  *   - parseBundleJsonString (new format + legacy {program, page})
@@ -77,6 +77,68 @@ final class ProgramContentBundleServiceTest extends CIUnitTestCase
         $this->assertSame([], $r['basic']);
         $this->assertSame(['philosophy' => 'x'], $r['content']);
         $this->assertSame([], $r['settings']);
+    }
+
+    public function testParseV2WrappedFieldsUnwrapsImportableDatabaseValues(): void
+    {
+        $json = json_encode([
+            'schema_version' => 2,
+            'program_id' => 4,
+            'basic' => [
+                'name_th' => [
+                    'value' => 'ไอที',
+                    'source' => 'database',
+                    'table' => 'programs',
+                    'column' => 'name_th',
+                    'importable' => true,
+                ],
+            ],
+            'content' => [
+                'careers_json' => [
+                    'value' => [['title' => 'Developer']],
+                    'source' => 'database_json_column',
+                    'table' => 'program_pages',
+                    'column' => 'careers_json',
+                    'importable' => true,
+                ],
+                'contact_info' => [
+                    'value' => 'ignored',
+                    'source' => 'computed',
+                    'importable' => false,
+                ],
+            ],
+        ]);
+
+        $r = $this->svc->parseBundleJsonString($json);
+
+        $this->assertSame([], $r['errors']);
+        $this->assertSame('ไอที', $r['basic']['name_th']);
+        $this->assertSame([['title' => 'Developer']], $r['content']['careers_json']);
+        $this->assertArrayNotHasKey('contact_info', $r['content']);
+        $this->assertContains('content.contact_info', $r['ignored_fields']);
+        $this->assertSame(1, $r['source_summary']['database']);
+        $this->assertSame(1, $r['source_summary']['database_json_column']);
+        $this->assertSame(1, $r['source_summary']['computed']);
+    }
+
+    public function testParseV2RejectsDatabaseWrapperWithoutTableColumn(): void
+    {
+        $json = json_encode([
+            'schema_version' => 2,
+            'program_id' => 4,
+            'basic' => [
+                'name_th' => [
+                    'value' => 'ไอที',
+                    'source' => 'database',
+                    'importable' => true,
+                ],
+            ],
+        ]);
+
+        $r = $this->svc->parseBundleJsonString($json);
+
+        $this->assertNotEmpty($r['errors']);
+        $this->assertStringContainsString('table', implode(' | ', $r['errors']));
     }
 
     public function testParseRejectsBundleWithNoNamespaceAndNoPage(): void
@@ -331,12 +393,16 @@ final class ProgramContentBundleServiceTest extends CIUnitTestCase
     {
         $b = $this->svc->buildBundleFromDatabase(7, null, null);
 
-        $this->assertSame(1, $b['schema_version']);
+        $this->assertSame(2, $b['schema_version']);
         $this->assertSame(7, $b['program_id']);
         $this->assertIsString($b['exported_at']);
         $this->assertIsArray($b['basic']);
         $this->assertIsArray($b['content']);
         $this->assertIsArray($b['settings']);
+        $this->assertArrayHasKey('value', $b['basic']['name_th']);
+        $this->assertSame('database', $b['basic']['name_th']['source']);
+        $this->assertSame('programs', $b['basic']['name_th']['table']);
+        $this->assertTrue($b['basic']['name_th']['importable']);
         $this->assertArrayNotHasKey('page', $b, 'new structure must not emit legacy "page" key');
         $this->assertArrayNotHasKey('program', $b, 'new structure must not emit legacy "program" key');
     }
@@ -399,8 +465,9 @@ final class ProgramContentBundleServiceTest extends CIUnitTestCase
 
         $bundle = $this->svc->buildBundleFromDatabase(11, $programRow, $pageRow);
 
-        $basicBack    = $this->svc->basicToUpdateRow($bundle['basic']);
-        $pageBack     = $this->svc->pageBundleToUpdateRow($bundle['content'] + $bundle['settings']);
+        $parsed       = $this->svc->parseBundleJsonString(json_encode($bundle));
+        $basicBack    = $this->svc->basicToUpdateRow($parsed['basic']);
+        $pageBack     = $this->svc->pageBundleToUpdateRow($parsed['content'] + $parsed['settings']);
 
         $this->assertSame([], $basicBack['errors']);
         $this->assertSame([], $pageBack['errors']);
@@ -415,15 +482,16 @@ final class ProgramContentBundleServiceTest extends CIUnitTestCase
     {
         $t = $this->svc->buildEmptyTemplateBundle(5, null);
 
-        $this->assertSame(1, $t['schema_version']);
+        $this->assertSame(2, $t['schema_version']);
         $this->assertSame(5, $t['program_id']);
         $this->assertNull($t['exported_at']);
         $this->assertArrayHasKey('basic', $t);
         $this->assertArrayHasKey('content', $t);
         $this->assertArrayHasKey('settings', $t);
         $this->assertArrayNotHasKey('page', $t);
-        $this->assertIsArray($t['content']['learning_standards_json']);
-        $this->assertSame('#1e40af', $t['settings']['theme_color']);
+        $this->assertIsArray($t['content']['learning_standards_json']['value']);
+        $this->assertSame('database_json_column', $t['content']['learning_standards_json']['source']);
+        $this->assertSame('#1e40af', $t['settings']['theme_color']['value']);
     }
 
     public function testDecodePageRowHandlesMissingOptionalKeys(): void
@@ -723,8 +791,8 @@ final class ProgramContentBundleServiceTest extends CIUnitTestCase
         $t = $this->svc->buildEmptyTemplateBundle(1, null);
 
         $this->assertArrayHasKey('admission_details_json', $t['content']);
-        $this->assertSame('', $t['content']['admission_details_json']['plan_seats']);
-        foreach ($t['content']['admission_details_json']['supports'] as $v) {
+        $this->assertSame('', $t['content']['admission_details_json']['value']['plan_seats']);
+        foreach ($t['content']['admission_details_json']['value']['supports'] as $v) {
             $this->assertTrue($v);
         }
     }

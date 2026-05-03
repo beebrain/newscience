@@ -11,6 +11,7 @@ use App\Models\ProgramFacilityModel;
 use App\Models\PersonnelModel;
 use App\Models\PersonnelProgramModel;
 use App\Models\NewsModel;
+use App\Models\SiteSettingModel;
 
 class ProgramSpaController extends BaseController
 {
@@ -100,7 +101,24 @@ class ProgramSpaController extends BaseController
     public function main($id)
     {
         $id = (int) $id;
-        $data = ['id' => $id];
+        $site = [];
+        try {
+            $site = (new SiteSettingModel())->getAll();
+        } catch (\Throwable $e) {
+            $site = [];
+        }
+        $data = [
+            'id'                       => $id,
+            'footer_phone'             => trim((string) ($site['phone'] ?? '')),
+            'footer_email'             => trim((string) ($site['email'] ?? '')),
+            'footer_fax'               => trim((string) ($site['fax'] ?? '')),
+            'footer_address_th'        => trim((string) ($site['address_th'] ?? '')),
+            'footer_facebook'          => trim((string) ($site['facebook'] ?? '')),
+            'footer_website'           => trim((string) ($site['website'] ?? '')),
+            'footer_site_name'         => trim((string) ($site['site_name_th'] ?? $site['site_name'] ?? '')),
+            'footer_university_name'   => trim((string) ($site['university_name_th'] ?? '')),
+            'footer_contact_page_url'  => base_url('contact'),
+        ];
         return view('program_spa/main', $data);
     }
 

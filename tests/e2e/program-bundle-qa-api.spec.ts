@@ -30,14 +30,40 @@ function assertBundleShape(j: Record<string, unknown>) {
   expect(keys.join(',')).toContain('settings');
   expect(j).not.toHaveProperty('program');
   expect(j).not.toHaveProperty('page');
+  expect(j).not.toHaveProperty('staff');
+  expect(j).not.toHaveProperty('news');
+  expect(j).not.toHaveProperty('documents');
+  expect(j).not.toHaveProperty('activities');
+  expect(j).not.toHaveProperty('facilities');
   const basic = j.basic as Record<string, unknown>;
   const content = j.content as Record<string, unknown>;
   const settings = j.settings as Record<string, unknown>;
   expect(Object.keys(basic).length).toBe(10);
-  expect(Object.keys(content).length).toBe(16);
+  expect(Object.keys(content).length).toBe(22);
   expect(Object.keys(settings).length).toBe(9);
+  expect(j.schema_version).toBe(2);
+  expect(basic.name_th).toMatchObject({
+    source: 'database',
+    table: 'programs',
+    column: 'name_th',
+    importable: true,
+  });
+  expect(content.careers_json).toMatchObject({
+    source: 'database_json_column',
+    table: 'program_pages',
+    column: 'careers_json',
+    importable: true,
+  });
   const overlap = Object.keys(content).filter((k) => k in settings);
   expect(overlap).toEqual([]);
+}
+
+function fieldValue<T = unknown>(obj: Record<string, unknown>, key: string): T {
+  const field = obj[key] as { value?: T } | T;
+  if (field && typeof field === 'object' && 'value' in field) {
+    return (field as { value: T }).value;
+  }
+  return field as T;
 }
 
 test.describe('QA Bundle v1.1 — API + commit + rollback', () => {
@@ -62,14 +88,14 @@ test.describe('QA Bundle v1.1 — API + commit + rollback', () => {
     expect(typeof tpl.template_note).toBe('string');
     expect((tpl.template_note as string).length).toBeGreaterThan(10);
     const ls = tpl.content as Record<string, unknown>;
-    const lss = ls.learning_standards_json as Record<string, unknown>;
+    const lss = fieldValue<Record<string, unknown>>(ls, 'learning_standards_json');
     expect(lss.intro).toBe('');
     expect(Array.isArray(lss.standards)).toBeTruthy();
     expect(Array.isArray(lss.mapping)).toBeTruthy();
-    expect((tpl.settings as Record<string, unknown>).theme_color).toBe(
+    expect(fieldValue(tpl.settings as Record<string, unknown>, 'theme_color')).toBe(
       '#1e40af',
     );
-    expect((tpl.settings as Record<string, unknown>).is_published).toBe(0);
+    expect(fieldValue(tpl.settings as Record<string, unknown>, 'is_published')).toBe(0);
 
     const prevRes = await api.get(`program-admin/bundle-preview/${pid}`);
     expect(prevRes.ok()).toBeTruthy();
@@ -84,9 +110,19 @@ test.describe('QA Bundle v1.1 — API + commit + rollback', () => {
 
     const modified = JSON.parse(bodyOriginal) as Record<string, unknown>;
     const basic = { ...(modified.basic as Record<string, unknown>) };
+    const content = { ...(modified.content as Record<string, unknown>) };
     const stamp = `QA_PW_${Date.now()}`;
-    basic.name_th = stamp;
+    basic.name_th = {
+      ...(basic.name_th as Record<string, unknown>),
+      value: stamp,
+    };
+    content.contact_info = {
+      value: 'computed field should not import',
+      source: 'computed',
+      importable: false,
+    };
     modified.basic = basic;
+    modified.content = content;
 
     const p5 = await api.post(`program-admin/bundle-import-preview/${pid}`, {
       multipart: {
@@ -100,6 +136,9 @@ test.describe('QA Bundle v1.1 — API + commit + rollback', () => {
     const j5 = await p5.json();
     expect(j5.success, JSON.stringify(j5)).toBeTruthy();
     expect(j5.legacy).toBeFalsy();
+    expect(j5.schema_version).toBe(2);
+    expect(j5.ignored_fields).toContain('content.contact_info');
+    expect(j5.import_summary.basic_update_count).toBeGreaterThan(0);
     const token5 = j5.token as string;
     expect(token5?.length).toBe(40);
 
@@ -112,7 +151,7 @@ test.describe('QA Bundle v1.1 — API + commit + rollback', () => {
     const afterNew = await (
       await api.get(`program-admin/bundle-export/${pid}`)
     ).json();
-    expect((afterNew.basic as Record<string, unknown>).name_th).toBe(stamp);
+    expect(fieldValue(afterNew.basic as Record<string, unknown>, 'name_th')).toBe(stamp);
 
     const pRb = await api.post(`program-admin/bundle-import-preview/${pid}`, {
       multipart: {
@@ -167,14 +206,14 @@ test.describe('QA Bundle v1.1 — API + commit + rollback', () => {
     const afterLeg = await (
       await api.get(`program-admin/bundle-export/${pid}`)
     ).json();
-    expect((afterLeg.basic as Record<string, unknown>).name_th).toBe(
+    expect(fieldValue(afterLeg.basic as Record<string, unknown>, 'name_th')).toBe(
       'QA LEGACY',
     );
-    expect((afterLeg.settings as Record<string, unknown>).theme_color).toBe(
+    expect(fieldValue(afterLeg.settings as Record<string, unknown>, 'theme_color')).toBe(
       '#abcdef',
     );
-    expect((afterLeg.settings as Record<string, unknown>).is_published).toBe(1);
-    expect((afterLeg.settings as Record<string, unknown>).slug).toBe(
+    expect(fieldValue(afterLeg.settings as Record<string, unknown>, 'is_published')).toBe(1);
+    expect(fieldValue(afterLeg.settings as Record<string, unknown>, 'slug')).toBe(
       'legacy-test',
     );
 
@@ -218,12 +257,12 @@ test.describe('QA Bundle v1.1 — API + commit + rollback', () => {
     expect(Array.isArray(j7.errors)).toBeTruthy();
 
     const cur = original.basic as Record<string, unknown>;
-    const b10Name = `${String(cur.name_th)} [B10]`;
+    const b10Name = `${String(fieldValue(cur, 'name_th'))} [B10]`;
     const b10 = await api.post(`program-admin/update/${pid}`, {
       form: {
         name_th: b10Name,
-        name_en: String(cur.name_en ?? ''),
-        level: String(cur.level ?? 'bachelor'),
+        name_en: String(fieldValue(cur, 'name_en') ?? ''),
+        level: String(fieldValue(cur, 'level') ?? 'bachelor'),
         status: 'active',
       },
     });

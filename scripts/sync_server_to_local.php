@@ -61,6 +61,23 @@ function parseEnvGroup(string $envFile, string $group): array {
     return $config;
 }
 
+/** @return string[] column names in ordinal order */
+function tableColumns(mysqli $mysqli, string $schema, string $table): array {
+    $s = $mysqli->real_escape_string($schema);
+    $t = $mysqli->real_escape_string($table);
+    $res = $mysqli->query(
+        "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '{$s}' AND TABLE_NAME = '{$t}' ORDER BY ORDINAL_POSITION"
+    );
+    if (!$res) {
+        return [];
+    }
+    $cols = [];
+    while ($row = $res->fetch_assoc()) {
+        $cols[] = $row['COLUMN_NAME'];
+    }
+    return $cols;
+}
+
 $serverConfig = parseEnvGroup($envFile, 'server');
 $localConfig  = parseEnvGroup($envFile, 'default');
 
@@ -153,29 +170,45 @@ foreach ($tables as $table) {
         continue;
     }
 
-    $colsRes = $server->query("SELECT * FROM `{$tableEsc}` LIMIT 0");
-    if (!$colsRes) {
-        $errors[] = "{$table}: SELECT failed - " . $server->error;
-        echo "Skip {$table} (SELECT failed)\n";
+    $serverCols = tableColumns($server, $serverConfig['database'], $table);
+    $localCols  = tableColumns($local, $localConfig['database'], $table);
+    $localSet   = array_flip($localCols);
+    $common     = [];
+    foreach ($serverCols as $c) {
+        if (isset($localSet[$c])) {
+            $common[] = $c;
+        }
+    }
+    if ($common === []) {
+        $errors[] = "{$table}: no overlapping columns between server and local (skip data)";
+        echo "Skip {$table} (no common columns)\n";
         continue;
     }
+    $onlyOnServer = array_diff($serverCols, $common);
+    if ($onlyOnServer !== []) {
+        echo "Note {$table}: omitting server-only columns: " . implode(', ', $onlyOnServer) . "\n";
+    }
+
     $columns = [];
-    while ($field = $colsRes->fetch_field()) {
-        $columns[] = '`' . $local->real_escape_string($field->name) . '`';
+    foreach ($common as $name) {
+        $columns[] = '`' . $local->real_escape_string($name) . '`';
     }
     $colsList = implode(',', $columns);
 
     $offset = 0;
     $inserted = 0;
     while (true) {
-        $sel = $server->query("SELECT * FROM `{$tableEsc}` LIMIT " . (int) $batchSize . " OFFSET " . (int) $offset);
+        $sel = $server->query(
+            "SELECT {$colsList} FROM `{$tableEsc}` LIMIT " . (int) $batchSize . " OFFSET " . (int) $offset
+        );
         if (!$sel || $sel->num_rows === 0) {
             break;
         }
         $values = [];
         while ($row = $sel->fetch_assoc()) {
             $vals = [];
-            foreach ($row as $v) {
+            foreach ($common as $col) {
+                $v = $row[$col] ?? null;
                 if ($v === null) {
                     $vals[] = 'NULL';
                 } elseif (is_numeric($v) && (string)(int)$v === (string)$v) {

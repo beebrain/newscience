@@ -126,6 +126,9 @@ class ProgramImportBundle extends BaseCommand
 
         CLI::write('basic fields: ' . count($basicConv['update']) . ' — ' . implode(', ', array_keys($basicConv['update'])), 'yellow');
         CLI::write('page fields: ' . count($pageConv['update']) . ' — ' . implode(', ', array_keys($pageConv['update'])), 'yellow');
+        if (! empty($p['ignored_fields'])) {
+            CLI::write('ignored fields: ' . count($p['ignored_fields']) . ' — ' . implode(', ', $p['ignored_fields']), 'light_cyan');
+        }
         if ($p['legacy']) {
             CLI::write('[legacy format {program, page}] แปลงเป็น 3 namespace แล้ว', 'light_cyan');
         }

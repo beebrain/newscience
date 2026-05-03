@@ -3,12 +3,13 @@
 namespace App\Services;
 
 /**
- * Export/import JSON bundle ต่อหลักสูตร (program_pages + metadata ตาราง programs สำหรับ export)
- * schema_version 1
+ * Export/import JSON bundle ต่อหลักสูตร (programs + program_pages only)
+ * schema_version 2 exports inline source metadata per field; v1 remains import-compatible.
+ * Shared feature tables (staff/news/downloads/activities/facilities) are intentionally excluded.
  */
 class ProgramContentBundleService
 {
-    public const SCHEMA_VERSION = 1;
+    public const SCHEMA_VERSION = 2;
 
     /** สำเนา JSON ล่าสุดหลังส่งออกหรือหลังนำเข้าสำเร็จ (writable/uploads/programs/{id}/data/) */
     public const SNAPSHOT_LATEST = 'content-bundle-latest.json';
@@ -17,10 +18,13 @@ class ProgramContentBundleService
     public const SNAPSHOT_TEMPLATE = 'content-bundle-template.json';
 
     /** path ของ JSON Schema file — ใช้เป็นเอกสารอ้างอิง + โหลดใน test */
-    public const SCHEMA_PATH = APPPATH . 'Config/program_content_bundle.v1.schema.json';
+    public const SCHEMA_PATH = APPPATH . 'Config/program_content_bundle.v2.schema.json';
+
+    /** Keep the legacy v1 schema around for compatibility checks and documentation. */
+    public const LEGACY_SCHEMA_PATH = APPPATH . 'Config/program_content_bundle.v1.schema.json';
 
     /**
-     * 3 namespace structure (v1.1) — single source per field, ไม่มี data ซ้ำซ้อน
+     * 3 namespace structure (v2) — single source per field, ไม่มี data ซ้ำซ้อน
      *
      *   basic    → ตาราง programs (ข้อมูลพื้นฐานหลักสูตร)
      *   content  → ตาราง program_pages เฉพาะส่วนเนื้อหา
@@ -122,6 +126,60 @@ class ProgramContentBundleService
     /** enum ที่ยอมรับสำหรับ basic.level */
     private const BASIC_LEVEL_VALUES = ['bachelor', 'master', 'doctorate'];
 
+    private const IMPORTABLE_SOURCES = ['database', 'database_json_column'];
+
+    private const SOURCE_VALUES = ['database', 'database_json_column', 'computed', 'external', 'snapshot_only'];
+
+    private const BASIC_FIELD_DEFS = [
+        'name_th'        => ['source' => 'database', 'table' => 'programs', 'column' => 'name_th', 'importable' => true],
+        'name_en'        => ['source' => 'database', 'table' => 'programs', 'column' => 'name_en', 'importable' => true],
+        'degree_th'      => ['source' => 'database', 'table' => 'programs', 'column' => 'degree_th', 'importable' => true],
+        'degree_en'      => ['source' => 'database', 'table' => 'programs', 'column' => 'degree_en', 'importable' => true],
+        'level'          => ['source' => 'database', 'table' => 'programs', 'column' => 'level', 'importable' => true],
+        'credits'        => ['source' => 'database', 'table' => 'programs', 'column' => 'credits', 'importable' => true],
+        'duration'       => ['source' => 'database', 'table' => 'programs', 'column' => 'duration', 'importable' => true],
+        'description'    => ['source' => 'database', 'table' => 'programs', 'column' => 'description', 'importable' => true],
+        'description_en' => ['source' => 'database', 'table' => 'programs', 'column' => 'description_en', 'importable' => true],
+        'website'        => ['source' => 'database', 'table' => 'programs', 'column' => 'website', 'importable' => true],
+    ];
+
+    private const CONTENT_FIELD_DEFS = [
+        'philosophy'              => ['source' => 'database', 'table' => 'program_pages', 'column' => 'philosophy', 'importable' => true],
+        'objectives'              => ['source' => 'database_json_column', 'table' => 'program_pages', 'column' => 'objectives', 'importable' => true],
+        'graduate_profile'        => ['source' => 'database_json_column', 'table' => 'program_pages', 'column' => 'graduate_profile', 'importable' => true],
+        'elos_json'               => ['source' => 'database_json_column', 'table' => 'program_pages', 'column' => 'elos_json', 'importable' => true],
+        'learning_standards_json' => ['source' => 'database_json_column', 'table' => 'program_pages', 'column' => 'learning_standards_json', 'importable' => true],
+        'curriculum_structure'    => ['source' => 'database', 'table' => 'program_pages', 'column' => 'curriculum_structure', 'importable' => true],
+        'study_plan'              => ['source' => 'database', 'table' => 'program_pages', 'column' => 'study_plan', 'importable' => true],
+        'curriculum_json'         => ['source' => 'database_json_column', 'table' => 'program_pages', 'column' => 'curriculum_json', 'importable' => true],
+        'course_details'          => ['source' => 'database', 'table' => 'program_pages', 'column' => 'course_details', 'importable' => true],
+        'teaching_methods'        => ['source' => 'database', 'table' => 'program_pages', 'column' => 'teaching_methods', 'importable' => true],
+        'assessment_methods'      => ['source' => 'database', 'table' => 'program_pages', 'column' => 'assessment_methods', 'importable' => true],
+        'graduation_requirements' => ['source' => 'database', 'table' => 'program_pages', 'column' => 'graduation_requirements', 'importable' => true],
+        'careers_json'            => ['source' => 'database_json_column', 'table' => 'program_pages', 'column' => 'careers_json', 'importable' => true],
+        'career_prospects'        => ['source' => 'database', 'table' => 'program_pages', 'column' => 'career_prospects', 'importable' => true],
+        'tuition_fees_json'       => ['source' => 'database_json_column', 'table' => 'program_pages', 'column' => 'tuition_fees_json', 'importable' => true],
+        'tuition_fees'            => ['source' => 'database', 'table' => 'program_pages', 'column' => 'tuition_fees', 'importable' => true],
+        'admission_info'          => ['source' => 'database', 'table' => 'program_pages', 'column' => 'admission_info', 'importable' => true],
+        'admission_details_json'  => ['source' => 'database_json_column', 'table' => 'program_pages', 'column' => 'admission_details_json', 'importable' => true],
+        'success_outcomes'        => ['source' => 'database', 'table' => 'program_pages', 'column' => 'success_outcomes', 'importable' => true],
+        'contact_info'            => ['source' => 'database', 'table' => 'program_pages', 'column' => 'contact_info', 'importable' => true],
+        'intro_video_url'         => ['source' => 'database', 'table' => 'program_pages', 'column' => 'intro_video_url', 'importable' => true],
+        'alumni_messages_json'    => ['source' => 'database_json_column', 'table' => 'program_pages', 'column' => 'alumni_messages_json', 'importable' => true],
+    ];
+
+    private const SETTINGS_FIELD_DEFS = [
+        'slug'             => ['source' => 'database', 'table' => 'program_pages', 'column' => 'slug', 'importable' => true],
+        'hero_image'       => ['source' => 'database', 'table' => 'program_pages', 'column' => 'hero_image', 'importable' => true],
+        'theme_color'      => ['source' => 'database', 'table' => 'program_pages', 'column' => 'theme_color', 'importable' => true],
+        'text_color'       => ['source' => 'database', 'table' => 'program_pages', 'column' => 'text_color', 'importable' => true],
+        'background_color' => ['source' => 'database', 'table' => 'program_pages', 'column' => 'background_color', 'importable' => true],
+        'meta_description' => ['source' => 'database', 'table' => 'program_pages', 'column' => 'meta_description', 'importable' => true],
+        'gallery_images'   => ['source' => 'database_json_column', 'table' => 'program_pages', 'column' => 'gallery_images', 'importable' => true],
+        'social_links'     => ['source' => 'database_json_column', 'table' => 'program_pages', 'column' => 'social_links', 'importable' => true],
+        'is_published'     => ['source' => 'database', 'table' => 'program_pages', 'column' => 'is_published', 'importable' => true],
+    ];
+
     /**
      * บันทึก snapshot ลง uploads ต่อหลักสูตร (ไม่แทน DB — สำรอง/อ้างอิง)
      */
@@ -148,7 +206,7 @@ class ProgramContentBundleService
     }
 
     /**
-     * สร้าง bundle สำหรับ export — 3 namespace (basic/content/settings) ไม่มีข้อมูลซ้ำ
+     * สร้าง bundle สำหรับ export — v2 wraps every field with source/import metadata.
      *
      * @return array{schema_version: int, program_id: int, exported_at: string, basic: array, content: array, settings: array}
      */
@@ -160,9 +218,9 @@ class ProgramContentBundleService
             'schema_version' => self::SCHEMA_VERSION,
             'program_id'     => $programId,
             'exported_at'    => gmdate('c'),
-            'basic'          => $this->buildBasicSliceFromProgram($programRow),
-            'content'        => $this->buildContentSliceFromPage($pageRow ?? []),
-            'settings'       => $this->buildSettingsSliceFromPage($pageRow ?? []),
+            'basic'          => $this->wrapNamespaceFields('basic', $this->buildBasicSliceFromProgram($programRow)),
+            'content'        => $this->wrapNamespaceFields('content', $this->buildContentSliceFromPage($pageRow ?? [])),
+            'settings'       => $this->wrapNamespaceFields('settings', $this->buildSettingsSliceFromPage($pageRow ?? [])),
         ];
     }
 
@@ -177,9 +235,9 @@ class ProgramContentBundleService
             'schema_version' => self::SCHEMA_VERSION,
             'program_id'     => $programId,
             'exported_at'    => null,
-            'template_note'  => 'แม่แบบว่าง — กรอก key ใน basic / content / settings แล้วนำเข้า (program_id ต้องตรงหลักสูตรนี้; ไม่รวมรูป/ไฟล์แนบ ต้องอัปโหลดแยก)',
-            'basic'          => $this->buildBasicSliceFromProgram($programRow),
-            'content' => [
+            'template_note'  => 'แม่แบบว่าง v2 — แก้ค่าใน value ของแต่ละ field; source/table/column/importable ใช้บอกแหล่งข้อมูลและสิทธิ์ update DB (program_id ต้องตรงหลักสูตรนี้; export เฉพาะ programs + program_pages ไม่รวมข้อมูล feature ร่วม เช่น บุคลากร ข่าว ดาวน์โหลด กิจกรรม สิ่งอำนวยความสะดวก; รูป/ไฟล์แนบต้องอัปโหลดแยก)',
+            'basic'          => $this->wrapNamespaceFields('basic', $this->buildBasicSliceFromProgram($programRow)),
+            'content' => $this->wrapNamespaceFields('content', [
                 'philosophy'              => '',
                 'objectives'              => [],
                 'graduate_profile'        => [],
@@ -202,8 +260,8 @@ class ProgramContentBundleService
                 'contact_info'            => '',
                 'intro_video_url'         => '',
                 'alumni_messages_json'    => [],
-            ],
-            'settings' => [
+            ]),
+            'settings' => $this->wrapNamespaceFields('settings', [
                 'slug'             => '',
                 'hero_image'       => '',
                 'theme_color'      => '#1e40af',
@@ -213,8 +271,47 @@ class ProgramContentBundleService
                 'gallery_images'   => [],
                 'social_links'     => [],
                 'is_published'     => 0,
-            ],
+            ]),
         ];
+    }
+
+    public function wrapNamespaceFields(string $namespace, array $values): array
+    {
+        $defs = $this->fieldDefsForNamespace($namespace);
+        $out  = [];
+        foreach ($values as $key => $value) {
+            if (! isset($defs[$key])) {
+                continue;
+            }
+            $out[$key] = $this->wrapField($value, $defs[$key]);
+        }
+
+        return $out;
+    }
+
+    private function wrapField($value, array $def): array
+    {
+        return [
+            'value'      => $value,
+            'source'     => $def['source'],
+            'table'      => $def['table'] ?? null,
+            'column'     => $def['column'] ?? null,
+            'importable' => (bool) ($def['importable'] ?? false),
+        ];
+    }
+
+    private function fieldDefsForNamespace(string $namespace): array
+    {
+        switch ($namespace) {
+            case 'basic':
+                return self::BASIC_FIELD_DEFS;
+            case 'content':
+                return self::CONTENT_FIELD_DEFS;
+            case 'settings':
+                return self::SETTINGS_FIELD_DEFS;
+        }
+
+        return [];
     }
 
     /**
@@ -362,11 +459,16 @@ class ProgramContentBundleService
      * รองรับทั้งรูปแบบใหม่ {basic, content, settings} และรูปแบบเดิม {program, page}
      * (legacy convert ก่อน validate เพื่อ error message สอดคล้อง new structure)
      *
-     * @return array{errors: list<string>, program_id: int|null, basic: array, content: array, settings: array, raw: ?array, legacy: bool}
+     * @return array{errors: list<string>, program_id: int|null, basic: array, content: array, settings: array, raw: ?array, legacy: bool, schema_version: int, ignored_fields: list<string>, source_summary: array}
      */
     public function parseBundleJsonString(string $json): array
     {
-        $empty = ['errors' => [], 'program_id' => null, 'basic' => [], 'content' => [], 'settings' => [], 'raw' => null, 'legacy' => false];
+        $empty = [
+            'errors' => [], 'program_id' => null,
+            'basic' => [], 'content' => [], 'settings' => [],
+            'raw' => null, 'legacy' => false, 'schema_version' => 0,
+            'ignored_fields' => [], 'source_summary' => [],
+        ];
 
         if (strlen($json) > 2_200_000) {
             $empty['errors'] = ['ไฟล์ใหญ่เกิน (จำกัด ~2.1MB)'];
@@ -387,6 +489,7 @@ class ProgramContentBundleService
 
         $errors = [];
         $v      = (int) ($data['schema_version'] ?? 0);
+        $empty['schema_version'] = $v;
         if ($v < 1 || $v > self::SCHEMA_VERSION) {
             $errors[] = 'schema_version ไม่รองรับ (รองรับ 1–' . self::SCHEMA_VERSION . ')';
         }
@@ -401,6 +504,8 @@ class ProgramContentBundleService
         $basic    = [];
         $content  = [];
         $settings = [];
+        $ignoredFields = [];
+        $sourceSummary = [];
 
         if ($isLegacy) {
             // Convert legacy {program, page} → {basic, content, settings} ก่อน validate
@@ -411,6 +516,18 @@ class ProgramContentBundleService
             $settings = is_array($data['settings'] ?? null) ? $data['settings'] : [];
             if (! isset($data['basic']) && ! isset($data['content']) && ! isset($data['settings'])) {
                 $errors[] = 'ต้องมี key "basic" / "content" / "settings" อย่างน้อยหนึ่ง';
+            }
+            if ($v >= 2) {
+                $basicUnwrap = $this->unwrapNamespaceFields($basic, 'basic');
+                $contentUnwrap = $this->unwrapNamespaceFields($content, 'content');
+                $settingsUnwrap = $this->unwrapNamespaceFields($settings, 'settings');
+
+                $basic = $basicUnwrap['values'];
+                $content = $contentUnwrap['values'];
+                $settings = $settingsUnwrap['values'];
+                $errors = array_merge($errors, $basicUnwrap['errors'], $contentUnwrap['errors'], $settingsUnwrap['errors']);
+                $ignoredFields = array_merge($ignoredFields, $basicUnwrap['ignored_fields'], $contentUnwrap['ignored_fields'], $settingsUnwrap['ignored_fields']);
+                $sourceSummary = $this->mergeSourceSummaries($basicUnwrap['source_summary'], $contentUnwrap['source_summary'], $settingsUnwrap['source_summary']);
             }
         } else {
             $errors[] = 'ต้องมี key "basic" / "content" / "settings" (หรือรูปแบบเดิม "page")';
@@ -434,7 +551,96 @@ class ProgramContentBundleService
             'settings'   => $settings,
             'raw'        => $data,
             'legacy'     => $isLegacy,
+            'schema_version' => $v,
+            'ignored_fields' => $ignoredFields,
+            'source_summary' => $sourceSummary,
         ];
+    }
+
+    /**
+     * @return array{values: array, errors: list<string>, ignored_fields: list<string>, source_summary: array<string, int>}
+     */
+    public function unwrapNamespaceFields(array $namespaceData, string $namespace): array
+    {
+        $defs = $this->fieldDefsForNamespace($namespace);
+        $values = [];
+        $errors = [];
+        $ignored = [];
+        $summary = [];
+
+        foreach ($namespaceData as $key => $wrapper) {
+            if (! is_string($key)) {
+                $errors[] = $namespace . ': key ต้องเป็น string';
+                continue;
+            }
+            if (! isset($defs[$key])) {
+                $errors[] = $namespace . ': key ต้องห้าม "' . $key . '"';
+                continue;
+            }
+            if (! is_array($wrapper) || array_is_list($wrapper) || ! array_key_exists('value', $wrapper)) {
+                $errors[] = $namespace . '.' . $key . ': schema v2 ต้องเป็น object ที่มี value/source/importable';
+                continue;
+            }
+
+            $source = (string) ($wrapper['source'] ?? '');
+            $importable = (bool) ($wrapper['importable'] ?? false);
+            $summary[$source !== '' ? $source : 'unknown'] = ($summary[$source !== '' ? $source : 'unknown'] ?? 0) + 1;
+
+            if ($source === '' || ! in_array($source, self::SOURCE_VALUES, true)) {
+                $errors[] = $namespace . '.' . $key . ': source ไม่รองรับ';
+                continue;
+            }
+
+            $def = $defs[$key];
+            $expectedSource = (string) $def['source'];
+            $expectedTable = (string) ($def['table'] ?? '');
+            $expectedColumn = (string) ($def['column'] ?? '');
+
+            if (in_array($source, self::IMPORTABLE_SOURCES, true)) {
+                if (($wrapper['table'] ?? null) === null || ($wrapper['column'] ?? null) === null) {
+                    $errors[] = $namespace . '.' . $key . ': DB source ต้องมี table และ column';
+                    continue;
+                }
+                if ($source !== $expectedSource
+                    || (string) $wrapper['table'] !== $expectedTable
+                    || (string) $wrapper['column'] !== $expectedColumn
+                ) {
+                    $errors[] = $namespace . '.' . $key . ': source/table/column ไม่ตรงกับ whitelist ฝั่งระบบ';
+                    continue;
+                }
+            }
+
+            if (! $importable || ! in_array($source, self::IMPORTABLE_SOURCES, true)) {
+                $ignored[] = $namespace . '.' . $key;
+                continue;
+            }
+
+            if (! (bool) ($def['importable'] ?? false)) {
+                $ignored[] = $namespace . '.' . $key;
+                continue;
+            }
+
+            $values[$key] = $wrapper['value'];
+        }
+
+        return [
+            'values' => $values,
+            'errors' => $errors,
+            'ignored_fields' => $ignored,
+            'source_summary' => $summary,
+        ];
+    }
+
+    private function mergeSourceSummaries(array ...$summaries): array
+    {
+        $out = [];
+        foreach ($summaries as $summary) {
+            foreach ($summary as $source => $count) {
+                $out[$source] = ($out[$source] ?? 0) + (int) $count;
+            }
+        }
+
+        return $out;
     }
 
     /**

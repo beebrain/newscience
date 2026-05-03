@@ -1217,6 +1217,8 @@ class Dashboard extends BaseController
         $staging = [
             'basic_update' => $basicConv['update'],
             'page_update'  => $pageMerged,
+            'ignored_fields' => $p['ignored_fields'] ?? [],
+            'source_summary' => $p['source_summary'] ?? [],
         ];
         $token   = $svc->writeStagingFile($programId, $staging);
         $fileSha = sha1($raw);
@@ -1229,7 +1231,16 @@ class Dashboard extends BaseController
             'expires_in_sec'   => 600,
             'file_sha1'        => $fileSha,
             'legacy'           => $p['legacy'],
+            'schema_version'   => $p['schema_version'] ?? null,
             'basic_keys'       => array_keys($basicConv['update']),
+            'page_keys'        => array_keys($pageConv['update']),
+            'ignored_fields'   => $p['ignored_fields'] ?? [],
+            'source_summary'   => $p['source_summary'] ?? [],
+            'import_summary'   => [
+                'basic_update_count' => count($basicConv['update']),
+                'page_update_count'  => count($pageConv['update']),
+                'ignored_count'      => count($p['ignored_fields'] ?? []),
+            ],
             'preview_sections' => $svc->buildSectionPreviews($pageIn),
             'current_sections' => $svc->buildSectionPreviews($svc->decodePageRowForBundle($existing)),
         ]);
