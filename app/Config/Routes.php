@@ -90,9 +90,12 @@ $routes->get('/oauth', 'OAuthController::callback');
 $routes->get('/oauth/logout', 'OAuthController::logout');
 
 // หน้า Dashboard ผู้ใช้งาน — หลัง login มาที่หน้านี้ (ทุก role); หน้าตาเหมือน Admin, เมนู Edoc + หน้าการจัดการงานวิจัย; หน้าแรก = ข้อมูลผู้ใช้คนนั้น
+$routes->get('/dashboard/portal-mode/member', 'User\Dashboard::setMemberPortal', ['filter' => 'loggedin']);
+$routes->get('/dashboard/portal-mode/manage', 'User\Dashboard::setManagePortal', ['filter' => 'loggedin']);
 $routes->get('/dashboard', 'User\Dashboard::index', ['filter' => 'loggedin']);
 $routes->get('/dashboard/calendar', 'User\CalendarController::index', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile', 'User\ProfileCv::index', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/identity', 'User\ProfileCv::saveAccountIdentity', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/cv', 'User\ProfileCv::cv', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/sync-from-rr', 'User\ProfileCv::syncFromResearchRecord', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/photo', 'User\ProfileCv::saveCvPhoto', ['filter' => 'loggedin']);

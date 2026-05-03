@@ -5,6 +5,7 @@
 $p = $profile ?? [];
 $role = $p['role'] ?? 'user';
 $isAdmin = in_array($role, ['admin', 'editor', 'super_admin', 'faculty_admin'], true);
+$hideAdminQuickTools = ($role === 'super_admin') && session()->get(\App\Controllers\User\Dashboard::SESSION_SUPER_ADMIN_MEMBER_PORTAL);
 $canManageEvaluate = $can_manage_evaluate ?? false;
 $dashUid = (int) ($p['uid'] ?? 0);
 $showProgramAdminQuick = $dashUid > 0 && \App\Libraries\AccessControl::hasAccess($dashUid, 'program_admin');
@@ -172,8 +173,8 @@ $quickSystemsGridClass = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid
         </div>
     </section>
 
-    <!-- Admin Quick Access (สำหรับ admin/super_admin) -->
-    <?php if ($isAdmin): ?>
+    <!-- Admin Quick Access (สำหรับ admin/super_admin — ซ่อนเมื่อ Super Admin ใช้มุมมองผู้ใช้ทั่วไป) -->
+    <?php if ($isAdmin && !$hideAdminQuickTools): ?>
     <section>
         <div class="flex items-center gap-2 mb-4">
             <div class="w-1 h-6 bg-red-400 rounded-full"></div>

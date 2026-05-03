@@ -6,6 +6,7 @@ $uid = (int) session()->get('admin_id');
 $userRole = session()->get('admin_role') ?? 'user';
 $userName = session()->get('admin_name') ?? session()->get('admin_email') ?? 'User';
 $isAdmin = in_array($userRole, ['admin', 'editor', 'super_admin', 'faculty_admin'], true);
+$superAdminMemberPortal = ($userRole === 'super_admin') && session()->get(\App\Controllers\User\Dashboard::SESSION_SUPER_ADMIN_MEMBER_PORTAL);
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -98,7 +99,12 @@ $isAdmin = in_array($userRole, ['admin', 'editor', 'super_admin', 'faculty_admin
 
                 <!-- Right: User + Admin link -->
                 <div class="flex items-center gap-2">
-                    <?php if ($isAdmin): ?>
+                    <?php if ($superAdminMemberPortal): ?>
+                        <a href="<?= base_url('dashboard/portal-mode/manage') ?>" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 border border-red-700 rounded-full hover:bg-red-700 transition-colors shadow-sm">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                            หน้าจัดการ
+                        </a>
+                    <?php elseif ($isAdmin): ?>
                         <a href="<?= base_url('admin/news') ?>" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-full hover:bg-yellow-100 transition-colors">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg>
                             Admin Panel
@@ -125,7 +131,12 @@ $isAdmin = in_array($userRole, ['admin', 'editor', 'super_admin', 'faculty_admin
                                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
                                 กลับเว็บไซต์หลัก
                             </a>
-                            <?php if ($isAdmin): ?>
+                            <?php if ($superAdminMemberPortal): ?>
+                                <a href="<?= base_url('dashboard/portal-mode/manage') ?>" class="flex items-center gap-2 px-4 py-2 text-sm text-red-700 hover:bg-red-50 font-medium">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                    หน้าจัดการ
+                                </a>
+                            <?php elseif ($isAdmin): ?>
                                 <a href="<?= base_url('admin/news') ?>" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
                                     Admin Panel
@@ -167,7 +178,14 @@ $isAdmin = in_array($userRole, ['admin', 'editor', 'super_admin', 'faculty_admin
                         <?= $item['label'] ?>
                     </a>
                 <?php endforeach; ?>
-                <?php if ($isAdmin): ?>
+                <?php if ($superAdminMemberPortal): ?>
+                    <div class="pt-2 mt-2 border-t border-gray-100">
+                        <a href="<?= base_url('dashboard/portal-mode/manage') ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white bg-red-600">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                            หน้าจัดการ
+                        </a>
+                    </div>
+                <?php elseif ($isAdmin): ?>
                     <div class="pt-2 mt-2 border-t border-gray-100">
                         <a href="<?= base_url('admin/news') ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-yellow-700 bg-yellow-50">
                             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>

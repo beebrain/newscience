@@ -76,6 +76,18 @@ use App\Libraries\AccessControl; ?>
                     สลับไปหน้า Dashboard
                 </a>
 
+                <?php if ($sidebarAdminId && $sidebarRole === 'super_admin'): ?>
+                    <a href="<?= base_url('dashboard/portal-mode/member') ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                        มุมมองผู้ใช้ทั่วไป
+                    </a>
+                <?php endif; ?>
+
                 <?php if ($sidebarAdminId && ($sidebarRole === 'admin' || $sidebarRole === 'super_admin')): ?>
                     <a href="<?= base_url('admin/executive-dashboard') ?>" class="<?= (uri_string() == 'admin/executive-dashboard') ? 'active' : '' ?>">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -542,6 +554,12 @@ use App\Libraries\AccessControl; ?>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                         Dashboard
                     </a>
+                    <?php if ((session()->get('admin_role') ?? '') === 'super_admin'): ?>
+                    <a href="<?= base_url('dashboard/portal-mode/member') ?>" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 600; border-radius: 9999px; border: 1px solid #fecaca; color: #991b1b; background: #fef2f2; text-decoration: none; transition: all 0.15s;" onmouseover="this.style.background='#fee2e2';this.style.borderColor='#fca5a5'" onmouseout="this.style.background='#fef2f2';this.style.borderColor='#fecaca'">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        มุมมองผู้ใช้
+                    </a>
+                    <?php endif; ?>
                     <?php
                     $topbarRole = session()->get('admin_role') ?? 'user';
                     $roleBadgeColors = [

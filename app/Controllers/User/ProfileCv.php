@@ -11,6 +11,7 @@ use App\Libraries\StaffImageUpload;
 use App\Models\CvEntryModel;
 use App\Models\CvSectionModel;
 use App\Models\PersonnelModel;
+use App\Models\UserModel;
 use Config\ResearchApi;
 use Config\ResearchRecordSync as ResearchRecordSyncConfig;
 
@@ -107,12 +108,80 @@ class ProfileCv extends BaseController
             }
         }
 
+        $uid = (int) session()->get('admin_id');
+        $accountUser = $uid > 0 ? (new UserModel())->find($uid) : null;
+
         return view('user/profile/index', [
             'page_title'    => 'โปรไฟล์และประวัติ',
             'person'        => $person,
             'public_cv_url' => $publicCvUrl,
             'session_email' => $email,
+            'account_user'  => $accountUser,
         ]);
+    }
+
+    /**
+     * POST — ผู้ใช้แก้คำนำหน้าและชื่อ-นามสกุลในบัญชีของตน (ตาราง user)
+     */
+    public function saveAccountIdentity()
+    {
+        $email = $this->sessionEmail();
+        if ($email === '') {
+            return redirect()->to(base_url('admin/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
+        }
+
+        $userId = (int) session()->get('admin_id');
+        if ($userId <= 0) {
+            return redirect()->to(base_url('admin/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
+        }
+
+        $userModel = new UserModel();
+        $user      = $userModel->find($userId);
+        if (!$user) {
+            return redirect()->to(base_url('dashboard/profile'))->with('error', 'ไม่พบบัญชีผู้ใช้');
+        }
+
+        if (CvProfile::normalizeEmail((string) ($user['email'] ?? '')) !== $email) {
+            return redirect()->to(base_url('dashboard/profile'))->with('error', 'ไม่สามารถแก้ไขบัญชีนี้ได้');
+        }
+
+        $title = trim((string) $this->request->getPost('title'));
+        $tf    = trim((string) $this->request->getPost('tf_name'));
+        $tl    = trim((string) $this->request->getPost('tl_name'));
+        $gf    = trim((string) $this->request->getPost('gf_name'));
+        $gl    = trim((string) $this->request->getPost('gl_name'));
+
+        $max = 255;
+        foreach (['คำนำหน้า' => $title, 'ชื่อ (ไทย)' => $tf, 'นามสกุล (ไทย)' => $tl, 'ชื่อ (อังกฤษ)' => $gf, 'นามสกุล (อังกฤษ)' => $gl] as $label => $val) {
+            if (mb_strlen($val) > $max) {
+                return redirect()->back()->withInput()->with('error', "{$label} ยาวเกิน {$max} ตัวอักษร");
+            }
+        }
+
+        $hasThai  = $tf !== '' || $tl !== '';
+        $hasRoman = $gf !== '' || $gl !== '';
+        if (!$hasThai && !$hasRoman) {
+            return redirect()->back()->withInput()->with('error', 'กรุณากรอกชื่อ-นามสกุลอย่างน้อยหนึ่งภาษา (ไทยหรืออังกฤษ)');
+        }
+
+        $ok = $userModel->skipValidation(true)->update($userId, [
+            'title'   => $title !== '' ? $title : null,
+            'tf_name' => $tf !== '' ? $tf : null,
+            'tl_name' => $tl !== '' ? $tl : null,
+            'gf_name' => $gf !== '' ? $gf : null,
+            'gl_name' => $gl !== '' ? $gl : null,
+        ]);
+
+        if (!$ok) {
+            return redirect()->back()->withInput()->with('error', 'บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง');
+        }
+
+        $fresh = $userModel->find($userId);
+        if ($fresh) {
+            session()->set('admin_name', $userModel->getFullName($fresh));
+        }
+
+        return redirect()->to(base_url('dashboard/profile'))->with('success', 'บันทึกชื่อและคำนำหน้าแล้ว');
     }
 
     public function cv()

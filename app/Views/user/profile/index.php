@@ -4,6 +4,7 @@
 <?php
 $person = $person ?? null;
 $publicCvUrl = $public_cv_url ?? null;
+$accountUser = $account_user ?? null;
 ?>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
@@ -12,6 +13,63 @@ $publicCvUrl = $public_cv_url ?? null;
         <div class="w-1 h-6 bg-yellow-400 rounded-full"></div>
         <h1 class="text-xl sm:text-2xl font-bold text-gray-800">โปรไฟล์และประวัติ</h1>
     </div>
+
+    <?php if ($accountUser !== null): ?>
+        <?php
+        $um = new \App\Models\UserModel();
+        $displayFromAccount = $um->getFullName($accountUser);
+        ?>
+        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">ชื่อตามบัญชีระบบ</h2>
+            <p class="text-xs text-gray-500 mb-4">แก้ไขได้เอง — ใช้แสดงใน Portal และข้อมูลที่ดึงจากบัญชีของคุณ (รวมถึงหน้าประวัติที่เชื่อมกับอีเมลนี้)</p>
+            <p class="text-sm text-gray-700 mb-4">ชื่อที่แสดงขณะนี้: <strong class="text-gray-900"><?= esc($displayFromAccount !== '' ? $displayFromAccount : '—') ?></strong></p>
+            <form action="<?= base_url('dashboard/profile/identity') ?>" method="post" class="space-y-4">
+                <?= csrf_field() ?>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="sm:col-span-2">
+                        <label for="profile-title" class="block text-sm font-medium text-gray-700 mb-1">คำนำหน้าชื่อ</label>
+                        <input type="text" name="title" id="profile-title" maxlength="255"
+                               value="<?= esc(old('title', $accountUser['title'] ?? '')) ?>"
+                               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+                               placeholder="เช่น นาย, นาง, ดร., Mr., Dr."
+                               autocomplete="honorific-prefix">
+                    </div>
+                    <div>
+                        <label for="profile-tf" class="block text-sm font-medium text-gray-700 mb-1">ชื่อ (ภาษาไทย)</label>
+                        <input type="text" name="tf_name" id="profile-tf" maxlength="255"
+                               value="<?= esc(old('tf_name', $accountUser['tf_name'] ?? '')) ?>"
+                               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+                               autocomplete="given-name" lang="th">
+                    </div>
+                    <div>
+                        <label for="profile-tl" class="block text-sm font-medium text-gray-700 mb-1">นามสกุล (ภาษาไทย)</label>
+                        <input type="text" name="tl_name" id="profile-tl" maxlength="255"
+                               value="<?= esc(old('tl_name', $accountUser['tl_name'] ?? '')) ?>"
+                               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+                               autocomplete="family-name" lang="th">
+                    </div>
+                    <div>
+                        <label for="profile-gf" class="block text-sm font-medium text-gray-700 mb-1">ชื่อ (ภาษาอังกฤษ)</label>
+                        <input type="text" name="gf_name" id="profile-gf" maxlength="255"
+                               value="<?= esc(old('gf_name', $accountUser['gf_name'] ?? '')) ?>"
+                               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+                               autocomplete="given-name" lang="en">
+                    </div>
+                    <div>
+                        <label for="profile-gl" class="block text-sm font-medium text-gray-700 mb-1">นามสกุล (ภาษาอังกฤษ)</label>
+                        <input type="text" name="gl_name" id="profile-gl" maxlength="255"
+                               value="<?= esc(old('gl_name', $accountUser['gl_name'] ?? '')) ?>"
+                               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+                               autocomplete="family-name" lang="en">
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500">ต้องกรอกชื่อ-นามสกุลอย่างน้อยหนึ่งภาษา คำนำหน้าเป็นทางเลือก</p>
+                <button type="submit" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-gray-900 text-sm font-semibold transition-colors">
+                    บันทึกชื่อและคำนำหน้า
+                </button>
+            </form>
+        </div>
+    <?php endif; ?>
 
     <?php if ($person === null): ?>
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 text-amber-900">
