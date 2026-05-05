@@ -390,7 +390,7 @@ class Pages extends BaseController
 
         $siteInfo = $this->siteSettingModel->getAll();
         $data = array_merge($this->getCommonData(), [
-            'page_title' => esc($event['title']) . ' | ' . ($siteInfo['site_name_th'] ?? 'Events'),
+            'page_title' => esc((string) ($event['title'] ?? '')) . ' | ' . ($siteInfo['site_name_th'] ?? 'Events'),
             'meta_description' => $event['excerpt'] ?: mb_substr(strip_tags($event['content'] ?? ''), 0, 160),
             'active_page' => 'events',
             'event' => $event,
@@ -503,7 +503,7 @@ class Pages extends BaseController
 
         // บุคลากรแยกตามหลักสูตร: ประธานหลักสูตรด้านบนสุด (เหมือนคณบดี) แล้วตามด้วยอาจารย์ที่ถูก tag ในหลักสูตร
         // ลำดับบนหน้านี้ = ประธานหลักสูตรสูงสุด ไม่ใช้ลำดับคณบดี/รอง
-        // ประธาน: ใช้ programs.chair_personnel_id ก่อน → personnel_programs role ประธาน → position ประธานหลักสูตร
+        // ประธาน: ใช้ programs.chair_personnel_id ก่อน → personnel_programs role ประธาน → org_role หลักสูตรนี้
         $personnelByProgram = [];
         $hasChairColumn = $this->programModel->db->fieldExists('chair_personnel_id', 'programs');
         foreach ($programs as $program) {
@@ -545,23 +545,54 @@ class Pages extends BaseController
                 }
             }
 
+            $chairIdForList = $chair !== null ? (int) ($chair['id'] ?? 0) : 0;
+            $chairPpRole    = '';
+            if ($chairIdForList > 0) {
+                foreach ($ppRows as $row) {
+                    if ((int) ($row['personnel_id'] ?? 0) === $chairIdForList) {
+                        $chairPpRole = trim((string) ($row['role_in_curriculum'] ?? ''));
+                        break;
+                    }
+                }
+            }
+
             // รายชื่อบุคลากรในหลักสูตร (ที่ถูก tag) เรียงตาม sort_order ของ personnel_programs — ไม่รวมประธาน
             $personnelList = [];
-            $chairId = $chair !== null ? (int)($chair['id'] ?? 0) : 0;
+            $programNameForBadge = trim((string) ($program['name_th'] ?? $program['name_en'] ?? ''));
             foreach ($ppRows as $row) {
-                $pid = (int)($row['personnel_id'] ?? 0);
-                if ($pid === $chairId) continue;
+                $pid = (int) ($row['personnel_id'] ?? 0);
+                if ($pid === $chairIdForList) {
+                    continue;
+                }
                 $person = $personnelById[$pid] ?? null;
                 if ($person !== null) {
-                    $personnelList[] = $person;
+                    $label = $this->programCurriculumRelationshipLabel(
+                        $programId,
+                        $person,
+                        $row['role_in_curriculum'] ?? null,
+                        false,
+                        $programNameForBadge
+                    );
+                    $personnelList[] = array_merge($person, ['program_curriculum_label' => $label]);
                 }
             }
             PersonnelOrgRoleRules::sortPersonnelWithStaffOfficerLast($personnelList);
 
+            $chairCurriculumLabel = $chair !== null
+                ? $this->programCurriculumRelationshipLabel(
+                    $programId,
+                    $chair,
+                    $chairPpRole !== '' ? $chairPpRole : null,
+                    true,
+                    $programNameForBadge
+                )
+                : '';
+
             $personnelByProgram[] = [
-                'program' => $program,
-                'chair' => $chair,
-                'personnel' => $personnelList,
+                'program'                   => $program,
+                'chair'                     => $chair,
+                'chair_curriculum_label'    => $chairCurriculumLabel,
+                'personnel'                 => $personnelList,
             ];
         }
 
@@ -692,6 +723,31 @@ class Pages extends BaseController
             $p['org_roles'] = $grouped[$pid] ?? [];
         }
         unset($p);
+    }
+
+    /**
+     * ข้อความบทบาทต่อหลักสูตรนี้บนหน้า Personnel — ใช้ role_in_curriculum ก่อน
+     * แล้ว fallback เป็น org_role ที่ program_id ตรง (ไม่ใช้ personnel.position)
+     * และเติมชื่อหลักสูตรท้ายป้ายเพื่อกันสับสนเมื่อคนเดียวมีหลายสาขา
+     *
+     * @param ?string $roleInCurriculum จากแถว personnel_programs ของหลักสูตรนี้
+     * @param string $programName ชื่อหลักสูตร (ไทย/อังกฤษ) ที่แสดงท้ายป้าย เช่น "เคมี"
+     */
+    private function programCurriculumRelationshipLabel(int $programId, array $person, ?string $roleInCurriculum, bool $isChairSlot, string $programName): string
+    {
+        $suffix = trim($programName);
+        $suffix = $suffix !== '' ? ' ' . $suffix : '';
+
+        $r = trim((string) ($roleInCurriculum ?? ''));
+        if ($r !== '') {
+            return $r . $suffix;
+        }
+        $fromOrg = PersonnelOrgRoleRules::pickProgramOrgRolePositionTitle($programId, $person['org_roles'] ?? []);
+        if ($fromOrg !== '') {
+            return $fromOrg . $suffix;
+        }
+
+        return ($isChairSlot ? 'ประธานหลักสูตร' : 'อาจารย์') . $suffix;
     }
 
     /**

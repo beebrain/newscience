@@ -495,7 +495,7 @@ class Organization extends BaseController
         return OrganizationPositionCatalog::getGroupedOptions();
     }
 
-    /** ค่าตำแหน่งที่อนุญาตใน dropdown (รวมตำแหน่งเพิ่มเติมของหน่วยจัดการงานวิจัย) */
+    /** ค่าตำแหน่งที่อนุญาตใน dropdown (รายการคงที่ใน OrganizationPositionCatalog) */
     private function getAllowedPositionValues(): array
     {
         return OrganizationPositionCatalog::getAllowedTitles();
@@ -567,7 +567,7 @@ class Organization extends BaseController
         }
         $position = trim($position);
         if (! in_array($position, $this->getAllowedPositionValues(), true)) {
-            return 'ตำแหน่งไม่อยู่ในรายการที่อนุญาต — เลือกจากรายการ หรือเพิ่มตำแหน่งใหม่เฉพาะหมวด «หน่วยจัดการงานวิจัย» ด้านล่าง';
+            return 'ตำแหน่งไม่อยู่ในรายการที่อนุญาต — เลือกจากรายการตำแหน่งเท่านั้น';
         }
 
         return null;

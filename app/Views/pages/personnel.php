@@ -212,7 +212,7 @@ $posLabelFn = function ($p) {
                         <?php endif; ?>
                         <div class="team-card__label">
                           <span class="team-card__label-name"><?= esc($chairName) ?></span>
-                          <span class="team-card__label-role">ประธานหลักสูตร</span>
+                          <span class="team-card__label-role"><?= esc($block['chair_curriculum_label'] ?? 'ประธานหลักสูตร') ?></span>
                         </div>
                       </div>
                     </div>
@@ -258,7 +258,7 @@ $posLabelFn = function ($p) {
                           <?php endif; ?>
                           <div class="team-card__label">
                             <span class="team-card__label-name"><?= esc($displayName) ?></span>
-                            <span class="team-card__label-role"><?= esc($posLabelFn($p)) ?></span>
+                            <span class="team-card__label-role"><?= esc($p['program_curriculum_label'] ?? $posLabelFn($p)) ?></span>
                           </div>
                         </div>
                       </div>

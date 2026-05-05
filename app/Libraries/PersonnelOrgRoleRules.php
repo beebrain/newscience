@@ -43,11 +43,6 @@ class PersonnelOrgRoleRules
         if ($t === 'อาจารย์' || $t === 'ประธานหลักสูตร' || $t === 'อาจารย์ประจำหลักสูตร') {
             return self::KIND_CURRICULUM;
         }
-        foreach (OrganizationResearchPositionExtras::getAll() as $extra) {
-            if ($t === $extra) {
-                return self::KIND_RESEARCH;
-            }
-        }
 
         return self::KIND_RESEARCH;
     }

@@ -16,9 +16,6 @@ class OrganizationPositionCatalog
             'หัวหน้าหน่วยการจัดการงานวิจัย' => 'หัวหน้าหน่วยการจัดการงานวิจัย',
             'กรรมการหน่วยจัดการงานวิจัย' => 'กรรมการหน่วยจัดการงานวิจัย',
         ];
-        foreach (OrganizationResearchPositionExtras::getAll() as $extra) {
-            $researchOptions[$extra] = $extra;
-        }
 
         return [
             'บริหาร' => [
