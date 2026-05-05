@@ -12,6 +12,20 @@ $cvTitleTh = \App\Models\PersonnelModel::resolvePublicTitleTh($p);
 $cvNameTh  = \App\Models\PersonnelModel::resolvePublicNameTh($p);
 $cvTitleEn = \App\Models\PersonnelModel::resolvePublicTitleEn($p);
 $cvNameEn  = \App\Models\PersonnelModel::resolvePublicNameEn($p);
+// ไม่แสดงชื่อภาษาอังกฤษซ้ำถ้า DB เก็บชื่อไทยไว้ใน name_en — จะไม่ซ้ำใต้คำนำหน้า EN
+$cvNameEnOut = $cvNameEn;
+if ($cvNameEnOut !== '' && $cvNameTh !== '' && trim($cvNameEnOut) === trim($cvNameTh)) {
+    $cvNameEnOut = '';
+}
+$nameEnOut = $nameEn;
+if ($nameEnOut !== '' && $name !== '' && trim($nameEnOut) === trim($name)) {
+    $nameEnOut = '';
+}
+if ($nameEnOut !== '' && $cvNameTh !== '' && trim($nameEnOut) === trim($cvNameTh)) {
+    $nameEnOut = '';
+}
+$showSidebarEnBlock = ($cvTitleEn !== '' || $cvNameEnOut !== '');
+$showMainEnBlock    = ($cvTitleEn !== '' || $cvNameEnOut !== '');
 $img = $profile_image ?? '';
 $email = trim($p['email'] ?? '');
 $phone = trim($p['phone'] ?? '');
@@ -397,18 +411,18 @@ if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) 
           <div class="cv-sidebar-academic"><?= esc($cvTitleTh) ?></div>
         <?php endif; ?>
         <div class="cv-sidebar-name"><?= esc($cvNameTh !== '' ? $cvNameTh : $name) ?></div>
-        <?php if ($cvTitleEn !== '' || $cvNameEn !== ''): ?>
+        <?php if ($showSidebarEnBlock): ?>
           <div class="cv-sidebar-role cv-sidebar-name-en" style="margin-top:0.35rem;">
             <?php if ($cvTitleEn !== ''): ?>
               <span class="cv-sidebar-academic-en"><?= esc($cvTitleEn) ?></span>
             <?php endif; ?>
-            <?php if ($cvTitleEn !== '' && $cvNameEn !== ''): ?><br><?php endif; ?>
-            <?php if ($cvNameEn !== ''): ?>
-              <span class="cv-sidebar-given-en"><?= esc($cvNameEn) ?></span>
+            <?php if ($cvTitleEn !== '' && $cvNameEnOut !== ''): ?><br><?php endif; ?>
+            <?php if ($cvNameEnOut !== ''): ?>
+              <span class="cv-sidebar-given-en"><?= esc($cvNameEnOut) ?></span>
             <?php endif; ?>
           </div>
-        <?php elseif ($nameEn !== ''): ?>
-          <div class="cv-sidebar-role"><?= esc($nameEn) ?></div>
+        <?php elseif ($nameEnOut !== ''): ?>
+          <div class="cv-sidebar-role"><?= esc($nameEnOut) ?></div>
         <?php endif; ?>
         <div class="cv-sidebar-role" style="margin-top:0.35rem;"><?= esc($posLabel) ?></div>
       </div>
@@ -459,18 +473,18 @@ if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) 
           <p class="cv-main-title-prefix"><?= esc($cvTitleTh) ?></p>
         <?php endif; ?>
         <h1><?= esc($cvNameTh !== '' ? $cvNameTh : $name) ?></h1>
-        <?php if ($cvTitleEn !== '' || $cvNameEn !== ''): ?>
+        <?php if ($showMainEnBlock): ?>
           <p class="cv-name-en">
             <?php if ($cvTitleEn !== ''): ?>
               <span class="cv-name-en-prefix"><?= esc($cvTitleEn) ?></span>
             <?php endif; ?>
-            <?php if ($cvNameEn !== ''): ?>
+            <?php if ($cvNameEnOut !== ''): ?>
               <?php if ($cvTitleEn !== ''): ?><br><?php endif; ?>
-              <?= esc($cvNameEn) ?>
+              <?= esc($cvNameEnOut) ?>
             <?php endif; ?>
           </p>
-        <?php elseif ($nameEn !== ''): ?>
-          <p class="cv-name-en"><?= esc($nameEn) ?></p>
+        <?php elseif ($nameEnOut !== ''): ?>
+          <p class="cv-name-en"><?= esc($nameEnOut) ?></p>
         <?php endif; ?>
         <p class="cv-position"><?= esc($posLabel) ?></p>
         <?php if ($orcidHref !== ''): ?>
