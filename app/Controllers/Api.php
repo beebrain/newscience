@@ -650,7 +650,7 @@ class Api extends BaseController
             }
         }
 
-        // Staff (same logic as ProgramController::buildPersonnelList)
+        // Staff: ตำแหน่งในหน้าหลักสูตร = role_in_curriculum + org_role เฉพาะ program นี้ (ไม่ใช้ personnel.position ทั่วไป)
         $staff = [];
         $ppRows = $personnelProgramModel->getByProgramId($id);
         if (! empty($ppRows)) {
@@ -660,8 +660,16 @@ class Api extends BaseController
                 $roleMap[(int) $row['personnel_id']] = $row['role_in_curriculum'] ?? '';
             }
             $rows = $personnelModel->getActiveByIdsWithUser($personnelIds);
+            $porModel   = new \App\Models\PersonnelOrgRoleModel();
+            $orgGrouped = $porModel->db->tableExists('personnel_org_roles')
+                ? $porModel->getGroupedByPersonnelIds($personnelIds)
+                : [];
             foreach ($rows as $p) {
                 $pid = (int) ($p['id'] ?? 0);
+                $posLabel = \App\Libraries\PersonnelOrgRoleRules::pickProgramOrgRolePositionTitle(
+                    $id,
+                    $orgGrouped[$pid] ?? []
+                );
                 $img = trim($p['image'] ?? '');
                 $imageUrl = $img !== '' ? base_url('serve/thumb/staff/' . basename(str_replace('\\', '/', $img))) : '';
                 if ($img !== '' && strpos($img, 'http') === 0) {
@@ -672,7 +680,7 @@ class Api extends BaseController
                 $cvUrl    = $emailKey !== '' ? base_url('personnel-cv/' . rawurlencode($emailKey)) : '';
                 $staff[] = [
                     'name'     => trim($p['name'] ?? ''),
-                    'position' => trim($p['position'] ?? ''),
+                    'position' => $posLabel,
                     'role'     => $roleMap[$pid] ?? '',
                     'image'    => $imageUrl,
                     'email'    => $emailRaw,
@@ -680,8 +688,12 @@ class Api extends BaseController
                 ];
             }
             usort($staff, function ($a, $b) {
-                $aChair = mb_strpos($a['role'], 'ประธาน') !== false ? 0 : 1;
-                $bChair = mb_strpos($b['role'], 'ประธาน') !== false ? 0 : 1;
+                $text = static function (array $x): string {
+                    return trim(trim($x['role'] ?? '') . ' ' . trim($x['position'] ?? ''));
+                };
+                $aChair = mb_strpos($text($a), 'ประธาน') !== false ? 0 : 1;
+                $bChair = mb_strpos($text($b), 'ประธาน') !== false ? 0 : 1;
+
                 return $aChair - $bChair;
             });
         }

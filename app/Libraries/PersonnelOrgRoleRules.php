@@ -53,6 +53,42 @@ class PersonnelOrgRoleRules
     }
 
     /**
+     * บุคลากรที่ถือตำแหน่งเจ้าหน้าที่ — ในโครงสร้างองค์กรให้แสดงท้ายสุดในกลุ่มเดียวกัน
+     */
+    public static function personnelHasStaffOfficerTitle(array $p): bool
+    {
+        foreach ($p['org_roles'] ?? [] as $r) {
+            if (mb_strpos((string) ($r['position_title'] ?? ''), 'เจ้าหน้าที่') !== false) {
+                return true;
+            }
+        }
+        if (mb_strpos((string) ($p['position'] ?? ''), 'เจ้าหน้าที่') !== false) {
+            return true;
+        }
+        $eff = self::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? '');
+
+        return mb_strpos($eff, 'เจ้าหน้าที่') !== false;
+    }
+
+    /**
+     * เรียงรายการ personnel: ไม่ใช่เจ้าหน้าที่ก่อน แล้วจึงเจ้าหน้าที่ — ภายในแต่ละกลุ่มตาม sort_order
+     *
+     * @param list<array<string, mixed>> $list
+     */
+    public static function sortPersonnelWithStaffOfficerLast(array &$list): void
+    {
+        usort($list, static function (array $a, array $b): int {
+            $sa = self::personnelHasStaffOfficerTitle($a) ? 1 : 0;
+            $sb = self::personnelHasStaffOfficerTitle($b) ? 1 : 0;
+            if ($sa !== $sb) {
+                return $sa <=> $sb;
+            }
+
+            return ((int) ($a['sort_order'] ?? 0)) <=> ((int) ($b['sort_order'] ?? 0));
+        });
+    }
+
+    /**
      * @param list<array{role_kind?: string, position_title?: string, program_id?: int|null, organization_unit_id?: int|null, position_detail?: string|null, sort_order?: int}> $rows
      * @return string|null error message
      */
@@ -319,5 +355,39 @@ class PersonnelOrgRoleRules
         }
 
         return mb_strpos((string) $legacyPosition, 'ประธานหลักสูตร') !== false;
+    }
+
+    /**
+     * เลือกชื่อตำแหน่งจาก org_roles ที่ผูกกับหลักสูตรนี้เท่านั้น (ไม่ fallback ไป personnel.position)
+     * ถ้ามีหลายแถวที่ program_id ตรงกัน: ใช้แถวประเภทหลักสูตร (curriculum) ก่อน ตามลำดับที่ส่งมา (sort_order)
+     *
+     * @param list<array<string, mixed>> $orgRoleRows
+     */
+    public static function pickProgramOrgRolePositionTitle(int $programId, array $orgRoleRows): string
+    {
+        if ($programId <= 0) {
+            return '';
+        }
+        $matches = [];
+        foreach ($orgRoleRows as $r) {
+            if ((int) ($r['program_id'] ?? 0) === $programId) {
+                $matches[] = $r;
+            }
+        }
+        if ($matches === []) {
+            return '';
+        }
+        foreach ($matches as $r) {
+            $kind  = trim((string) ($r['role_kind'] ?? ''));
+            $title = trim((string) ($r['position_title'] ?? ''));
+            if ($kind === '' && $title !== '') {
+                $kind = self::inferRoleKind($title);
+            }
+            if ($kind === self::KIND_CURRICULUM && $title !== '') {
+                return $title;
+            }
+        }
+
+        return trim((string) ($matches[0]['position_title'] ?? ''));
     }
 }

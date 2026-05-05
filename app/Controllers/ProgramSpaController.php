@@ -13,6 +13,7 @@ use App\Models\PersonnelProgramModel;
 use App\Models\PersonnelOrgRoleModel;
 use App\Models\NewsModel;
 use App\Models\SiteSettingModel;
+use App\Libraries\PersonnelOrgRoleRules;
 
 class ProgramSpaController extends BaseController
 {
@@ -244,13 +245,10 @@ class ProgramSpaController extends BaseController
                 : [];
             foreach ($rows as $p) {
                 $pid = (int) ($p['id'] ?? 0);
-                $posLabel = trim($p['position'] ?? '');
-                foreach ($orgGrouped[$pid] ?? [] as $or) {
-                    if ((int) ($or['program_id'] ?? 0) === $id) {
-                        $posLabel = trim((string) ($or['position_title'] ?? ''));
-                        break;
-                    }
-                }
+                $posLabel = PersonnelOrgRoleRules::pickProgramOrgRolePositionTitle(
+                    $id,
+                    $orgGrouped[$pid] ?? []
+                );
                 $img = trim($p['image'] ?? '');
                 $imageUrl = $img !== '' ? base_url('serve/thumb/staff/' . basename(str_replace('\\', '/', $img))) : '';
                 if ($img !== '' && strpos($img, 'http') === 0) {
@@ -269,8 +267,12 @@ class ProgramSpaController extends BaseController
                 ];
             }
             usort($staff, function ($a, $b) {
-                $aChair = mb_strpos($a['role'], 'ประธาน') !== false ? 0 : 1;
-                $bChair = mb_strpos($b['role'], 'ประธาน') !== false ? 0 : 1;
+                $text = static function (array $x): string {
+                    return trim(trim($x['role'] ?? '') . ' ' . trim($x['position'] ?? ''));
+                };
+                $aChair = mb_strpos($text($a), 'ประธาน') !== false ? 0 : 1;
+                $bChair = mb_strpos($text($b), 'ประธาน') !== false ? 0 : 1;
+
                 return $aChair - $bChair;
             });
         }

@@ -550,15 +550,6 @@
                 <input type="text" name="position_detail" id="position_detail" class="form-control" value="<?= esc(old('position_detail', $person['position_detail'] ?? '')) ?>" placeholder="เช่น ฝ่ายกิจกรรมนักศึกษา">
             </div>
             <?php endif; ?>
-            <div class="form-group" style="padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
-                <label class="form-label" style="font-weight: 600;">เพิ่มชื่อตำแหน่งในรายการตัวเลือก (เฉพาะหน่วยจัดการงานวิจัย)</label>
-                <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.75rem;">หมวดอื่น (บริหาร / สำนักงานคณบดี / หลักสูตร) ใช้ตามรายการคงที่เท่านั้น — กดปุ่มนี้ส่งไป endpoint แยก (ไม่ใช้ฟอร์มซ้อน)</p>
-                <div class="form-inline flex-wrap" style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
-                    <input type="hidden" name="redirect" value="<?= esc(current_url(), 'attr') ?>">
-                    <input type="text" name="label" class="form-control" style="min-width: 220px; flex: 1;" maxlength="200" placeholder="เช่น เลขานุการหน่วยจัดการงานวิจัย" autocomplete="off">
-                    <button type="submit" class="btn btn-outline-primary btn-sm" formaction="<?= base_url('admin/organization/research-position-extra') ?>" formmethod="post" formnovalidate>เพิ่มในรายการ</button>
-                </div>
-            </div>
 
             <div class="form-group">
                 <label class="form-label" for="sort_order">ลำดับการแสดง (ตัวเลข)</label>

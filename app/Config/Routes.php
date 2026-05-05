@@ -280,7 +280,6 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->post('organization/store', 'Admin\Organization::store');
     $routes->get('organization/edit/(:num)', 'Admin\Organization::edit/$1');
     $routes->post('organization/update/(:num)', 'Admin\Organization::update/$1');
-    $routes->post('organization/research-position-extra', 'Admin\Organization::addResearchPositionExtra');
     $routes->get('organization/delete/(:num)', 'Admin\Organization::delete/$1');
 
     // Programs (หลักสูตร)

@@ -12,7 +12,6 @@ use App\Libraries\SeedEnsure;
 use App\Libraries\OrganizationRoles;
 use App\Libraries\StaffImageUpload;
 use App\Libraries\CvProfile;
-use App\Libraries\OrganizationResearchPositionExtras;
 use App\Libraries\OrganizationPositionCatalog;
 use App\Libraries\PersonnelOrgRoleRules;
 use App\Libraries\CertOrganizerAccess;
@@ -113,8 +112,10 @@ class Organization extends BaseController
             $groups[$tier]['personnel'][] = $p;
         }
         foreach ($groups as $tier => &$g) {
-            usort($g['personnel'], fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
+            PersonnelOrgRoleRules::sortPersonnelWithStaffOfficerLast($g['personnel']);
         }
+        unset($g);
+
         return $groups;
     }
 
@@ -307,7 +308,7 @@ class Organization extends BaseController
                 }
             }
         }
-        usort($officePersonnel, fn($a, $b) => ((int) ($a['sort_order'] ?? 0)) - ((int) ($b['sort_order'] ?? 0)));
+        PersonnelOrgRoleRules::sortPersonnelWithStaffOfficerLast($officePersonnel);
 
         // หัวหน้าหน่วยวิจัย: เฉพาะ tier 6 ที่สังกัดหน่วย research (หัวหน้าหน่วยวิจัยไปอยู่ผู้บริหารแล้ว)
         $headResearch = [];
@@ -320,7 +321,7 @@ class Organization extends BaseController
 
                 return $tier === 6;
             }));
-            usort($headResearch, fn($a, $b) => ((int) ($a['sort_order'] ?? 0)) - ((int) ($b['sort_order'] ?? 0)));
+            PersonnelOrgRoleRules::sortPersonnelWithStaffOfficerLast($headResearch);
         }
 
         $programs = $this->programModel->getActive();
@@ -370,6 +371,7 @@ class Organization extends BaseController
                     $personnelList[] = $person;
                 }
             }
+            PersonnelOrgRoleRules::sortPersonnelWithStaffOfficerLast($personnelList);
             $personnelByProgram[] = [
                 'program' => $program,
                 'chair' => $chair,
@@ -473,7 +475,7 @@ class Organization extends BaseController
             }
             $unassigned[] = $p;
         }
-        usort($unassigned, fn ($a, $b) => ((int) ($a['sort_order'] ?? 0)) - ((int) ($b['sort_order'] ?? 0)));
+        PersonnelOrgRoleRules::sortPersonnelWithStaffOfficerLast($unassigned);
 
         $sections[] = [
             'unit'      => ['name_th' => 'บุคลากร', 'name_en' => 'Faculty Staff', 'code' => 'personnel_pool', 'sort_order' => 99],
@@ -501,13 +503,7 @@ class Organization extends BaseController
 
     private function personnelHasOfficeStaffTitle(array $p): bool
     {
-        foreach ($p['org_roles'] ?? [] as $r) {
-            if (mb_strpos((string) ($r['position_title'] ?? ''), 'เจ้าหน้าที่') !== false) {
-                return true;
-            }
-        }
-
-        return mb_strpos((string) ($p['position'] ?? ''), 'เจ้าหน้าที่') !== false;
+        return PersonnelOrgRoleRules::personnelHasStaffOfficerTitle($p);
     }
 
     private function personIsChairForProgram(array $person, int $programId): bool
@@ -741,27 +737,6 @@ class Organization extends BaseController
         ];
 
         return view('admin/organization/edit', $data);
-    }
-
-    /**
-     * POST — เพิ่มชื่อตำแหน่งในตัวเลือกเฉพาะหมวดหน่วยจัดการงานวิจัย
-     */
-    public function addResearchPositionExtra()
-    {
-        if (! $this->request->is('post')) {
-            return redirect()->to(base_url('admin/organization'));
-        }
-        $redirect = trim((string) $this->request->getPost('redirect'));
-        if ($redirect === '' || strpos($redirect, base_url()) !== 0) {
-            $redirect = base_url('admin/organization');
-        }
-        $label = (string) $this->request->getPost('label');
-        $res   = OrganizationResearchPositionExtras::add($label);
-        if (! $res['ok']) {
-            return redirect()->to($redirect)->with('error', $res['message']);
-        }
-
-        return redirect()->to($redirect)->with('success', $res['message']);
     }
 
     /**

@@ -556,6 +556,7 @@ class Pages extends BaseController
                     $personnelList[] = $person;
                 }
             }
+            PersonnelOrgRoleRules::sortPersonnelWithStaffOfficerLast($personnelList);
 
             $personnelByProgram[] = [
                 'program' => $program,
@@ -595,7 +596,7 @@ class Pages extends BaseController
             return mb_strpos($eff, 'หัวหน้าหน่วยการจัดการงานวิจัย') === false && mb_strpos($eff, 'หัวหน้าหน่วยวิจัย') === false;
         }));
         usort($researchHeadsFirst, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
-        usort($researchRest, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
+        PersonnelOrgRoleRules::sortPersonnelWithStaffOfficerLast($researchRest);
         $headResearch = array_merge($researchHeadsFirst, $researchRest);
 
         $officePersonnel = array_values(array_filter($personnel, function ($p) use ($hasOrgUnitId, $officeUnitId) {
@@ -617,7 +618,7 @@ class Pages extends BaseController
             return mb_strpos($eff, 'หัวหน้าสำนักงาน') === false;
         }));
         usort($officeHeadsFirst, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
-        usort($officeRest, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
+        PersonnelOrgRoleRules::sortPersonnelWithStaffOfficerLast($officeRest);
         $headOffice = array_merge($officeHeadsFirst, $officeRest);
 
         // หน้า Personnel แสดง 3 หน่วยงาน (icon): หลักสูตร, หน่วยจัดการงานวิจัย, สำนักงานคณบดี — ชื่อจาก organization_units ถ้ามี
