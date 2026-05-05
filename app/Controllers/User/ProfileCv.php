@@ -46,6 +46,16 @@ class ProfileCv extends BaseController
             ->first();
     }
 
+    /** URL หลังบันทึกชื่อ/คำนำหน้า: CV (แท็บ identity) ถ้ามี personnel ไม่งั้นโปรไฟล์ */
+    private function identityFormRedirectUrl(): string
+    {
+        if ($this->resolveOwnedPersonnel() !== null) {
+            return base_url('dashboard/profile/cv?tab=identity');
+        }
+
+        return base_url('dashboard/profile');
+    }
+
     /**
      * @return int|\CodeIgniter\HTTP\RedirectResponse
      */
@@ -98,6 +108,12 @@ class ProfileCv extends BaseController
         }
 
         $person = $this->resolveOwnedPersonnel();
+        if ($person !== null) {
+            $withUser = (new PersonnelModel())->findWithUser((int) ($person['id'] ?? 0));
+            if ($withUser !== null) {
+                $person = $withUser;
+            }
+        }
         $publicCvUrl = null;
         if ($person !== null) {
             $cvEmail = !empty($person['user_email'])
@@ -121,7 +137,7 @@ class ProfileCv extends BaseController
     }
 
     /**
-     * POST — ผู้ใช้แก้คำนำหน้าและชื่อ-นามสกุลในบัญชีของตน (ตาราง user)
+     * POST — แก้คำนำหน้าและชื่อ-นามสกุล: บันทึกลง personnel เป็นหลัก (แสดงหน้าเว็บ/CV) และ sync ลง user เพื่อบัญชีล็อกอิน
      */
     public function saveAccountIdentity()
     {
@@ -137,7 +153,7 @@ class ProfileCv extends BaseController
 
         $userModel = new UserModel();
         $user      = $userModel->find($userId);
-        if (!$user) {
+        if (! $user) {
             return redirect()->to(base_url('dashboard/profile'))->with('error', 'ไม่พบบัญชีผู้ใช้');
         }
 
@@ -146,6 +162,13 @@ class ProfileCv extends BaseController
         }
 
         $title = trim((string) $this->request->getPost('title'));
+        if (! CvProfile::isAllowedUserTitle($title)) {
+            return redirect()->to($this->identityFormRedirectUrl())->withInput()->with('error', 'คำนำหน้าชื่อไม่ตรงกับรายการมาตรฐาน กรุณาเลือกจากรายการ');
+        }
+        $titleEn = trim((string) $this->request->getPost('academic_title_en'));
+        if ($titleEn !== '' && ! array_key_exists($titleEn, CvProfile::academicTitleOptionsEn())) {
+            return redirect()->to($this->identityFormRedirectUrl())->withInput()->with('error', 'คำนำหน้าชื่อ (English) ไม่ตรงกับรายการมาตรฐาน');
+        }
         $tf    = trim((string) $this->request->getPost('tf_name'));
         $tl    = trim((string) $this->request->getPost('tl_name'));
         $gf    = trim((string) $this->request->getPost('gf_name'));
@@ -154,14 +177,34 @@ class ProfileCv extends BaseController
         $max = 255;
         foreach (['คำนำหน้า' => $title, 'ชื่อ (ไทย)' => $tf, 'นามสกุล (ไทย)' => $tl, 'ชื่อ (อังกฤษ)' => $gf, 'นามสกุล (อังกฤษ)' => $gl] as $label => $val) {
             if (mb_strlen($val) > $max) {
-                return redirect()->back()->withInput()->with('error', "{$label} ยาวเกิน {$max} ตัวอักษร");
+                return redirect()->to($this->identityFormRedirectUrl())->withInput()->with('error', "{$label} ยาวเกิน {$max} ตัวอักษร");
             }
         }
 
         $hasThai  = $tf !== '' || $tl !== '';
         $hasRoman = $gf !== '' || $gl !== '';
-        if (!$hasThai && !$hasRoman) {
-            return redirect()->back()->withInput()->with('error', 'กรุณากรอกชื่อ-นามสกุลอย่างน้อยหนึ่งภาษา (ไทยหรืออังกฤษ)');
+        if (! $hasThai && ! $hasRoman) {
+            return redirect()->to($this->identityFormRedirectUrl())->withInput()->with('error', 'กรุณากรอกชื่อ-นามสกุลอย่างน้อยหนึ่งภาษา (ไทยหรืออังกฤษ)');
+        }
+
+        $nameTh = trim($tf . ' ' . $tl);
+        $nameEn = trim($gf . ' ' . $gl);
+
+        $person = $this->resolveOwnedPersonnel();
+        if ($person !== null) {
+            $personnelId = (int) ($person['id'] ?? 0);
+            if ($personnelId > 0) {
+                $personnelModel = new PersonnelModel();
+                $pUpdate = [
+                    'academic_title'    => $title !== '' ? $title : null,
+                    'name'              => $nameTh !== '' ? $nameTh : ($person['name'] ?? ''),
+                    'name_en'           => $nameEn !== '' ? $nameEn : null,
+                ];
+                if ($personnelModel->db->fieldExists('academic_title_en', 'personnel')) {
+                    $pUpdate['academic_title_en'] = $titleEn !== '' ? $titleEn : null;
+                }
+                $personnelModel->skipValidation(true)->update($personnelId, $pUpdate);
+            }
         }
 
         $ok = $userModel->skipValidation(true)->update($userId, [
@@ -172,8 +215,8 @@ class ProfileCv extends BaseController
             'gl_name' => $gl !== '' ? $gl : null,
         ]);
 
-        if (!$ok) {
-            return redirect()->back()->withInput()->with('error', 'บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง');
+        if (! $ok) {
+            return redirect()->to($this->identityFormRedirectUrl())->withInput()->with('error', 'บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง');
         }
 
         $fresh = $userModel->find($userId);
@@ -181,7 +224,7 @@ class ProfileCv extends BaseController
             session()->set('admin_name', $userModel->getFullName($fresh));
         }
 
-        return redirect()->to(base_url('dashboard/profile'))->with('success', 'บันทึกชื่อและคำนำหน้าแล้ว');
+        return redirect()->to($this->identityFormRedirectUrl())->with('success', 'บันทึกชื่อและคำนำหน้าแล้ว (หลักในข้อมูลบุคลากร และซิงก์บัญชีผู้ใช้)');
     }
 
     public function cv()
@@ -197,6 +240,14 @@ class ProfileCv extends BaseController
         }
 
         $personnelId = (int) $person['id'];
+        $withUser = (new PersonnelModel())->findWithUser($personnelId);
+        if ($withUser !== null) {
+            $person = $withUser;
+        }
+
+        $uid = (int) session()->get('admin_id');
+        $accountUser = $uid > 0 ? (new UserModel())->find($uid) : null;
+
         $cvSectionModel = new CvSectionModel();
         if (!$cvSectionModel->db->tableExists('cv_sections')) {
             return redirect()->to(base_url('dashboard/profile'))->with('error', 'ระบบ CV ยังไม่พร้อม — รัน php spark migrate (ต้องมีตาราง cv_sections)');
@@ -247,12 +298,13 @@ class ProfileCv extends BaseController
         helper('cv');
 
         $tabRaw = strtolower((string) $this->request->getGet('tab'));
-        $cvEditTabs = ['narrative', 'photo', 'orcid', 'sections'];
+        $cvEditTabs = ['identity', 'narrative', 'photo', 'orcid', 'sections'];
         $cvEditActiveTab = in_array($tabRaw, $cvEditTabs, true) ? $tabRaw : 'narrative';
 
         return view('user/profile/cv_manage', [
             'page_title'                 => 'จัดการ CV',
             'person'                     => $person,
+            'account_user'               => $accountUser,
             'cv_sections'                => $cvSections,
             'cv_photo_supported'         => $personnelModel->db->fieldExists('cv_profile_image', 'personnel'),
             'research_sync_configured'   => $researchSyncConfigured,

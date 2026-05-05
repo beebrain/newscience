@@ -19,56 +19,33 @@ $accountUser = $account_user ?? null;
         $um = new \App\Models\UserModel();
         $displayFromAccount = $um->getFullName($accountUser);
         ?>
-        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">ชื่อตามบัญชีระบบ</h2>
-            <p class="text-xs text-gray-500 mb-4">แก้ไขได้เอง — ใช้แสดงใน Portal และข้อมูลที่ดึงจากบัญชีของคุณ (รวมถึงหน้าประวัติที่เชื่อมกับอีเมลนี้)</p>
-            <p class="text-sm text-gray-700 mb-4">ชื่อที่แสดงขณะนี้: <strong class="text-gray-900"><?= esc($displayFromAccount !== '' ? $displayFromAccount : '—') ?></strong></p>
-            <form action="<?= base_url('dashboard/profile/identity') ?>" method="post" class="space-y-4">
-                <?= csrf_field() ?>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="sm:col-span-2">
-                        <label for="profile-title" class="block text-sm font-medium text-gray-700 mb-1">คำนำหน้าชื่อ</label>
-                        <input type="text" name="title" id="profile-title" maxlength="255"
-                               value="<?= esc(old('title', $accountUser['title'] ?? '')) ?>"
-                               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
-                               placeholder="เช่น นาย, นาง, ดร., Mr., Dr."
-                               autocomplete="honorific-prefix">
-                    </div>
-                    <div>
-                        <label for="profile-tf" class="block text-sm font-medium text-gray-700 mb-1">ชื่อ (ภาษาไทย)</label>
-                        <input type="text" name="tf_name" id="profile-tf" maxlength="255"
-                               value="<?= esc(old('tf_name', $accountUser['tf_name'] ?? '')) ?>"
-                               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
-                               autocomplete="given-name" lang="th">
-                    </div>
-                    <div>
-                        <label for="profile-tl" class="block text-sm font-medium text-gray-700 mb-1">นามสกุล (ภาษาไทย)</label>
-                        <input type="text" name="tl_name" id="profile-tl" maxlength="255"
-                               value="<?= esc(old('tl_name', $accountUser['tl_name'] ?? '')) ?>"
-                               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
-                               autocomplete="family-name" lang="th">
-                    </div>
-                    <div>
-                        <label for="profile-gf" class="block text-sm font-medium text-gray-700 mb-1">ชื่อ (ภาษาอังกฤษ)</label>
-                        <input type="text" name="gf_name" id="profile-gf" maxlength="255"
-                               value="<?= esc(old('gf_name', $accountUser['gf_name'] ?? '')) ?>"
-                               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
-                               autocomplete="given-name" lang="en">
-                    </div>
-                    <div>
-                        <label for="profile-gl" class="block text-sm font-medium text-gray-700 mb-1">นามสกุล (ภาษาอังกฤษ)</label>
-                        <input type="text" name="gl_name" id="profile-gl" maxlength="255"
-                               value="<?= esc(old('gl_name', $accountUser['gl_name'] ?? '')) ?>"
-                               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
-                               autocomplete="family-name" lang="en">
-                    </div>
-                </div>
-                <p class="text-xs text-gray-500">ต้องกรอกชื่อ-นามสกุลอย่างน้อยหนึ่งภาษา คำนำหน้าเป็นทางเลือก</p>
-                <button type="submit" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-gray-900 text-sm font-semibold transition-colors">
-                    บันทึกชื่อและคำนำหน้า
-                </button>
-            </form>
-        </div>
+        <?php if ($person !== null): ?>
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">ชื่อและคำนำหน้า (หลักใน personnel)</h2>
+                <p class="text-xs text-gray-500 mb-4">แก้ไขได้ที่ <strong>จัดการ CV</strong> — บันทึกลง <strong>personnel</strong> สำหรับหน้าเว็บบุคลากรและ CV สาธารณะ และซิงก์ <strong>user</strong></p>
+                <?php
+                $pm = new \App\Models\PersonnelModel();
+                $displayPersonnel = $pm->getFullName($person);
+                ?>
+                <p class="text-sm text-gray-700 mb-4">ชื่อที่ใช้แสดง (บุคลากร): <strong class="text-gray-900"><?= esc($displayPersonnel !== '' ? $displayPersonnel : ($person['name'] ?? '—')) ?></strong></p>
+                <p class="text-sm text-gray-600 mb-4">ชื่อบัญชีล่าสุด: <strong class="text-gray-800"><?= esc($displayFromAccount !== '' ? $displayFromAccount : '—') ?></strong></p>
+                <a href="<?= base_url('dashboard/profile/cv?tab=identity') ?>"
+                   class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-600 text-gray-900 text-sm font-semibold transition-colors">
+                    แก้ไขชื่อและคำนำหน้าใน CV
+                </a>
+            </div>
+        <?php else: ?>
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">ชื่อและคำนำหน้า (บัญชี)</h2>
+                <p class="text-xs text-gray-500 mb-4">ยังไม่เชื่อมกับระบบบุคลากร — บันทึกลงตาราง <strong>user</strong> เท่านั้น เมื่อเชื่อมอีเมลกับ <strong>personnel</strong> แล้ว ให้แก้ชื่อจากหน้าจัดการ CV</p>
+                <p class="text-sm text-gray-700 mb-4">ชื่อที่แสดงขณะนี้: <strong class="text-gray-900"><?= esc($displayFromAccount !== '' ? $displayFromAccount : '—') ?></strong></p>
+                <?= $this->include('user/profile/partials/identity_form', [
+                    'account_user' => $accountUser,
+                    'person' => null,
+                    'id_prefix' => 'profile-unlinked',
+                ]) ?>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
 
     <?php if ($person === null): ?>

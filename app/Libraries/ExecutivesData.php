@@ -3,6 +3,7 @@
 namespace App\Libraries;
 
 use App\Models\PersonnelModel;
+use App\Models\PersonnelOrgRoleModel;
 use App\Models\ProgramModel;
 use App\Models\PersonnelProgramModel;
 
@@ -79,7 +80,7 @@ class ExecutivesData
             4 => ['label_th' => 'อาจารย์และบุคลากรในสังกัด', 'label_en' => 'Faculty & Staff', 'personnel' => []],
         ];
         foreach ($personnel as $p) {
-            $posTh = $p['position'] ?? '';
+            $posTh = PersonnelOrgRoleRules::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? '');
             $posEn = $p['position_en'] ?? '';
             $tier = self::personnelPositionTier($posTh);
             if ($tier === 4 && $posTh === '' && $posEn !== '') {
@@ -99,7 +100,8 @@ class ExecutivesData
     public static function filterHeadOffice(array $personnel): array
     {
         return array_values(array_filter($personnel, function ($p) {
-            $pos = $p['position'] ?? '';
+            $pos = PersonnelOrgRoleRules::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? '');
+
             return mb_strpos($pos, 'หัวหน้าสำนักงาน') !== false;
         }));
     }
@@ -113,7 +115,7 @@ class ExecutivesData
     public static function filterHeadResearch(array $personnel): array
     {
         return array_values(array_filter($personnel, function ($p) {
-            $pos = trim($p['position'] ?? '');
+            $pos = trim(PersonnelOrgRoleRules::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? ''));
             $posEn = trim($p['position_en'] ?? '');
             if (mb_strpos($pos, 'หัวหน้าหน่วยจัดการงานวิจัย') !== false) {
                 return true;
@@ -218,6 +220,7 @@ class ExecutivesData
         $personnelProgramModel = new PersonnelProgramModel();
 
         $personnel = $personnelModel->getActiveWithDepartment();
+        $personnel = self::attachOrgRolesToPersonnel($personnel);
         $byTier = self::groupPersonnelByPositionTier($personnel);
 
         $tier1 = $byTier[1]['personnel'] ?? [];
@@ -237,5 +240,34 @@ class ExecutivesData
             'headResearch' => $headResearch,
             'programChairs' => $programChairs,
         ];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $personnel
+     * @return list<array<string, mixed>>
+     */
+    private static function attachOrgRolesToPersonnel(array $personnel): array
+    {
+        $m = new PersonnelOrgRoleModel();
+        if (! $m->db->tableExists('personnel_org_roles')) {
+            foreach ($personnel as &$p) {
+                $p['org_roles'] = [];
+            }
+            unset($p);
+
+            return $personnel;
+        }
+        $ids = array_values(array_filter(array_map(fn ($p) => (int) ($p['id'] ?? 0), $personnel), fn ($id) => $id > 0));
+        if ($ids === []) {
+            return $personnel;
+        }
+        $grouped = $m->getGroupedByPersonnelIds($ids);
+        foreach ($personnel as &$p) {
+            $pid            = (int) ($p['id'] ?? 0);
+            $p['org_roles'] = $grouped[$pid] ?? [];
+        }
+        unset($p);
+
+        return $personnel;
     }
 }

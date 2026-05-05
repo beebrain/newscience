@@ -377,7 +377,7 @@ class Auth extends BaseController
     }
 
     /**
-     * หา/สร้าง user จาก API user info (JSON จาก Edoc) — แมปฟิลด์ตามแบบ Edoc แล้ว update ลง table user
+     * หา/สร้าง user จาก API user info (JSON จาก Edoc) — มี user แล้วจะไม่ทับจาก API; ใหม่เท่านั้นที่ insert bootstrap
      * คืน user array หรือ null
      */
     private function processPortalUser(array $userInfo): ?array

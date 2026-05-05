@@ -11,15 +11,10 @@ $getImageUrl = function ($person) {
   return base_url('serve/thumb/staff/' . basename(str_replace('\\', '/', $img)));
 };
 $getDisplayName = function ($person) {
-  $name = trim($person['name'] ?? '');
-  $title = trim($person['academic_title'] ?? '');
-  return $title !== '' ? $title . ' ' . $name : $name;
+  return \App\Models\PersonnelModel::resolvePublicDisplayNameTh($person);
 };
 $getDisplayNameEn = function ($person) {
-  $name = trim($person['name_en'] ?? '');
-  if ($name === '') return $getDisplayName($person);
-  $title = trim($person['academic_title_en'] ?? '');
-  return $title !== '' ? $title . ' ' . $name : $name;
+  return \App\Models\PersonnelModel::resolvePublicDisplayNameEn($person);
 };
 $getCvUrl = function ($person) {
   $email = trim($person['email'] ?? '');

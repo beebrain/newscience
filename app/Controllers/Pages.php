@@ -10,7 +10,9 @@ use App\Models\NewsTagModel;
 use App\Models\ProgramModel;
 use App\Models\PersonnelModel;
 use App\Models\PersonnelProgramModel;
+use App\Models\PersonnelOrgRoleModel;
 use App\Models\OrganizationUnitModel;
+use App\Libraries\PersonnelOrgRoleRules;
 use App\Models\EventModel;
 use App\Models\ProgramPageModel;
 use App\Models\DownloadCategoryModel;
@@ -25,6 +27,7 @@ class Pages extends BaseController
     protected $programModel;
     protected $personnelModel;
     protected $personnelProgramModel;
+    protected $personnelOrgRoleModel;
     protected $organizationUnitModel;
     protected $eventModel;
     protected $programPageModel;
@@ -37,6 +40,7 @@ class Pages extends BaseController
         $this->programModel = new ProgramModel();
         $this->personnelModel = new PersonnelModel();
         $this->personnelProgramModel = new PersonnelProgramModel();
+        $this->personnelOrgRoleModel  = new PersonnelOrgRoleModel();
         $this->organizationUnitModel = new OrganizationUnitModel();
         $this->programPageModel = new ProgramPageModel();
         $this->eventModel = new EventModel();
@@ -489,6 +493,7 @@ class Pages extends BaseController
         // Get all active personnel with department name (1 query)
         $personnel = $this->personnelModel->getActiveWithDepartment();
         $personnel = $this->enrichPersonnelWithProgramRoles($personnel);
+        $this->attachOrgRolesToPersonnelList($personnel);
 
         $programs = $this->programModel->getActive();
         $personnelById = [];
@@ -529,7 +534,11 @@ class Pages extends BaseController
                 foreach ($ppRows as $row) {
                     $pid = (int)($row['personnel_id'] ?? 0);
                     $person = $personnelById[$pid] ?? null;
-                    if ($person && mb_strpos($person['position'] ?? '', 'ประธานหลักสูตร') !== false) {
+                    if ($person && PersonnelOrgRoleRules::hasChairCurriculumRoleForProgram(
+                        $person['org_roles'] ?? [],
+                        $programId,
+                        $person['position'] ?? null
+                    )) {
                         $chair = $person;
                         break;
                     }
@@ -557,34 +566,55 @@ class Pages extends BaseController
 
         // หัวหน้าหน่วยงาน: โดยตำแหน่ง หรือ organization_unit_id — เรียงหัวหน้าหน่วยขึ้นก่อน (เหมือนประธานหลักสูตร)
         $hasOrgUnitId = $this->personnelModel->db->fieldExists('organization_unit_id', 'personnel');
-        $researchPersonnel = array_values(array_filter($personnel, function ($p) use ($hasOrgUnitId) {
-            if ($hasOrgUnitId && (int)($p['organization_unit_id'] ?? 0) === 3) {
+        $researchUnitId = 3;
+        $officeUnitId     = 2;
+        foreach ($this->organizationUnitModel->getOrdered() as $u) {
+            if (($u['code'] ?? '') === 'research') {
+                $researchUnitId = (int) ($u['id'] ?? 3);
+            }
+            if (($u['code'] ?? '') === 'office') {
+                $officeUnitId = (int) ($u['id'] ?? 2);
+            }
+        }
+        $researchPersonnel = array_values(array_filter($personnel, function ($p) use ($hasOrgUnitId, $researchUnitId) {
+            if ($hasOrgUnitId && (int) ($p['organization_unit_id'] ?? 0) === $researchUnitId) {
                 return true;
             }
-            return mb_strpos($p['position'] ?? '', 'หัวหน้าหน่วยจัดการงานวิจัย') !== false;
+            $eff = PersonnelOrgRoleRules::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? '');
+
+            return mb_strpos($eff, 'หัวหน้าหน่วยจัดการงานวิจัย') !== false || mb_strpos($eff, 'หัวหน้าหน่วยวิจัย') !== false;
         }));
         $researchHeadsFirst = array_values(array_filter($researchPersonnel, function ($p) {
-            return mb_strpos($p['position'] ?? '', 'หัวหน้าหน่วยจัดการงานวิจัย') !== false;
+            $eff = PersonnelOrgRoleRules::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? '');
+
+            return mb_strpos($eff, 'หัวหน้าหน่วยการจัดการงานวิจัย') !== false || mb_strpos($eff, 'หัวหน้าหน่วยวิจัย') !== false;
         }));
         $researchRest = array_values(array_filter($researchPersonnel, function ($p) {
-            return mb_strpos($p['position'] ?? '', 'หัวหน้าหน่วยจัดการงานวิจัย') === false;
+            $eff = PersonnelOrgRoleRules::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? '');
+
+            return mb_strpos($eff, 'หัวหน้าหน่วยการจัดการงานวิจัย') === false && mb_strpos($eff, 'หัวหน้าหน่วยวิจัย') === false;
         }));
         usort($researchHeadsFirst, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
         usort($researchRest, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
         $headResearch = array_merge($researchHeadsFirst, $researchRest);
 
-        $officePersonnel = array_values(array_filter($personnel, function ($p) use ($hasOrgUnitId) {
-            if ($hasOrgUnitId && (int)($p['organization_unit_id'] ?? 0) === 2) {
+        $officePersonnel = array_values(array_filter($personnel, function ($p) use ($hasOrgUnitId, $officeUnitId) {
+            if ($hasOrgUnitId && (int) ($p['organization_unit_id'] ?? 0) === $officeUnitId) {
                 return true;
             }
-            $pos = $p['position'] ?? '';
-            return mb_strpos($pos, 'หัวหน้าสำนักงาน') !== false || mb_strpos($pos, 'เจ้าหน้าที่') !== false;
+            $eff = PersonnelOrgRoleRules::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? '');
+
+            return mb_strpos($eff, 'หัวหน้าสำนักงาน') !== false || mb_strpos($eff, 'เจ้าหน้าที่') !== false;
         }));
         $officeHeadsFirst = array_values(array_filter($officePersonnel, function ($p) {
-            return mb_strpos($p['position'] ?? '', 'หัวหน้าสำนักงาน') !== false;
+            $eff = PersonnelOrgRoleRules::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? '');
+
+            return mb_strpos($eff, 'หัวหน้าสำนักงาน') !== false;
         }));
         $officeRest = array_values(array_filter($officePersonnel, function ($p) {
-            return mb_strpos($p['position'] ?? '', 'หัวหน้าสำนักงาน') === false;
+            $eff = PersonnelOrgRoleRules::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? '');
+
+            return mb_strpos($eff, 'หัวหน้าสำนักงาน') === false;
         }));
         usort($officeHeadsFirst, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
         usort($officeRest, fn($a, $b) => ((int)($a['sort_order'] ?? 0)) - ((int)($b['sort_order'] ?? 0)));
@@ -639,6 +669,28 @@ class Pages extends BaseController
         ]);
 
         return view('pages/personnel', $data);
+    }
+
+    private function attachOrgRolesToPersonnelList(array &$personnel): void
+    {
+        if (! $this->personnelOrgRoleModel->db->tableExists('personnel_org_roles')) {
+            foreach ($personnel as &$p) {
+                $p['org_roles'] = [];
+            }
+            unset($p);
+
+            return;
+        }
+        $ids = array_values(array_filter(array_map(fn ($p) => (int) ($p['id'] ?? 0), $personnel), fn ($id) => $id > 0));
+        if ($ids === []) {
+            return;
+        }
+        $grouped = $this->personnelOrgRoleModel->getGroupedByPersonnelIds($ids);
+        foreach ($personnel as &$p) {
+            $pid           = (int) ($p['id'] ?? 0);
+            $p['org_roles'] = $grouped[$pid] ?? [];
+        }
+        unset($p);
     }
 
     /**

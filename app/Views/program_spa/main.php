@@ -105,6 +105,10 @@
             <div id="plo-elo-empty" class="hidden"></div>
             <div id="plo-elo-body" class="space-y-16">
                 <div id="plo-intro-wrap" class="hidden max-w-4xl mx-auto text-on-surface-variant leading-relaxed text-lg font-light border border-outline-variant/40 rounded-sm bg-surface p-8 md:p-10 shadow-elegant"></div>
+                <div id="domains-section" class="hidden">
+                    <h3 class="text-2xl font-bold text-primary text-center mb-10">มาตรฐานการเรียนรู้ (5 ด้าน)</h3>
+                    <div id="domains-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+                </div>
                 <div id="ls-section" class="hidden">
                     <h3 class="text-2xl font-bold text-primary text-center mb-10">มาตรฐานการเรียนรู้ (Learning Standards)</h3>
                     <div id="ls-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
@@ -137,7 +141,7 @@
     <section id="graduate-journey" class="py-24 bg-[#eff6ff] w-full border-t border-outline-variant/30">
         <div class="max-w-[1280px] mx-auto px-8">
             <div class="text-center mb-20">
-                <h2 class="text-4xl font-bold text-primary mb-6">โปรไฟล์ผู้สำเร็จการศึกษาระหว่างหลักสูตร</h2>
+                <h2 class="text-4xl font-bold text-primary mb-6">ผลลัพธ์การเรียนรู้ที่คาดหวังรายชั้นปี (YLOs)</h2>
                 <div class="section-rule mx-auto mb-6"></div>
             </div>
             <div id="graduate-empty" class="hidden"></div>
@@ -158,17 +162,6 @@
                     <div id="year-panels" class="p-8 md:p-12"></div>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <section id="teaching-methods" class="py-32 bg-[#f8fafc] w-full border-t border-outline-variant/30">
-        <div class="max-w-[1280px] mx-auto px-8">
-            <div class="text-center mb-20">
-                <h2 class="text-4xl font-bold text-primary mb-6">รูปแบบการเรียนการสอน</h2>
-                <div class="section-rule mx-auto mb-6"></div>
-            </div>
-            <div id="teaching-empty" class="hidden"></div>
-            <div id="teaching-grid" class="grid grid-cols-1 md:grid-cols-3 gap-10"></div>
         </div>
     </section>
 
@@ -196,28 +189,25 @@
         </div>
     </section>
 
-    <section id="learning-supports" class="bg-white py-32 w-full border-t border-outline-variant/30">
+    <section id="admission-requirements" class="py-28 bg-[#f8fafc] w-full border-t border-outline-variant/30">
         <div class="max-w-[1280px] mx-auto px-8">
-            <div id="learning-supports-head" class="text-center mb-20">
-                <h2 id="learning-supports-title" class="text-4xl font-bold text-primary mb-6">สิ่งสนับสนุนการเรียนการสอน</h2>
-                <div id="learning-supports-rule" class="section-rule mx-auto mb-6"></div>
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-primary mb-6">คุณสมบัติของผู้เข้าเรียน</h2>
+                <div class="section-rule mx-auto mb-6"></div>
             </div>
-            <div id="admission-info-block" class="max-w-4xl mx-auto mb-12 text-on-surface-variant leading-relaxed hidden"></div>
-            <div id="support-empty" class="hidden"></div>
-            <div id="support-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"></div>
+            <div id="admission-req-empty" class="hidden"></div>
+            <div id="admission-req-body" class="max-w-4xl mx-auto space-y-6"></div>
         </div>
     </section>
 
-    <section id="assessment" class="bg-primary text-white py-32 w-full">
+    <section id="learning-supports" class="bg-white py-32 w-full border-t border-outline-variant/30">
         <div class="max-w-[1280px] mx-auto px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-white mb-6">การวัดและประเมินผล</h2>
+            <div class="text-center mb-20">
+                <h2 class="text-4xl font-bold text-primary mb-6">สิ่งสนับสนุนการเรียนการสอน</h2>
                 <div class="section-rule mx-auto mb-6"></div>
-                <div id="assessment-empty" class="hidden"></div>
-                <div id="assessment-loaded" class="hidden">
-                    <p id="assessment-text" class="text-lg text-white/85 max-w-3xl mx-auto font-light leading-relaxed"></p>
-                </div>
             </div>
+            <div id="support-empty" class="hidden"></div>
+            <div id="support-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"></div>
         </div>
     </section>
 
@@ -398,15 +388,14 @@
     function renderNavLinks() {
         var spec = [
             ['#about', 'ปรัชญาและวัตถุประสงค์'],
-            ['#plo-elo', 'มาตรฐานการเรียนรู้ & PLO/ELO'],
+            ['#plo-elo', 'มาตรฐานการเรียนรู้ & PLO'],
             ['#curriculum', 'โครงสร้างหลักสูตรและรายวิชา'],
             ['#faculty', 'คณาจารย์และบุคลากร'],
-            ['#graduate-journey', 'โปรไฟล์ผู้สำเร็จการศึกษาระหว่างหลักสูตร'],
-            ['#teaching-methods', 'รูปแบบการเรียนการสอน'],
+            ['#graduate-journey', 'ผลลัพธ์การเรียนรู้ที่คาดหวังรายชั้นปี (YLOs)'],
             ['#graduation', 'เกณฑ์การจบการศึกษา'],
             ['#alumni', 'ข้อความจากศิษย์เก่า'],
-            ['#learning-supports', 'การรับสมัครและสิ่งสนับสนุน'],
-            ['#assessment', 'การวัดและประเมินผล'],
+            ['#admission-requirements', 'คุณสมบัติของผู้เข้าเรียน'],
+            ['#learning-supports', 'สิ่งสนับสนุนการเรียนการสอน'],
             ['#contact', 'การติดต่อ']
         ];
         var desk = document.getElementById('nav-desktop');
@@ -481,9 +470,9 @@
                 sel + '">' + esc(txt) + '</a>');
         }
         add('#curriculum', 'โครงสร้างหลักสูตรและรายวิชา');
-        addGhost('#plo-elo', 'มาตรฐาน & PLO/ELO');
+        addGhost('#plo-elo', 'มาตรฐาน & PLO');
         addGhost('#about', 'ปรัชญาและวัตถุประสงค์');
-        addGhost('#learning-supports', 'การรับสมัครและสิ่งสนับสนุน');
+        addGhost('#learning-supports', 'สิ่งสนับสนุนการเรียนการสอน');
         addGhost('#contact', 'การติดต่อ');
 
         var wurl = (dRef && text(dRef.website)) ? String(dRef.website).trim() : '';
@@ -652,26 +641,6 @@
         }).join('');
     }
 
-    function renderTeaching(d) {
-        var m = listFromString(d.teaching_methods);
-        var grid = document.getElementById('teaching-grid');
-        var emp = document.getElementById('teaching-empty');
-        if (!m.length) {
-            grid.innerHTML = '';
-            grid.classList.add('hidden');
-            emp.innerHTML = badgeNoData();
-            emp.classList.remove('hidden');
-            return;
-        }
-        emp.innerHTML = '';
-        emp.classList.add('hidden');
-        grid.classList.remove('hidden');
-        var deco = ['study', 'lab', 'cloud', 'study', 'lab', 'cloud'];
-        grid.innerHTML = m.map(function (line, i) {
-            return textCardCentered(deco[i % deco.length], line);
-        }).join('');
-    }
-
     function renderGraduation(d) {
         var items = listFromString(d.graduation_requirements);
         var emp = document.getElementById('graduation-empty');
@@ -748,6 +717,8 @@
 
         var ls = d && d.learning_standards;
         ls = ls && typeof ls === 'object' ? ls : {};
+        var mode = text(ls.mode || 'this_year');
+        var domains = Array.isArray(ls.domains) ? ls.domains : [];
         var intro = text(ls.intro || '');
         var standards = Array.isArray(ls.standards) ? ls.standards : [];
         var mapping = Array.isArray(ls.mapping) ? ls.mapping : [];
@@ -762,11 +733,16 @@
         elos = elos.filter(function (e) {
             return !!(e && (text(e.category) || text(e.title) || text(e.summary) || text(e.detail)));
         });
+        domains = domains.filter(function (dom) {
+            return !!(dom && (text(dom.name) || (Array.isArray(dom.items) && dom.items.length)));
+        });
 
+        var hasDomains = domains.length > 0;
         var hasStandardsBlock = intro.length > 0 || standards.length > 0 || mapping.length > 0;
         var hasElos = elos.length > 0;
+        var hasAnyContent = hasDomains || hasStandardsBlock || hasElos;
 
-        if (!hasStandardsBlock && !hasElos) {
+        if (!hasAnyContent) {
             emptyEl.innerHTML = badgeNoData();
             emptyEl.classList.remove('hidden');
             bodyEl.classList.add('hidden');
@@ -777,116 +753,212 @@
         emptyEl.classList.add('hidden');
         bodyEl.classList.remove('hidden');
 
+        // Hide all sub-sections initially
+        showEl('plo-intro-wrap', false);
+        showEl('domains-section', false);
+        showEl('ls-section', false);
+        showEl('mapping-section', false);
+        showEl('elo-section', false);
+
+        // New format: mode-based rendering
+        if (hasDomains) {
+            var domSec = document.getElementById('domains-section');
+            var domGrid = document.getElementById('domains-grid');
+            if (domSec && domGrid) {
+                domSec.classList.remove('hidden');
+                domGrid.innerHTML = domains.map(function (dom, i) {
+                    var domName = text(dom.name || ('ด้านที่ ' + (i + 1)));
+                    var items = Array.isArray(dom.items) ? dom.items.filter(function (it) { return text(it); }) : [];
+                    var itemsHtml = items.length > 0
+                        ? '<ul class="mt-4 space-y-2 text-left">' + items.map(function (it) {
+                            return '<li class="flex items-start gap-2 text-on-surface-variant text-sm font-light leading-relaxed">' +
+                                '<span class="text-gold mt-0.5 shrink-0 font-bold">•</span>' +
+                                '<span>' + esc(text(it)) + '</span></li>';
+                        }).join('') + '</ul>'
+                        : '<p class="text-sm text-on-surface-variant/60 mt-3 italic">ยังไม่มีรายการย่อย</p>';
+                    return '<article class="bg-surface p-8 rounded-sm shadow-elegant border border-outline-variant/40 hover:border-gold/30 transition-colors">' +
+                        '<div class="flex items-center gap-3 mb-4">' +
+                        '<div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">' + (i + 1) + '</div>' +
+                        '<h4 class="text-lg font-bold text-primary leading-snug">' + esc(domName) + '</h4></div>' +
+                        itemsHtml + '</article>';
+                }).join('');
+            }
+
+            // If mode is next_year also show PLOs alongside
+            if (mode === 'next_year' && hasElos) {
+                var eloSec2 = document.getElementById('elo-section');
+                var eloGrid2 = document.getElementById('elo-grid');
+                if (eloSec2 && eloGrid2) {
+                    eloSec2.classList.remove('hidden');
+                    eloGrid2.innerHTML = renderElosHtml(elos);
+                }
+            }
+            return;
+        }
+
+        // mode=next_year with PLOs only (no domains yet)
+        if (mode === 'next_year' && hasElos) {
+            var eloSec3 = document.getElementById('elo-section');
+            var eloGrid3 = document.getElementById('elo-grid');
+            var eloHd3 = document.getElementById('elo-heading');
+            if (eloSec3 && eloGrid3) {
+                eloSec3.classList.remove('hidden');
+                if (eloHd3) eloHd3.classList.remove('hidden');
+                eloGrid3.innerHTML = renderElosHtml(elos);
+            }
+            return;
+        }
+
+        // Legacy / old format fallback
         var introWrap = document.getElementById('plo-intro-wrap');
         if (introWrap) {
             if (intro) {
                 introWrap.innerHTML = rich(intro);
                 introWrap.classList.remove('hidden');
-            } else {
-                introWrap.innerHTML = '';
-                introWrap.classList.add('hidden');
             }
         }
 
         var lsSec = document.getElementById('ls-section');
         var lsGrid = document.getElementById('ls-grid');
-        if (lsSec && lsGrid) {
-            if (standards.length > 0) {
-                lsSec.classList.remove('hidden');
-                lsGrid.innerHTML = standards.map(function (st, i) {
-                    var title = firstText(st.title, st.category) || ('มาตรฐานการเรียนรู้ ' + (i + 1));
-                    var code = text(st.code) || ('LS' + (i + 1));
-                    var catTxt = text(st.category);
-                    var catLabel = catTxt ? catTxt : 'มาตรฐานการเรียนรู้';
-                    var sum = text(st.summary);
-                    var det = text(st.detail);
-                    var summaryHtml = '';
-                    if (sum) {
-                        summaryHtml = '<p class="text-on-surface-variant mt-3 leading-relaxed">' + rich(sum) + '</p>';
-                    } else if (det) {
-                        summaryHtml = '<p class="text-on-surface-variant mt-3 leading-relaxed">' + rich(det) + '</p>';
-                    }
-                    var detailExtra = '';
-                    if (det && det !== sum) {
-                        detailExtra = '<div class="text-sm text-on-surface-variant mt-4 pt-4 border-t border-outline-variant/30 leading-relaxed">' + rich(det) + '</div>';
-                    }
-                    return '<article class="bg-surface p-8 rounded-sm shadow-elegant border border-outline-variant/40 hover:border-gold/30 transition-colors">' +
-                        '<div class="text-gold mb-5">' + svgIcon('study', 'w-10 h-10') + '</div>' +
-                        '<span class="inline-block text-xs font-bold tracking-wide uppercase text-gold mb-2">' + esc(code) + '</span>' +
-                        '<p class="text-sm font-semibold text-primary">' + esc(catLabel) + '</p>' +
-                        '<h4 class="text-xl font-bold text-primary mt-1">' + esc(title) + '</h4>' +
-                        summaryHtml + detailExtra + '</article>';
-                }).join('');
-            } else {
-                lsSec.classList.add('hidden');
-                lsGrid.innerHTML = '';
-            }
+        if (lsSec && lsGrid && standards.length > 0) {
+            lsSec.classList.remove('hidden');
+            lsGrid.innerHTML = standards.map(function (st, i) {
+                var title = firstText(st.title, st.category) || ('มาตรฐานการเรียนรู้ ' + (i + 1));
+                var code = text(st.code) || ('LS' + (i + 1));
+                var catTxt = text(st.category);
+                var catLabel = catTxt ? catTxt : 'มาตรฐานการเรียนรู้';
+                var sum = text(st.summary);
+                var det = text(st.detail);
+                var summaryHtml = sum
+                    ? '<p class="text-on-surface-variant mt-3 leading-relaxed">' + rich(sum) + '</p>'
+                    : (det ? '<p class="text-on-surface-variant mt-3 leading-relaxed">' + rich(det) + '</p>' : '');
+                var detailExtra = (det && det !== sum)
+                    ? '<div class="text-sm text-on-surface-variant mt-4 pt-4 border-t border-outline-variant/30 leading-relaxed">' + rich(det) + '</div>' : '';
+                return '<article class="bg-surface p-8 rounded-sm shadow-elegant border border-outline-variant/40 hover:border-gold/30 transition-colors">' +
+                    '<div class="text-gold mb-5">' + svgIcon('study', 'w-10 h-10') + '</div>' +
+                    '<span class="inline-block text-xs font-bold tracking-wide uppercase text-gold mb-2">' + esc(code) + '</span>' +
+                    '<p class="text-sm font-semibold text-primary">' + esc(catLabel) + '</p>' +
+                    '<h4 class="text-xl font-bold text-primary mt-1">' + esc(title) + '</h4>' +
+                    summaryHtml + detailExtra + '</article>';
+            }).join('');
         }
 
         var mapSec = document.getElementById('mapping-section');
         var mapHost = document.getElementById('mapping-table-host');
-        if (mapSec && mapHost) {
-            if (mapping.length > 0) {
-                mapSec.classList.remove('hidden');
-                var rows = mapping.map(function (row) {
-                    var refs = text(row.plo_refs);
-                    return '<tr class="border-b border-outline-variant/25 last:border-b-0">' +
-                        '<td class="px-6 py-3 align-top text-on-surface-variant font-medium whitespace-nowrap">' + esc(text(row.standard_code) || '—') + '</td>' +
-                        '<td class="px-6 py-3 align-top text-on-surface-variant leading-relaxed">' + (refs ? esc(refs).replace(/\n/g, '<br>') : '—') + '</td>' +
-                        '</tr>';
-                }).join('');
-                mapHost.innerHTML =
-                    '<table class="min-w-full text-left border-collapse" role="table">' +
-                    '<thead><tr class="bg-primary/5 text-primary border-b border-outline-variant/40">' +
-                    '<th scope="col" class="px-6 py-4 font-semibold">รหัส / มาตรฐานการเรียนรู้</th>' +
-                    '<th scope="col" class="px-6 py-4 font-semibold">PLO ที่เกี่ยวข้อง</th></tr></thead>' +
-                    '<tbody>' + rows + '</tbody></table>';
-            } else {
-                mapSec.classList.add('hidden');
-                mapHost.innerHTML = '';
-            }
+        if (mapSec && mapHost && mapping.length > 0) {
+            mapSec.classList.remove('hidden');
+            var rows = mapping.map(function (row) {
+                var refs = text(row.plo_refs);
+                return '<tr class="border-b border-outline-variant/25 last:border-b-0">' +
+                    '<td class="px-6 py-3 align-top text-on-surface-variant font-medium whitespace-nowrap">' + esc(text(row.standard_code) || '—') + '</td>' +
+                    '<td class="px-6 py-3 align-top text-on-surface-variant leading-relaxed">' + (refs ? esc(refs).replace(/\n/g, '<br>') : '—') + '</td>' +
+                    '</tr>';
+            }).join('');
+            mapHost.innerHTML =
+                '<table class="min-w-full text-left border-collapse" role="table">' +
+                '<thead><tr class="bg-primary/5 text-primary border-b border-outline-variant/40">' +
+                '<th scope="col" class="px-6 py-4 font-semibold">รหัส / มาตรฐานการเรียนรู้</th>' +
+                '<th scope="col" class="px-6 py-4 font-semibold">PLO ที่เกี่ยวข้อง</th></tr></thead>' +
+                '<tbody>' + rows + '</tbody></table>';
         }
 
         var eloSec = document.getElementById('elo-section');
         var eloGrid = document.getElementById('elo-grid');
         var eloHd = document.getElementById('elo-heading');
-        if (eloSec && eloGrid) {
-            if (hasElos) {
-                eloSec.classList.remove('hidden');
-                if (eloHd) eloHd.classList.toggle('hidden', !(hasStandardsBlock && hasElos));
-                eloGrid.innerHTML = elos.map(function (elo) {
-                    var sum = text(elo.summary);
-                    var det = text(elo.detail);
-                    var summaryHtml = '';
-                    if (sum) {
-                        summaryHtml = '<p class="text-on-surface-variant mt-3 leading-relaxed">' + rich(sum) + '</p>';
-                    } else if (det) {
-                        summaryHtml = '<p class="text-on-surface-variant mt-3 leading-relaxed">' + rich(det) + '</p>';
-                    }
-                    var detailExtra = '';
-                    if (det && det !== sum) {
-                        detailExtra = '<div class="text-sm text-on-surface-variant mt-4 pt-4 border-t border-outline-variant/30 leading-relaxed">' + rich(det) + '</div>';
-                    }
-                    var catTxt = text(elo.category);
-                    var titleTxt = text(elo.title);
-                    var headTitle = firstText(titleTxt, catTxt);
-                    if (!headTitle) headTitle = 'PLO / ELO';
-                    var catHtml = '';
-                    if (catTxt && (!titleTxt || catTxt !== titleTxt)) {
-                        catHtml = '<p class="text-sm font-semibold text-primary">' + esc(catTxt) + '</p>';
-                    }
-                    var headCls = catHtml ? 'text-xl font-bold text-primary mt-2' : 'text-xl font-bold text-primary mt-0';
-                    return '<article class="bg-surface p-8 rounded-sm shadow-elegant border border-outline-variant/40 hover:border-gold/30 transition-colors">' +
-                        '<div class="text-gold mb-5">' + svgIcon('verified', 'w-10 h-10') + '</div>' +
-                        catHtml +
-                        '<h4 class="' + headCls + '">' + esc(headTitle) + '</h4>' +
-                        summaryHtml + detailExtra + '</article>';
-                }).join('');
-            } else {
-                eloSec.classList.add('hidden');
-                eloGrid.innerHTML = '';
-            }
+        if (eloSec && eloGrid && hasElos) {
+            eloSec.classList.remove('hidden');
+            if (eloHd) eloHd.classList.toggle('hidden', !(hasStandardsBlock && hasElos));
+            eloGrid.innerHTML = renderElosHtml(elos);
         }
+    }
+
+    function renderElosHtml(elos) {
+        return elos.map(function (elo) {
+            var sum = text(elo.summary);
+            var det = text(elo.detail);
+            var summaryHtml = sum
+                ? '<p class="text-on-surface-variant mt-3 leading-relaxed">' + rich(sum) + '</p>'
+                : (det ? '<p class="text-on-surface-variant mt-3 leading-relaxed">' + rich(det) + '</p>' : '');
+            var detailExtra = (det && det !== sum)
+                ? '<div class="text-sm text-on-surface-variant mt-4 pt-4 border-t border-outline-variant/30 leading-relaxed">' + rich(det) + '</div>' : '';
+            var catTxt = text(elo.category);
+            var titleTxt = text(elo.title);
+            var headTitle = firstText(titleTxt, catTxt) || 'PLO';
+            var catHtml = (catTxt && (!titleTxt || catTxt !== titleTxt))
+                ? '<p class="text-sm font-semibold text-primary">' + esc(catTxt) + '</p>' : '';
+            var headCls = catHtml ? 'text-xl font-bold text-primary mt-2' : 'text-xl font-bold text-primary mt-0';
+            return '<article class="bg-surface p-8 rounded-sm shadow-elegant border border-outline-variant/40 hover:border-gold/30 transition-colors">' +
+                '<div class="text-gold mb-5">' + svgIcon('verified', 'w-10 h-10') + '</div>' +
+                catHtml +
+                '<h4 class="' + headCls + '">' + esc(headTitle) + '</h4>' +
+                summaryHtml + detailExtra + '</article>';
+        }).join('');
+    }
+
+    function renderAdmissionRequirements(d) {
+        var bodyEl = document.getElementById('admission-req-body');
+        var emptyEl = document.getElementById('admission-req-empty');
+        if (!bodyEl || !emptyEl) return;
+
+        var admInfo = text(d.admission_info || '');
+        var admDet = (d.admission_details && typeof d.admission_details === 'object') ? d.admission_details : {};
+        var planSeats = text(admDet.plan_seats || '');
+        var reqs = (admDet.requirements && typeof admDet.requirements === 'object') ? admDet.requirements : {};
+
+        var reqLabels = {
+            selection_criteria: 'เกณฑ์การคัดเลือก',
+            english_grade: 'เกณฑ์ภาษาอังกฤษ',
+            program_type: 'ประเภทหลักสูตร',
+            study_plan: 'แผนการเรียน',
+            duration: 'ระยะเวลาการศึกษา',
+            credits_note: 'หมายเหตุหน่วยกิต'
+        };
+
+        var hasSomething = !!(admInfo || planSeats);
+        if (!hasSomething) {
+            Object.keys(reqLabels).forEach(function (k) {
+                if (text(reqs[k] || '')) hasSomething = true;
+            });
+        }
+
+        if (!hasSomething) {
+            bodyEl.innerHTML = '';
+            emptyEl.innerHTML = badgeNoData();
+            emptyEl.classList.remove('hidden');
+            return;
+        }
+
+        emptyEl.innerHTML = '';
+        emptyEl.classList.add('hidden');
+
+        var parts = [];
+
+        if (planSeats) {
+            parts.push(
+                '<div class="bg-surface p-6 rounded-sm border border-outline-variant/40 shadow-elegant">' +
+                '<span class="text-sm font-semibold text-gold tracking-wide">จำนวนที่รับ</span>' +
+                '<p class="text-on-surface-variant mt-2 leading-relaxed font-light">' + esc(planSeats) + '</p></div>'
+            );
+        }
+
+        if (admInfo) {
+            parts.push(
+                '<div class="bg-surface p-8 rounded-sm border border-outline-variant/40 shadow-elegant">' +
+                '<div class="text-on-surface-variant leading-relaxed font-light">' + rich(admInfo) + '</div></div>'
+            );
+        }
+
+        Object.keys(reqLabels).forEach(function (k) {
+            var val = text(reqs[k] || '');
+            if (!val) return;
+            parts.push(
+                '<div class="bg-surface p-6 rounded-sm border border-outline-variant/40 shadow-elegant">' +
+                '<span class="text-sm font-semibold text-gold tracking-wide">' + esc(reqLabels[k]) + '</span>' +
+                '<p class="text-on-surface-variant mt-2 leading-relaxed font-light">' + rich(val) + '</p></div>'
+            );
+        });
+
+        bodyEl.innerHTML = parts.join('');
     }
 
     function renderSupports(d) {
@@ -903,18 +975,8 @@
         var enabled = rowsMeta.filter(function (row) {
             return sup[row[0]] === true;
         });
-        var admissionInfo = text(d.admission_info || '');
-        var infoEl = document.getElementById('admission-info-block');
         var supGrid = document.getElementById('support-grid');
         var supEmp = document.getElementById('support-empty');
-
-        if (admissionInfo) {
-            infoEl.innerHTML = rich(d.admission_info);
-            infoEl.classList.remove('hidden');
-        } else {
-            infoEl.innerHTML = '';
-            infoEl.classList.add('hidden');
-        }
 
         if (enabled.length) {
             supEmp.innerHTML = '';
@@ -929,24 +991,6 @@
             supEmp.innerHTML = badgeNoData();
             supEmp.classList.remove('hidden');
         }
-    }
-
-    function renderAssessment(d) {
-        var a = text(d.assessment_methods);
-        var loaded = document.getElementById('assessment-loaded');
-        var empt = document.getElementById('assessment-empty');
-        var txt = document.getElementById('assessment-text');
-        if (!a) {
-            loaded.classList.add('hidden');
-            txt.innerHTML = '';
-            empt.innerHTML = badgeNoData('light');
-            empt.classList.remove('hidden');
-            return;
-        }
-        empt.innerHTML = '';
-        empt.classList.add('hidden');
-        loaded.classList.remove('hidden');
-        txt.innerHTML = rich(d.assessment_methods);
     }
 
     function bindTabs() {
@@ -1005,11 +1049,10 @@
         renderFaculty(d);
         renderJourney(d);
         renderCurriculum(d);
-        renderTeaching(d);
         renderGraduation(d);
         renderAlumni(d);
+        renderAdmissionRequirements(d);
         renderSupports(d);
-        renderAssessment(d);
         updateHeroAnchors();
         bindTabs();
         renderNavLinks();

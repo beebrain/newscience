@@ -11,6 +11,8 @@ use App\Models\HeroSlideModel;
 use App\Models\EventModel;
 use App\Models\UrgentPopupModel;
 use App\Libraries\OrganizationRoles;
+use App\Libraries\PersonnelOrgRoleRules;
+use App\Models\PersonnelOrgRoleModel;
 
 class Home extends BaseController
 {
@@ -63,17 +65,25 @@ class Home extends BaseController
 
         // ทีมผู้บริหาร: ดึงจาก personnel (คณบดี = tier 1, รองคณบดี = tier 2)
         $personnel = $personnelModel->getActiveWithDepartment();
+        $porModel = new PersonnelOrgRoleModel();
+        $orgByPid = $porModel->db->tableExists('personnel_org_roles')
+            ? $porModel->getGroupedByPersonnelIds(array_values(array_filter(array_map(fn ($x) => (int) ($x['id'] ?? 0), $personnel))))
+            : [];
         $dean = null;
         $viceDeans = [];
         foreach ($personnel as $p) {
-            $tier = OrganizationRoles::getTier(['position' => $p['position'] ?? '', 'position_en' => $p['position_en'] ?? '']);
+            $pid = (int) ($p['id'] ?? 0);
+            $eff   = PersonnelOrgRoleRules::effectivePositionForTier($orgByPid[$pid] ?? [], $p['position'] ?? '');
+            $tier = OrganizationRoles::getTier(['position' => $eff, 'position_en' => $p['position_en'] ?? '']);
             if ($tier === 1) {
                 $dean = $p;
                 break;
             }
         }
         foreach ($personnel as $p) {
-            $tier = OrganizationRoles::getTier(['position' => $p['position'] ?? '', 'position_en' => $p['position_en'] ?? '']);
+            $pid = (int) ($p['id'] ?? 0);
+            $eff   = PersonnelOrgRoleRules::effectivePositionForTier($orgByPid[$pid] ?? [], $p['position'] ?? '');
+            $tier = OrganizationRoles::getTier(['position' => $eff, 'position_en' => $p['position_en'] ?? '']);
             if ($tier === 2) {
                 $viceDeans[] = $p;
             }

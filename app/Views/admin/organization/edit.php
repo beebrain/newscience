@@ -39,6 +39,12 @@
         <?php if ($currentOrgUnitName !== ''): ?>
         <p style="margin-bottom: 1rem; font-size: 0.9rem;"><strong>หน่วยงานสังกัดปัจจุบัน (จากสาขาหลัก):</strong> <?= esc($currentOrgUnitName) ?></p>
         <?php endif; ?>
+        <?php if (session('success')): ?>
+            <div class="alert alert-success" style="margin-bottom: 1rem;"><?= esc(session('success')) ?></div>
+        <?php endif; ?>
+        <?php if (session('error')): ?>
+            <div class="alert alert-danger" style="margin-bottom: 1rem;"><?= esc(session('error')) ?></div>
+        <?php endif; ?>
         <?php if (session('errors')): ?>
             <div class="alert alert-danger" style="margin-bottom: 1rem;">
                 <ul style="margin: 0; padding-left: 1.25rem;">
@@ -93,13 +99,13 @@
                 </div>
             </div>
 
-            <h3 style="font-size: 1rem; margin-bottom: 1rem; color: var(--color-gray-700);">ชื่อ-นามสกุล</h3>
+            <h3 style="font-size: 1rem; margin-bottom: 1rem; color: var(--color-gray-700);">ชื่อ-นามสกุลและคำนำหน้า (ตาราง personnel)</h3>
             <?php if (!empty($person['user_uid'])): ?>
-                <p style="font-size: 0.85rem; color: var(--color-gray-500); margin: -0.5rem 0 0.5rem;">บุคลากรนี้ลิงก์กับตาราง user — ชื่อดึงจาก user ได้ (ไม่บังคับกรอก)</p>
+                <p style="font-size: 0.85rem; color: var(--color-gray-500); margin: -0.5rem 0 0.5rem;">บุคลากรนี้ลิงก์กับ user — ชื่อใน personnel เป็นหลักบนหน้าเว็บ/CV; ถ้าเว้นชื่อว่างระบบอาจดึงจากบัญชีเมื่อบันทึก</p>
             <?php endif; ?>
             <div class="form-row name-with-prefix">
                 <div class="form-group" style="flex: 0 0 auto; min-width: 180px;">
-                    <label class="form-label" for="academic_title">คำนำหน้าชื่อ (ไทย)</label>
+                    <label class="form-label" for="academic_title">คำนำหน้า (ไทย)</label>
                     <select name="academic_title" id="academic_title" class="form-control">
                         <?php foreach ($academic_title_options as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= (old('academic_title', $person['academic_title'] ?? '') === $value ? 'selected' : '') ?>><?= esc($label) ?></option>
@@ -113,7 +119,7 @@
             </div>
             <div class="form-row name-with-prefix">
                 <div class="form-group" style="flex: 0 0 auto; min-width: 180px;">
-                    <label class="form-label" for="academic_title_en">คำนำหน้าชื่อ (English)</label>
+                    <label class="form-label" for="academic_title_en">คำนำหน้า (English)</label>
                     <select name="academic_title_en" id="academic_title_en" class="form-control">
                         <?php foreach ($academic_title_options_en as $value => $label): ?>
                             <option value="<?= esc($value) ?>" <?= (old('academic_title_en', $person['academic_title_en'] ?? '') === $value ? 'selected' : '') ?>><?= esc($label) ?></option>
@@ -131,27 +137,31 @@
                 <small style="color: var(--color-gray-500);">ใช้ลิงก์กับตาราง user — ถ้าอีเมลตรงกับ user ในระบบ จะเชื่อมบัญชี (personnel.user_uid)</small>
             </div>
 
+            <?php if (empty($use_org_roles_ui) && ! empty($programs)): ?>
             <h3 style="font-size: 1rem; margin: 1.5rem 0 1rem; color: var(--color-gray-700);">สาขาในหลักสูตร (อาจารย์ 1 คน สังกัดได้หลายสาขา)</h3>
-            <?php if (!empty($programs)): ?>
                 <?php
                 $assignments = old('program_assignments');
                 $rows = [];
-                if (is_array($assignments) && !empty($assignments['program_id'])) {
+                if (is_array($assignments) && ! empty($assignments['program_id'])) {
                     foreach ($assignments['program_id'] as $i => $pid) {
-                        $pid = (int)$pid;
-                        if ($pid <= 0) continue;
+                        $pid = (int) $pid;
+                        if ($pid <= 0) {
+                            continue;
+                        }
                         $rows[] = ['program_id' => $pid];
                     }
                 }
-                if (empty($rows) && !empty($personnel_programs)) {
+                if (empty($rows) && ! empty($personnel_programs)) {
                     foreach ($personnel_programs as $pp) {
-                        $pid = (int)($pp['program_id'] ?? 0);
-                        if ($pid <= 0) continue;
+                        $pid = (int) ($pp['program_id'] ?? 0);
+                        if ($pid <= 0) {
+                            continue;
+                        }
                         $rows[] = ['program_id' => $pid];
                     }
                 }
-                if (empty($rows) && !empty($person['program_id'])) {
-                    $rows[] = ['program_id' => (int)$person['program_id']];
+                if (empty($rows) && ! empty($person['program_id'])) {
+                    $rows[] = ['program_id' => (int) $person['program_id']];
                 }
                 $programLabels = [];
                 foreach ($programs as $pr) {
@@ -160,7 +170,7 @@
                     if ($orgName !== '') {
                         $l .= ' (' . $orgName . ')';
                     }
-                    $programLabels[(int)$pr['id']] = $l;
+                    $programLabels[(int) $pr['id']] = $l;
                 }
                 ?>
                 <style>
@@ -177,19 +187,16 @@
                         background: #f1f5f9;
                         transition: background 0.15s;
                     }
-
                     .program-tags-wrap.drag-over {
                         background: #e2e8f0;
                         border-color: #2563eb;
                     }
-
                     .program-tags-wrap .drop-hint {
                         color: #64748b;
                         font-size: 0.85rem;
                         width: 100%;
                         margin: 0;
                     }
-
                     .program-tag {
                         display: inline-flex;
                         align-items: center;
@@ -200,7 +207,6 @@
                         border-radius: 999px;
                         font-size: 0.8rem;
                     }
-
                     .program-tag .program-tag-remove {
                         border: none;
                         background: rgba(255, 255, 255, 0.3);
@@ -216,15 +222,12 @@
                         align-items: center;
                         justify-content: center;
                     }
-
                     .program-tag .program-tag-remove:hover {
                         background: rgba(255, 255, 255, 0.5);
                     }
-
                     .program-buttons-wrap {
                         margin-top: 1rem;
                     }
-
                     .program-draggable-btn {
                         display: inline-block;
                         margin: 0.25rem;
@@ -236,12 +239,10 @@
                         cursor: grab;
                         transition: background 0.15s, border-color 0.15s;
                     }
-
                     .program-draggable-btn:hover {
                         background: #f1f5f9;
                         border-color: #94a3b8;
                     }
-
                     .program-draggable-btn.added {
                         opacity: 0.5;
                         cursor: not-allowed;
@@ -256,10 +257,10 @@
                         <span class="drop-hint" id="program-tags-hint" style="display: none;">ลากปุ่มสาขาจากด้านล่างมาวางที่นี่ หรือคลิกปุ่มเพื่อเพิ่ม</span>
                         <?php foreach ($rows as $i => $row):
                             $label = $programLabels[$row['program_id']] ?? 'หลักสูตร';
-                            $isPrimary = ($i === 0);
-                        ?>
-                            <span class="program-tag" data-program-id="<?= (int)$row['program_id'] ?>">
-                                <?php if ($isPrimary): ?>
+                            $isPrimaryTag = ($i === 0);
+                            ?>
+                            <span class="program-tag" data-program-id="<?= (int) $row['program_id'] ?>">
+                                <?php if ($isPrimaryTag): ?>
                                     <span class="primary-badge" style="background: #fbbf24; color: #1e293b; font-size: 0.65rem; padding: 0.1rem 0.3rem; border-radius: 4px; margin-right: 0.25rem;">หลัก</span>
                                 <?php endif; ?>
                                 <span><?= esc($label) ?></span>
@@ -271,7 +272,7 @@
                 <div id="program-assignments-hidden">
                     <?php foreach ($rows as $row): ?>
                         <div class="program-assignment-row">
-                            <input type="hidden" name="program_assignments[program_id][]" value="<?= (int)$row['program_id'] ?>">
+                            <input type="hidden" name="program_assignments[program_id][]" value="<?= (int) $row['program_id'] ?>">
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -284,17 +285,254 @@
                             if ($orgName !== '') {
                                 $label .= ' (' . $orgName . ')';
                             }
-                            $already = in_array((int)$pr['id'], array_column($rows, 'program_id'), true);
-                        ?>
-                            <button type="button" class="program-draggable-btn <?= $already ? 'added' : '' ?>" draggable="true" data-program-id="<?= (int)$pr['id'] ?>" data-program-label="<?= esc($label) ?>"><?= esc($label) ?></button>
+                            $already = in_array((int) $pr['id'], array_column($rows, 'program_id'), true);
+                            ?>
+                            <button type="button" class="program-draggable-btn <?= $already ? 'added' : '' ?>" draggable="true" data-program-id="<?= (int) $pr['id'] ?>" data-program-label="<?= esc($label) ?>"><?= esc($label) ?></button>
                         <?php endforeach; ?>
                     </div>
                 </div>
-                <input type="hidden" name="primary_program_id" id="primary_program_id" value="<?= !empty($rows) ? (int)$rows[0]['program_id'] : '' ?>">
+                <input type="hidden" name="primary_program_id" id="primary_program_id" value="<?= ! empty($rows) ? (int) $rows[0]['program_id'] : '' ?>">
                 <small style="color: var(--color-gray-500); display: block; margin-top: 0.5rem;">สาขาแรกจะเป็นสาขาหลัก — ใช้กำหนดหน่วยงานสังกัด (หลักสูตรป.ตรี หรือ หลักสูตรบัณฑิตศึกษา)</small>
             <?php endif; ?>
 
-            <h3 style="font-size: 1rem; margin: 1.5rem 0 1rem; color: var(--color-gray-700);">ตำแหน่งในโครงสร้าง</h3>
+            <h3 style="font-size: 1rem; margin: 1.5rem 0 1rem; color: var(--color-gray-700);">บทบาทในโครงสร้าง (หลายแถวได้)</h3>
+            <?php
+            $useOrg = ! empty($use_org_roles_ui);
+            $postedOrg = old('org_roles');
+            $primaryPidForm = null;
+            foreach ($personnel_programs ?? [] as $pp) {
+                if (! empty($pp['is_primary'])) {
+                    $primaryPidForm = (int) ($pp['program_id'] ?? 0);
+                    break;
+                }
+            }
+            if ($primaryPidForm === null && ! empty($personnel_programs)) {
+                $primaryPidForm = (int) ($personnel_programs[0]['program_id'] ?? 0);
+            }
+            $orgRoleRows = [];
+            if (is_array($postedOrg)) {
+                foreach ($postedOrg as $pr) {
+                    if (! is_array($pr)) {
+                        continue;
+                    }
+                    $orgRoleRows[] = $pr;
+                }
+            }
+            if ($orgRoleRows === [] && $useOrg) {
+                foreach ($org_roles ?? [] as $r) {
+                    $kind = trim((string) ($r['role_kind'] ?? ''));
+                    $pid  = (int) ($r['program_id'] ?? 0);
+                    $orgRoleRows[] = [
+                        'role_kind'            => $r['role_kind'] ?? '',
+                        'position_title'       => $r['position_title'] ?? '',
+                        'program_id'           => $pid,
+                        'organization_unit_id' => (int) ($r['organization_unit_id'] ?? 0),
+                        'position_detail'      => $r['position_detail'] ?? '',
+                        'sort_order'           => (int) ($r['sort_order'] ?? 0),
+                        'is_primary_program'   => ($kind === 'curriculum' && $primaryPidForm > 0 && $pid === $primaryPidForm),
+                    ];
+                }
+            }
+            if ($orgRoleRows === [] && $useOrg) {
+                $defPid = (int) ($person['program_id'] ?? 0);
+                $orgRoleRows[] = [
+                    'role_kind'            => '',
+                    'position_title'       => $person['position'] ?? 'อาจารย์',
+                    'program_id'           => $defPid,
+                    'organization_unit_id' => (int) ($person['organization_unit_id'] ?? 0),
+                    'position_detail'      => $person['position_detail'] ?? '',
+                    'sort_order'           => 0,
+                    'is_primary_program'   => ($defPid > 0 && ($primaryPidForm <= 0 || $defPid === $primaryPidForm)),
+                ];
+            }
+            ?>
+            <?php if ($useOrg): ?>
+            <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.75rem;">แต่ละแถว = บทบาทหนึ่งในองค์กร (เช่น รองคณบดี + อาจารย์คนละสาขา) — หมวด <strong>หลักสูตร</strong> ต้องเลือกหลักสูตรในแถวนั้น; ติ๊ก <strong>สาขาหลัก</strong> แถวใดแถวหนึ่งเพื่อสังกัดหน่วยตามสาขานั้น (ถ้าไม่ติ๊ก ระบบใช้แถวที่ลำดับน้อยสุด)</p>
+            <div id="org-roles-wrap" style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem;">
+                <?php foreach ($orgRoleRows as $ri => $orow): ?>
+                    <div class="org-role-row card" style="padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px; background: #fafafa;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; align-items: end;">
+                            <div class="form-group" style="margin: 0;">
+                                <label class="form-label">ประเภท</label>
+                                <select name="org_roles[<?= $ri ?>][role_kind]" class="form-control org-role-kind">
+                                    <option value="">— อัตโนมัติ —</option>
+                                    <?php foreach ($org_role_kind_options ?? [] as $k => $lab): ?>
+                                        <option value="<?= esc($k) ?>" <?= ((string) ($orow['role_kind'] ?? '') === (string) $k ? 'selected' : '') ?>><?= esc($lab) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin: 0; grid-column: span 2;">
+                                <label class="form-label">ตำแหน่ง</label>
+                                <select name="org_roles[<?= $ri ?>][position_title]" class="form-control org-role-title" required>
+                                    <?php foreach ($position_options as $groupLabel => $options): ?>
+                                        <optgroup label="<?= esc($groupLabel) ?>">
+                                            <?php foreach ($options as $value => $label): ?>
+                                                <option value="<?= esc($value) ?>" <?= ((string) ($orow['position_title'] ?? '') === (string) $value ? 'selected' : '') ?>><?= esc($label) ?></option>
+                                            <?php endforeach; ?>
+                                        </optgroup>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group org-role-program-wrap" style="margin: 0;">
+                                <label class="form-label">หลักสูตร (สาขา)</label>
+                                <select name="org_roles[<?= $ri ?>][program_id]" class="form-control org-role-program">
+                                    <option value="">—</option>
+                                    <?php foreach ($programs ?? [] as $pr): ?>
+                                        <option value="<?= (int)($pr['id'] ?? 0) ?>" <?= ((int)($orow['program_id'] ?? 0) === (int)($pr['id'] ?? 0) ? 'selected' : '') ?>><?= esc($pr['name_th'] ?? $pr['name'] ?? '') ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group org-role-primary-wrap" style="margin: 0; align-self: end;">
+                                <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500; cursor: pointer; margin: 0;">
+                                    <input type="checkbox" name="org_roles[<?= $ri ?>][is_primary_program]" value="1" class="org-role-primary" <?= ! empty($orow['is_primary_program']) ? 'checked' : '' ?>>
+                                    สาขาหลัก
+                                </label>
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label class="form-label">หน่วยงาน (ถ้ามี)</label>
+                                <select name="org_roles[<?= $ri ?>][organization_unit_id]" class="form-control">
+                                    <option value="">—</option>
+                                    <?php foreach ($organization_units ?? [] as $ou): ?>
+                                        <option value="<?= (int)($ou['id'] ?? 0) ?>" <?= ((int)($orow['organization_unit_id'] ?? 0) === (int)($ou['id'] ?? 0) ? 'selected' : '') ?>><?= esc($ou['name_th'] ?? $ou['code'] ?? '') ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin: 0; grid-column: span 2;">
+                                <label class="form-label">รายละเอียด (เช่น ฝ่าย)</label>
+                                <input type="text" name="org_roles[<?= $ri ?>][position_detail]" class="form-control" value="<?= esc($orow['position_detail'] ?? '') ?>" placeholder="บังคับสำหรับผู้บริหาร / เจ้าหน้าที่">
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label class="form-label">ลำดับในแถว</label>
+                                <input type="number" name="org_roles[<?= $ri ?>][sort_order]" class="form-control" value="<?= (int)($orow['sort_order'] ?? $ri) ?>" min="0" style="max-width: 100px;">
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-outline-danger btn-sm org-role-remove" <?= count($orgRoleRows) <= 1 ? 'disabled' : '' ?>>ลบแถว</button>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="org-role-add" style="margin-bottom: 1rem;">+ เพิ่มบทบาท</button>
+            <template id="org-role-row-tpl">
+                <div class="org-role-row card" style="padding: 1rem; border: 1px solid #e2e8f0; border-radius: 8px; background: #fafafa;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; align-items: end;">
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">ประเภท</label>
+                            <select name="__NAME__[role_kind]" class="form-control org-role-kind">
+                                <option value="">— อัตโนมัติ —</option>
+                                <?php foreach ($org_role_kind_options ?? [] as $k => $lab): ?>
+                                    <option value="<?= esc($k) ?>"><?= esc($lab) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin: 0; grid-column: span 2;">
+                            <label class="form-label">ตำแหน่ง</label>
+                            <select name="__NAME__[position_title]" class="form-control org-role-title" required>
+                                <?php foreach ($position_options as $groupLabel => $options): ?>
+                                    <optgroup label="<?= esc($groupLabel) ?>">
+                                        <?php foreach ($options as $value => $label): ?>
+                                            <option value="<?= esc($value) ?>"><?= esc($label) ?></option>
+                                        <?php endforeach; ?>
+                                    </optgroup>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group org-role-program-wrap" style="margin: 0;">
+                            <label class="form-label">หลักสูตร (สาขา)</label>
+                            <select name="__NAME__[program_id]" class="form-control org-role-program">
+                                <option value="">—</option>
+                                <?php foreach ($programs ?? [] as $pr): ?>
+                                    <option value="<?= (int)($pr['id'] ?? 0) ?>"><?= esc($pr['name_th'] ?? $pr['name'] ?? '') ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group org-role-primary-wrap" style="margin: 0; align-self: end;">
+                            <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500; cursor: pointer; margin: 0;">
+                                <input type="checkbox" name="__NAME__[is_primary_program]" value="1" class="org-role-primary">
+                                สาขาหลัก
+                            </label>
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">หน่วยงาน (ถ้ามี)</label>
+                            <select name="__NAME__[organization_unit_id]" class="form-control">
+                                <option value="">—</option>
+                                <?php foreach ($organization_units ?? [] as $ou): ?>
+                                    <option value="<?= (int)($ou['id'] ?? 0) ?>"><?= esc($ou['name_th'] ?? $ou['code'] ?? '') ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin: 0; grid-column: span 2;">
+                            <label class="form-label">รายละเอียด (เช่น ฝ่าย)</label>
+                            <input type="text" name="__NAME__[position_detail]" class="form-control" value="" placeholder="บังคับสำหรับผู้บริหาร / เจ้าหน้าที่">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">ลำดับในแถว</label>
+                            <input type="number" name="__NAME__[sort_order]" class="form-control" value="0" min="0" style="max-width: 100px;">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" class="btn btn-outline-danger btn-sm org-role-remove">ลบแถว</button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            <script>
+            (function() {
+                var wrap = document.getElementById('org-roles-wrap');
+                var tpl = document.getElementById('org-role-row-tpl');
+                if (!wrap || !tpl) return;
+                function reindex() {
+                    var rows = wrap.querySelectorAll('.org-role-row');
+                    rows.forEach(function(row, i) {
+                        row.querySelectorAll('select, input[type="checkbox"], input[type="text"], input[type="number"]').forEach(function(el) {
+                            var n = el.getAttribute('name');
+                            if (n) el.setAttribute('name', n.replace(/org_roles\[\d+\]/, 'org_roles[' + i + ']'));
+                        });
+                    });
+                    wrap.querySelectorAll('.org-role-remove').forEach(function(btn) {
+                        btn.disabled = rows.length <= 1;
+                    });
+                    rows.forEach(function(row) { syncProgramVisibility(row); });
+                }
+                function syncProgramVisibility(row) {
+                    var kind = row.querySelector('.org-role-kind');
+                    var title = row.querySelector('.org-role-title');
+                    var pw = row.querySelector('.org-role-program-wrap');
+                    var prw = row.querySelector('.org-role-primary-wrap');
+                    if (!pw) return;
+                    var k = kind ? kind.value : '';
+                    var t = title ? title.value : '';
+                    var need = (k === 'curriculum') || (t === 'อาจารย์' || t === 'ประธานหลักสูตร' || t === 'อาจารย์ประจำหลักสูตร');
+                    pw.style.display = need ? '' : 'none';
+                    if (prw) prw.style.display = need ? '' : 'none';
+                }
+                wrap.addEventListener('change', function(e) {
+                    if (e.target.classList.contains('org-role-kind') || e.target.classList.contains('org-role-title')) {
+                        syncProgramVisibility(e.target.closest('.org-role-row'));
+                    }
+                });
+                var addBtn = document.getElementById('org-role-add');
+                if (!addBtn) return;
+                addBtn.addEventListener('click', function() {
+                    var html = tpl.innerHTML.replace(/__NAME__/g, 'org_roles[' + wrap.querySelectorAll('.org-role-row').length + ']');
+                    var div = document.createElement('div');
+                    div.innerHTML = html.trim();
+                    var row = div.firstElementChild;
+                    wrap.appendChild(row);
+                    reindex();
+                });
+                wrap.addEventListener('click', function(e) {
+                    if (e.target.closest('.org-role-remove')) {
+                        var row = e.target.closest('.org-role-row');
+                        if (row && wrap.querySelectorAll('.org-role-row').length > 1) row.remove();
+                        reindex();
+                    }
+                });
+                wrap.querySelectorAll('.org-role-row').forEach(syncProgramVisibility);
+            })();
+            </script>
+            <?php else: ?>
             <div class="form-group">
                 <label class="form-label" for="position">ตำแหน่ง</label>
                 <select name="position" id="position" class="form-control">
@@ -306,12 +544,21 @@
                         </optgroup>
                     <?php endforeach; ?>
                 </select>
-                <small style="color: var(--color-gray-500);">ถ้าเป็นประธานหลักสูตร กรุณาเพิ่มอย่างน้อยหนึ่งสาขาด้านบน</small>
             </div>
             <div class="form-group">
                 <label class="form-label" for="position_detail">รายละเอียดตำแหน่ง</label>
-                <input type="text" name="position_detail" id="position_detail" class="form-control" value="<?= esc(old('position_detail', $person['position_detail'] ?? '')) ?>" placeholder="เช่น ฝ่ายกิจกรรมนักศึกษา, ฝ่ายวิจัยและนวัตกรรม">
-                <small style="color: var(--color-gray-500);">ระบุฝ่าย/หน่วย เช่น รองคณบดี ฝ่ายกิจกรรมนักศึกษา</small>
+                <input type="text" name="position_detail" id="position_detail" class="form-control" value="<?= esc(old('position_detail', $person['position_detail'] ?? '')) ?>" placeholder="เช่น ฝ่ายกิจกรรมนักศึกษา">
+            </div>
+            <?php endif; ?>
+            <div class="form-group" style="padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1rem;">
+                <label class="form-label" style="font-weight: 600;">เพิ่มชื่อตำแหน่งในรายการตัวเลือก (เฉพาะหน่วยจัดการงานวิจัย)</label>
+                <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.75rem;">หมวดอื่น (บริหาร / สำนักงานคณบดี / หลักสูตร) ใช้ตามรายการคงที่เท่านั้น</p>
+                <form method="post" action="<?= base_url('admin/organization/research-position-extra') ?>" class="form-inline flex-wrap" style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="redirect" value="<?= esc(current_url(), 'attr') ?>">
+                    <input type="text" name="label" class="form-control" style="min-width: 220px; flex: 1;" maxlength="200" placeholder="เช่น เลขานุการหน่วยจัดการงานวิจัย" required>
+                    <button type="submit" class="btn btn-outline-primary btn-sm">เพิ่มในรายการ</button>
+                </form>
             </div>
 
             <div class="form-group">
@@ -344,11 +591,8 @@
 <?= view('admin/organization/partials/staff_profile_photo_crop') ?>
 <?= view('admin/organization/partials/staff_profile_photo_crop_script') ?>
 
+<?php if (empty($use_org_roles_ui)): ?>
 <script>
-    var programsForChair = <?= json_encode(array_values(array_map(function ($p) {
-                                return ['id' => (int)($p['id'] ?? 0), 'name' => $p['name_th'] ?? $p['name_en'] ?? ''];
-                            }, $programs ?? []))) ?>;
-
     function initProgramTagsEdit() {
         var tagsEl = document.getElementById('program-tags');
         var hiddenEl = document.getElementById('program-assignments-hidden');
@@ -376,7 +620,6 @@
             var selected = getSelectedIds();
             if (selected.indexOf(String(programId)) !== -1) return;
 
-            // Set first program as primary automatically
             var isFirst = selected.length === 0;
             if (isFirst) {
                 document.getElementById('primary_program_id').value = programId;
@@ -390,7 +633,6 @@
             span.className = 'program-tag';
             span.setAttribute('data-program-id', programId);
 
-            // Add primary indicator
             if (isFirst) {
                 var primaryBadge = document.createElement('span');
                 primaryBadge.className = 'primary-badge';
@@ -416,16 +658,15 @@
                 span.remove();
                 if (tagsEl.querySelectorAll('.program-tag').length === 0 && hintEl) hintEl.style.display = '';
 
-                // Update primary if first tag was removed
                 var remainingTags = tagsEl.querySelectorAll('.program-tag');
                 if (remainingTags.length > 0) {
                     var firstTag = remainingTags[0];
                     if (!firstTag.querySelector('.primary-badge')) {
-                        var primaryBadge = document.createElement('span');
-                        primaryBadge.className = 'primary-badge';
-                        primaryBadge.style.cssText = 'background: #fbbf24; color: #1e293b; font-size: 0.65rem; padding: 0.1rem 0.3rem; border-radius: 4px; margin-right: 0.25rem;';
-                        primaryBadge.textContent = 'หลัก';
-                        firstTag.insertBefore(primaryBadge, firstTag.firstChild);
+                        var pb = document.createElement('span');
+                        pb.className = 'primary-badge';
+                        pb.style.cssText = 'background: #fbbf24; color: #1e293b; font-size: 0.65rem; padding: 0.1rem 0.3rem; border-radius: 4px; margin-right: 0.25rem;';
+                        pb.textContent = 'หลัก';
+                        firstTag.insertBefore(pb, firstTag.firstChild);
                     }
                     document.getElementById('primary_program_id').value = firstTag.getAttribute('data-program-id');
                 } else {
@@ -470,16 +711,15 @@
                 span.remove();
                 if (tagsEl.querySelectorAll('.program-tag').length === 0 && hintEl) hintEl.style.display = '';
 
-                // Update primary if first tag was removed
                 var remainingTags = tagsEl.querySelectorAll('.program-tag');
                 if (remainingTags.length > 0) {
                     var firstTag = remainingTags[0];
                     if (!firstTag.querySelector('.primary-badge')) {
-                        var primaryBadge = document.createElement('span');
-                        primaryBadge.className = 'primary-badge';
-                        primaryBadge.style.cssText = 'background: #fbbf24; color: #1e293b; font-size: 0.65rem; padding: 0.1rem 0.3rem; border-radius: 4px; margin-right: 0.25rem;';
-                        primaryBadge.textContent = 'หลัก';
-                        firstTag.insertBefore(primaryBadge, firstTag.firstChild);
+                        var pb = document.createElement('span');
+                        pb.className = 'primary-badge';
+                        pb.style.cssText = 'background: #fbbf24; color: #1e293b; font-size: 0.65rem; padding: 0.1rem 0.3rem; border-radius: 4px; margin-right: 0.25rem;';
+                        pb.textContent = 'หลัก';
+                        firstTag.insertBefore(pb, firstTag.firstChild);
                     }
                     document.getElementById('primary_program_id').value = firstTag.getAttribute('data-program-id');
                 } else {
@@ -515,5 +755,6 @@
         initProgramTagsEdit();
     }
 </script>
+<?php endif; ?>
 
 <?= $this->endSection() ?>

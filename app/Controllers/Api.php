@@ -499,21 +499,27 @@ class Api extends BaseController
     public function executives()
     {
         $data = \App\Libraries\ExecutivesData::getExecutivesData();
-        $personnelModel = new \App\Models\PersonnelModel();
 
-        $normalizePerson = function (array $p) use ($personnelModel) {
+        $normalizePerson = function (array $p) {
             $img = trim($p['image'] ?? '');
             $imageUrl = $img !== '' ? base_url('serve/thumb/staff/' . basename(str_replace('\\', '/', $img))) : null;
             if ($imageUrl !== null && strpos($img, 'http') === 0) {
                 $imageUrl = $img;
             }
-            $fullName = trim($personnelModel->getFullName($p));
-            $academicTitle = trim($p['academic_title'] ?? '');
-            $name = $academicTitle !== '' ? $academicTitle . ' ' . $fullName : $fullName;
+            $name = \App\Models\PersonnelModel::resolvePublicDisplayNameTh($p);
+            $posParts = [];
+            foreach ($p['org_roles'] ?? [] as $r) {
+                $t = trim((string) ($r['position_title'] ?? ''));
+                if ($t !== '') {
+                    $posParts[] = $t;
+                }
+            }
+            $positionLabel = $posParts !== [] ? implode(', ', $posParts) : trim($p['position'] ?? '');
+
             return [
                 'id' => (int) ($p['id'] ?? 0),
                 'name' => $name,
-                'position' => trim($p['position'] ?? ''),
+                'position' => $positionLabel,
                 'position_en' => trim($p['position_en'] ?? ''),
                 'position_detail' => trim($p['position_detail'] ?? ''),
                 'image' => $imageUrl,

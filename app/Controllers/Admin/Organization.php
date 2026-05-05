@@ -11,12 +11,20 @@ use App\Models\UserModel;
 use App\Libraries\SeedEnsure;
 use App\Libraries\OrganizationRoles;
 use App\Libraries\StaffImageUpload;
+use App\Libraries\CvProfile;
+use App\Libraries\OrganizationResearchPositionExtras;
+use App\Libraries\OrganizationPositionCatalog;
+use App\Libraries\PersonnelOrgRoleRules;
+use App\Libraries\CertOrganizerAccess;
+use App\Models\PersonnelOrgRoleModel;
+use Config\Certificate as CertificateConfig;
 use CodeIgniter\Database\Exceptions\DataException;
 
 class Organization extends BaseController
 {
     protected $personnelModel;
     protected $personnelProgramModel;
+    protected $personnelOrgRoleModel;
     protected $programModel;
     protected $userModel;
 
@@ -24,6 +32,7 @@ class Organization extends BaseController
     {
         $this->personnelModel = new PersonnelModel();
         $this->personnelProgramModel = new PersonnelProgramModel();
+        $this->personnelOrgRoleModel = new PersonnelOrgRoleModel();
         $this->programModel = new ProgramModel();
         $this->userModel = new UserModel();
     }
@@ -35,6 +44,51 @@ class Organization extends BaseController
     private static function getTier(string $position, string $positionEn = ''): int
     {
         return OrganizationRoles::getTier(['position' => $position, 'position_en' => $positionEn]);
+    }
+
+    private function getTierForPersonnel(array $p): int
+    {
+        $eff = PersonnelOrgRoleRules::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? '');
+
+        return self::getTier($eff, $p['position_en'] ?? '');
+    }
+
+    /**
+     * แนบ org_roles ให้แต่ละแถว personnel (อ้างอิงตาม id)
+     */
+    private function attachOrgRolesToPersonnelRows(array &$personnel): void
+    {
+        if (! $this->personnelOrgRoleModel->db->tableExists('personnel_org_roles')) {
+            foreach ($personnel as &$p) {
+                $p['org_roles']              = [];
+                $t                           = trim((string) ($p['position'] ?? ''));
+                $p['position_summary_lines'] = $t !== '' ? [$t] : [];
+            }
+            unset($p);
+
+            return;
+        }
+        $ids = array_values(array_filter(array_map(fn ($p) => (int) ($p['id'] ?? 0), $personnel), fn ($id) => $id > 0));
+        if ($ids === []) {
+            return;
+        }
+        $grouped = $this->personnelOrgRoleModel->getGroupedByPersonnelIds($ids);
+        foreach ($personnel as &$p) {
+            $pid = (int) ($p['id'] ?? 0);
+            $p['org_roles'] = $grouped[$pid] ?? [];
+            $lines            = [];
+            foreach ($p['org_roles'] as $r) {
+                $t = trim((string) ($r['position_title'] ?? ''));
+                if ($t !== '') {
+                    $lines[] = $t;
+                }
+            }
+            if ($lines === [] && trim((string) ($p['position'] ?? '')) !== '') {
+                $lines[] = trim((string) $p['position']);
+            }
+            $p['position_summary_lines'] = $lines;
+        }
+        unset($p);
     }
 
     /**
@@ -52,7 +106,7 @@ class Organization extends BaseController
             6 => ['label_th' => 'อาจารย์และบุคลากรในสังกัด', 'label_en' => 'Faculty & Staff', 'personnel' => []],
         ];
         foreach ($personnel as $p) {
-            $tier = self::getTier($p['position'] ?? '', $p['position_en'] ?? '');
+            $tier = $this->getTierForPersonnel($p);
             if (!isset($groups[$tier])) {
                 $groups[$tier] = ['label_th' => 'อื่นๆ', 'label_en' => 'Other', 'personnel' => []];
             }
@@ -139,6 +193,16 @@ class Organization extends BaseController
         }
         unset($p);
 
+        $this->attachOrgRolesToPersonnelRows($personnel);
+
+        // เฉพาะสมาชิกคณะวิทยาศาสตร์และเทคโนโลยี (เกณฑ์เดียวกับ user-faculty / E-Certificate)
+        $certCfg   = config(CertificateConfig::class);
+        $personnel = array_values(array_filter($personnel, static function ($p) use ($certCfg) {
+            $user = $p['user_link'] ?? null;
+
+            return $user !== null && CertOrganizerAccess::userFacultyMatchesOrganizerFaculty($user, $certCfg);
+        }));
+
         // ตัวกรองชื่อ (ค้นหา)
         $filterName = $this->request->getGet('name');
         if ($filterName !== null && trim($filterName) !== '') {
@@ -160,6 +224,7 @@ class Organization extends BaseController
         foreach ($organizationUnits as $u) {
             $unitFilterOptions[$u['code'] ?? ''] = $u['name_th'] ?? $u['code'];
         }
+        $unitFilterOptions['personnel_pool'] = 'บุคลากร';
         $filterUnit = $this->request->getGet('unit');
         if ($filterUnit !== null && $filterUnit !== '') {
             $organizationSections = array_values(array_filter($organizationSections, function ($sec) use ($filterUnit) {
@@ -222,20 +287,20 @@ class Organization extends BaseController
                 return (int) ($p['organization_unit_id'] ?? 0) === $officeUnitId;
             }));
             foreach ($byOrgUnit as $p) {
-                $tier = self::getTier($p['position'] ?? '', $p['position_en'] ?? '');
+                $tier = $this->getTierForPersonnel($p);
                 if ($tier === 6) {
                     $officePersonnel[] = $p;
                 }
             }
         }
         $staffPosition = array_values(array_filter($personnel, function ($p) {
-            return mb_strpos($p['position'] ?? '', 'เจ้าหน้าที่') !== false;
+            return $this->personnelHasOfficeStaffTitle($p);
         }));
         $officeIds = array_fill_keys(array_map(fn($p) => (int) ($p['id'] ?? 0), $officePersonnel), true);
         foreach ($staffPosition as $p) {
             $id = (int) ($p['id'] ?? 0);
             if ($id > 0 && empty($officeIds[$id])) {
-                $tier = self::getTier($p['position'] ?? '', $p['position_en'] ?? '');
+                $tier = $this->getTierForPersonnel($p);
                 if ($tier === 6) {
                     $officePersonnel[] = $p;
                     $officeIds[$id] = true;
@@ -251,7 +316,8 @@ class Organization extends BaseController
                 if ((int) ($p['organization_unit_id'] ?? 0) !== $researchUnitId) {
                     return false;
                 }
-                $tier = self::getTier($p['position'] ?? '', $p['position_en'] ?? '');
+                $tier = $this->getTierForPersonnel($p);
+
                 return $tier === 6;
             }));
             usort($headResearch, fn($a, $b) => ((int) ($a['sort_order'] ?? 0)) - ((int) ($b['sort_order'] ?? 0)));
@@ -286,7 +352,7 @@ class Organization extends BaseController
                 foreach ($ppRows as $row) {
                     $pid = (int) ($row['personnel_id'] ?? 0);
                     $person = $personnelById[$pid] ?? null;
-                    if ($person && mb_strpos($person['position'] ?? '', 'ประธานหลักสูตร') !== false) {
+                    if ($person && $this->personIsChairForProgram($person, $programId)) {
                         $chair = $person;
                         break;
                     }
@@ -339,6 +405,82 @@ class Organization extends BaseController
             }
             $sections[] = $section;
         }
+
+        // กลุ่ม "บุคลากร": ยังไม่อยู่ในรายการผู้บริหาร / สำนักงาน / วิจัย / หลักสูตร (จาก personnel_programs)
+        // และยังไม่มีสังกัดหลักสูตรหลัก (program_id หรือแถว personnel_programs)
+        $assignedInSections = [];
+        foreach ($executivesPersonnel as $p) {
+            $assignedInSections[(int) ($p['id'] ?? 0)] = true;
+        }
+        foreach ($officePersonnel as $p) {
+            $assignedInSections[(int) ($p['id'] ?? 0)] = true;
+        }
+        foreach ($headResearch as $p) {
+            $assignedInSections[(int) ($p['id'] ?? 0)] = true;
+        }
+        foreach ($personnelByProgram as $block) {
+            if (! empty($block['chair'])) {
+                $assignedInSections[(int) ($block['chair']['id'] ?? 0)] = true;
+            }
+            foreach ($block['personnel'] ?? [] as $p) {
+                $assignedInSections[(int) ($p['id'] ?? 0)] = true;
+            }
+        }
+
+        $hasProgramAffiliation = [];
+        foreach ($personnel as $p) {
+            $pid = (int) ($p['id'] ?? 0);
+            if ($pid <= 0) {
+                continue;
+            }
+            if ((int) ($p['program_id'] ?? 0) > 0) {
+                $hasProgramAffiliation[$pid] = true;
+            }
+            foreach ($p['org_roles'] ?? [] as $or) {
+                if ((int) ($or['program_id'] ?? 0) > 0) {
+                    $hasProgramAffiliation[$pid] = true;
+                    break;
+                }
+            }
+        }
+        if ($this->personnelModel->db->tableExists('personnel_programs')) {
+            $allPersonnelIds = array_values(array_filter(
+                array_map(fn ($p) => (int) ($p['id'] ?? 0), $personnel),
+                fn ($id) => $id > 0
+            ));
+            if ($allPersonnelIds !== []) {
+                foreach ($this->personnelProgramModel->getByPersonnelIds($allPersonnelIds) as $row) {
+                    $hasProgramAffiliation[(int) ($row['personnel_id'] ?? 0)] = true;
+                }
+            }
+        }
+
+        $orgUnitCol = $this->personnelModel->db->fieldExists('organization_unit_id', 'personnel');
+        $unassigned = [];
+        foreach ($personnel as $p) {
+            $pid = (int) ($p['id'] ?? 0);
+            if ($pid <= 0) {
+                continue;
+            }
+            if (! empty($assignedInSections[$pid])) {
+                continue;
+            }
+            if (! empty($hasProgramAffiliation[$pid])) {
+                continue;
+            }
+            if ($orgUnitCol && (int) ($p['organization_unit_id'] ?? 0) > 0) {
+                continue;
+            }
+            $unassigned[] = $p;
+        }
+        usort($unassigned, fn ($a, $b) => ((int) ($a['sort_order'] ?? 0)) - ((int) ($b['sort_order'] ?? 0)));
+
+        $sections[] = [
+            'unit'      => ['name_th' => 'บุคลากร', 'name_en' => 'Faculty Staff', 'code' => 'personnel_pool', 'sort_order' => 99],
+            'personnel' => $unassigned,
+            'programs'  => [],
+        ];
+
         return $sections;
     }
 
@@ -348,112 +490,117 @@ class Organization extends BaseController
      */
     private function getPositionOptions(): array
     {
-        return [
-            'บริหาร' => [
-                'คณบดี' => 'คณบดี',
-                'รองคณบดี' => 'รองคณบดี',
-                'ผู้ช่วยคณบดี' => 'ผู้ช่วยคณบดี',
-            ],
-            'หน่วยงานวิจัย' => [
-                'หัวหน้าหน่วยการจัดการงานวิจัย' => 'หัวหน้าหน่วยการจัดการงานวิจัย',
-                'กรรมการหน่วยจัดการงานวิจัย' => 'กรรมการหน่วยจัดการงานวิจัย',
-            ],
-            'สำนักงานคณบดี' => [
-                'หัวหน้าสำนักงานคณบดี' => 'หัวหน้าสำนักงานคณบดี',
-                'เจ้าหน้าที่' => 'เจ้าหน้าที่',
-            ],
-            'หลักสูตร' => [
-                'ประธานหลักสูตร' => 'ประธานหลักสูตร',
-                'อาจารย์ประจำหลักสูตร' => 'อาจารย์ประจำหลักสูตร',
-            ],
-        ];
+        return OrganizationPositionCatalog::getGroupedOptions();
     }
 
-    /** ตัวเลือกคำนำหน้าชื่อ ภาษาไทย */
-    private function getAcademicTitleOptions(): array
+    /** ค่าตำแหน่งที่อนุญาตใน dropdown (รวมตำแหน่งเพิ่มเติมของหน่วยจัดการงานวิจัย) */
+    private function getAllowedPositionValues(): array
     {
-        return [
-            '' => '— ไม่ระบุ —',
-            'นาย' => 'นาย',
-            'นาง' => 'นาง',
-            'นางสาว' => 'นางสาว',
-            'ดร.' => 'ดร.',
-            'อาจารย์' => 'อาจารย์',
-            'ผู้ช่วยศาสตราจารย์' => 'ผู้ช่วยศาสตราจารย์',
-            'ผู้ช่วยศาสตราจารย์ ดร.' => 'ผู้ช่วยศาสตราจารย์ ดร.',
-            'รองศาสตราจารย์' => 'รองศาสตราจารย์',
-            'รองศาสตราจารย์ ดร.' => 'รองศาสตราจารย์ ดร.',
-            'ศาสตราจารย์' => 'ศาสตราจารย์',
-            'ศาสตราจารย์ ดร.' => 'ศาสตราจารย์ ดร.',
-        ];
+        return OrganizationPositionCatalog::getAllowedTitles();
     }
 
-    /** ตัวเลือกคำนำหน้าชื่อ ภาษาอังกฤษ */
-    private function getAcademicTitleOptionsEn(): array
+    private function personnelHasOfficeStaffTitle(array $p): bool
+    {
+        foreach ($p['org_roles'] ?? [] as $r) {
+            if (mb_strpos((string) ($r['position_title'] ?? ''), 'เจ้าหน้าที่') !== false) {
+                return true;
+            }
+        }
+
+        return mb_strpos((string) ($p['position'] ?? ''), 'เจ้าหน้าที่') !== false;
+    }
+
+    private function personIsChairForProgram(array $person, int $programId): bool
+    {
+        return PersonnelOrgRoleRules::hasChairCurriculumRoleForProgram(
+            $person['org_roles'] ?? [],
+            $programId,
+            $person['position'] ?? null
+        );
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function collectOrgRolesFromPost(): array
+    {
+        $raw = $this->request->getPost('org_roles');
+        if (! is_array($raw)) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $r) {
+            if (! is_array($r)) {
+                continue;
+            }
+            $title = trim((string) ($r['position_title'] ?? ''));
+            if ($title === '') {
+                continue;
+            }
+            $out[] = [
+                'role_kind'            => trim((string) ($r['role_kind'] ?? '')),
+                'position_title'       => $title,
+                'program_id'           => (int) ($r['program_id'] ?? 0) ?: null,
+                'organization_unit_id' => (int) ($r['organization_unit_id'] ?? 0) ?: null,
+                'position_detail'      => trim((string) ($r['position_detail'] ?? '')) ?: null,
+                'sort_order'           => (int) ($r['sort_order'] ?? 0),
+                'is_primary_program'   => isset($r['is_primary_program']) && (string) $r['is_primary_program'] !== '' && (string) $r['is_primary_program'] !== '0',
+            ];
+        }
+
+        return $out;
+    }
+
+    private function orgRoleKindOptionsTh(): array
     {
         return [
-            '' => '— Not specified —',
-            'Mr.' => 'Mr.',
-            'Mrs.' => 'Mrs.',
-            'Miss' => 'Miss',
-            'Dr.' => 'Dr.',
-            'Lecturer' => 'Lecturer',
-            'Asst. Prof.' => 'Asst. Prof.',
-            'Asst. Prof. Dr.' => 'Asst. Prof. Dr.',
-            'Assoc. Prof.' => 'Assoc. Prof.',
-            'Assoc. Prof. Dr.' => 'Assoc. Prof. Dr.',
-            'Prof.' => 'Prof.',
-            'Prof. Dr.' => 'Prof. Dr.',
+            PersonnelOrgRoleRules::KIND_EXECUTIVE  => 'ผู้บริหาร',
+            PersonnelOrgRoleRules::KIND_RESEARCH   => 'หน่วยงานวิจัย',
+            PersonnelOrgRoleRules::KIND_OFFICE    => 'สำนักงานคณบดี',
+            PersonnelOrgRoleRules::KIND_CURRICULUM => 'หลักสูตร',
         ];
     }
 
     /**
-     * ฟอร์มเพิ่มบุคลากร — เลือกจากตาราง user ได้
+     * @return string|null ข้อความ error หรือ null ถ้าผ่าน
+     */
+    private function validatePostedOrganizationPosition(?string $position): ?string
+    {
+        if ($position === null || trim($position) === '') {
+            return null;
+        }
+        $position = trim($position);
+        if (! in_array($position, $this->getAllowedPositionValues(), true)) {
+            return 'ตำแหน่งไม่อยู่ในรายการที่อนุญาต — เลือกจากรายการ หรือเพิ่มตำแหน่งใหม่เฉพาะหมวด «หน่วยจัดการงานวิจัย» ด้านล่าง';
+        }
+
+        return null;
+    }
+
+    /**
+     * คำนำหน้าใน CvProfile — คืนข้อความ error หรือ null ถ้าผ่าน
+     */
+    private function validatePostedAcademicTitles(): ?string
+    {
+        $at = trim((string) $this->request->getPost('academic_title'));
+        if ($at !== '' && ! CvProfile::isAllowedUserTitle($at)) {
+            return 'คำนำหน้าชื่อ (ไทย) ไม่ตรงกับรายการมาตรฐาน กรุณาเลือกจากรายการ';
+        }
+        $atEn = trim((string) $this->request->getPost('academic_title_en'));
+        if ($atEn !== '' && ! array_key_exists($atEn, CvProfile::academicTitleOptionsEn())) {
+            return 'คำนำหน้าชื่อ (English) ไม่ตรงกับรายการมาตรฐาน กรุณาเลือกจากรายการ';
+        }
+
+        return null;
+    }
+
+    /**
+     * เดิมเป็นฟอร์มเพิ่มบุคลากร — ย้ายไปที่ admin/user-faculty (user.faculty) แล้วซิงก์ personnel อัตโนมัติ
      */
     public function create()
     {
-        // แสดงทุก user ใน autocomplete พร้อมสถานะ is_linked เพื่อให้รู้ว่าผู้ใดถูกผูกกับบุคลากรแล้ว
-        $usersForPersonnel = $this->userModel->getListForPersonnel(false);
-
-        $data = [
-            'page_title' => 'เพิ่มบุคลากร',
-            'person' => [
-                'name' => '',
-                'name_en' => '',
-                'email' => '',
-                'position' => 'อาจารย์',
-                'position_en' => '',
-                'academic_title' => '',
-                'academic_title_en' => '',
-                'sort_order' => 0,
-                'phone' => '',
-                'organization_unit_id' => null,
-                'program_id' => null,
-            ],
-            'personnel_programs' => [],
-            'position_options' => $this->getPositionOptions(),
-            'academic_title_options' => $this->getAcademicTitleOptions(),
-            'academic_title_options_en' => $this->getAcademicTitleOptionsEn(),
-            'programs' => $this->programModel->getWithDepartment(),
-            'users_for_personnel' => $usersForPersonnel,
-        ];
-
-        SeedEnsure::ensureComputerEngineering($this->personnelModel->db);
-
-        $orgUnitModel = new OrganizationUnitModel();
-        $data['organization_units'] = $orgUnitModel->getOrdered();
-
-        return view('admin/organization/create', $data);
-    }
-
-    /** ตัวเลือกบทบาทในหลักสูตร (ใช้ในฟอร์มหลายหลักสูตร) - Uses OrganizationRoles constants */
-    private function getRoleInCurriculumOptions(): array
-    {
-        $options = ['' => '— ไม่ระบุ —'];
-        foreach (OrganizationRoles::CURRICULUM_ROLES as $key => $data) {
-            $options[$data['th']] = $data['th'];
-        }
-        return $options;
+        return redirect()->to(base_url('admin/user-faculty'))
+            ->with('success', 'เพิ่มบุคลากรในโครงสร้างองค์กร: ไปที่ “จัดการคณะผู้ใช้” แล้วเพิ่มผู้ใช้เข้า “คณะวิทยาศาสตร์และเทคโนโลยี” — ระบบจะสร้าง/เปิดใช้แถว personnel ให้อัตโนมัติเมื่อบันทึก');
     }
 
     /**
@@ -470,152 +617,12 @@ class Organization extends BaseController
     }
 
     /**
-     * บันทึกบุคลากรใหม่ — ไม่บังคับกรอกชื่อเมื่อเลือก user (ใช้ชื่อจากตาราง user)
+     * เดิมรับ POST สร้างบุคลากร — ปิดการใช้งาน (ใช้ admin/user-faculty แทน)
      */
     public function store()
     {
-        $postedUserUid = $this->request->getPost('user_uid');
-        $selectedUser = null;
-        if ($postedUserUid !== null && $postedUserUid !== '' && (int) $postedUserUid > 0) {
-            $selectedUser = $this->userModel->find((int) $postedUserUid);
-            // ถ้า user นี้มีใน personnel แล้ว ห้ามเพิ่มซ้ำ
-            if ($selectedUser && $this->personnelModel->db->fieldExists('user_uid', 'personnel')) {
-                $existing = $this->personnelModel->where('user_uid', (int) $postedUserUid)->first();
-                if ($existing) {
-                    return redirect()->back()
-                        ->withInput()
-                        ->with('errors', ['user_uid' => 'ผู้ใช้นี้มีในโครงสร้างองค์กรแล้ว กรุณาเลือกผู้ใช้อื่นหรือเลือก "กรอกเอง"']);
-                }
-            }
-        }
-        $rules = [
-            'name' => $selectedUser ? 'permit_empty|min_length[1]' : 'required|min_length[1]',
-        ];
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
-
-        $programRoles = $this->collectProgramAssignmentsFromPost();
-        $position = $this->request->getPost('position') ?: null;
-        $chairError = $this->validateProgramChairRequirement($position, $programRoles);
-        if ($chairError !== null) {
-            return redirect()->back()->withInput()->with('errors', ['program_chair' => $chairError]);
-        }
-        $programRoles = $this->applyChairRoleFromPosition($position, $programRoles);
-
-        // organization_unit_id: จากฟอร์ม > จากสาขาหลัก > fallback ตำแหน่งสำนักงาน
-        $organizationUnitId = null;
-        $postedOrgUnitId = $this->request->getPost('organization_unit_id');
-        if ($postedOrgUnitId !== null && $postedOrgUnitId !== '' && (int) $postedOrgUnitId > 0) {
-            $organizationUnitId = (int) $postedOrgUnitId;
-        }
-        $programId = null;
-        if (!empty($programRoles)) {
-            $primaryProgram = null;
-            foreach ($programRoles as $pr) {
-                if (!empty($pr['is_primary'])) {
-                    $primaryProgram = $pr;
-                    break;
-                }
-            }
-            if (!$primaryProgram) {
-                $primaryProgram = $programRoles[0];
-            }
-
-            $primaryProgramId = (int) ($primaryProgram['program_id'] ?? 0);
-            if ($primaryProgramId > 0) {
-                if ($organizationUnitId === null) {
-                    $program = $this->programModel->find($primaryProgramId);
-                    if ($program && !empty($program['organization_unit_id'])) {
-                        $organizationUnitId = (int) $program['organization_unit_id'];
-                    }
-                }
-                $programId = $primaryProgramId;
-            }
-        }
-        if ($organizationUnitId === null && $position !== null) {
-            $isOfficeRole = (mb_strpos($position, 'หัวหน้าสำนักงาน') !== false || mb_strpos($position, 'เจ้าหน้าที่') !== false);
-            if ($isOfficeRole) {
-                $orgUnitModel = new OrganizationUnitModel();
-                foreach ($orgUnitModel->getOrdered() as $u) {
-                    if (($u['code'] ?? '') === 'office') {
-                        $organizationUnitId = (int) ($u['id'] ?? 0);
-                        break;
-                    }
-                }
-            }
-        }
-
-        $email = $this->request->getPost('email') ?: null;
-        $userUid = null;
-        $selectedUser = null;
-        $postedUserUid = $this->request->getPost('user_uid');
-        if ($postedUserUid !== null && $postedUserUid !== '') {
-            $postedUserUid = (int) $postedUserUid;
-            if ($postedUserUid > 0) {
-                $selectedUser = $this->userModel->find($postedUserUid);
-                if ($selectedUser) {
-                    $userUid = $postedUserUid;
-                    $email = trim($selectedUser['email'] ?? '') ?: $email;
-                }
-            }
-        }
-        if ($userUid === null && $email !== null && $email !== '' && $this->personnelModel->db->fieldExists('user_uid', 'personnel')) {
-            $userRow = $this->userModel->where('email', $email)->first();
-            $userUid = $userRow ? (int) ($userRow['uid'] ?? 0) : null;
-        }
-
-        $data = [
-            'name' => $selectedUser ? (trim($this->userModel->getFullName($selectedUser)) ?: $this->request->getPost('name')) : $this->request->getPost('name'),
-            'name_en' => $selectedUser ? (trim(($selectedUser['gf_name'] ?? '') . ' ' . ($selectedUser['gl_name'] ?? '')) ?: $this->request->getPost('name_en')) : ($this->request->getPost('name_en') ?: null),
-            'email' => $email,
-            'phone' => $this->request->getPost('phone') ?: null,
-            'position' => $this->request->getPost('position') ?: null,
-            'position_en' => $this->request->getPost('position_en') ?: null,
-            'sort_order' => (int) $this->request->getPost('sort_order'),
-            'status' => 'active',
-        ];
-        if ($this->personnelModel->db->fieldExists('organization_unit_id', 'personnel')) {
-            $data['organization_unit_id'] = $organizationUnitId;
-        }
-        if ($this->personnelModel->db->fieldExists('position_detail', 'personnel')) {
-            $data['position_detail'] = $this->request->getPost('position_detail') ?: null;
-        }
-        if ($this->personnelModel->db->fieldExists('academic_title', 'personnel')) {
-            $data['academic_title'] = $this->request->getPost('academic_title') ?: null;
-        }
-        if ($this->personnelModel->db->fieldExists('academic_title_en', 'personnel')) {
-            $data['academic_title_en'] = $this->request->getPost('academic_title_en') ?: null;
-        }
-        if ($this->personnelModel->db->fieldExists('program_id', 'personnel')) {
-            $data['program_id'] = $programId;
-        }
-        if ($this->personnelModel->db->fieldExists('user_uid', 'personnel')) {
-            $data['user_uid'] = $userUid;
-        }
-
-        // รูปโปรไฟล์เก็บในตาราง user เท่านั้น (ไม่ใช้ personnel.image)
-        // CHANGE: Allow saving to personnel.image if user_uid is null
-        $imagePath = StaffImageUpload::handleUpload($this->request->getFile('image'));
-        if ($imagePath !== null) {
-            if ($userUid !== null && (int) $userUid > 0) {
-                log_message('info', 'Saving profile image to USER table (uid=' . $userUid . '): ' . $imagePath);
-                $this->saveUserProfileImage((int) $userUid, $imagePath);
-            } else {
-                log_message('info', 'Saving profile image to PERSONNEL table (new record): ' . $imagePath);
-                $data['image'] = $imagePath;
-            }
-        } else {
-            log_message('info', 'No image uploaded for new personnel');
-        }
-
-        $newId = $this->personnelModel->insert($data);
-        if ($newId && $this->personnelModel->db->tableExists('personnel_programs') && !empty($programRoles)) {
-            $this->personnelProgramModel->setProgramsForPersonnelWithPrimary((int) $newId, $programRoles);
-        }
-        $this->programModel->syncChairFromPersonnelPrograms();
-
-        return redirect()->to(base_url('admin/organization'))->with('success', 'เพิ่มบุคลากรแล้ว');
+        return redirect()->to(base_url('admin/user-faculty'))
+            ->with('error', 'การเพิ่มบุคลากรทำที่หน้า “จัดการคณะผู้ใช้” เท่านั้น — เลือกคณะ “คณะวิทยาศาสตร์และเทคโนโลยี” แล้วบันทึก');
     }
 
     /** อ่านรายการหลักสูตรที่ส่งมาจากฟอร์ม (program_assignments[]) - รองรับ is_primary */
@@ -714,18 +721,47 @@ class Organization extends BaseController
         $programs = $this->programModel->getWithDepartment();
         $organizationUnits = (new OrganizationUnitModel())->getOrdered();
 
+        $orgRoles = [];
+        if ($this->personnelOrgRoleModel->db->tableExists('personnel_org_roles')) {
+            $orgRoles = $this->personnelOrgRoleModel->getByPersonnelId((int) $id);
+        }
+
         $data = [
             'page_title' => 'แก้ไขตำแหน่งในโครงสร้างองค์กร',
             'person' => $person,
             'personnel_programs' => $personnelPrograms,
+            'use_org_roles_ui' => $this->personnelOrgRoleModel->db->tableExists('personnel_org_roles'),
+            'org_roles' => $orgRoles,
+            'org_role_kind_options' => $this->orgRoleKindOptionsTh(),
             'position_options' => $this->getPositionOptions(),
-            'academic_title_options' => $this->getAcademicTitleOptions(),
-            'academic_title_options_en' => $this->getAcademicTitleOptionsEn(),
+            'academic_title_options' => CvProfile::academicTitleOptionsTh(),
+            'academic_title_options_en' => CvProfile::academicTitleOptionsEn(),
             'programs' => $programs,
             'organization_units' => $organizationUnits,
         ];
 
         return view('admin/organization/edit', $data);
+    }
+
+    /**
+     * POST — เพิ่มชื่อตำแหน่งในตัวเลือกเฉพาะหมวดหน่วยจัดการงานวิจัย
+     */
+    public function addResearchPositionExtra()
+    {
+        if (! $this->request->is('post')) {
+            return redirect()->to(base_url('admin/organization'));
+        }
+        $redirect = trim((string) $this->request->getPost('redirect'));
+        if ($redirect === '' || strpos($redirect, base_url()) !== 0) {
+            $redirect = base_url('admin/organization');
+        }
+        $label = (string) $this->request->getPost('label');
+        $res   = OrganizationResearchPositionExtras::add($label);
+        if (! $res['ok']) {
+            return redirect()->to($redirect)->with('error', $res['message']);
+        }
+
+        return redirect()->to($redirect)->with('success', $res['message']);
     }
 
     /**
@@ -747,6 +783,11 @@ class Organization extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        $titleErr = $this->validatePostedAcademicTitles();
+        if ($titleErr !== null) {
+            return redirect()->back()->withInput()->with('errors', ['academic_title' => $titleErr]);
+        }
+
         $name = $this->request->getPost('name');
         $nameEn = $this->request->getPost('name_en');
         $email = $this->request->getPost('email');
@@ -756,55 +797,134 @@ class Organization extends BaseController
         if ($linkedUser && (trim($nameEn ?? '') === '')) {
             $nameEn = trim(($linkedUser['gf_name'] ?? '') . ' ' . ($linkedUser['gl_name'] ?? ''));
         }
-        $position = $this->request->getPost('position') ?: null;
         $positionEn = $this->request->getPost('position_en');
-        $sortOrder = (int) $this->request->getPost('sort_order');
-
+        $sortOrder    = (int) $this->request->getPost('sort_order');
         $programRoles = $this->collectProgramAssignmentsFromPost();
-        $chairError = $this->validateProgramChairRequirement($position, $programRoles);
-        if ($chairError !== null) {
-            return redirect()->back()->withInput()->with('errors', ['program_chair' => $chairError]);
-        }
-        $programRoles = $this->applyChairRoleFromPosition($position, $programRoles);
 
-        // organization_unit_id: จากฟอร์ม > จากสาขาหลัก > fallback ตำแหน่งสำนักงาน
+        $useOrgRoles = $this->personnelOrgRoleModel->db->tableExists('personnel_org_roles');
+        $position    = null;
+        $programId   = null;
+        $positionDetailValue = $this->request->getPost('position_detail') ?: null;
         $organizationUnitId = null;
-        $postedOrgUnitId = $this->request->getPost('organization_unit_id');
+        $postedOrgUnitId    = $this->request->getPost('organization_unit_id');
         if ($postedOrgUnitId !== null && $postedOrgUnitId !== '' && (int) $postedOrgUnitId > 0) {
             $organizationUnitId = (int) $postedOrgUnitId;
         }
-        $programId = null;
-        if (!empty($programRoles)) {
-            $primaryProgram = null;
-            foreach ($programRoles as $pr) {
-                if (!empty($pr['is_primary'])) {
-                    $primaryProgram = $pr;
-                    break;
+
+        if ($useOrgRoles) {
+            $orgRows = $this->collectOrgRolesFromPost();
+            foreach ($orgRows as &$row) {
+                $rk = trim((string) ($row['role_kind'] ?? ''));
+                if ($rk === '' || ! in_array($rk, PersonnelOrgRoleRules::roleKinds(), true)) {
+                    $row['role_kind'] = PersonnelOrgRoleRules::inferRoleKind((string) $row['position_title']);
                 }
             }
-            if (!$primaryProgram) {
-                $primaryProgram = $programRoles[0];
+            unset($row);
+
+            if ($orgRows === []) {
+                return redirect()->back()->withInput()->with('errors', ['org_roles' => 'เพิ่มอย่างน้อยหนึ่งบทบาทในโครงสร้าง']);
+            }
+            $roleErr = PersonnelOrgRoleRules::validateRows($orgRows);
+            if ($roleErr !== null) {
+                return redirect()->back()->withInput()->with('errors', ['org_roles' => $roleErr]);
             }
 
-            $primaryProgramId = (int) ($primaryProgram['program_id'] ?? 0);
-            if ($primaryProgramId > 0) {
-                if ($organizationUnitId === null) {
-                    $program = $this->programModel->find($primaryProgramId);
-                    if ($program && !empty($program['organization_unit_id'])) {
-                        $organizationUnitId = (int) $program['organization_unit_id'];
+            $mergedProgramRoles = PersonnelOrgRoleRules::buildProgramRolesFromOrgRoles($orgRows, 0);
+
+            $this->personnelOrgRoleModel->replaceForPersonnel((int) $id, $orgRows);
+
+            if ($this->personnelProgramModel->db->tableExists('personnel_programs')) {
+                $this->personnelProgramModel->setProgramsForPersonnelWithPrimary((int) $id, $mergedProgramRoles);
+            }
+
+            $summary   = PersonnelOrgRoleRules::summarizeLegacyPersonnelColumns($orgRows);
+            $position  = $summary['position'];
+            $programId = $summary['program_id'];
+            if (! empty($summary['position_detail'])) {
+                $positionDetailValue = $summary['position_detail'];
+            }
+            if ($organizationUnitId === null && ! empty($summary['organization_unit_id'])) {
+                $organizationUnitId = (int) $summary['organization_unit_id'];
+            }
+            $effPos = PersonnelOrgRoleRules::effectivePositionForTier($orgRows, $position ?? '');
+            if ($organizationUnitId === null && $effPos !== '') {
+                $isOfficeRole = (mb_strpos($effPos, 'หัวหน้าสำนักงาน') !== false || mb_strpos($effPos, 'เจ้าหน้าที่') !== false);
+                if ($isOfficeRole) {
+                    $orgUnitModel = new OrganizationUnitModel();
+                    foreach ($orgUnitModel->getOrdered() as $u) {
+                        if (($u['code'] ?? '') === 'office') {
+                            $organizationUnitId = (int) ($u['id'] ?? 0);
+                            break;
+                        }
                     }
                 }
-                $programId = $primaryProgramId;
             }
-        }
-        if ($organizationUnitId === null && $position !== null) {
-            $isOfficeRole = (mb_strpos($position, 'หัวหน้าสำนักงาน') !== false || mb_strpos($position, 'เจ้าหน้าที่') !== false);
-            if ($isOfficeRole) {
-                $orgUnitModel = new OrganizationUnitModel();
-                foreach ($orgUnitModel->getOrdered() as $u) {
-                    if (($u['code'] ?? '') === 'office') {
-                        $organizationUnitId = (int) ($u['id'] ?? 0);
+            if ($programId === null && $mergedProgramRoles !== []) {
+                $primaryProgram = null;
+                foreach ($mergedProgramRoles as $pr) {
+                    if (! empty($pr['is_primary'])) {
+                        $primaryProgram = $pr;
                         break;
+                    }
+                }
+                if (! $primaryProgram) {
+                    $primaryProgram = $mergedProgramRoles[0];
+                }
+                $ppid = (int) ($primaryProgram['program_id'] ?? 0);
+                if ($ppid > 0) {
+                    if ($organizationUnitId === null) {
+                        $program = $this->programModel->find($ppid);
+                        if ($program && ! empty($program['organization_unit_id'])) {
+                            $organizationUnitId = (int) $program['organization_unit_id'];
+                        }
+                    }
+                    $programId = $ppid;
+                }
+            }
+        } else {
+            $position = $this->request->getPost('position') ?: null;
+            $posErr   = $this->validatePostedOrganizationPosition($position);
+            if ($posErr !== null) {
+                return redirect()->back()->withInput()->with('errors', ['position' => $posErr]);
+            }
+            $chairError = $this->validateProgramChairRequirement($position, $programRoles);
+            if ($chairError !== null) {
+                return redirect()->back()->withInput()->with('errors', ['program_chair' => $chairError]);
+            }
+            $programRoles = $this->applyChairRoleFromPosition($position, $programRoles);
+
+            if (! empty($programRoles)) {
+                $primaryProgram = null;
+                foreach ($programRoles as $pr) {
+                    if (! empty($pr['is_primary'])) {
+                        $primaryProgram = $pr;
+                        break;
+                    }
+                }
+                if (! $primaryProgram) {
+                    $primaryProgram = $programRoles[0];
+                }
+
+                $primaryProgramId = (int) ($primaryProgram['program_id'] ?? 0);
+                if ($primaryProgramId > 0) {
+                    if ($organizationUnitId === null) {
+                        $program = $this->programModel->find($primaryProgramId);
+                        if ($program && ! empty($program['organization_unit_id'])) {
+                            $organizationUnitId = (int) $program['organization_unit_id'];
+                        }
+                    }
+                    $programId = $primaryProgramId;
+                }
+            }
+            if ($organizationUnitId === null && $position !== null) {
+                $isOfficeRole = (mb_strpos($position, 'หัวหน้าสำนักงาน') !== false || mb_strpos($position, 'เจ้าหน้าที่') !== false);
+                if ($isOfficeRole) {
+                    $orgUnitModel = new OrganizationUnitModel();
+                    foreach ($orgUnitModel->getOrdered() as $u) {
+                        if (($u['code'] ?? '') === 'office') {
+                            $organizationUnitId = (int) ($u['id'] ?? 0);
+                            break;
+                        }
                     }
                 }
             }
@@ -828,7 +948,7 @@ class Organization extends BaseController
             $updateData['organization_unit_id'] = $organizationUnitId;
         }
         if ($this->personnelModel->db->fieldExists('position_detail', 'personnel')) {
-            $updateData['position_detail'] = $this->request->getPost('position_detail') ?: null;
+            $updateData['position_detail'] = $positionDetailValue ?: null;
         }
         if ($this->personnelModel->db->fieldExists('academic_title', 'personnel')) {
             $updateData['academic_title'] = $this->request->getPost('academic_title') ?: null;
@@ -873,7 +993,7 @@ class Organization extends BaseController
             }
         }
 
-        if ($this->personnelModel->db->tableExists('personnel_programs')) {
+        if (! $useOrgRoles && $this->personnelModel->db->tableExists('personnel_programs')) {
             $this->personnelProgramModel->setProgramsForPersonnelWithPrimary((int) $id, $programRoles);
         }
         $this->programModel->syncChairFromPersonnelPrograms();

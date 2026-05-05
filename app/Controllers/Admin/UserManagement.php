@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\CvProfile;
 use App\Models\UserModel;
 use App\Models\StudentUserModel;
 use App\Models\ProgramModel;
@@ -311,6 +312,12 @@ class UserManagement extends BaseController
             'active' => $active,
         ];
 
+        $titleTrim = trim((string) ($data['title'] ?? ''));
+        if (! CvProfile::isAllowedUserTitle($titleTrim)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'คำนำหน้าชื่อไม่ตรงกับรายการมาตรฐาน (ดูรายการในโปรไฟล์/CvProfile)']);
+        }
+        $data['title'] = $titleTrim === '' ? null : $titleTrim;
+
         if ($requestedRole === '') {
             log_message('warning', 'UserManagement::ajaxUpdateUser missing role input', [
                 'target_uid' => $uid,
@@ -406,6 +413,12 @@ class UserManagement extends BaseController
             'program_id' => $this->request->getPost('program_id') ? (int)$this->request->getPost('program_id') : null,
             'status' => $this->request->getPost('status'),
         ];
+
+        $titleTrim = trim((string) ($data['title'] ?? ''));
+        if (! CvProfile::isAllowedUserTitle($titleTrim)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'คำนำหน้าชื่อไม่ตรงกับรายการมาตรฐาน']);
+        }
+        $data['title'] = $titleTrim === '' ? null : $titleTrim;
 
         // Validate role assignment
         if (!$this->canAssignStudentRole($data['role'] ?? '', $data['program_id'])) {

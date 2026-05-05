@@ -213,9 +213,9 @@ class UserModel extends Model
     /**
      * หาหรือสร้าง user จากข้อมูล URU Portal OAuth (/me endpoint)
      * ใช้ email เป็น key หลักในการ identify user เสมอ
-     * — ถ้า user มีอยู่แล้วในฐานข้อมูล (email ตรงกัน) แต่ยังไม่มี login_uid → update login_uid
-     * — ถ้าไม่มีเลย → สร้าง user ใหม่ (role=user, status=active)
-     * — อัปเดตข้อมูลจาก Portal ทุกครั้งที่ login (ไม่ข้ามแม้ user มีอยู่แล้ว) เพื่อ sync ชื่อ/ยศ/email ฯลฯ
+     * — ถ้ามี user แล้ว (ตรง email หรือพบด้วย login_uid สำหรับข้อมูลเก่า) → ไม่อัปเดตจาก Portal
+     *   ชื่อ/ยศเป็นข้อมูลใน table user แก้ผ่านโปรไฟล์เท่านั้น ไม่ให้ login ทับซ้ำ
+     * — ถ้าไม่มีเลย → สร้าง user ใหม่ (role=user, status=active) ด้วยข้อมูลเบื้องต้นจาก Portal
      *
      * @param array $portalUser ข้อมูลจาก /me endpoint ต้องมี email; ควรมี login_uid/username
      * @return array|null user array หรือ null ถ้าล้มเหลว
@@ -230,13 +230,18 @@ class UserModel extends Model
             return null;
         }
 
-        // ค้นหาด้วย email ก่อนเสมอ (email เป็นเงื่อนไขหลักสำหรับการอัปเดต)
+        // ค้นหาด้วย email ก่อนเสมอ
         $user = $this->findByEmail($email);
-        $foundByEmail = $user !== null;
 
         // ถ้าไม่พบด้วย email ลองหาด้วย login_uid (กรณีข้อมูลเก่าที่ email อาจต่างกัน)
         if (!$user && $loginUid !== '') {
             $user = $this->findByLoginUid($loginUid);
+        }
+
+        if ($user !== null) {
+            $uid = (int) ($user['uid'] ?? $user['id'] ?? 0);
+            log_message('info', 'UserModel::findOrCreateFromPortalUser existing user skip portal sync uid=' . $uid . ' portal_email=' . $email);
+            return $user;
         }
 
         // Mapping จาก URU Portal /me API (id, code, type, degree, prefix_*, first_name_en/th, last_name_en/th, email, ...)
@@ -256,52 +261,14 @@ class UserModel extends Model
             unset($updateData['tl_name']);
         }
 
-        // Mapping faculty จาก Portal API (ถ้ามี) — ไม่ overwrite ค่าเดิมถ้า Portal ไม่ส่งมา
+        // Mapping faculty จาก Portal API (ถ้ามี) — bootstrap เท่านั้น
         $portalFaculty = trim($portalUser['faculty'] ?? $portalUser['department'] ?? $portalUser['organization'] ?? $portalUser['faculty_name'] ?? '');
         if ($portalFaculty !== '') {
             $updateData['faculty'] = $portalFaculty;
         }
 
-        // อัปเดต login_uid เสมอถ้า Portal ส่งมา (รวมถึงกรณี login ครั้งแรกที่ login_uid ยังว่าง)
         if ($loginUid !== '') {
             $updateData['login_uid'] = $loginUid;
-        }
-
-        // ไม่อัปเดต profile_image จาก API (ยกเว้นตามข้อกำหนด — ใช้เฉพาะที่ user อัปโหลดหรือมีอยู่แล้ว)
-
-        if ($user) {
-            // user มีอยู่แล้ว — อัปเดตทุกครั้งที่ login (sync ข้อมูลจาก Portal)
-            $existingLoginUid = trim($user['login_uid'] ?? '');
-            if ($existingLoginUid === '' && $loginUid !== '') {
-                log_message('info', 'UserModel::findOrCreateFromPortalUser first login, updating login_uid=' . $loginUid . ' for uid=' . $user['uid']);
-            }
-            $onlyAllowed = array_intersect_key($updateData, array_flip($this->allowedFields));
-            $uid = (int) ($user['uid'] ?? $user['id'] ?? 0);
-            $updateBy = $foundByEmail ? 'email' : ($uid >= 1 ? 'uid' : 'email');
-            log_message('info', 'UserModel::findOrCreateFromPortalUser [update_user] before update | ' . json_encode([
-                'email' => $email,
-                'found_by_email' => $foundByEmail,
-                'uid' => $uid,
-                'update_by' => $updateBy,
-                'data' => $onlyAllowed,
-            ]));
-            $ok = false;
-            if ($foundByEmail) {
-                $ok = $this->db->table($this->table)->where('email', $email)->update($onlyAllowed);
-                $updated = $this->findByEmail($email);
-            } elseif ($uid >= 1) {
-                $ok = $this->update($uid, $onlyAllowed);
-                $updated = $this->find($uid);
-            } else {
-                $ok = $this->db->table($this->table)->where('email', $email)->update($onlyAllowed);
-                $updated = $this->findByEmail($email);
-            }
-            log_message($ok ? 'info' : 'error', 'UserModel::findOrCreateFromPortalUser [update_user] after update | ' . json_encode([
-                'email' => $email,
-                'success' => $ok,
-                'updated_uid' => $updated['uid'] ?? null,
-            ]));
-            return $updated;
         }
 
         // ไม่มี user — สร้างใหม่
@@ -318,8 +285,9 @@ class UserModel extends Model
     }
 
     /**
-     * หาหรือสร้าง user จากข้อมูล API (Portal/Edoc SSO) — เมื่อได้รับ JSON จาก Edoc จะ update ลง table user
-     * คืน array user หรือ null ถ้าไม่พบและสร้างไม่ได้
+     * หาหรือสร้าง user จากข้อมูล API (Portal/Edoc SSO)
+     * — ถ้ามี user แล้ว (email หรือ login_uid) → ไม่อัปเดตจาก API (ชื่อ/ยศมาจาก table user)
+     * — ถ้าไม่มี → insert bootstrap จาก API
      * @param array $apiUser ต้องมี key: email; ควรมี login_uid/code, ชื่อ-นามสกุล (gf_name, gl_name, tf_name, tl_name หรือ first_name_th, last_name_th ฯลฯ)
      */
     public function findOrCreateFromApiUser(array $apiUser): ?array
@@ -329,13 +297,16 @@ class UserModel extends Model
         if ($email === '') {
             return null;
         }
-        // ค้นหาด้วย email เป็นเงื่อนไขหลักสำหรับการอัปเดต
         $user = $this->findByEmail($email);
-        $foundByEmail = $user !== null;
         if (!$user && $loginUid !== '') {
             $user = $this->findByLoginUid($loginUid);
         }
-        // อัปเดตฟิลด์จาก API ลง table user (รองรับ URU Portal /me และ Edoc: code, prefix_*, first_name_en/th, last_name_en/th)
+        if ($user !== null) {
+            $uid = (int) ($user['uid'] ?? $user['id'] ?? 0);
+            log_message('info', 'UserModel::findOrCreateFromApiUser existing user skip api sync uid=' . $uid . ' api_email=' . $email);
+            return $user;
+        }
+
         $data = [
             'login_uid' => $loginUid ?: null,
             'email'     => $email,
@@ -353,37 +324,9 @@ class UserModel extends Model
             unset($data['tl_name']);
         }
 
-        // Mapping faculty จาก API (ถ้ามี) — ไม่ overwrite ค่าเดิมถ้า API ไม่ส่งมา
         $apiFaculty = trim($apiUser['faculty'] ?? $apiUser['department'] ?? $apiUser['organization'] ?? $apiUser['faculty_name'] ?? '');
         if ($apiFaculty !== '') {
             $data['faculty'] = $apiFaculty;
-        }
-        // ไม่อัปเดต profile_image จาก API (ยกเว้นตามข้อกำหนด)
-        if ($user) {
-            $onlyAllowed = array_intersect_key($data, array_flip($this->allowedFields));
-            $uid = (int) ($user['uid'] ?? $user['id'] ?? 0);
-            log_message('info', 'UserModel::findOrCreateFromApiUser [update_user] before update | ' . json_encode([
-                'email' => $email,
-                'found_by_email' => $foundByEmail,
-                'uid' => $uid,
-                'data' => $onlyAllowed,
-            ]));
-            $ok = false;
-            if ($foundByEmail) {
-                $ok = $this->db->table($this->table)->where('email', $email)->update($onlyAllowed);
-                $updated = $this->findByEmail($email);
-            } elseif ($uid >= 1) {
-                $ok = $this->update($uid, $onlyAllowed);
-                $updated = $this->find($uid);
-            } else {
-                $ok = $this->db->table($this->table)->where('email', $email)->update($onlyAllowed);
-                $updated = $this->findByEmail($email);
-            }
-            log_message($ok ? 'info' : 'error', 'UserModel::findOrCreateFromApiUser [update_user] after update | ' . json_encode([
-                'email' => $email,
-                'success' => $ok,
-            ]));
-            return $updated;
         }
         $data['password'] = null;
         $data['role'] = 'user';

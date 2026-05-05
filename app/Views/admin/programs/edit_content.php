@@ -407,45 +407,93 @@
 
                     <div id="content-sub-quality" class="content-subpanel" role="tabpanel">
                         <div class="form-section">
-                            <h4 class="form-section-title">มาตรฐานการเรียนรู้ &amp; PLO / ELO</h4>
-                        <div class="form-group learning-standards-editor-wrap">
-                            <label class="form-label">มาตรฐานการเรียนรู้ (Learning Standards)</label>
-                            <div class="form-group">
-                                <label for="learning-standards-intro" class="form-label">คำอธิบาย / ความสัมพันธ์ PLO กับมาตรฐาน (ไม่บังคับ)</label>
-                                <textarea id="learning-standards-intro" class="form-control" rows="3" placeholder="เช่น หลักสูตรอ้างอิงมาตรฐานการเรียนรู้ของ... และกำหนด PLO ให้สอดคล้องกับ..."><?= esc($ls_initial['intro'] ?? '') ?></textarea>
-                            </div>
-                            <label class="form-label" style="margin-top: 0.75rem;">รายการมาตรฐานการเรียนรู้</label>
-                            <div id="learning-standards-list" class="learning-standards-list" data-initial="<?= htmlspecialchars(json_encode($ls_initial['standards'] ?? [], JSON_UNESCAPED_UNICODE)) ?>"></div>
-                            <div class="elos-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button type="button" class="btn btn-outline btn-sm" id="ls-add-btn">+ เพิ่มมาตรฐาน</button>
-                                <button type="button" class="btn btn-primary btn-sm" id="ls-save-ajax-btn">บันทึกมาตรฐานการเรียนรู้</button>
-                                <span id="ls-ajax-msg" class="ajax-msg" aria-live="polite"></span>
-                            </div>
-                            <label class="form-label" style="margin-top: 1rem;">ตารางเชื่อมโยงมาตรฐาน – PLO (ไม่บังคับ)</label>
-                            <div id="learning-standards-mapping-list" class="learning-standards-mapping-list" data-initial="<?= htmlspecialchars(json_encode($ls_initial['mapping'] ?? [], JSON_UNESCAPED_UNICODE)) ?>"></div>
-                            <div class="elos-actions" style="margin-top: 0.5rem;">
-                                <button type="button" class="btn btn-outline btn-sm" id="ls-add-mapping-btn">+ เพิ่มแถวเชื่อมโยง</button>
-                            </div>
-                            <textarea id="learning_standards_json" name="learning_standards_json" class="form-control" style="display: none;" aria-hidden="true"><?= esc($program_page['learning_standards_json'] ?? '') ?></textarea>
-                        </div>
+                            <h4 class="form-section-title">มาตรฐานการเรียนรู้ &amp; PLO</h4>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1.25rem;">เลือกโหมดที่จะแสดงบนหน้าเว็บหลักสูตร — ปีนี้ใช้มาตรฐานการเรียนรู้ 5 ด้าน, ปีหน้าใช้ PLO ที่หลักสูตรกำหนดเอง</p>
 
-                        <?php
-                        $elos_initial = [];
-                        if (!empty($program_page['elos_json'])) {
-                            $decoded = json_decode($program_page['elos_json'], true);
-                            if (is_array($decoded)) { $elos_initial = $decoded; }
-                        }
-                        ?>
-                        <div class="form-group elos-editor-wrap">
-                            <label class="form-label">PLO / ELO (ผลลัพธ์การเรียนรู้ระดับหลักสูตร)</label>
-                            <div id="elos-list" class="elos-list" data-initial="<?= htmlspecialchars(json_encode($elos_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
-                            <div class="elos-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button type="button" class="btn btn-outline btn-sm" id="elos-add-btn">+ เพิ่ม ELO</button>
-                                <button type="button" class="btn btn-primary btn-sm" id="elos-save-ajax-btn">บันทึก ELO</button>
-                                <span id="elos-ajax-msg" class="ajax-msg" aria-live="polite"></span>
+                            <?php
+                            $qualityMode = $ls_initial['mode'] ?? 'this_year';
+                            $domainDefs = [
+                                1 => 'ด้านคุณธรรม จริยธรรม',
+                                2 => 'ด้านความรู้',
+                                3 => 'ด้านทักษะทางปัญญา',
+                                4 => 'ด้านความสัมพันธ์ระหว่างบุคคลและความรับผิดชอบ',
+                                5 => 'ด้านทักษะการวิเคราะห์เชิงตัวเลข การสื่อสาร และการใช้เทคโนโลยี',
+                            ];
+                            $domainsData = [];
+                            if (!empty($ls_initial['domains']) && is_array($ls_initial['domains'])) {
+                                foreach ($ls_initial['domains'] as $dom) {
+                                    if (isset($dom['domain'])) {
+                                        $domainsData[(int) $dom['domain']] = $dom['items'] ?? [];
+                                    }
+                                }
+                            }
+                            $elos_initial = [];
+                            if (!empty($program_page['elos_json'])) {
+                                $decoded = json_decode($program_page['elos_json'], true);
+                                if (is_array($decoded)) {
+                                    $elos_initial = $decoded;
+                                }
+                            }
+                            ?>
+
+                            <!-- Mode toggle -->
+                            <div class="form-group" style="margin-bottom: 1.5rem;">
+                                <label class="form-label">โหมดข้อมูลที่แสดงบนหน้าเว็บ</label>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                                    <button type="button" id="mode-this-year-btn"
+                                        class="btn btn-sm <?= $qualityMode === 'this_year' ? 'btn-primary' : 'btn-outline' ?>"
+                                        onclick="switchQualityMode('this_year')">
+                                        ปีนี้ — มาตรฐานการเรียนรู้ 5 ด้าน
+                                    </button>
+                                    <button type="button" id="mode-next-year-btn"
+                                        class="btn btn-sm <?= $qualityMode === 'next_year' ? 'btn-primary' : 'btn-outline' ?>"
+                                        onclick="switchQualityMode('next_year')">
+                                        ปีหน้า — PLO (ผลลัพธ์การเรียนรู้ระดับหลักสูตร)
+                                    </button>
+                                </div>
+                                <p class="form-text text-muted" id="quality-mode-desc" style="font-size: 0.8125rem;"></p>
                             </div>
+
+                            <!-- มาตรฐานการเรียนรู้ 5 ด้าน (ปีนี้) -->
+                            <div id="standards-domains-panel" style="<?= $qualityMode === 'next_year' ? 'display:none;' : '' ?>">
+                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 1rem;">ทุกหลักสูตรต้องมีครบทั้ง 5 ด้าน — เพิ่มรายการย่อยได้ตามต้องการในแต่ละด้าน</p>
+                                <?php foreach ($domainDefs as $domId => $domName):
+                                    $initItems = $domainsData[$domId] ?? [];
+                                ?>
+                                <div class="form-group domain-block" style="border: 1px solid var(--color-gray-200); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1rem; background: var(--color-gray-50);">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                        <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-primary, #002D72); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8125rem; font-weight: 700; flex-shrink: 0;"><?= $domId ?></span>
+                                        <strong style="font-size: 0.9375rem; color: var(--color-gray-900);"><?= esc($domName) ?></strong>
+                                    </div>
+                                    <div id="domain-<?= $domId ?>-items"
+                                         class="domain-items-list"
+                                         data-domain="<?= $domId ?>"
+                                         data-initial="<?= htmlspecialchars(json_encode($initItems, JSON_UNESCAPED_UNICODE)) ?>"></div>
+                                    <button type="button" class="btn btn-outline btn-sm domain-add-btn" data-domain="<?= $domId ?>" style="margin-top: 0.5rem;">
+                                        + เพิ่มรายการย่อย
+                                    </button>
+                                </div>
+                                <?php endforeach; ?>
+
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem;">
+                                    <button type="button" class="btn btn-primary btn-sm" id="ls-save-ajax-btn">บันทึกมาตรฐานการเรียนรู้</button>
+                                    <span id="ls-ajax-msg" class="ajax-msg" aria-live="polite"></span>
+                                </div>
+                            </div>
+
+                            <!-- PLO panel (ปีหน้า) -->
+                            <div id="plo-panel" style="<?= $qualityMode === 'next_year' ? '' : 'display:none;' ?>">
+                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 1rem;">เพิ่ม PLO ตามจำนวนที่หลักสูตรกำหนด เช่น PLO1 PLO2 … PLO10</p>
+                                <div id="elos-list" class="elos-list" data-initial="<?= htmlspecialchars(json_encode($elos_initial, JSON_UNESCAPED_UNICODE)) ?>"></div>
+                                <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <button type="button" class="btn btn-outline btn-sm" id="elos-add-btn">+ เพิ่ม PLO</button>
+                                    <button type="button" class="btn btn-primary btn-sm" id="elos-save-ajax-btn">บันทึก PLO</button>
+                                    <span id="elos-ajax-msg" class="ajax-msg" aria-live="polite"></span>
+                                </div>
+                            </div>
+
+                            <textarea id="learning_standards_json" name="learning_standards_json" class="form-control" style="display: none;" aria-hidden="true"><?= esc($program_page['learning_standards_json'] ?? '') ?></textarea>
                             <textarea id="elos_json" name="elos_json" class="form-control" style="display: none;" aria-hidden="true"><?= esc($program_page['elos_json'] ?? '') ?></textarea>
-                        </div>
                         </div>
                     </div>
 
@@ -497,13 +545,7 @@
                             <h4 class="form-section-title">หัวข้อหลักเพิ่มเติมของหลักสูตร</h4>
                             <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">เติมข้อมูลสำหรับหัวข้อหลักข้อ 5–8 และ 11 เพื่อให้หน้าเว็บหลักสูตรครบตามกรอบข้อมูลที่ควรเผยแพร่</p>
 
-                            <div class="form-group content-with-toolbar">
-                                <label for="course_details" class="form-label">5. รายละเอียดวิชา</label>
-                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">คำอธิบายรายวิชา, CLO, และ Curriculum Mapping ระหว่างรายวิชากับ PLO</p>
-                                <textarea id="course_details" name="course_details" class="form-control" rows="5"><?= esc($program_page['course_details'] ?? '') ?></textarea>
-                            </div>
-
-                            <div class="form-group content-with-toolbar">
+                                <div class="form-group content-with-toolbar">
                                 <label for="teaching_methods" class="form-label">6. รูปแบบการเรียนสอน</label>
                                 <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">เช่น Active Learning, Project-based, CWIE, ฝึกงาน หรือการเรียนรู้ในสถานประกอบการ</p>
                                 <textarea id="teaching_methods" name="teaching_methods" class="form-control" rows="5"><?= esc($program_page['teaching_methods'] ?? '') ?></textarea>
@@ -1927,15 +1969,12 @@
             swalAlert('JSON ไม่ถูกต้อง: ' + e.message, 'error');
         }
     }
-    // --- เนื้อหาหลักสูตร: มาตรฐานการเรียนรู้ + PLO/ELO ---
+    // --- เนื้อหาหลักสูตร: มาตรฐานการเรียนรู้ 5 ด้าน + PLO ---
     var contentForm = document.querySelector('#content-tab form');
     if (!contentForm) return;
 
     var elosList = document.getElementById('elos-list');
     var elosJsonField = document.getElementById('elos_json');
-    var lsIntroField = document.getElementById('learning-standards-intro');
-    var lsList = document.getElementById('learning-standards-list');
-    var lsMapList = document.getElementById('learning-standards-mapping-list');
     var lsJsonField = document.getElementById('learning_standards_json');
 
     function escapeHtml(s) {
@@ -1945,68 +1984,65 @@
         return div.innerHTML;
     }
 
-    function addStandardRow(data) {
-        data = data || {};
-        var code = escapeHtml(data.code || '');
-        var category = escapeHtml(data.category || '');
-        var detail = escapeHtml(data.detail || '');
-        var row = document.createElement('div');
-        row.className = 'ls-row elo-row';
-        row.innerHTML =
-            '<div class="elo-row__fields">' +
-            '<div class="form-group"><label class="form-label">รหัส (code)</label><input type="text" class="form-control ls-field ls-code" value="' + code + '" placeholder="เช่น LS1"></div>' +
-            '<div class="form-group"><label class="form-label">หมวด / ด้าน</label><input type="text" class="form-control ls-field ls-category" value="' + category + '" placeholder="เช่น ด้านคุณธรรมจริยธรรม"></div>' +
-            '<div class="form-group"><label class="form-label">รายละเอียด</label><textarea class="form-control ls-field ls-detail" rows="3" placeholder="ข้อความมาตรฐานการเรียนรู้">' + detail + '</textarea></div>' +
-            '</div>' +
-            '<div class="elo-row__actions"><button type="button" class="btn btn-danger btn-sm ls-remove-btn">ลบ</button></div>';
-        lsList.appendChild(row);
-        row.querySelector('.ls-remove-btn').addEventListener('click', function () { row.remove(); });
+    var DOMAIN_NAMES = [
+        'ด้านคุณธรรม จริยธรรม',
+        'ด้านความรู้',
+        'ด้านทักษะทางปัญญา',
+        'ด้านความสัมพันธ์ระหว่างบุคคลและความรับผิดชอบ',
+        'ด้านทักษะการวิเคราะห์เชิงตัวเลข การสื่อสาร และการใช้เทคโนโลยี'
+    ];
+
+    var currentQualityMode = '<?= $qualityMode ?? 'this_year' ?>';
+
+    function switchQualityMode(mode) {
+        currentQualityMode = mode;
+        var stdPanel = document.getElementById('standards-domains-panel');
+        var ploPanel = document.getElementById('plo-panel');
+        var btnThis = document.getElementById('mode-this-year-btn');
+        var btnNext = document.getElementById('mode-next-year-btn');
+        var descEl = document.getElementById('quality-mode-desc');
+        if (stdPanel) stdPanel.style.display = mode === 'this_year' ? '' : 'none';
+        if (ploPanel) ploPanel.style.display = mode === 'next_year' ? '' : 'none';
+        if (btnThis) { btnThis.classList.toggle('btn-primary', mode === 'this_year'); btnThis.classList.toggle('btn-outline', mode !== 'this_year'); }
+        if (btnNext) { btnNext.classList.toggle('btn-primary', mode === 'next_year'); btnNext.classList.toggle('btn-outline', mode !== 'next_year'); }
+        if (descEl) {
+            descEl.textContent = mode === 'this_year'
+                ? 'หน้าเว็บหลักสูตรจะแสดงมาตรฐานการเรียนรู้ 5 ด้านพร้อมรายการย่อย'
+                : 'หน้าเว็บหลักสูตรจะแสดง PLO ที่หลักสูตรกำหนด';
+        }
+        // Auto-save mode change to learning_standards_json
+        buildLearningStandardsJson();
     }
 
-    function addMappingRow(data) {
-        data = data || {};
-        var sc = escapeHtml(data.standard_code || '');
-        var pr = escapeHtml(data.plo_refs || '');
+    function addDomainItem(domainNum, value) {
+        var container = document.getElementById('domain-' + domainNum + '-items');
+        if (!container) return;
+        value = value || '';
         var row = document.createElement('div');
-        row.className = 'ls-map-row elo-row';
+        row.className = 'domain-item-row';
+        row.style.cssText = 'display:flex; gap:0.5rem; align-items:center; margin-bottom:0.4rem;';
         row.innerHTML =
-            '<div class="elo-row__fields" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:flex-end;">' +
-            '<div class="form-group" style="flex:1; min-width:10rem;"><label class="form-label">รหัสมาตรฐาน</label><input type="text" class="form-control ls-map-field ls-map-code" value="' + sc + '" placeholder="LS1"></div>' +
-            '<div class="form-group" style="flex:2; min-width:12rem;"><label class="form-label">PLO ที่เกี่ยวข้อง</label><input type="text" class="form-control ls-map-field ls-map-plo" value="' + pr + '" placeholder="PLO1, PLO2"></div>' +
-            '</div>' +
-            '<div class="elo-row__actions"><button type="button" class="btn btn-danger btn-sm ls-map-remove-btn">ลบ</button></div>';
-        lsMapList.appendChild(row);
-        row.querySelector('.ls-map-remove-btn').addEventListener('click', function () { row.remove(); });
+            '<input type="text" class="form-control domain-item-input" value="' + escapeHtml(value) + '" placeholder="รายการย่อย..." style="flex:1;">' +
+            '<button type="button" class="btn btn-danger btn-sm domain-item-remove" style="flex-shrink:0;">ลบ</button>';
+        container.appendChild(row);
+        row.querySelector('.domain-item-remove').addEventListener('click', function () { row.remove(); });
     }
 
     function buildLearningStandardsJson() {
-        if (!lsJsonField || !lsList) return '';
-        var intro = (lsIntroField && lsIntroField.value) ? lsIntroField.value.trim() : '';
-        var standards = [];
-        lsList.querySelectorAll('.ls-row').forEach(function (row) {
-            var code = (row.querySelector('.ls-code') && row.querySelector('.ls-code').value) || '';
-            var category = (row.querySelector('.ls-category') && row.querySelector('.ls-category').value) || '';
-            var detail = (row.querySelector('.ls-detail') && row.querySelector('.ls-detail').value) || '';
-            var summary = detail.length > 120 ? detail.substring(0, 120) + '…' : detail;
-            standards.push({
-                code: code.trim(),
-                category: category.trim(),
-                title: category.trim() || code.trim() || ('มาตรฐาน ' + (standards.length + 1)),
-                summary: summary,
-                detail: detail
-            });
+        if (!lsJsonField) return '';
+        var domains = DOMAIN_NAMES.map(function (name, idx) {
+            var domNum = idx + 1;
+            var items = [];
+            var container = document.getElementById('domain-' + domNum + '-items');
+            if (container) {
+                container.querySelectorAll('.domain-item-input').forEach(function (inp) {
+                    var v = inp.value.trim();
+                    if (v) items.push(v);
+                });
+            }
+            return { domain: domNum, name: name, items: items };
         });
-        var mapping = [];
-        if (lsMapList) {
-            lsMapList.querySelectorAll('.ls-map-row').forEach(function (row) {
-                var sc = (row.querySelector('.ls-map-code') && row.querySelector('.ls-map-code').value) || '';
-                var pr = (row.querySelector('.ls-map-plo') && row.querySelector('.ls-map-plo').value) || '';
-                if (sc.trim() || pr.trim()) {
-                    mapping.push({ standard_code: sc.trim(), plo_refs: pr.trim() });
-                }
-            });
-        }
-        var obj = { intro: intro, standards: standards, mapping: mapping };
+        var obj = { mode: currentQualityMode, domains: domains };
         lsJsonField.value = JSON.stringify(obj);
         return lsJsonField.value;
     }
@@ -2022,8 +2058,37 @@
         if (el) { el.textContent = msg; el.style.color = isError ? 'var(--color-error)' : 'var(--secondary)'; }
     }
 
-    if (lsList && lsJsonField) {
-        document.getElementById('ls-save-ajax-btn') && document.getElementById('ls-save-ajax-btn').addEventListener('click', function () {
+    // Init domain editors
+    for (var di = 1; di <= 5; di++) {
+        (function (domNum) {
+            var container = document.getElementById('domain-' + domNum + '-items');
+            if (!container) return;
+            var initItems = [];
+            try {
+                var rawItems = container.getAttribute('data-initial') || '[]';
+                initItems = JSON.parse(rawItems);
+                if (!Array.isArray(initItems)) initItems = [];
+            } catch (e) { initItems = []; }
+            if (initItems.length === 0) {
+                addDomainItem(domNum, '');
+            } else {
+                initItems.forEach(function (it) { addDomainItem(domNum, it); });
+            }
+        })(di);
+    }
+
+    // Bind domain add buttons
+    document.querySelectorAll('.domain-add-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var domNum = parseInt(btn.getAttribute('data-domain'), 10);
+            addDomainItem(domNum, '');
+        });
+    });
+
+    // Save standards button
+    var lsSaveBtn = document.getElementById('ls-save-ajax-btn');
+    if (lsSaveBtn) {
+        lsSaveBtn.addEventListener('click', function () {
             var btn = this;
             var json = buildLearningStandardsJson();
             btn.disabled = true;
@@ -2039,36 +2104,10 @@
                 })
                 .catch(function () { btn.disabled = false; showLsMsg('เกิดข้อผิดพลาดในการเชื่อมต่อ', true); });
         });
-
-        var lsInitial = [];
-        try {
-            var lraw = lsList.getAttribute('data-initial') || '[]';
-            lsInitial = JSON.parse(lraw);
-            if (!Array.isArray(lsInitial)) lsInitial = [];
-        } catch (e1) { lsInitial = []; }
-        if (lsInitial.length === 0) {
-            addStandardRow({});
-        } else {
-            lsInitial.forEach(function (item) { addStandardRow(item); });
-        }
-
-        var mapInitial = [];
-        if (lsMapList) {
-            try {
-                var mraw = lsMapList.getAttribute('data-initial') || '[]';
-                mapInitial = JSON.parse(mraw);
-                if (!Array.isArray(mapInitial)) mapInitial = [];
-            } catch (e2) { mapInitial = []; }
-            if (mapInitial.length === 0) {
-                addMappingRow({});
-            } else {
-                mapInitial.forEach(function (item) { addMappingRow(item); });
-            }
-        }
-
-        document.getElementById('ls-add-btn') && document.getElementById('ls-add-btn').addEventListener('click', function () { addStandardRow({}); });
-        document.getElementById('ls-add-mapping-btn') && document.getElementById('ls-add-mapping-btn').addEventListener('click', function () { addMappingRow({}); });
     }
+
+    // Set initial mode description
+    switchQualityMode(currentQualityMode);
 
     function addElosRow(data) {
         data = data || {};
@@ -2078,8 +2117,8 @@
         row.className = 'elo-row';
         row.innerHTML =
             '<div class="elo-row__fields">' +
-            '<div class="form-group"><label class="form-label">หมวด (category)</label><input type="text" class="form-control elo-field elo-category" value="' + category + '" placeholder="เช่น PLO1 / ความรู้"></div>' +
-            '<div class="form-group"><label class="form-label">รายละเอียด (detail)</label><textarea class="form-control elo-field elo-detail" rows="3" placeholder="อธิบายผลลัพธ์การเรียนรู้ที่คาดหวัง">' + detail + '</textarea></div>' +
+            '<div class="form-group"><label class="form-label">รหัส / ชื่อ PLO</label><input type="text" class="form-control elo-field elo-category" value="' + category + '" placeholder="เช่น PLO1 — ความรู้ด้านวิทยาศาสตร์"></div>' +
+            '<div class="form-group"><label class="form-label">รายละเอียด</label><textarea class="form-control elo-field elo-detail" rows="3" placeholder="อธิบายผลลัพธ์การเรียนรู้ที่คาดหวังของ PLO นี้">' + detail + '</textarea></div>' +
             '</div>' +
             '<div class="elo-row__actions"><button type="button" class="btn btn-danger btn-sm elo-remove-btn">ลบ</button></div>';
         elosList.appendChild(row);
@@ -2094,7 +2133,7 @@
             var category = (row.querySelector('.elo-category') && row.querySelector('.elo-category').value) || '';
             var detail = (row.querySelector('.elo-detail') && row.querySelector('.elo-detail').value) || '';
             var summary = detail.length > 120 ? detail.substring(0, 120) + '…' : detail;
-            arr.push({ category: category, title: category || ('ELO ' + (arr.length + 1)), summary: summary, detail: detail });
+            arr.push({ category: category, title: category || ('PLO ' + (arr.length + 1)), summary: summary, detail: detail });
         });
         elosJsonField.value = JSON.stringify(arr);
         return elosJsonField.value;
@@ -2120,7 +2159,7 @@
                 .then(function (r) { return r.json(); })
                 .then(function (res) {
                     btn.disabled = false;
-                    showElosMsg(res.success ? 'บันทึก PLO/ELO เรียบร้อย' : (res.message || 'เกิดข้อผิดพลาด'), !res.success);
+                    showElosMsg(res.success ? 'บันทึก PLO เรียบร้อย' : (res.message || 'เกิดข้อผิดพลาด'), !res.success);
                 })
                 .catch(function () { btn.disabled = false; showElosMsg('เกิดข้อผิดพลาดในการเชื่อมต่อ', true); });
         });
@@ -2136,9 +2175,7 @@
         if (initialData.length === 0) {
             addElosRow({});
         } else {
-            initialData.forEach(function (item) {
-                addElosRow(item);
-            });
+            initialData.forEach(function (item) { addElosRow(item); });
         }
 
         document.getElementById('elos-add-btn') && document.getElementById('elos-add-btn').addEventListener('click', function () {

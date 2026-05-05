@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Libraries\CvProfile;
 use CodeIgniter\Model;
 
 class PersonnelModel extends Model
@@ -26,6 +27,7 @@ class PersonnelModel extends Model
         'organization_unit_id',
         'program_id',
         'user_email',
+        'user_uid',
         'phone',
         'bio',
         'bio_en',
@@ -42,7 +44,7 @@ class PersonnelModel extends Model
 
     /**
      * Build SELECT statement with user data joined
-     * ใช้ COALESCE เพื่อ fallback ไปยังข้อมูลใน personnel ถ้า user ไม่มี
+     * ชื่อที่แสดง (name / name_en): ใช้ข้อมูลใน personnel เป็นหลัก แล้วจึง fallback ไป user
      * ตรวจสอบคอลัมน์ใน user ก่อนใช้ เพื่อกัน Unknown column ถ้า DB ยังไม่มีคอลัมน์
      */
     protected function selectWithUser(): string
@@ -66,13 +68,15 @@ class PersonnelModel extends Model
         $uEmail = $hasEmail  ? 'user.email'   : 'NULL';
 
         $nameExpr = "COALESCE(
+                NULLIF(TRIM(personnel.name), ''),
                 NULLIF(TRIM(CONCAT(COALESCE({$uTf}, ''), ' ', COALESCE({$uTl}, ''))), ''),
                 NULLIF(TRIM(CONCAT(COALESCE({$uTitle}, ''), ' ', COALESCE({$uTf}, ''), ' ', COALESCE({$uTl}, ''))), ''),
-                personnel.name
+                TRIM(personnel.name)
             )";
         $nameEnExpr = "COALESCE(
+                NULLIF(TRIM(personnel.name_en), ''),
                 NULLIF(TRIM(CONCAT(COALESCE({$uGf}, ''), ' ', COALESCE({$uGl}, ''))), ''),
-                personnel.name_en
+                TRIM(personnel.name_en)
             )";
 
         $extra = "user.email as user_email";
@@ -96,17 +100,36 @@ class PersonnelModel extends Model
     }
 
     /**
+     * ON clause สำหรับ JOIN user — รองรับทั้ง user_email และ user_uid (ถ้ามีคอลัมน์)
+     *
+     * @return array{0: string, 1: bool|null} [condition, escape]
+     */
+    protected function userJoinOn(): array
+    {
+        if ($this->db->fieldExists('user_uid', 'personnel')) {
+            return ['(user.email = personnel.user_email OR user.uid = personnel.user_uid)', false];
+        }
+
+        return ['user.email = personnel.user_email', null];
+    }
+
+    /**
      * ชื่อสำหรับแสดง — ชื่อภาษาไทย ก่อนเสมอ (user_tf_name + user_tl_name จาก user)
      */
     public function getFullName($person)
     {
+        $combined = trim($person['name'] ?? '');
+        if ($combined !== '') {
+            return $combined;
+        }
         $first = trim($person['user_tf_name'] ?? '');
         $last  = trim($person['user_tl_name'] ?? '');
         $full  = trim($first . ' ' . $last);
         if ($full !== '') {
             return $full;
         }
-        return trim($person['name'] ?? '');
+
+        return '';
     }
 
     /**
@@ -114,8 +137,11 @@ class PersonnelModel extends Model
      */
     public function getFullNameEn($person)
     {
-        // If we have user data joined
-        if (!empty($person['user_gf_name']) || !empty($person['user_gl_name'])) {
+        $enRow = trim($person['name_en'] ?? '');
+        if ($enRow !== '') {
+            return $enRow;
+        }
+        if (! empty($person['user_gf_name']) || ! empty($person['user_gl_name'])) {
             $fname = trim($person['user_gf_name'] ?? '');
             $lname = trim($person['user_gl_name'] ?? '');
             $fullName = trim("{$fname} {$lname}");
@@ -123,9 +149,8 @@ class PersonnelModel extends Model
                 return $fullName;
             }
         }
-        // Fallback to personnel.name_en
-        $en = trim($person['name_en'] ?? '');
-        return $en !== '' ? $en : $this->getFullName($person);
+
+        return $this->getFullName($person);
     }
 
     /**
@@ -151,8 +176,10 @@ class PersonnelModel extends Model
      */
     public function getActive()
     {
+        [$on, $onEsc] = $this->userJoinOn();
+
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.email = personnel.user_email', 'left')
+            ->join('user', $on, 'left', $onEsc)
             ->where('personnel.status', 'active')
             ->orderBy('personnel.sort_order', 'ASC')
             ->findAll();
@@ -176,8 +203,10 @@ class PersonnelModel extends Model
         if (!$this->db->fieldExists('organization_unit_id', 'personnel')) {
             return [];
         }
+        [$on, $onEsc] = $this->userJoinOn();
+
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.email = personnel.user_email', 'left')
+            ->join('user', $on, 'left', $onEsc)
             ->where('personnel.organization_unit_id', $organizationUnitId)
             ->where('personnel.status', 'active')
             ->orderBy('personnel.sort_order', 'ASC')
@@ -189,8 +218,10 @@ class PersonnelModel extends Model
      */
     public function getExecutives()
     {
+        [$on, $onEsc] = $this->userJoinOn();
+
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.email = personnel.user_email', 'left')
+            ->join('user', $on, 'left', $onEsc)
             ->where('personnel.status', 'active')
             ->where('personnel.position IS NOT NULL')
             ->orderBy('personnel.sort_order', 'ASC')
@@ -202,8 +233,10 @@ class PersonnelModel extends Model
      */
     public function getDean()
     {
+        [$on, $onEsc] = $this->userJoinOn();
+
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.email = personnel.user_email', 'left')
+            ->join('user', $on, 'left', $onEsc)
             ->like('personnel.position', 'คณบดี')
             ->where('personnel.status', 'active')
             ->first();
@@ -214,8 +247,10 @@ class PersonnelModel extends Model
      */
     public function findWithUser($id)
     {
+        [$on, $onEsc] = $this->userJoinOn();
+
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.email = personnel.user_email', 'left')
+            ->join('user', $on, 'left', $onEsc)
             ->where('personnel.id', $id)
             ->first();
     }
@@ -229,8 +264,10 @@ class PersonnelModel extends Model
         if ($email === '') {
             return null;
         }
+        [$on, $onEsc] = $this->userJoinOn();
+
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.email = personnel.user_email', 'left')
+            ->join('user', $on, 'left', $onEsc)
             ->where('personnel.user_email', $email)
             ->first();
     }
@@ -269,8 +306,10 @@ class PersonnelModel extends Model
         if ($email === '') {
             return null;
         }
+        [$on, $onEsc] = $this->userJoinOn();
+
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.email = personnel.user_email', 'left')
+            ->join('user', $on, 'left', $onEsc)
             ->groupStart()
             ->where('personnel.user_email', $email)
             ->orWhere('user.email', $email)
@@ -289,8 +328,9 @@ class PersonnelModel extends Model
             if ($this->db->fieldExists('program_id', 'personnel')) {
                 $select .= ', programs.name_th as program_name_th, programs.name_en as program_name_en';
             }
+            [$on, $onEsc] = $this->userJoinOn();
             $builder = $this->select($select)
-                ->join('user', 'user.email = personnel.user_email', 'left')
+                ->join('user', $on, 'left', $onEsc)
                 ->where('personnel.status', 'active');
             if ($this->db->fieldExists('program_id', 'personnel')) {
                 $builder->join('programs', 'programs.id = personnel.program_id', 'left');
@@ -301,8 +341,9 @@ class PersonnelModel extends Model
         if ($this->db->fieldExists('program_id', 'personnel')) {
             $select .= ', programs.name_th as program_name_th, programs.name_en as program_name_en';
         }
+        [$on, $onEsc] = $this->userJoinOn();
         $builder = $this->select($select)
-            ->join('user', 'user.email = personnel.user_email', 'left')
+            ->join('user', $on, 'left', $onEsc)
             ->join('organization_units', 'organization_units.id = personnel.organization_unit_id', 'left')
             ->where('personnel.status', 'active');
         if ($this->db->fieldExists('program_id', 'personnel')) {
@@ -323,8 +364,10 @@ class PersonnelModel extends Model
         if ($ids === []) {
             return [];
         }
+        [$on, $onEsc] = $this->userJoinOn();
+
         return $this->select($this->selectWithUser())
-            ->join('user', 'user.email = personnel.user_email', 'left')
+            ->join('user', $on, 'left', $onEsc)
             ->where('personnel.status', 'active')
             ->whereIn('personnel.id', $ids)
             ->orderBy('personnel.sort_order', 'ASC')
@@ -429,5 +472,80 @@ class PersonnelModel extends Model
 
         $userModel = new UserModel();
         return $userModel->findByEmail(trim($personnel['user_email']));
+    }
+
+    /**
+     * คำนำหน้าไทยสำหรับแสดงสาธารณะ — personnel.academic_title ก่อน แล้วค่อย user.title
+     */
+    public static function resolvePublicTitleTh(array $person): string
+    {
+        $at = trim((string) ($person['academic_title'] ?? ''));
+        if ($at !== '') {
+            return $at;
+        }
+
+        return trim((string) ($person['user_title'] ?? ''));
+    }
+
+    /**
+     * คำนำหน้าอังกฤษ — personnel.academic_title_en ก่อน แล้วแปลจาก user.title
+     */
+    public static function resolvePublicTitleEn(array $person): string
+    {
+        $en = trim((string) ($person['academic_title_en'] ?? ''));
+        if ($en !== '') {
+            return $en;
+        }
+        $u = trim((string) ($person['user_title'] ?? ''));
+        if ($u === '') {
+            return '';
+        }
+
+        return trim(CvProfile::mapAcademicTitleThToEn($u));
+    }
+
+    /**
+     * ชื่อ-นามสกุลไทยสาธารณะ — ชื่อรวมจาก query (เน้น personnel) ก่อน แล้วค่อยแยกจาก user
+     */
+    public static function resolvePublicNameTh(array $person): string
+    {
+        $n = trim((string) ($person['name'] ?? ''));
+        if ($n !== '') {
+            return $n;
+        }
+
+        return trim(trim((string) ($person['user_tf_name'] ?? '')) . ' ' . trim((string) ($person['user_tl_name'] ?? '')));
+    }
+
+    /**
+     * ชื่อ-นามสกุลอังกฤษสาธารณะ — name_en จาก query ก่อน แล้วค่อย user
+     */
+    public static function resolvePublicNameEn(array $person): string
+    {
+        $n = trim((string) ($person['name_en'] ?? ''));
+        if ($n !== '') {
+            return $n;
+        }
+
+        return trim(trim((string) ($person['user_gf_name'] ?? '')) . ' ' . trim((string) ($person['user_gl_name'] ?? '')));
+    }
+
+    public static function resolvePublicDisplayNameTh(array $person): string
+    {
+        $t = self::resolvePublicTitleTh($person);
+        $n = self::resolvePublicNameTh($person);
+
+        return $t !== '' ? $t . ' ' . $n : $n;
+    }
+
+    public static function resolvePublicDisplayNameEn(array $person): string
+    {
+        $t = self::resolvePublicTitleEn($person);
+        $n = self::resolvePublicNameEn($person);
+        if ($n === '') {
+            return self::resolvePublicDisplayNameTh($person);
+        }
+
+        return $t !== '' ? $t . ' ' . $n : $n;
     }
 }

@@ -5,8 +5,8 @@
 <div class="card">
     <div class="card-header">
         <h2>โครงสร้างองค์กรของคณะ</h2>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <a href="<?= base_url('admin/organization/create') ?>" class="btn btn-primary">เพิ่มบุคลากร</a>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+            <a href="<?= base_url('admin/user-faculty') ?>" class="btn btn-primary">จัดการคณะผู้ใช้ (เพิ่มบุคลากร)</a>
             <a href="<?= base_url('personnel') ?>" target="_blank" class="btn btn-secondary">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
@@ -24,6 +24,9 @@
         <?php if (session('error')): ?>
             <div class="alert alert-danger" style="margin-bottom: 1rem;"><?= esc(session('error')) ?></div>
         <?php endif; ?>
+        <p style="color: var(--color-gray-600); margin-bottom: 1rem;">
+            แสดงเฉพาะบุคลากรที่ผูกกับ <strong>user</strong> และสังกัดคณะวิทยาศาสตร์และเทคโนโลยี (ตาม <strong>user.faculty</strong>) — รายชื่อที่ยังไม่มีสังกัดหลักสูตร (<code>program_id</code> / <code>personnel_programs</code>) และยังไม่มีหน่วยงาน (<code>organization_unit_id</code>) จะรวมในกลุ่ม <strong>บุคลากร</strong> ด้านล่าง
+        </p>
         <p style="color: var(--color-gray-600); margin-bottom: 1rem;">
             โครงสร้าง 5 หน่วยงาน: ผู้บริหาร, สำนักงานคณบดี, หัวหน้าหน่วยวิจัย, หลักสูตรระดับปริญญาตรี, หลักสูตรระดับบัณฑิตศึกษา — หลักสูตร = สาขา คลิก <strong>แก้ไข</strong> เพื่อเปลี่ยนตำแหน่งหรือสาขา
         </p>
@@ -50,9 +53,14 @@
             if ($img && strpos($img, 'http') !== 0) {
                 $img = base_url('serve/thumb/staff/' . basename(str_replace('\\', '/', $img)));
             }
-            $pos = trim($p['position'] ?? $p['position_en'] ?? '');
-            $det = trim($p['position_detail'] ?? '');
-            $posDisplay = $pos !== '' ? $pos . ($det !== '' ? ' ' . $det : '') : '—';
+            $lines = $p['position_summary_lines'] ?? [];
+            if ($lines !== []) {
+                $posDisplay = implode(' · ', $lines);
+            } else {
+                $pos = trim($p['position'] ?? $p['position_en'] ?? '');
+                $det = trim($p['position_detail'] ?? '');
+                $posDisplay = $pos !== '' ? $pos . ($det !== '' ? ' ' . $det : '') : '—';
+            }
             $email = trim($p['email'] ?? '');
             $userLink = $p['user_link'] ?? null;
             $dept = $p['department_name_th'] ?? $p['department_name_en'] ?? '';

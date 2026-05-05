@@ -1,6 +1,13 @@
 <?= $this->extend('admin/layouts/admin_layout') ?>
 
 <?= $this->section('content') ?>
+<?php
+$userTitleOptions = \App\Libraries\CvProfile::academicTitleOptionsTh();
+$curUserTitle = old('title', $user['title'] ?? '');
+if ($curUserTitle !== '' && ! array_key_exists($curUserTitle, $userTitleOptions)) {
+    $userTitleOptions = [$curUserTitle => $curUserTitle . ' (ค่าที่บันทึกไว้)'] + $userTitleOptions;
+}
+?>
 
 <div class="card">
     <div class="card-header">
@@ -79,18 +86,9 @@
                     <div class="form-group">
                         <label for="title" class="form-label">คำนำหน้า</label>
                         <select id="title" name="title" class="form-control">
-                            <option value="">-- เลือก --</option>
-                            <option value="ดร." <?= old('title', $user['title'] ?? '') === 'ดร.' ? 'selected' : '' ?>>ดร.</option>
-                            <option value="ศ.ดร." <?= old('title', $user['title'] ?? '') === 'ศ.ดร.' ? 'selected' : '' ?>>ศ.ดร.</option>
-                            <option value="รศ.ดร." <?= old('title', $user['title'] ?? '') === 'รศ.ดร.' ? 'selected' : '' ?>>รศ.ดร.</option>
-                            <option value="ผศ.ดร." <?= old('title', $user['title'] ?? '') === 'ผศ.ดร.' ? 'selected' : '' ?>>ผศ.ดร.</option>
-                            <option value="ศ." <?= old('title', $user['title'] ?? '') === 'ศ.' ? 'selected' : '' ?>>ศ.</option>
-                            <option value="รศ." <?= old('title', $user['title'] ?? '') === 'รศ.' ? 'selected' : '' ?>>รศ.</option>
-                            <option value="ผศ." <?= old('title', $user['title'] ?? '') === 'ผศ.' ? 'selected' : '' ?>>ผศ.</option>
-                            <option value="อ." <?= old('title', $user['title'] ?? '') === 'อ.' ? 'selected' : '' ?>>อ.</option>
-                            <option value="นาย" <?= old('title', $user['title'] ?? '') === 'นาย' ? 'selected' : '' ?>>นาย</option>
-                            <option value="นาง" <?= old('title', $user['title'] ?? '') === 'นาง' ? 'selected' : '' ?>>นาง</option>
-                            <option value="นางสาว" <?= old('title', $user['title'] ?? '') === 'นางสาว' ? 'selected' : '' ?>>นางสาว</option>
+                            <?php foreach ($userTitleOptions as $tVal => $tLabel): ?>
+                                <option value="<?= esc($tVal, 'attr') ?>" <?= $curUserTitle === $tVal ? 'selected' : '' ?>><?= esc($tLabel) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                 </div>

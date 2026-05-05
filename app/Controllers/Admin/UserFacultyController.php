@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\OrganizationPersonnelSync;
 use App\Models\UserModel;
 
 class UserFacultyController extends BaseController
@@ -77,6 +78,8 @@ class UserFacultyController extends BaseController
         $result = $this->userModel->update($userId, ['faculty' => $faculty ?: null]);
 
         if ($result) {
+            OrganizationPersonnelSync::syncAfterUserFacultyChange((int) $userId);
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'อัปเดตคณะเรียบร้อย'
@@ -107,6 +110,7 @@ class UserFacultyController extends BaseController
         $updated = 0;
         foreach ($userIds as $userId) {
             if ($this->userModel->update($userId, ['faculty' => $faculty ?: null])) {
+                OrganizationPersonnelSync::syncAfterUserFacultyChange((int) $userId);
                 $updated++;
             }
         }

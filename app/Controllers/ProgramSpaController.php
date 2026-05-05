@@ -10,6 +10,7 @@ use App\Models\ProgramActivityImageModel;
 use App\Models\ProgramFacilityModel;
 use App\Models\PersonnelModel;
 use App\Models\PersonnelProgramModel;
+use App\Models\PersonnelOrgRoleModel;
 use App\Models\NewsModel;
 use App\Models\SiteSettingModel;
 
@@ -240,8 +241,19 @@ class ProgramSpaController extends BaseController
                 $roleMap[(int) $row['personnel_id']] = $row['role_in_curriculum'] ?? '';
             }
             $rows = $personnelModel->getActiveByIdsWithUser($personnelIds);
+            $porModel   = new PersonnelOrgRoleModel();
+            $orgGrouped = $porModel->db->tableExists('personnel_org_roles')
+                ? $porModel->getGroupedByPersonnelIds($personnelIds)
+                : [];
             foreach ($rows as $p) {
                 $pid = (int) ($p['id'] ?? 0);
+                $posLabel = trim($p['position'] ?? '');
+                foreach ($orgGrouped[$pid] ?? [] as $or) {
+                    if ((int) ($or['program_id'] ?? 0) === $id) {
+                        $posLabel = trim((string) ($or['position_title'] ?? ''));
+                        break;
+                    }
+                }
                 $img = trim($p['image'] ?? '');
                 $imageUrl = $img !== '' ? base_url('serve/thumb/staff/' . basename(str_replace('\\', '/', $img))) : '';
                 if ($img !== '' && strpos($img, 'http') === 0) {
@@ -252,7 +264,7 @@ class ProgramSpaController extends BaseController
                 $cvUrl    = $emailKey !== '' ? base_url('personnel-cv/' . rawurlencode($emailKey)) : '';
                 $staff[] = [
                     'name'     => trim($p['name'] ?? ''),
-                    'position' => trim($p['position'] ?? ''),
+                    'position' => $posLabel,
                     'role'     => $roleMap[$pid] ?? '',
                     'image'    => $imageUrl,
                     'email'    => $emailRaw,

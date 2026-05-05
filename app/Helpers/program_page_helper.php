@@ -10,14 +10,17 @@ if (! function_exists('parse_learning_standards_json')) {
      * Normalize learning_standards_json จาก DB เป็นโครงสร้างคงที่สำหรับ API/View
      *
      * รูปแบบที่รองรับ:
-     * - Object: { "intro": "...", "standards": [...], "mapping": [...] }
-     * - Array เดี่ยว: [ {...}, ... ] → ถือเป็น standards
+     * - New: { "mode": "this_year"|"next_year", "domains": [{domain,name,items},...] }
+     * - Old: { "intro": "...", "standards": [...], "mapping": [...] }
+     * - Array เดี่ยว: [ {...}, ... ] → ถือเป็น standards (legacy)
      *
-     * @return array{intro: string, standards: list<array>, mapping: list<array>}
+     * @return array{mode: string, domains: list<array>, intro: string, standards: list<array>, mapping: list<array>}
      */
     function parse_learning_standards_json(?string $raw): array
     {
         $out = [
+            'mode'      => 'this_year',
+            'domains'   => [],
             'intro'     => '',
             'standards' => [],
             'mapping'   => [],
@@ -32,6 +35,14 @@ if (! function_exists('parse_learning_standards_json')) {
             return $out;
         }
 
+        // New domain-based format
+        if (isset($decoded['domains']) && is_array($decoded['domains'])) {
+            $out['mode']    = isset($decoded['mode']) ? (string) $decoded['mode'] : 'this_year';
+            $out['domains'] = $decoded['domains'];
+            return $out;
+        }
+
+        // Old object format
         if (isset($decoded['standards']) || isset($decoded['intro']) || isset($decoded['mapping'])) {
             $out['intro'] = isset($decoded['intro']) ? (string) $decoded['intro'] : '';
             $out['standards'] = isset($decoded['standards']) && is_array($decoded['standards'])

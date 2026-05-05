@@ -1,6 +1,9 @@
 <?= $this->extend('admin/layouts/admin_layout') ?>
 
 <?= $this->section('content') ?>
+<?php
+$userTitleOptions = \App\Libraries\CvProfile::academicTitleOptionsTh();
+?>
 
 <div class="card">
     <div class="news-page-header" style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--color-gray-200);">
@@ -147,7 +150,11 @@
                     <div style="display: grid; grid-template-columns: 80px 1fr; gap: 1rem; align-items: end;">
                         <div class="form-group" style="margin: 0;">
                             <label class="form-label">คำนำหน้า</label>
-                            <input type="text" id="editUserTitle" name="title" class="form-control" placeholder="เช่น อ., ดร.">
+                            <select id="editUserTitle" name="title" class="form-control">
+                                <?php foreach ($userTitleOptions as $tVal => $tLabel): ?>
+                                    <option value="<?= esc($tVal, 'attr') ?>"><?= esc($tLabel) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div class="form-group" style="margin: 0;">
@@ -856,8 +863,25 @@
                 if (data.success) {
                     const u = data.data;
                     document.getElementById('editUserUid').value = u.uid;
-                    // Thai names
-                    document.getElementById('editUserTitle').value = u.title || '';
+                    // Thai names — คำนำหน้า (select)
+                    (function ensureUserTitleOption(val) {
+                        const sel = document.getElementById('editUserTitle');
+                        if (!sel) return;
+                        const v = val || '';
+                        if (v !== '') {
+                            let found = false;
+                            for (let i = 0; i < sel.options.length; i++) {
+                                if (sel.options[i].value === v) { found = true; break; }
+                            }
+                            if (!found) {
+                                const opt = document.createElement('option');
+                                opt.value = v;
+                                opt.textContent = v + ' (ค่าที่บันทึกไว้)';
+                                sel.insertBefore(opt, sel.options[1] || null);
+                            }
+                        }
+                        sel.value = v;
+                    })(u.title || '');
                     document.getElementById('editUserTfName').value = u.tf_name || '';
                     document.getElementById('editUserTlName').value = u.tl_name || '';
                     // English names

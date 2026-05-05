@@ -331,9 +331,10 @@ $research_sync_configured    = $research_sync_configured ?? false;
 $rr_sync_notice              = $rr_sync_notice ?? null;
 $rr_last_pull_at             = $rr_last_pull_at ?? null;
 $rr_auto_pull_max_age_days   = $rr_auto_pull_max_age_days ?? null;
-$cvEditTabs = ['narrative', 'photo', 'orcid', 'sections'];
+$cvEditTabs = ['identity', 'narrative', 'photo', 'orcid', 'sections'];
 $tTab = strtolower((string) ($cv_edit_active_tab ?? 'narrative'));
 $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
+$account_user = $account_user ?? null;
 ?>
 
 <div class="cv-manage-page px-3 sm:px-5 md:px-8 lg:px-10 xl:px-12 py-4 sm:py-6 space-y-4 sm:space-y-6 min-h-[calc(100dvh-11rem)] w-full">
@@ -432,6 +433,8 @@ $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
                 <?php endif; ?>
 
                 <nav class="cv-edit-stitch-sidebar-nav mt-7 border-t border-white/10 pt-5 text-sm space-y-0.5" aria-label="สลับส่วนแก้ไข CV (โหลดหน้าใหม่)">
+                    <a href="<?= esc(base_url('dashboard/profile/cv?tab=identity'), 'attr') ?>"
+                       class="cv-edit-tab-nav <?= $cvEditActiveTab === 'identity' ? 'cv-edit-tab-nav--active' : '' ?>">ชื่อและคำนำหน้า</a>
                     <a href="<?= esc(base_url('dashboard/profile/cv?tab=narrative'), 'attr') ?>"
                        class="cv-edit-tab-nav <?= $cvEditActiveTab === 'narrative' ? 'cv-edit-tab-nav--active' : '' ?>">ข้อความบนหน้าสาธารณะ</a>
                     <a href="<?= esc(base_url('dashboard/profile/cv?tab=photo'), 'attr') ?>"
@@ -501,6 +504,24 @@ $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
                         <?php endif; ?>
                     </div>
                 </header>
+
+                <section id="cv-edit-identity" class="cv-edit-stitch-panel <?= $cvEditActiveTab !== 'identity' ? 'hidden' : '' ?>">
+                    <div class="border-b-2 border-secondary-dark pb-2 mb-5">
+                        <p class="cv-edit-stitch-kicker mb-1">ข้อมูลบุคคล (personnel)</p>
+                        <p class="text-sm text-slate-600 leading-relaxed max-w-3xl">
+                            <strong>ชื่อและคำนำหน้า</strong> เก็บที่ตาราง <strong>personnel</strong> เป็นหลักสำหรับหน้าเว็บบุคลากรและ CV สาธารณะ และซิงก์ไป <strong>user</strong> เพื่อบัญชีล็อกอิน
+                        </p>
+                    </div>
+                    <?php if ($account_user !== null): ?>
+                        <?= $this->include('user/profile/partials/identity_form', [
+                            'account_user' => $account_user,
+                            'person'       => $person ?? null,
+                            'id_prefix'    => 'cv-identity',
+                        ]) ?>
+                    <?php else: ?>
+                        <p class="text-sm text-red-700">ไม่พบข้อมูลบัญชีผู้ใช้ในเซสชัน — กรุณาล็อกอินใหม่</p>
+                    <?php endif; ?>
+                </section>
 
                 <section id="cv-edit-narrative" class="cv-edit-stitch-panel <?= $cvEditActiveTab !== 'narrative' ? 'hidden' : '' ?>">
                     <div class="border-b-2 border-secondary-dark pb-2 mb-5">

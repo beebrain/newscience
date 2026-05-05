@@ -33,14 +33,9 @@ class PersonnelCvController extends BaseController
         $settings = $siteSettingModel->getAll();
         $layout = $this->request->isAJAX() ? 'layouts/ajax_layout' : 'layouts/main_layout';
 
-        // ชื่อแสดงผล
-        $displayName = trim($person['academic_title'] ?? '') !== ''
-            ? trim($person['academic_title']) . ' ' . trim($person['name'] ?? '')
-            : trim($person['name'] ?? '');
-
-        $displayNameEn = trim($person['academic_title_en'] ?? '') !== ''
-            ? trim($person['academic_title_en']) . ' ' . trim($person['name_en'] ?? '')
-            : trim($person['name_en'] ?? '');
+        // ชื่อแสดงผล — อิง user (title + ชื่อ) ก่อน แล้ว fallback personnel
+        $displayName   = PersonnelModel::resolvePublicDisplayNameTh($person);
+        $displayNameEn = PersonnelModel::resolvePublicDisplayNameEn($person);
 
         // รูปโปรไฟล์เฉพาะ CV (ไม่ใช้รูปบัญชี user)
         $image = trim((string) ($person['cv_profile_image'] ?? ''));
