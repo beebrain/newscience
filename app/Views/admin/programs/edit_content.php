@@ -2048,6 +2048,7 @@
     }
 
     window.buildLearningStandardsJson = buildLearningStandardsJson;
+    window.switchQualityMode = switchQualityMode;
 
     var programId = <?= (int)($program['id'] ?? 0) ?>;
     var updatePageJsonUrl = '<?= base_url('program-admin/update-page-json/' . (int)($program['id'] ?? 0)) ?>';
