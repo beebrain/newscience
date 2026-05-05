@@ -1110,14 +1110,18 @@
         renderFooterContact(d);
     }
 
-    document.getElementById('nav-toggle').addEventListener('click', function () {
-        document.getElementById('nav-mobile').classList.toggle('hidden');
-    });
-    document.getElementById('nav-mobile').addEventListener('click', function (ev) {
-        if (ev.target && ev.target.closest && ev.target.closest('a')) {
-            document.getElementById('nav-mobile').classList.add('hidden');
-        }
-    });
+    var navToggle = document.getElementById('nav-toggle');
+    var navMobile = document.getElementById('nav-mobile');
+    if (navToggle && navMobile) {
+        navToggle.addEventListener('click', function () {
+            navMobile.classList.toggle('hidden');
+        });
+        navMobile.addEventListener('click', function (ev) {
+            if (ev.target && ev.target.closest && ev.target.closest('a')) {
+                navMobile.classList.add('hidden');
+            }
+        });
+    }
 
     $.ajax({ url: dataUrl, method: 'GET', dataType: 'json' })
         .done(function (res) {
