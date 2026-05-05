@@ -136,16 +136,6 @@
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ชื่อวิชา, คำอธิบายรายวิชา, ผลลัพธ์การเรียนรู้ระดับรายวิชา (CLO), และ Curriculum Mapping (วิชานี้ตอบ PLO ข้อใด)</td>
                         </tr>
                         <tr>
-                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">6. รูปแบบการเรียนสอน</td>
-                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">วิธีการจัดการเรียนรู้</td>
-                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">รูปแบบการสอนหลัก เช่น Active Learning, Project-based, CWIE, หรือการฝึกงานในสถานประกอบการ</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">7. การวัดและประเมินผล</td>
-                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">เกณฑ์การประเมินและอุทธรณ์</td>
-                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">วิธีการให้คะแนน, การใช้ Rubrics, นโยบายการสอบ, และขั้นตอนการอุทธรณ์ผลการเรียนที่ชัดเจน</td>
-                        </tr>
-                        <tr>
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">8. เกณฑ์การจบ</td>
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">เงื่อนไขการสำเร็จการศึกษา</td>
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">เกณฑ์ GPA ขั้นต่ำ, คะแนนทดสอบภาษาอังกฤษ (เช่น TOEIC/IELTS), และข้อกำหนดพิเศษ (เช่น ผลงานตีพิมพ์)</td>
@@ -159,11 +149,6 @@
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">10. การสนับสนุน</td>
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ระบบดูแลและสิ่งอำนวยความสะดวก</td>
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ระบบอาจารย์ที่ปรึกษา, ทุนการศึกษา, ห้องปฏิบัติการ, ห้องสมุด, และซอฟต์แวร์ที่สนับสนุนการเรียน</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">11. ความสำเร็จ</td>
-                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">ผลลัพธ์และสถิติบัณฑิต</td>
-                            <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">อัตราการได้งานทำ, เงินเดือนเริ่มต้นเฉลี่ย, รางวัลที่นักศึกษาได้รับ, และข่าวสารกิจกรรมล่าสุดของหลักสูตร</td>
                         </tr>
                         <tr>
                             <td style="padding: 0.5rem 0.65rem; border: 1px solid var(--color-gray-200); vertical-align: top;">12. การติดต่อ</td>
@@ -543,19 +528,7 @@
                     <div id="content-sub-academic" class="content-subpanel" role="tabpanel">
                         <div class="form-section">
                             <h4 class="form-section-title">หัวข้อหลักเพิ่มเติมของหลักสูตร</h4>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">เติมข้อมูลสำหรับหัวข้อหลักข้อ 5–8 และ 11 เพื่อให้หน้าเว็บหลักสูตรครบตามกรอบข้อมูลที่ควรเผยแพร่</p>
-
-                                <div class="form-group content-with-toolbar">
-                                <label for="teaching_methods" class="form-label">6. รูปแบบการเรียนสอน</label>
-                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">เช่น Active Learning, Project-based, CWIE, ฝึกงาน หรือการเรียนรู้ในสถานประกอบการ</p>
-                                <textarea id="teaching_methods" name="teaching_methods" class="form-control" rows="5"><?= esc($program_page['teaching_methods'] ?? '') ?></textarea>
-                            </div>
-
-                            <div class="form-group content-with-toolbar">
-                                <label for="assessment_methods" class="form-label">7. การวัดและประเมินผล</label>
-                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">วิธีให้คะแนน, Rubrics, นโยบายสอบ และขั้นตอนการอุทธรณ์ผลการเรียน</p>
-                                <textarea id="assessment_methods" name="assessment_methods" class="form-control" rows="5"><?= esc($program_page['assessment_methods'] ?? '') ?></textarea>
-                            </div>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">เติมข้อมูลสำหรับหัวข้อเกณฑ์การจบการศึกษา เพื่อให้หน้าเว็บหลักสูตรครบตามกรอบข้อมูลที่ควรเผยแพร่</p>
 
                             <div class="form-group content-with-toolbar">
                                 <label for="graduation_requirements" class="form-label">8. เกณฑ์การจบ</label>
@@ -563,11 +536,6 @@
                                 <textarea id="graduation_requirements" name="graduation_requirements" class="form-control" rows="5"><?= esc($program_page['graduation_requirements'] ?? '') ?></textarea>
                             </div>
 
-                            <div class="form-group content-with-toolbar">
-                                <label for="success_outcomes" class="form-label">11. ความสำเร็จ</label>
-                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">อัตราการได้งานทำ, เงินเดือนเริ่มต้นเฉลี่ย, รางวัลนักศึกษา, ผลงานเด่น หรือกิจกรรมล่าสุด</p>
-                                <textarea id="success_outcomes" name="success_outcomes" class="form-control" rows="5"><?= esc($program_page['success_outcomes'] ?? '') ?></textarea>
-                            </div>
                         </div>
                     </div>
 

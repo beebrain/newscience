@@ -55,10 +55,7 @@ class ProgramSpaController extends BaseController
             'curriculum_json' => '',
             'curriculum_structure' => '',
             'course_details' => '',
-            'teaching_methods' => '',
-            'assessment_methods' => '',
             'graduation_requirements' => '',
-            'success_outcomes' => '',
             'contact_info' => '',
         ];
     }
@@ -410,8 +407,6 @@ class ProgramSpaController extends BaseController
             'curriculum_structure'  => $page['curriculum_structure'] ?? '',
             'study_plan'           => $page['study_plan'] ?? '',
             'course_details'       => $page['course_details'] ?? '',
-            'teaching_methods'     => $page['teaching_methods'] ?? '',
-            'assessment_methods'   => $page['assessment_methods'] ?? '',
             'graduation_requirements' => $page['graduation_requirements'] ?? '',
             'career_prospects'     => $page['career_prospects'] ?? '',
             'careers'              => $careers,
@@ -419,7 +414,6 @@ class ProgramSpaController extends BaseController
             'tuition_items'        => $tuitionItems,
             'admission_info'       => $page['admission_info'] ?? '',
             'admission_details'    => $admissionDetails,
-            'success_outcomes'     => $page['success_outcomes'] ?? '',
             'contact_info'         => $page['contact_info'] ?? '',
             'intro_video_url'      => $page['intro_video_url'] ?? '',
             'elos'                 => $elos,
