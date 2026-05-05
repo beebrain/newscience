@@ -189,6 +189,17 @@
         </div>
     </section>
 
+    <section id="careers" class="py-28 bg-white w-full border-t border-outline-variant/30">
+        <div class="max-w-[1280px] mx-auto px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-primary mb-6">อาชีพที่สามารถประกอบได้</h2>
+                <div class="section-rule mx-auto mb-6"></div>
+            </div>
+            <div id="careers-empty" class="hidden"></div>
+            <div id="careers-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+        </div>
+    </section>
+
     <section id="admission-requirements" class="py-28 bg-[#f8fafc] w-full border-t border-outline-variant/30">
         <div class="max-w-[1280px] mx-auto px-8">
             <div class="text-center mb-16">
@@ -323,7 +334,16 @@
         loan: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V9l-8-7-8 7v3c0 6 8 10 8 10z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 11h6"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v8"/>',
         card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 10h12"/>',
         rocket: '<path stroke-linecap="round" stroke-linejoin="round" d="M14 21l7-14-7 4"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 7L7 21l2-10"/>',
-        building: '<rect x="5" y="3" width="14" height="18" rx="1"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 21V9h2v12M13 21V12h2v9"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18"/>'
+        building: '<rect x="5" y="3" width="14" height="18" rx="1"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 21V9h2v12M13 21V12h2v9"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18"/>',
+        cpu: '<rect x="9" y="9" width="6" height="6"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 4V2m6 2V2M4 9H2m2 6H2m2 3v2m6-2v2m6-2v2m2-6h2m-2-6h2M5 9a4 4 0 014-4h6a4 4 0 014 4v6a4 4 0 01-4 4H9a4 4 0 01-4-4V9z"/>',
+        chart: '<path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>',
+        search: '<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>',
+        code: '<path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>',
+        users: '<path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>',
+        mortar: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>',
+        target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+        briefcase: '<rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 10-8 0v2"/>',
+        book: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.753 0-3.332.477-4.5 1.253"/>'
     };
 
     function esc(v) {
@@ -394,6 +414,7 @@
             ['#graduate-journey', 'ผลลัพธ์การเรียนรู้ที่คาดหวังรายชั้นปี (YLOs)'],
             ['#graduation', 'เกณฑ์การจบการศึกษา'],
             ['#alumni', 'ข้อความจากศิษย์เก่า'],
+            ['#careers', 'อาชีพที่สามารถประกอบได้'],
             ['#admission-requirements', 'คุณสมบัติของผู้เข้าเรียน'],
             ['#learning-supports', 'สิ่งสนับสนุนการเรียนการสอน'],
             ['#contact', 'การติดต่อ']
@@ -722,16 +743,11 @@
         var intro = text(ls.intro || '');
         var standards = Array.isArray(ls.standards) ? ls.standards : [];
         var mapping = Array.isArray(ls.mapping) ? ls.mapping : [];
-        var elos = Array.isArray(d && d.elos) ? d.elos : [];
-
         standards = standards.filter(function (st) {
             return !!(st && (text(st.code) || text(st.title) || text(st.category) || text(st.summary) || text(st.detail)));
         });
         mapping = mapping.filter(function (row) {
             return !!(row && (text(row.standard_code) || text(row.plo_refs)));
-        });
-        elos = elos.filter(function (e) {
-            return !!(e && (text(e.category) || text(e.title) || text(e.summary) || text(e.detail)));
         });
         domains = domains.filter(function (dom) {
             return !!(dom && (text(dom.name) || (Array.isArray(dom.items) && dom.items.length)));
@@ -739,8 +755,7 @@
 
         var hasDomains = domains.length > 0;
         var hasStandardsBlock = intro.length > 0 || standards.length > 0 || mapping.length > 0;
-        var hasElos = elos.length > 0;
-        var hasAnyContent = hasDomains || hasStandardsBlock || hasElos;
+        var hasAnyContent = hasDomains || hasStandardsBlock;
 
         if (!hasAnyContent) {
             emptyEl.innerHTML = badgeNoData();
@@ -784,28 +799,6 @@
                 }).join('');
             }
 
-            // If mode is next_year also show PLOs alongside
-            if (mode === 'next_year' && hasElos) {
-                var eloSec2 = document.getElementById('elo-section');
-                var eloGrid2 = document.getElementById('elo-grid');
-                if (eloSec2 && eloGrid2) {
-                    eloSec2.classList.remove('hidden');
-                    eloGrid2.innerHTML = renderElosHtml(elos);
-                }
-            }
-            return;
-        }
-
-        // mode=next_year with PLOs only (no domains yet)
-        if (mode === 'next_year' && hasElos) {
-            var eloSec3 = document.getElementById('elo-section');
-            var eloGrid3 = document.getElementById('elo-grid');
-            var eloHd3 = document.getElementById('elo-heading');
-            if (eloSec3 && eloGrid3) {
-                eloSec3.classList.remove('hidden');
-                if (eloHd3) eloHd3.classList.remove('hidden');
-                eloGrid3.innerHTML = renderElosHtml(elos);
-            }
             return;
         }
 
@@ -862,37 +855,6 @@
                 '<tbody>' + rows + '</tbody></table>';
         }
 
-        var eloSec = document.getElementById('elo-section');
-        var eloGrid = document.getElementById('elo-grid');
-        var eloHd = document.getElementById('elo-heading');
-        if (eloSec && eloGrid && hasElos) {
-            eloSec.classList.remove('hidden');
-            if (eloHd) eloHd.classList.toggle('hidden', !(hasStandardsBlock && hasElos));
-            eloGrid.innerHTML = renderElosHtml(elos);
-        }
-    }
-
-    function renderElosHtml(elos) {
-        return elos.map(function (elo) {
-            var sum = text(elo.summary);
-            var det = text(elo.detail);
-            var summaryHtml = sum
-                ? '<p class="text-on-surface-variant mt-3 leading-relaxed">' + rich(sum) + '</p>'
-                : (det ? '<p class="text-on-surface-variant mt-3 leading-relaxed">' + rich(det) + '</p>' : '');
-            var detailExtra = (det && det !== sum)
-                ? '<div class="text-sm text-on-surface-variant mt-4 pt-4 border-t border-outline-variant/30 leading-relaxed">' + rich(det) + '</div>' : '';
-            var catTxt = text(elo.category);
-            var titleTxt = text(elo.title);
-            var headTitle = firstText(titleTxt, catTxt) || 'PLO';
-            var catHtml = (catTxt && (!titleTxt || catTxt !== titleTxt))
-                ? '<p class="text-sm font-semibold text-primary">' + esc(catTxt) + '</p>' : '';
-            var headCls = catHtml ? 'text-xl font-bold text-primary mt-2' : 'text-xl font-bold text-primary mt-0';
-            return '<article class="bg-surface p-8 rounded-sm shadow-elegant border border-outline-variant/40 hover:border-gold/30 transition-colors">' +
-                '<div class="text-gold mb-5">' + svgIcon('verified', 'w-10 h-10') + '</div>' +
-                catHtml +
-                '<h4 class="' + headCls + '">' + esc(headTitle) + '</h4>' +
-                summaryHtml + detailExtra + '</article>';
-        }).join('');
     }
 
     function renderAdmissionRequirements(d) {
@@ -993,6 +955,35 @@
         }
     }
 
+    function renderCareers(d) {
+        var grid = document.getElementById('careers-grid');
+        var emptyEl = document.getElementById('careers-empty');
+        if (!grid || !emptyEl) return;
+
+        var items = Array.isArray(d && d.careers) ? d.careers : [];
+        items = items.filter(function (c) { return c && (text(c.title) || text(c.desc)); });
+
+        if (!items.length) {
+            grid.innerHTML = '';
+            emptyEl.innerHTML = badgeNoData();
+            emptyEl.classList.remove('hidden');
+            return;
+        }
+
+        emptyEl.innerHTML = '';
+        emptyEl.classList.add('hidden');
+        grid.innerHTML = items.map(function (c) {
+            var icon = text(c.icon) || 'briefcase';
+            var title = text(c.title) || '';
+            var desc = text(c.desc) || '';
+            return '<article class="bg-surface p-8 rounded-sm shadow-elegant border border-outline-variant/40 hover:border-gold/30 transition-colors">' +
+                '<div class="text-gold mb-5">' + svgIcon(icon, 'w-10 h-10') + '</div>' +
+                '<h4 class="text-xl font-bold text-primary mb-3">' + esc(title) + '</h4>' +
+                (desc ? '<p class="text-on-surface-variant leading-relaxed font-light">' + rich(desc) + '</p>' : '') +
+                '</article>';
+        }).join('');
+    }
+
     function bindTabs() {
         document.querySelectorAll('.year-tab').forEach(function (tab) {
             tab.addEventListener('click', function () {
@@ -1051,6 +1042,7 @@
         renderCurriculum(d);
         renderGraduation(d);
         renderAlumni(d);
+        renderCareers(d);
         renderAdmissionRequirements(d);
         renderSupports(d);
         updateHeroAnchors();
