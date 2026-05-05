@@ -98,9 +98,9 @@
     <section id="plo-elo" class="py-28 md:py-32 bg-white w-full border-t border-outline-variant/30">
         <div class="max-w-[1280px] mx-auto px-8">
             <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-primary mb-6">มาตรฐานการเรียนรู้ &amp; PLO / ELO</h2>
+                <h2 class="text-4xl font-bold text-primary mb-6">มาตรฐานการเรียนรู้ 5 ด้าน</h2>
                 <div class="section-rule mx-auto mb-6"></div>
-                <p class="text-on-surface-variant text-sm md:text-base max-w-3xl mx-auto font-light">Programme Learning Outcomes (PLO/ELOs) และมาตรฐานการเรียนรู้ — OBE / AUN-QA</p>
+                <p class="text-on-surface-variant text-sm md:text-base max-w-3xl mx-auto font-light">มาตรฐานการเรียนรู้ตามกรอบมาตรฐานคุณวุฒิระดับอุดมศึกษาแห่งชาติ (TQF) — OBE / AUN-QA</p>
             </div>
             <div id="plo-elo-empty" class="hidden"></div>
             <div id="plo-elo-body" class="space-y-16">
@@ -408,7 +408,7 @@
     function renderNavLinks() {
         var spec = [
             ['#about', 'ปรัชญาและวัตถุประสงค์'],
-            ['#plo-elo', 'มาตรฐานการเรียนรู้ & PLO'],
+            ['#plo-elo', 'มาตรฐานการเรียนรู้ 5 ด้าน'],
             ['#curriculum', 'โครงสร้างหลักสูตรและรายวิชา'],
             ['#faculty', 'คณาจารย์และบุคลากร'],
             ['#graduate-journey', 'ผลลัพธ์การเรียนรู้ที่คาดหวังรายชั้นปี (YLOs)'],
