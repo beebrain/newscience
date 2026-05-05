@@ -67,10 +67,10 @@ class PersonnelModel extends Model
         $uImg   = $hasProfileImage ? 'user.profile_image' : ($hasProfilePicture ? 'user.profile_picture' : 'NULL');
         $uEmail = $hasEmail  ? 'user.email'   : 'NULL';
 
+        // ไม่ใส่ user.title ใน name — คำนำหน้ามาจาก resolvePublicTitleTh (personnel ก่อน แล้วค่อย user.title)
         $nameExpr = "COALESCE(
                 NULLIF(TRIM(personnel.name), ''),
                 NULLIF(TRIM(CONCAT(COALESCE({$uTf}, ''), ' ', COALESCE({$uTl}, ''))), ''),
-                NULLIF(TRIM(CONCAT(COALESCE({$uTitle}, ''), ' ', COALESCE({$uTf}, ''), ' ', COALESCE({$uTl}, ''))), ''),
                 TRIM(personnel.name)
             )";
         $nameEnExpr = "COALESCE(

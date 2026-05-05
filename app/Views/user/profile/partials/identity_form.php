@@ -1,6 +1,6 @@
 <?php
 /**
- * ฟอร์มชื่อและคำนำหน้า — บันทึกลง personnel (ถ้ามีแถวที่เชื่อม) และ sync user
+ * ฟอร์มชื่อและคำนำหน้า — คำนำหน้าหลักที่ personnel (ถ้าเชื่อมและมีคอลัมน์) ไม่มีจึงใช้ user.title
  *
  * @var array|null $account_user แถว user ของบัญชีที่ล็อกอิน
  * @var array|null $person        แถว personnel (+ join user) หรือ null
@@ -22,12 +22,17 @@ $pmRow = $person ?? null;
         <?php
         $titleOptions = \App\Libraries\CvProfile::academicTitleOptionsTh();
         $pAc = $pmRow !== null ? trim((string) ($pmRow['academic_title'] ?? '')) : '';
-        $curTitle = old('title', $pAc !== '' ? $pAc : ($acc['title'] ?? ''));
+        $uAc = trim((string) ($acc['title'] ?? ''));
+        $curTitle = old('title', $pAc !== '' ? $pAc : $uAc);
         if ($curTitle !== '' && ! array_key_exists($curTitle, $titleOptions)) {
             $titleOptions = [$curTitle => $curTitle . ' (ค่าที่บันทึกไว้)'] + $titleOptions;
         }
         $titleEnOptions = \App\Libraries\CvProfile::academicTitleOptionsEn();
-        $curTitleEn = old('academic_title_en', $pmRow !== null ? trim((string) ($pmRow['academic_title_en'] ?? '')) : '');
+        $pAcEn = $pmRow !== null ? trim((string) ($pmRow['academic_title_en'] ?? '')) : '';
+        $curTitleEn = old('academic_title_en', $pAcEn);
+        if ($curTitleEn === '' && $pAcEn === '' && $pmRow !== null && $uAc !== '') {
+            $curTitleEn = \App\Libraries\CvProfile::mapAcademicTitleThToEn($uAc);
+        }
         if ($curTitleEn !== '' && ! array_key_exists($curTitleEn, $titleEnOptions)) {
             $titleEnOptions = [$curTitleEn => $curTitleEn . ' (ค่าที่บันทึกไว้)'] + $titleEnOptions;
         }
@@ -42,7 +47,7 @@ $pmRow = $person ?? null;
             </select>
         </div>
         <div class="sm:col-span-2">
-            <label for="<?= esc($idPx, 'attr') ?>-title-en" class="block text-sm font-medium text-gray-700 mb-1">คำนำหน้าชื่อ (English) — เก็บใน personnel</label>
+            <label for="<?= esc($idPx, 'attr') ?>-title-en" class="block text-sm font-medium text-gray-700 mb-1">คำนำหน้าชื่อ (English) — บันทึกใน personnel เมื่อเชื่อมบุคลากร</label>
             <select name="academic_title_en" id="<?= esc($idPx, 'attr') ?>-title-en"
                     class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400">
                 <?php foreach ($titleEnOptions as $tVal => $tLabel): ?>

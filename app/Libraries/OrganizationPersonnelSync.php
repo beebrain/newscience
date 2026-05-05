@@ -68,12 +68,14 @@ class OrganizationPersonnelSync
         $title  = trim((string) ($user['title'] ?? ''));
 
         $insert = $payload + [
-            'name'          => $nameTh !== '' ? $nameTh : $email,
-            'name_en'       => $nameEn !== '' ? $nameEn : null,
-            'position'      => 'อาจารย์',
-            'sort_order'    => self::nextSortOrder($pm),
-            'academic_title' => $title !== '' ? $title : null,
+            'name'       => $nameTh !== '' ? $nameTh : $email,
+            'name_en'    => $nameEn !== '' ? $nameEn : null,
+            'position'   => 'อาจารย์',
+            'sort_order' => self::nextSortOrder($pm),
         ];
+        if ($pm->db->fieldExists('academic_title', 'personnel')) {
+            $insert['academic_title'] = $title !== '' ? $title : null;
+        }
 
         $pm->skipValidation(true)->insert($insert);
         $newId = (int) $pm->getInsertID();

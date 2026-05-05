@@ -137,7 +137,7 @@ class ProfileCv extends BaseController
     }
 
     /**
-     * POST — แก้คำนำหน้าและชื่อ-นามสกุล: บันทึกลง personnel เป็นหลัก (แสดงหน้าเว็บ/CV) และ sync ลง user เพื่อบัญชีล็อกอิน
+     * POST — คำนำหน้า: หลักที่ personnel (ถ้ามีแถวและคอลัมน์) มิฉะนั้นเก็บที่ user.title — ชื่อแยกซิงก์ลง user เสมอ
      */
     public function saveAccountIdentity()
     {
@@ -161,12 +161,15 @@ class ProfileCv extends BaseController
             return redirect()->to(base_url('dashboard/profile'))->with('error', 'ไม่สามารถแก้ไขบัญชีนี้ได้');
         }
 
-        $title = trim((string) $this->request->getPost('title'));
+        $person = $this->resolveOwnedPersonnel();
+        $hasPersonnel = $person !== null && (int) ($person['id'] ?? 0) > 0;
+
+        $title   = trim((string) $this->request->getPost('title'));
+        $titleEn = trim((string) $this->request->getPost('academic_title_en'));
         if (! CvProfile::isAllowedUserTitle($title)) {
             return redirect()->to($this->identityFormRedirectUrl())->withInput()->with('error', 'คำนำหน้าชื่อไม่ตรงกับรายการมาตรฐาน กรุณาเลือกจากรายการ');
         }
-        $titleEn = trim((string) $this->request->getPost('academic_title_en'));
-        if ($titleEn !== '' && ! array_key_exists($titleEn, CvProfile::academicTitleOptionsEn())) {
+        if ($hasPersonnel && $titleEn !== '' && ! array_key_exists($titleEn, CvProfile::academicTitleOptionsEn())) {
             return redirect()->to($this->identityFormRedirectUrl())->withInput()->with('error', 'คำนำหน้าชื่อ (English) ไม่ตรงกับรายการมาตรฐาน');
         }
         $tf    = trim((string) $this->request->getPost('tf_name'));
@@ -190,30 +193,35 @@ class ProfileCv extends BaseController
         $nameTh = trim($tf . ' ' . $tl);
         $nameEn = trim($gf . ' ' . $gl);
 
-        $person = $this->resolveOwnedPersonnel();
-        if ($person !== null) {
+        $personnelModel = new PersonnelModel();
+        $storeTitleOnPersonnel = $hasPersonnel && $personnelModel->db->fieldExists('academic_title', 'personnel');
+
+        if ($hasPersonnel) {
             $personnelId = (int) ($person['id'] ?? 0);
-            if ($personnelId > 0) {
-                $personnelModel = new PersonnelModel();
-                $pUpdate = [
-                    'academic_title'    => $title !== '' ? $title : null,
-                    'name'              => $nameTh !== '' ? $nameTh : ($person['name'] ?? ''),
-                    'name_en'           => $nameEn !== '' ? $nameEn : null,
-                ];
-                if ($personnelModel->db->fieldExists('academic_title_en', 'personnel')) {
-                    $pUpdate['academic_title_en'] = $titleEn !== '' ? $titleEn : null;
-                }
-                $personnelModel->skipValidation(true)->update($personnelId, $pUpdate);
+            $pUpdate = [
+                'name'    => $nameTh !== '' ? $nameTh : ($person['name'] ?? ''),
+                'name_en' => $nameEn !== '' ? $nameEn : null,
+            ];
+            if ($storeTitleOnPersonnel) {
+                $pUpdate['academic_title'] = $title !== '' ? $title : null;
             }
+            if ($personnelModel->db->fieldExists('academic_title_en', 'personnel')) {
+                $pUpdate['academic_title_en'] = $titleEn !== '' ? $titleEn : null;
+            }
+            $personnelModel->skipValidation(true)->update($personnelId, $pUpdate);
         }
 
-        $ok = $userModel->skipValidation(true)->update($userId, [
-            'title'   => $title !== '' ? $title : null,
+        // user.title เมื่อไม่มีคอลัมน์/ไม่เก็บใน personnel — หลีกเลี่ยงซ้ำซ้อนเมื่อเก็บที่ personnel แล้ว
+        $userTitle = $storeTitleOnPersonnel ? null : ($title !== '' ? $title : null);
+
+        $userUpdate = [
+            'title'   => $userTitle,
             'tf_name' => $tf !== '' ? $tf : null,
             'tl_name' => $tl !== '' ? $tl : null,
             'gf_name' => $gf !== '' ? $gf : null,
             'gl_name' => $gl !== '' ? $gl : null,
-        ]);
+        ];
+        $ok = $userModel->skipValidation(true)->update($userId, $userUpdate);
 
         if (! $ok) {
             return redirect()->to($this->identityFormRedirectUrl())->withInput()->with('error', 'บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง');
@@ -221,10 +229,25 @@ class ProfileCv extends BaseController
 
         $fresh = $userModel->find($userId);
         if ($fresh) {
-            session()->set('admin_name', $userModel->getFullName($fresh));
+            if ($hasPersonnel) {
+                $with = (new PersonnelModel())->findWithUser((int) $person['id']);
+                if ($with !== null) {
+                    session()->set('admin_name', PersonnelModel::resolvePublicDisplayNameTh($with));
+                } else {
+                    $t = trim((string) ($fresh['title'] ?? ''));
+                    $base = $userModel->getFullName($fresh);
+                    session()->set('admin_name', $t !== '' ? trim($t . ' ' . $base) : $base);
+                }
+            } else {
+                $t = trim((string) ($fresh['title'] ?? ''));
+                $base = $userModel->getFullName($fresh);
+                session()->set('admin_name', $t !== '' ? trim($t . ' ' . $base) : $base);
+            }
         }
 
-        return redirect()->to($this->identityFormRedirectUrl())->with('success', 'บันทึกชื่อและคำนำหน้าแล้ว (หลักในข้อมูลบุคลากร และซิงก์บัญชีผู้ใช้)');
+        return redirect()->to($this->identityFormRedirectUrl())->with('success', $storeTitleOnPersonnel
+            ? 'บันทึกแล้ว — คำนำหน้าหลักในข้อมูลบุคลากร ชื่อ-นามสกุลซิงก์บัญชีผู้ใช้'
+            : 'บันทึกแล้ว — คำนำหน้าอยู่ที่บัญชีผู้ใช้ (ยังไม่มีการเก็บใน personnel หรือยังไม่เชื่อมบุคลากร)');
     }
 
     public function cv()
