@@ -521,10 +521,21 @@ class Dashboard extends BaseController
         $reqIn  = $this->request->getPost('requirements');
         $reqArr = is_array($reqIn) ? $reqIn : [];
 
+        $supArr = [];
+        foreach (admission_details_support_keys() as $k) {
+            $supArr[$k] = $this->request->getPost("supports[{$k}]") === '1';
+        }
+
+        $extraIn  = $this->request->getPost('supports_extra');
+        $extraArr = is_array($extraIn)
+            ? array_values(array_filter(array_map('trim', $extraIn)))
+            : [];
+
         $input = [
-            'plan_seats'   => (string) $this->request->getPost('plan_seats'),
-            'requirements' => array_intersect_key($reqArr, array_flip(admission_details_requirement_keys())),
-            'supports'     => $existingDecoded['supports'], // preserve ค่าเดิม (ไม่มี UI)
+            'plan_seats'     => (string) $this->request->getPost('plan_seats'),
+            'requirements'   => array_intersect_key($reqArr, array_flip(admission_details_requirement_keys())),
+            'supports'       => $supArr,
+            'supports_extra' => $extraArr,
         ];
 
         $errors = [];

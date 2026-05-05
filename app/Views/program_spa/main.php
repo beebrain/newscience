@@ -924,7 +924,10 @@
     }
 
     function renderSupports(d) {
-        var sup = ((d.admission_details || {}).supports) || {};
+        var admDet = d.admission_details && typeof d.admission_details === 'object' ? d.admission_details : {};
+        var sup = admDet.supports || {};
+        var extra = Array.isArray(admDet.supports_extra) ? admDet.supports_extra.filter(function (s) { return text(s); }) : [];
+
         var rowsMeta = [
             ['scholarship', 'ทุนการศึกษา', 'tuition'],
             ['first_term_loan', 'กองทุนยืมเงินค่าเทอมแรกเข้า', 'wallet'],
@@ -934,19 +937,17 @@
             ['dormitory', 'หอพักนักศึกษาของมหาวิทยาลัย', 'building']
         ];
 
-        var enabled = rowsMeta.filter(function (row) {
-            return sup[row[0]] === true;
-        });
+        var enabled = rowsMeta.filter(function (row) { return sup[row[0]] === true; });
         var supGrid = document.getElementById('support-grid');
         var supEmp = document.getElementById('support-empty');
 
-        if (enabled.length) {
+        if (enabled.length || extra.length) {
             supEmp.innerHTML = '';
             supEmp.classList.add('hidden');
             supGrid.classList.remove('hidden');
-            supGrid.innerHTML = enabled.map(function (x) {
-                return supportTitleCard(x[2], x[1]);
-            }).join('');
+            supGrid.innerHTML =
+                enabled.map(function (x) { return supportTitleCard(x[2], x[1]); }).join('') +
+                extra.map(function (s) { return supportTitleCard('verified', text(s)); }).join('');
         } else {
             supGrid.innerHTML = '';
             supGrid.classList.add('hidden');

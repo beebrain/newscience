@@ -531,7 +531,7 @@
                             <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">เติมข้อมูลสำหรับหัวข้อเกณฑ์การจบการศึกษา เพื่อให้หน้าเว็บหลักสูตรครบตามกรอบข้อมูลที่ควรเผยแพร่</p>
 
                             <div class="form-group content-with-toolbar">
-                                <label for="graduation_requirements" class="form-label">8. เกณฑ์การจบ</label>
+                                <label for="graduation_requirements" class="form-label">เกณฑ์การจบ</label>
                                 <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">GPA ขั้นต่ำ, คะแนนภาษาอังกฤษ, ผลงาน/ข้อกำหนดพิเศษ และเงื่อนไขสำเร็จการศึกษา</p>
                                 <textarea id="graduation_requirements" name="graduation_requirements" class="form-control" rows="5"><?= esc($program_page['graduation_requirements'] ?? '') ?></textarea>
                             </div>
@@ -712,6 +712,44 @@
                         </div>
                     </div>
 
+                    <div class="form-section" style="margin-top: 1.5rem;">
+                        <h4 class="form-section-title">สิ่งสนับสนุนการเรียน</h4>
+                        <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">เลือกสิ่งสนับสนุนที่หลักสูตรมีให้ (ค่าเริ่มต้น = มีทั้งหมด) และเพิ่มรายการพิเศษของหลักสูตรได้</p>
+
+                        <?php
+                        $supLabels = [
+                            'scholarship'      => 'ทุนการศึกษา',
+                            'first_term_loan'  => 'กองทุนยืมเงินค่าเทอมแรกเข้า',
+                            'ksl_loan'         => 'กองทุนกู้ยืมเพื่อการศึกษา (กยศ.)',
+                            'study_scholarship'=> 'ทุนการศึกษาระหว่างเรียน',
+                            'entrepreneur_fund'=> 'ทุนสนับสนุนการเป็นผู้ประกอบการ',
+                            'dormitory'        => 'หอพักนักศึกษาของมหาวิทยาลัย',
+                        ];
+                        ?>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem;">
+                            <?php foreach ($supLabels as $key => $label): ?>
+                            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 0.5rem 0.75rem; border: 1px solid var(--color-gray-200); border-radius: 6px; background: var(--color-gray-50);">
+                                <input type="checkbox" name="supports[<?= $key ?>]" value="1"
+                                    <?= ($admissionDetails['supports'][$key] ?? true) ? 'checked' : '' ?>
+                                    style="width: 1rem; height: 1rem; accent-color: var(--color-primary, #002D72);">
+                                <span style="font-size: 0.9375rem;"><?= esc($label) ?></span>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <label class="form-label">รายการสนับสนุนเพิ่มเติมของหลักสูตร</label>
+                        <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">เพิ่มสิ่งสนับสนุนพิเศษที่หลักสูตรมีนอกเหนือจากรายการด้านบน</p>
+                        <div id="supports-extra-list" style="display: flex; flex-direction: column; gap: 0.4rem;">
+                            <?php foreach (($admissionDetails['supports_extra'] ?? []) as $extraItem): ?>
+                            <div class="supports-extra-row" style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="text" name="supports_extra[]" class="form-control" value="<?= esc($extraItem) ?>" placeholder="เช่น ห้องปฏิบัติการ AI, ซอฟต์แวร์ลิขสิทธิ์" style="flex: 1;">
+                                <button type="button" class="btn btn-danger btn-sm supports-extra-remove">ลบ</button>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <button type="button" class="btn btn-outline btn-sm" id="supports-extra-add-btn" style="margin-top: 0.5rem;">+ เพิ่มรายการ</button>
+                    </div>
+
                     <div class="form-actions" style="margin-top: 1.5rem;">
                         <button type="submit" class="btn btn-primary">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -722,10 +760,6 @@
                             บันทึกข้อมูลการรับสมัคร
                         </button>
                     </div>
-
-                    <p class="form-text text-muted" style="font-size: 0.8125rem; margin-top: 1rem;">
-                        หมายเหตุ: "สิ่งสนับสนุนการเรียน" (ทุนการศึกษา 5 ประเภท + หอพักของมหาวิทยาลัย) ถูกตั้งเป็น <strong>"มี"</strong> โดย default สำหรับทุกหลักสูตร
-                    </p>
                 </form>
             </div>
             </div>
@@ -2490,6 +2524,32 @@
         }
         if (addBtn) addBtn.addEventListener('click', function () { addRow({}); sync(); });
         sync();
+    })();
+
+    // --- สิ่งสนับสนุนการเรียนเพิ่มเติม (supports_extra): dynamic add/remove ---
+    (function () {
+        var list = document.getElementById('supports-extra-list');
+        var addBtn = document.getElementById('supports-extra-add-btn');
+        if (!list || !addBtn) return;
+
+        function addExtraRow(value) {
+            var row = document.createElement('div');
+            row.className = 'supports-extra-row';
+            row.style.cssText = 'display: flex; gap: 0.5rem; align-items: center;';
+            row.innerHTML =
+                '<input type="text" name="supports_extra[]" class="form-control" value="" placeholder="เช่น ห้องปฏิบัติการ AI, ซอฟต์แวร์ลิขสิทธิ์" style="flex: 1;">' +
+                '<button type="button" class="btn btn-danger btn-sm supports-extra-remove">ลบ</button>';
+            row.querySelector('input').value = value || '';
+            row.querySelector('.supports-extra-remove').addEventListener('click', function () { row.remove(); });
+            list.appendChild(row);
+        }
+
+        // bind existing remove buttons (server-rendered rows)
+        list.querySelectorAll('.supports-extra-remove').forEach(function (btn) {
+            btn.addEventListener('click', function () { btn.closest('.supports-extra-row').remove(); });
+        });
+
+        addBtn.addEventListener('click', function () { addExtraRow(''); });
     })();
 
     // --- ศิษย์เก่าถึงรุ่นน้อง: repeater + อัปโหลดรูป (ครอป 1:1) + บันทึก Ajax ---

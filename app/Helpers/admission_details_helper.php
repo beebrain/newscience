@@ -55,9 +55,10 @@ if (! function_exists('admission_details_default_structure')) {
         }
 
         return [
-            'plan_seats'   => '',
-            'requirements' => $req,
-            'supports'     => $sup,
+            'plan_seats'     => '',
+            'requirements'   => $req,
+            'supports'       => $sup,
+            'supports_extra' => [],
         ];
     }
 }
@@ -98,6 +99,13 @@ if (! function_exists('admission_details_decode')) {
             }
         }
 
+        if (isset($data['supports_extra']) && is_array($data['supports_extra'])) {
+            $out['supports_extra'] = array_values(array_filter(
+                array_map('strval', $data['supports_extra']),
+                fn ($v) => trim($v) !== ''
+            ));
+        }
+
         return $out;
     }
 }
@@ -121,6 +129,12 @@ if (! function_exists('admission_details_normalize')) {
         foreach (admission_details_requirement_keys() as $k) {
             $decoded['requirements'][$k] = mb_substr((string) $decoded['requirements'][$k], 0, 500);
         }
+
+        // clamp supports_extra items
+        $decoded['supports_extra'] = array_values(array_filter(
+            array_map(fn ($v) => mb_substr(trim((string) $v), 0, 200), $decoded['supports_extra']),
+            fn ($v) => $v !== ''
+        ));
 
         // validate mor_kor_2_url
         $url = trim($decoded['requirements']['mor_kor_2_url']);
