@@ -53,15 +53,27 @@
     </div>
 </div>
 
-<nav class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md border-b border-gold/20 shadow-sm transition-all duration-300 ease-in-out">
-    <div class="flex items-center justify-between px-8 py-5 max-w-[1280px] mx-auto">
-        <a href="#hero" id="nav-brand" class="text-2xl font-bold tracking-tight text-primary truncate max-w-[12rem] sm:max-w-none">หลักสูตร</a>
-        <button id="nav-toggle" class="md:hidden text-primary inline-flex items-center justify-center" type="button" aria-label="เปิดเมนู">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
-        <div id="nav-desktop" class="hidden md:flex items-center gap-8 lg:gap-10 text-sm font-semibold"></div>
+<nav class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md border-b border-gold/20 shadow-sm">
+    <div class="flex items-center justify-between px-6 md:px-8 py-4 max-w-[1280px] mx-auto">
+        <a href="#hero" id="nav-brand" class="text-xl md:text-2xl font-bold tracking-tight text-primary truncate max-w-[10rem] sm:max-w-xs md:max-w-sm lg:max-w-none">หลักสูตร</a>
+        <div class="flex items-center gap-3">
+            <!-- Dropdown trigger (desktop + mobile) -->
+            <div class="relative" id="nav-dropdown-wrap">
+                <button id="nav-dropdown-btn" type="button" aria-haspopup="true" aria-expanded="false"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-sm border border-outline-variant/60 bg-white text-primary text-sm font-semibold hover:border-gold/50 hover:bg-surface-alt transition-all duration-200 select-none">
+                    <svg class="w-4 h-4 text-gold shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <span>สารบัญ</span>
+                    <svg id="nav-chevron" class="w-4 h-4 transition-transform duration-200 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <!-- Dropdown panel -->
+                <div id="nav-dropdown-panel"
+                    class="absolute right-0 top-[calc(100%+8px)] w-72 bg-surface rounded-sm shadow-[0_8px_32px_-8px_rgba(0,45,114,0.18)] border border-outline-variant/40 overflow-hidden"
+                    style="display:none; opacity:0; transform:translateY(-6px); transition:opacity 0.18s ease, transform 0.18s ease;">
+                    <div id="nav-dropdown-list" class="py-2"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div id="nav-mobile" class="hidden md:hidden border-t border-outline-variant/40 bg-surface px-8 py-5 space-y-4 text-sm"></div>
 </nav>
 
 <main id="app" class="hidden">
@@ -407,33 +419,79 @@
 
     function renderNavLinks() {
         var spec = [
-            ['#about', 'ปรัชญาและวัตถุประสงค์'],
-            ['#plo-elo', 'มาตรฐานการเรียนรู้ 5 ด้าน'],
-            ['#curriculum', 'โครงสร้างหลักสูตรและรายวิชา'],
-            ['#faculty', 'คณาจารย์และบุคลากร'],
-            ['#graduate-journey', 'ผลลัพธ์การเรียนรู้ที่คาดหวังรายชั้นปี (YLOs)'],
-            ['#graduation', 'เกณฑ์การจบการศึกษา'],
-            ['#alumni', 'ข้อความจากศิษย์เก่า'],
-            ['#careers', 'อาชีพที่สามารถประกอบได้'],
-            ['#admission-requirements', 'คุณสมบัติของผู้เข้าเรียน'],
-            ['#learning-supports', 'สิ่งสนับสนุนการเรียนการสอน'],
-            ['#contact', 'การติดต่อ']
+            ['#about',                'ปรัชญาและวัตถุประสงค์'],
+            ['#plo-elo',              'มาตรฐานการเรียนรู้ 5 ด้าน'],
+            ['#curriculum',           'โครงสร้างหลักสูตรและรายวิชา'],
+            ['#faculty',              'คณาจารย์และบุคลากร'],
+            ['#graduate-journey',     'ผลลัพธ์การเรียนรู้รายชั้นปี (YLOs)'],
+            ['#graduation',           'เกณฑ์การจบการศึกษา'],
+            ['#alumni',               'ข้อความจากศิษย์เก่า'],
+            ['#careers',              'อาชีพที่สามารถประกอบได้'],
+            ['#admission-requirements','คุณสมบัติของผู้เข้าเรียน'],
+            ['#learning-supports',    'สิ่งสนับสนุนการเรียนการสอน'],
+            ['#contact',              'การติดต่อ']
         ];
-        var desk = document.getElementById('nav-desktop');
-        var mob = document.getElementById('nav-mobile');
-        var deskHtml = '';
-        var mobHtml = '';
+        var listEl = document.getElementById('nav-dropdown-list');
+        if (!listEl) return;
+        var html = '';
         for (var i = 0; i < spec.length; i++) {
             var tgt = document.querySelector(spec[i][0]);
             if (!tgt || tgt.classList.contains('hidden')) continue;
-            var href = spec[i][0];
-            var lab = esc(spec[i][1]);
-            deskHtml += '<a class="text-on-surface-variant hover:text-gold transition-colors" href="' + href + '">' + lab + '</a>';
-            mobHtml += '<a class="block text-on-surface-variant hover:text-gold transition-colors" href="' + href + '">' + lab + '</a>';
+            var isLast = (i === spec.length - 1);
+            var border = isLast ? '' : ' border-b border-outline-variant/25';
+            html += '<a href="' + spec[i][0] + '" class="nav-dd-link flex items-center gap-3 px-5 py-3 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors' + border + '">' +
+                '<span class="w-1.5 h-1.5 rounded-full bg-gold shrink-0 opacity-70"></span>' +
+                '<span>' + esc(spec[i][1]) + '</span></a>';
         }
-        desk.innerHTML = deskHtml;
-        mob.innerHTML = mobHtml;
+        listEl.innerHTML = html;
+        // close dropdown when a link is clicked
+        listEl.querySelectorAll('.nav-dd-link').forEach(function (a) {
+            a.addEventListener('click', function () { closeNavDropdown(); });
+        });
     }
+
+    // --- Dropdown open/close logic ---
+    var navDropdownOpen = false;
+    function openNavDropdown() {
+        var panel = document.getElementById('nav-dropdown-panel');
+        var chevron = document.getElementById('nav-chevron');
+        var btn = document.getElementById('nav-dropdown-btn');
+        if (!panel) return;
+        navDropdownOpen = true;
+        panel.style.display = 'block';
+        // trigger animation
+        requestAnimationFrame(function () {
+            panel.style.opacity = '1';
+            panel.style.transform = 'translateY(0)';
+        });
+        if (chevron) chevron.style.transform = 'rotate(180deg)';
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+    }
+    function closeNavDropdown() {
+        var panel = document.getElementById('nav-dropdown-panel');
+        var chevron = document.getElementById('nav-chevron');
+        var btn = document.getElementById('nav-dropdown-btn');
+        if (!panel) return;
+        navDropdownOpen = false;
+        panel.style.opacity = '0';
+        panel.style.transform = 'translateY(-6px)';
+        if (chevron) chevron.style.transform = '';
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+        setTimeout(function () { if (!navDropdownOpen) panel.style.display = 'none'; }, 180);
+    }
+    document.getElementById('nav-dropdown-btn') && document.getElementById('nav-dropdown-btn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        navDropdownOpen ? closeNavDropdown() : openNavDropdown();
+    });
+    document.addEventListener('click', function (e) {
+        if (navDropdownOpen) {
+            var wrap = document.getElementById('nav-dropdown-wrap');
+            if (wrap && !wrap.contains(e.target)) closeNavDropdown();
+        }
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && navDropdownOpen) closeNavDropdown();
+    });
 
     function renderHero(d) {
         var title = firstText(d.name_th, d.name_en);
