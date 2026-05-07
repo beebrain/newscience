@@ -273,12 +273,13 @@ class ExecutiveStats extends BaseController
         }
 
         $byDepartment = [];
-        if ($this->db->tableExists('personnel') && $this->db->tableExists('organization_units') && $this->db->fieldExists('organization_unit_id', 'personnel')) {
-            $rows = $this->db->table('personnel p')
-                ->select('ou.name_th as name, COUNT(*) as count')
-                ->join('organization_units ou', 'ou.id = p.organization_unit_id', 'left')
-                ->where('p.status', 'active')
-                ->groupBy('p.organization_unit_id')
+        if ($this->db->tableExists('personnel_org_roles') && $this->db->tableExists('organization_units')) {
+            $rows = $this->db->table('personnel_org_roles r')
+                ->select('ou.name_th as name, COUNT(DISTINCT r.personnel_id) as count')
+                ->join('organization_units ou', 'ou.id = r.organization_unit_id', 'left')
+                ->where('r.organization_unit_id IS NOT NULL', null, false)
+                ->groupBy('r.organization_unit_id')
+                ->orderBy('count', 'DESC')
                 ->get()
                 ->getResultArray();
             foreach ($rows as $row) {

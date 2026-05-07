@@ -322,20 +322,35 @@ PROSE;
                     <?php endif; ?>
                 </div>
 
-                <!-- TAB 4: STRATEGY -->
+                <!-- TAB 4: STRATEGY (ข้อมูลคงที่จากตารางความสอดคล้องแผนกลยุทธ์ พ.ศ. 2569–2572) -->
                 <div class="about-tabs__panel" role="tabpanel" data-panel="strategy">
+                    <?php $fs = $faculty_strategy ?? []; ?>
                     <div class="section-header">
                         <span class="section-header__subtitle">ยุทธศาสตร์</span>
-                        <h2 class="section-header__title"><?= esc($strategy_title ?: 'ยุทธศาสตร์ในการบริหารคณะ') ?></h2>
+                        <h2 class="section-header__title"><?= esc($fs['title'] ?? 'ยุทธศาสตร์คณะ') ?></h2>
+                        <?php if (!empty($fs['intro'])): ?>
+                            <p class="section-header__description"><?= esc($fs['intro']) ?></p>
+                        <?php endif; ?>
                     </div>
-                    <?php if (!empty($strategies)): ?>
-                        <ul class="about-list about-list--strategy animate-on-scroll">
-                            <?php foreach ($strategies as $s): ?>
-                                <li class="about-list__item"><?= esc($s) ?></li>
+                    <?php if (!empty($fs['items']) && is_array($fs['items'])): ?>
+                        <ol class="about-list about-list--mission about-list--strategy-items animate-on-scroll">
+                            <?php foreach ($fs['items'] as $row): ?>
+                                <li class="about-list__item about-list__item--strategy">
+                                    <strong class="strategy-item__heading"><?= esc($row['heading'] ?? '') ?></strong>
+                                    <?php if (!empty($row['body'])): ?>
+                                        <span class="strategy-item__body"><?= esc($row['body']) ?></span>
+                                    <?php endif; ?>
+                                </li>
                             <?php endforeach; ?>
-                        </ul>
-                    <?php else: ?>
-                        <p class="section-description">ยังไม่มีข้อมูลยุทธศาสตร์</p>
+                        </ol>
+                    <?php endif; ?>
+
+                    <?php if (!empty($fs['pdf_path'])): ?>
+                        <div class="about-callout strategy-source-doc animate-on-scroll" style="margin-top: 2rem;">
+                            <span class="about-callout__label">เอกสารอ้างอิง</span>
+                            <p class="about-callout__text" style="margin-bottom: 1rem;">ตารางความสอดคล้องแผนกลยุทธ์ พ.ศ. 2569 – 2572 (ไฟล์ต้นฉบับ PDF)</p>
+                            <a href="<?= base_url($fs['pdf_path']) ?>" class="btn btn-outline strategy-source-doc__btn" download target="_blank" rel="noopener">ดาวน์โหลด PDF</a>
+                        </div>
                     <?php endif; ?>
 
                     <!-- Stats -->
@@ -1404,6 +1419,37 @@ PROSE;
         padding: 0.6rem 0;
         line-height: 1.7;
         color: #1e293b;
+    }
+
+    .about-list__item--strategy {
+        padding: 0.85rem 0;
+    }
+
+    .strategy-item__heading {
+        display: block;
+        color: #1e293b;
+        font-weight: 700;
+        margin-bottom: 0.35rem;
+        line-height: 1.45;
+    }
+
+    .strategy-item__body {
+        display: block;
+        color: #475569;
+        font-size: 0.95rem;
+        font-weight: 400;
+        line-height: 1.65;
+    }
+
+    .strategy-source-doc__btn {
+        border-color: rgba(30, 58, 95, 0.35);
+        color: #1e3a5f;
+    }
+
+    .strategy-source-doc__btn:hover {
+        background: #1e3a5f;
+        border-color: #1e3a5f;
+        color: white;
     }
 
     /* ============ RESPONSIVE ============ */

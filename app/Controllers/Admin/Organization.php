@@ -90,6 +90,19 @@ class Organization extends BaseController
         unset($p);
     }
 
+    private function personnelHasOrgUnitRole(array $p, int $orgUnitId): bool
+    {
+        if ($orgUnitId <= 0) {
+            return false;
+        }
+        foreach ($p['org_roles'] ?? [] as $r) {
+            if ((int) ($r['organization_unit_id'] ?? 0) === $orgUnitId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * จัดกลุ่มบุคลากรตาม tier โครงสร้างผู้บริหาร:
      * 1 คณบดี, 2 รองคณบดี, 3 ผู้ช่วยคณบดี, 4 หัวหน้าสำนักงาน/หัวหน้าหน่วยวิจัย, 5 ประธานหลักสูตร, 6 อื่นๆ
@@ -283,9 +296,9 @@ class Organization extends BaseController
         }
         // สำนักงานคณบดี: เฉพาะ tier 6 ที่สังกัดหน่วย office หรือตำแหน่งเจ้าหน้าที่ (หัวหน้าสำนักงานไปอยู่ผู้บริหารแล้ว)
         $officePersonnel = [];
-        if ($officeUnitId > 0 && $this->personnelModel->db->fieldExists('organization_unit_id', 'personnel')) {
+        if ($officeUnitId > 0) {
             $byOrgUnit = array_values(array_filter($personnel, function ($p) use ($officeUnitId) {
-                return (int) ($p['organization_unit_id'] ?? 0) === $officeUnitId;
+                return $this->personnelHasOrgUnitRole($p, $officeUnitId);
             }));
             foreach ($byOrgUnit as $p) {
                 $tier = $this->getTierForPersonnel($p);
@@ -312,9 +325,9 @@ class Organization extends BaseController
 
         // หัวหน้าหน่วยวิจัย: เฉพาะ tier 6 ที่สังกัดหน่วย research (หัวหน้าหน่วยวิจัยไปอยู่ผู้บริหารแล้ว)
         $headResearch = [];
-        if ($researchUnitId > 0 && $this->personnelModel->db->fieldExists('organization_unit_id', 'personnel')) {
+        if ($researchUnitId > 0) {
             $headResearch = array_values(array_filter($personnel, function ($p) use ($researchUnitId) {
-                if ((int) ($p['organization_unit_id'] ?? 0) !== $researchUnitId) {
+                if (! $this->personnelHasOrgUnitRole($p, $researchUnitId)) {
                     return false;
                 }
                 $tier = $this->getTierForPersonnel($p);
@@ -457,7 +470,6 @@ class Organization extends BaseController
             }
         }
 
-        $orgUnitCol = $this->personnelModel->db->fieldExists('organization_unit_id', 'personnel');
         $unassigned = [];
         foreach ($personnel as $p) {
             $pid = (int) ($p['id'] ?? 0);
@@ -468,9 +480,6 @@ class Organization extends BaseController
                 continue;
             }
             if (! empty($hasProgramAffiliation[$pid])) {
-                continue;
-            }
-            if ($orgUnitCol && (int) ($p['organization_unit_id'] ?? 0) > 0) {
                 continue;
             }
             $unassigned[] = $p;
@@ -780,12 +789,6 @@ class Organization extends BaseController
         $position    = null;
         $programId   = null;
         $positionDetailValue = $this->request->getPost('position_detail') ?: null;
-        $organizationUnitId = null;
-        $postedOrgUnitId    = $this->request->getPost('organization_unit_id');
-        if ($postedOrgUnitId !== null && $postedOrgUnitId !== '' && (int) $postedOrgUnitId > 0) {
-            $organizationUnitId = (int) $postedOrgUnitId;
-        }
-
         if ($useOrgRoles) {
             $orgRows = $this->collectOrgRolesFromPost();
             foreach ($orgRows as &$row) {
@@ -818,22 +821,7 @@ class Organization extends BaseController
             if (! empty($summary['position_detail'])) {
                 $positionDetailValue = $summary['position_detail'];
             }
-            if ($organizationUnitId === null && ! empty($summary['organization_unit_id'])) {
-                $organizationUnitId = (int) $summary['organization_unit_id'];
-            }
             $effPos = PersonnelOrgRoleRules::effectivePositionForTier($orgRows, $position ?? '');
-            if ($organizationUnitId === null && $effPos !== '') {
-                $isOfficeRole = (mb_strpos($effPos, 'หัวหน้าสำนักงาน') !== false || mb_strpos($effPos, 'เจ้าหน้าที่') !== false);
-                if ($isOfficeRole) {
-                    $orgUnitModel = new OrganizationUnitModel();
-                    foreach ($orgUnitModel->getOrdered() as $u) {
-                        if (($u['code'] ?? '') === 'office') {
-                            $organizationUnitId = (int) ($u['id'] ?? 0);
-                            break;
-                        }
-                    }
-                }
-            }
             if ($programId === null && $mergedProgramRoles !== []) {
                 $primaryProgram = null;
                 foreach ($mergedProgramRoles as $pr) {
@@ -847,12 +835,6 @@ class Organization extends BaseController
                 }
                 $ppid = (int) ($primaryProgram['program_id'] ?? 0);
                 if ($ppid > 0) {
-                    if ($organizationUnitId === null) {
-                        $program = $this->programModel->find($ppid);
-                        if ($program && ! empty($program['organization_unit_id'])) {
-                            $organizationUnitId = (int) $program['organization_unit_id'];
-                        }
-                    }
                     $programId = $ppid;
                 }
             }
@@ -882,25 +864,7 @@ class Organization extends BaseController
 
                 $primaryProgramId = (int) ($primaryProgram['program_id'] ?? 0);
                 if ($primaryProgramId > 0) {
-                    if ($organizationUnitId === null) {
-                        $program = $this->programModel->find($primaryProgramId);
-                        if ($program && ! empty($program['organization_unit_id'])) {
-                            $organizationUnitId = (int) $program['organization_unit_id'];
-                        }
-                    }
                     $programId = $primaryProgramId;
-                }
-            }
-            if ($organizationUnitId === null && $position !== null) {
-                $isOfficeRole = (mb_strpos($position, 'หัวหน้าสำนักงาน') !== false || mb_strpos($position, 'เจ้าหน้าที่') !== false);
-                if ($isOfficeRole) {
-                    $orgUnitModel = new OrganizationUnitModel();
-                    foreach ($orgUnitModel->getOrdered() as $u) {
-                        if (($u['code'] ?? '') === 'office') {
-                            $organizationUnitId = (int) ($u['id'] ?? 0);
-                            break;
-                        }
-                    }
                 }
             }
         }
@@ -919,9 +883,6 @@ class Organization extends BaseController
             'position_en' => $positionEn === '' ? null : $positionEn,
             'sort_order' => $sortOrder,
         ];
-        if ($this->personnelModel->db->fieldExists('organization_unit_id', 'personnel')) {
-            $updateData['organization_unit_id'] = $organizationUnitId;
-        }
         if ($this->personnelModel->db->fieldExists('position_detail', 'personnel')) {
             $updateData['position_detail'] = $positionDetailValue ?: null;
         }

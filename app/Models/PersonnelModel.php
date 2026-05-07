@@ -24,7 +24,6 @@ class PersonnelModel extends Model
         'academic_title',
         'academic_title_en',
         'orcid_id',
-        'organization_unit_id',
         'program_id',
         'user_email',
         'user_uid',
@@ -196,24 +195,6 @@ class PersonnelModel extends Model
     }
 
     /**
-     * Get personnel by organization unit with user data
-     */
-    public function getByOrganizationUnit($organizationUnitId)
-    {
-        if (!$this->db->fieldExists('organization_unit_id', 'personnel')) {
-            return [];
-        }
-        [$on, $onEsc] = $this->userJoinOn();
-
-        return $this->select($this->selectWithUser())
-            ->join('user', $on, 'left', $onEsc)
-            ->where('personnel.organization_unit_id', $organizationUnitId)
-            ->where('personnel.status', 'active')
-            ->orderBy('personnel.sort_order', 'ASC')
-            ->findAll();
-    }
-
-    /**
      * Get executives (dean, vice deans) with user data
      */
     public function getExecutives()
@@ -319,39 +300,34 @@ class PersonnelModel extends Model
     }
 
     /**
-     * Get active personnel with organization unit (และ program names)
+     * Get active personnel with department (via programs.organization_unit_id) and program names.
      */
     public function getActiveWithDepartment()
     {
-        if (!$this->db->tableExists('organization_units') || !$this->db->fieldExists('organization_unit_id', 'personnel')) {
-            $select = $this->selectWithUser();
-            if ($this->db->fieldExists('program_id', 'personnel')) {
-                $select .= ', programs.name_th as program_name_th, programs.name_en as program_name_en';
-            }
-            [$on, $onEsc] = $this->userJoinOn();
-            $builder = $this->select($select)
-                ->join('user', $on, 'left', $onEsc)
-                ->where('personnel.status', 'active');
-            if ($this->db->fieldExists('program_id', 'personnel')) {
-                $builder->join('programs', 'programs.id = personnel.program_id', 'left');
-            }
-            return $builder->orderBy('personnel.sort_order', 'ASC')->findAll();
-        }
-        $select = $this->selectWithUser() . ', organization_units.name_th as department_name_th, organization_units.name_en as department_name_en';
+        $select = $this->selectWithUser();
         if ($this->db->fieldExists('program_id', 'personnel')) {
             $select .= ', programs.name_th as program_name_th, programs.name_en as program_name_en';
         }
+        if ($this->db->tableExists('organization_units') && $this->db->fieldExists('organization_unit_id', 'programs')) {
+            $select .= ', organization_units.name_th as department_name_th, organization_units.name_en as department_name_en';
+        }
+
         [$on, $onEsc] = $this->userJoinOn();
         $builder = $this->select($select)
             ->join('user', $on, 'left', $onEsc)
-            ->join('organization_units', 'organization_units.id = personnel.organization_unit_id', 'left')
             ->where('personnel.status', 'active');
+
         if ($this->db->fieldExists('program_id', 'personnel')) {
             $builder->join('programs', 'programs.id = personnel.program_id', 'left');
         }
-        return $builder->orderBy('organization_units.sort_order', 'ASC')
-            ->orderBy('personnel.sort_order', 'ASC')
-            ->findAll();
+        if ($this->db->tableExists('organization_units') && $this->db->fieldExists('organization_unit_id', 'programs')) {
+            $builder->join('organization_units', 'organization_units.id = programs.organization_unit_id', 'left');
+            return $builder->orderBy('organization_units.sort_order', 'ASC')
+                ->orderBy('personnel.sort_order', 'ASC')
+                ->findAll();
+        }
+
+        return $builder->orderBy('personnel.sort_order', 'ASC')->findAll();
     }
 
     /**

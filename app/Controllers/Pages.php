@@ -85,17 +85,7 @@ class Pages extends BaseController
             'identity' => $siteInfo['identity_th'] ?? '',
             'history' => $siteInfo['history_th'] ?? '',
             'policy' => $siteInfo['policy_th'] ?? '',
-            'strategy_title' => $siteInfo['strategy_title_th'] ?? '',
-            'strategies' => array_filter([
-                $siteInfo['strategy_1_th'] ?? '',
-                $siteInfo['strategy_2_th'] ?? '',
-                $siteInfo['strategy_3_th'] ?? '',
-                $siteInfo['strategy_4_th'] ?? '',
-                $siteInfo['strategy_5_th'] ?? '',
-                $siteInfo['strategy_6_th'] ?? '',
-                $siteInfo['strategy_7_th'] ?? '',
-                $siteInfo['strategy_8_th'] ?? '',
-            ]),
+            'faculty_strategy' => $this->getFacultyStrategyPageData(),
             'departments' => $this->organizationUnitModel->getOrdered(),
             'executive_posters' => $executivePosters,
         ]);
@@ -596,8 +586,7 @@ class Pages extends BaseController
             ];
         }
 
-        // หัวหน้าหน่วยงาน: โดยตำแหน่ง หรือ organization_unit_id — เรียงหัวหน้าหน่วยขึ้นก่อน (เหมือนประธานหลักสูตร)
-        $hasOrgUnitId = $this->personnelModel->db->fieldExists('organization_unit_id', 'personnel');
+        // หัวหน้าหน่วยงาน: โดยตำแหน่งจาก org_roles/legacy position — เรียงหัวหน้าหน่วยขึ้นก่อน (เหมือนประธานหลักสูตร)
         $researchUnitId = 3;
         $officeUnitId     = 2;
         foreach ($this->organizationUnitModel->getOrdered() as $u) {
@@ -608,10 +597,7 @@ class Pages extends BaseController
                 $officeUnitId = (int) ($u['id'] ?? 2);
             }
         }
-        $researchPersonnel = array_values(array_filter($personnel, function ($p) use ($hasOrgUnitId, $researchUnitId) {
-            if ($hasOrgUnitId && (int) ($p['organization_unit_id'] ?? 0) === $researchUnitId) {
-                return true;
-            }
+        $researchPersonnel = array_values(array_filter($personnel, function ($p) {
             $eff = PersonnelOrgRoleRules::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? '');
 
             return mb_strpos($eff, 'หัวหน้าหน่วยจัดการงานวิจัย') !== false || mb_strpos($eff, 'หัวหน้าหน่วยวิจัย') !== false;
@@ -630,10 +616,7 @@ class Pages extends BaseController
         PersonnelOrgRoleRules::sortPersonnelWithStaffOfficerLast($researchRest);
         $headResearch = array_merge($researchHeadsFirst, $researchRest);
 
-        $officePersonnel = array_values(array_filter($personnel, function ($p) use ($hasOrgUnitId, $officeUnitId) {
-            if ($hasOrgUnitId && (int) ($p['organization_unit_id'] ?? 0) === $officeUnitId) {
-                return true;
-            }
+        $officePersonnel = array_values(array_filter($personnel, function ($p) {
             $eff = PersonnelOrgRoleRules::effectivePositionForTier($p['org_roles'] ?? [], $p['position'] ?? '');
 
             return mb_strpos($eff, 'หัวหน้าสำนักงาน') !== false || mb_strpos($eff, 'เจ้าหน้าที่') !== false;
@@ -977,5 +960,56 @@ class Pages extends BaseController
     public function internalDocuments()
     {
         return redirect()->to(base_url('documents#section-internal'));
+    }
+
+    /**
+     * ยุทธศาสตร์คณะ พ.ศ. 2569 – 2572 (สรุปจากตารางความสอดคล้องแผนกลยุทธ์)
+     * เก็บเป็นข้อมูลคงที่ในโค้ด — ไม่ใช้ site_settings
+     */
+    protected function getFacultyStrategyPageData(): array
+    {
+        return [
+            'title' => 'ยุทธศาสตร์คณะวิทยาศาสตร์และเทคโนโลยี พ.ศ. 2569 – 2572',
+            'intro' => 'ตารางความสอดคล้องแผนกลยุทธ์และตัวชี้วัดระยะ 4 ปีงบประมาณ (พ.ศ. 2569 – 2572) เพื่อขับเคลื่อนพันธกิจการผลิตบัณฑิต การพัฒนาหลักสูตร การวิจัย และการบริการวิชาการของคณะ',
+            'pdf_path' => 'assets/downloads/faculty-strategic-alignment-2569-2572.pdf',
+            'items' => [
+                [
+                    'heading' => 'ยุทธศาสตร์ที่ 1 การผลิตบัณฑิตคุณภาพ',
+                    'body' => 'พัฒนาทักษะภาษาและดิจิทัล — ทักษะวิชาการและวิชาชีพเพื่อตลาดแรงงาน — ทักษะวิจัยและนวัตกรรมร่วมกับชุมชน — ทักษะชีวิตและจิตอาสาเชิงวิศวกรสังคม — สร้างเครือข่ายศิษย์เก่าและพัฒนาศักยภาพต่อเนื่อง',
+                ],
+                [
+                    'heading' => 'ยุทธศาสตร์ที่ 2 การพัฒนาหลักสูตรและการจัดการเรียนการสอน',
+                    'body' => 'พัฒนาหลักสูตรคุณภาพตาม OBE และ WIL/CWIE — หลักสูตรตอบสนองผู้เรียนและตลาดแรงงาน (รวม Life Long Learning / Credit Bank) — พัฒนาห้องเรียน ห้องปฏิบัติการ และความปลอดภัย Lab',
+                ],
+                [
+                    'heading' => 'ยุทธศาสตร์ที่ 3 การพัฒนาวิทยาศาสตร์และเทคโนโลยีที่ยั่งยืน',
+                    'body' => 'ขับเคลื่อนเศรษฐกิจ BCG ด้วยวิทยาศาสตร์และเทคโนโลยี — พัฒนาคณะสู่ Green Faculty และ Green University — บูรณาการงานวิจัยและบริการวิชาการกับ SDGs',
+                ],
+                [
+                    'heading' => 'ยุทธศาสตร์ที่ 4 การวิจัยและบริการวิชาการเพื่อท้องถิ่นและประเทศ',
+                    'body' => 'ส่งเสริมงานวิจัย บริการวิชาการและพันธกิจสัมพันธ์ — ยกระดับคุณภาพผลงานวิจัยและบริการวิชาการ — บูรณาการงานวิจัยกับการเรียนการสอนและการฝึกประสบการณ์',
+                ],
+                [
+                    'heading' => 'ยุทธศาสตร์ที่ 5 การบริหารจัดการที่มีธรรมาภิบาล และการพัฒนาศักยภาพบุคลากร',
+                    'body' => 'พัฒนาระบบบริหารจัดการที่มีธรรมาภิบาลและวัฒนธรรมองค์กรแห่งความเป็นหนึ่งเดียว — ส่งเสริมศักยภาพบุคลากรสายวิชาการและสายสนับสนุนด้านวิชาการ — ส่งเสริมสุขภาวะและความปลอดภัยทางจิตใจของบุคลากร',
+                ],
+                [
+                    'heading' => 'ยุทธศาสตร์ที่ 6 สืบสานประเพณี ทำนุบำรุงศิลปวัฒนธรรม ถ่ายทอดภูมิปัญญาท้องถิ่นและโครงการอันเนื่องมาจากพระราชดำริ',
+                    'body' => 'เชิดชูกิจกรรมสืบสานและทำนุบำรุง — ร่วมมือชุมชนด้านศิลปวัฒนธรรม — เก็บรวบรวมและถ่ายทอดภูมิปัญญาท้องถิ่น — เชื่อมโยงโครงการอันเนื่องมาจากพระราชดำริ',
+                ],
+                [
+                    'heading' => 'ยุทธศาสตร์ที่ 7 การพัฒนาระบบเทคโนโลยีสารสนเทศและโครงสร้างพื้นฐาน',
+                    'body' => 'พัฒนาระบบสารสนเทศเพื่อการบริหารจัดการ (Dashboard คลังปัญญา Resume Builder ติดตามศิษย์เก่า บันทึกโครงการบริการวิชาการ) — โครงสร้างพื้นฐานอัจฉริยะและมหาวิทยาลัยสีเขียว — ระบบช่างประจำคณะและงานซ่อมบำรุง',
+                ],
+                [
+                    'heading' => 'ยุทธศาสตร์ที่ 8 การสร้างเครือข่ายความร่วมมือและการสร้างรายได้',
+                    'body' => 'สร้างเครือข่ายความร่วมมือเชิงยุทธศาสตร์ (MOU/MOA และโครงการร่วม) — เพิ่มรายได้จากศักยภาพวิชาการ บุคลากร และโครงสร้างพื้นฐานของคณะ',
+                ],
+                [
+                    'heading' => 'ยุทธศาสตร์ที่ 9 การประชาสัมพันธ์และการรับนักศึกษา',
+                    'body' => 'สร้างภาพลักษณ์คณะที่รู้จักและน่าเชื่อถือผ่านสื่อสมัยใหม่ — บริหารจัดการและเครือข่ายรับนักศึกษา (โรงเรียนเครือข่าย แผนปฏิบัติงาน กิจกรรมแนะแนว การเล่าเรื่องศิษย์เก่า)',
+                ],
+            ],
+        ];
     }
 }

@@ -20,14 +20,10 @@
             $primaryProgramId = (int)($personnel_programs[0]['program_id'] ?? 0);
         }
         $currentOrgUnitName = '';
-        $currentOrgUnitId = (int)($person['organization_unit_id'] ?? 0);
         if ($primaryProgramId > 0 && !empty($programs)) {
             foreach ($programs as $pr) {
                 if ((int)($pr['id'] ?? 0) === $primaryProgramId) {
                     $currentOrgUnitName = $pr['department_name'] ?? $pr['department_name_th'] ?? $pr['department_name_en'] ?? '';
-                    if ($currentOrgUnitId === 0) {
-                        $currentOrgUnitId = (int)($pr['organization_unit_id'] ?? 0);
-                    }
                     break;
                 }
             }
@@ -103,12 +99,34 @@
             <?php if (!empty($person['user_uid'])): ?>
                 <p style="font-size: 0.85rem; color: var(--color-gray-500); margin: -0.5rem 0 0.5rem;">บุคลากรนี้ลิงก์กับ user — ชื่อใน personnel เป็นหลักบนหน้าเว็บ/CV; ถ้าเว้นชื่อว่างระบบอาจดึงจากบัญชีเมื่อบันทึก</p>
             <?php endif; ?>
+            <?php
+            // Normalize selection values:
+            // - Use DB value as default
+            // - Only let old() override when there is an old value (postback)
+            $dbAcademicTitleTh = trim((string) ($person['academic_title'] ?? ''));
+            if ($dbAcademicTitleTh === '') {
+                // Fallback: some records store title in linked user
+                $dbAcademicTitleTh = trim((string) ($person['user_title'] ?? ''));
+            }
+            $dbAcademicTitleEn = trim((string) ($person['academic_title_en'] ?? ''));
+            if ($dbAcademicTitleEn === '' && $dbAcademicTitleTh !== '') {
+                // Fallback: map Thai title to English for display
+                $dbAcademicTitleEn = \App\Libraries\CvProfile::mapAcademicTitleThToEn($dbAcademicTitleTh);
+            }
+            $oldAcademicTitleTh = old('academic_title');
+            $oldAcademicTitleEn = old('academic_title_en');
+            $selectedAcademicTitleTh = $oldAcademicTitleTh !== null ? trim((string) $oldAcademicTitleTh) : $dbAcademicTitleTh;
+            $selectedAcademicTitleEn = $oldAcademicTitleEn !== null ? trim((string) $oldAcademicTitleEn) : $dbAcademicTitleEn;
+            ?>
             <div class="form-row name-with-prefix">
                 <div class="form-group" style="flex: 0 0 auto; min-width: 180px;">
                     <label class="form-label" for="academic_title">คำนำหน้า (ไทย)</label>
                     <select name="academic_title" id="academic_title" class="form-control">
+                        <?php if ($selectedAcademicTitleTh !== '' && !array_key_exists($selectedAcademicTitleTh, $academic_title_options ?? [])): ?>
+                            <option value="<?= esc($selectedAcademicTitleTh) ?>" selected><?= esc($selectedAcademicTitleTh) ?></option>
+                        <?php endif; ?>
                         <?php foreach ($academic_title_options as $value => $label): ?>
-                            <option value="<?= esc($value) ?>" <?= (old('academic_title', $person['academic_title'] ?? '') === $value ? 'selected' : '') ?>><?= esc($label) ?></option>
+                            <option value="<?= esc($value) ?>" <?= ($selectedAcademicTitleTh === (string) $value ? 'selected' : '') ?>><?= esc($label) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -121,8 +139,11 @@
                 <div class="form-group" style="flex: 0 0 auto; min-width: 180px;">
                     <label class="form-label" for="academic_title_en">คำนำหน้า (English)</label>
                     <select name="academic_title_en" id="academic_title_en" class="form-control">
+                        <?php if ($selectedAcademicTitleEn !== '' && !array_key_exists($selectedAcademicTitleEn, $academic_title_options_en ?? [])): ?>
+                            <option value="<?= esc($selectedAcademicTitleEn) ?>" selected><?= esc($selectedAcademicTitleEn) ?></option>
+                        <?php endif; ?>
                         <?php foreach ($academic_title_options_en as $value => $label): ?>
-                            <option value="<?= esc($value) ?>" <?= (old('academic_title_en', $person['academic_title_en'] ?? '') === $value ? 'selected' : '') ?>><?= esc($label) ?></option>
+                            <option value="<?= esc($value) ?>" <?= ($selectedAcademicTitleEn === (string) $value ? 'selected' : '') ?>><?= esc($label) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -339,7 +360,7 @@
                     'role_kind'            => '',
                     'position_title'       => $person['position'] ?? 'อาจารย์',
                     'program_id'           => $defPid,
-                    'organization_unit_id' => (int) ($person['organization_unit_id'] ?? 0),
+                    'organization_unit_id' => 0,
                     'position_detail'      => $person['position_detail'] ?? '',
                     'sort_order'           => 0,
                     'is_primary_program'   => ($defPid > 0 && ($primaryPidForm <= 0 || $defPid === $primaryPidForm)),
@@ -557,18 +578,7 @@
                 <small style="color: var(--color-gray-500);">เลขน้อยแสดงก่อนภายในระดับเดียวกัน</small>
             </div>
 
-            <?php if (!empty($organization_units)): ?>
-            <div class="form-group">
-                <label class="form-label" for="organization_unit_id">หน่วยงานสังกัด (organization_unit_id)</label>
-                <select name="organization_unit_id" id="organization_unit_id" class="form-control" style="max-width: 360px;">
-                    <option value="">— ตามสาขาหลัก (อัตโนมัติ) —</option>
-                    <?php foreach ($organization_units as $ou): ?>
-                        <option value="<?= (int)($ou['id'] ?? 0) ?>" <?= (string)(old('organization_unit_id', $currentOrgUnitId)) === (string)($ou['id'] ?? '') ? 'selected' : '' ?>><?= esc($ou['name_th'] ?? $ou['code'] ?? '') ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <small style="color: var(--color-gray-500);">บุคลากรสำนักงาน (หัวหน้าสำนักงาน/เจ้าหน้าที่) ให้เลือก "สำนักงานคณบดี" ถ้าไม่มีสาขา</small>
-            </div>
-            <?php endif; ?>
+            <?php /* removed legacy personnel.organization_unit_id */ ?>
 
             <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
                 <button type="submit" class="btn btn-primary">บันทึก</button>

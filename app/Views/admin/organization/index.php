@@ -25,7 +25,7 @@
             <div class="alert alert-danger" style="margin-bottom: 1rem;"><?= esc(session('error')) ?></div>
         <?php endif; ?>
         <p style="color: var(--color-gray-600); margin-bottom: 1rem;">
-            แสดงเฉพาะบุคลากรที่ผูกกับ <strong>user</strong> และสังกัดคณะวิทยาศาสตร์และเทคโนโลยี (ตาม <strong>user.faculty</strong>) — รายชื่อที่ยังไม่มีสังกัดหลักสูตร (<code>program_id</code> / <code>personnel_programs</code>) และยังไม่มีหน่วยงาน (<code>organization_unit_id</code>) จะรวมในกลุ่ม <strong>บุคลากร</strong> ด้านล่าง
+            แสดงเฉพาะบุคลากรที่ผูกกับ <strong>user</strong> และสังกัดคณะวิทยาศาสตร์และเทคโนโลยี (ตาม <strong>user.faculty</strong>) — รายชื่อที่ยังไม่มีสังกัดหลักสูตร (<code>program_id</code> / <code>personnel_programs</code>) และยังไม่มีบทบาทในโครงสร้าง จะรวมในกลุ่ม <strong>บุคลากร</strong> ด้านล่าง
         </p>
         <p style="color: var(--color-gray-600); margin-bottom: 1rem;">
             โครงสร้าง 5 หน่วยงาน: ผู้บริหาร, สำนักงานคณบดี, หัวหน้าหน่วยวิจัย, หลักสูตรระดับปริญญาตรี, หลักสูตรระดับบัณฑิตศึกษา — หลักสูตร = สาขา คลิก <strong>แก้ไข</strong> เพื่อเปลี่ยนตำแหน่งหรือสาขา
