@@ -76,10 +76,14 @@ $apiExecutivesUrl = base_url('api/executives');
         .replace(/'/g, '&#39;');
     }
 
-    function positionLabel(p, defaultLabel) {
-      var pos = (p.position || '').trim();
+    // For /executives, we want ONLY group labels (no extra titles like "อาจารย์ประจำหลักสูตร")
+    function positionLabel(p, forcedLabel) {
       var det = (p.position_detail || '').trim();
-      return (pos || defaultLabel) + (det ? ' ' + det : '');
+      if (forcedLabel && String(forcedLabel).trim()) {
+        return String(forcedLabel).trim() + (det ? ' ' + det : '');
+      }
+      var pos = (p.position || '').trim();
+      return pos + (det ? ' ' + det : '');
     }
 
     function teamCardHtml(fullName, posLabel, imageUrl) {
@@ -100,13 +104,13 @@ $apiExecutivesUrl = base_url('api/executives');
         '</div></div></div>';
     }
 
-    function programChairCardHtml(programDisplay, fullName, imageUrl) {
-      var programEsc = esc(programDisplay);
+    function programChairCardHtml(fullName, programDisplay, imageUrl) {
       var nameEsc = esc(fullName);
-      var roleEsc = esc('ประธานหลักสูตร · ' + fullName);
+      var programEsc = esc(programDisplay);
+      var roleEsc = esc('ประธานหลักสูตร' + (programDisplay ? ' · ' + programDisplay : ''));
       var imgHtml;
       if (imageUrl) {
-        imgHtml = '<img src="' + esc(imageUrl) + '" alt="' + programEsc + '" class="team-card__image" onerror="this.style.display=\'none\';var n=this.nextElementSibling;if(n)n.style.display=\'flex\';">' +
+        imgHtml = '<img src="' + esc(imageUrl) + '" alt="' + nameEsc + '" class="team-card__image" onerror="this.style.display=\'none\';var n=this.nextElementSibling;if(n)n.style.display=\'flex\';">' +
           '<div class="team-card__placeholder" style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:var(--color-gray-200);">' + PLACEHOLDER_SVG + '</div>';
       } else {
         imgHtml = '<div class="team-card__placeholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--color-gray-200);">' + PLACEHOLDER_SVG + '</div>';
@@ -114,7 +118,7 @@ $apiExecutivesUrl = base_url('api/executives');
       return '<div class="team-card animate-on-scroll">' +
         '<div class="team-card__image-wrap">' + imgHtml +
         '<div class="team-card__label">' +
-        '<span class="team-card__label-name">' + programEsc + '</span>' +
+        '<span class="team-card__label-name">' + nameEsc + '</span>' +
         '<span class="team-card__label-role">' + roleEsc + '</span>' +
         '</div></div></div>';
     }
@@ -163,7 +167,7 @@ $apiExecutivesUrl = base_url('api/executives');
       container.innerHTML = html;
     }
 
-    function renderTier4(container, list) {
+    function renderTier4(container, list, forcedLabel) {
       if (!list || list.length === 0) {
         container.innerHTML = '';
         return;
@@ -172,7 +176,7 @@ $apiExecutivesUrl = base_url('api/executives');
       for (var i = 0; i < list.length; i++) {
         var p = list[i];
         var name = (p.name || '').trim();
-        var pos = positionLabel(p, '');
+        var pos = positionLabel(p, forcedLabel || '');
         var img = p.image || '';
         html += teamCardHtml(name, pos, img);
       }
@@ -192,7 +196,7 @@ $apiExecutivesUrl = base_url('api/executives');
         var fullName = (p.name || '').trim();
         var img = p.image || '';
         var programDisplay = programName && programName.indexOf('หลักสูตร') === -1 ? 'หลักสูตร ' + programName : (programName || 'หลักสูตร');
-        html += programChairCardHtml(programDisplay, fullName, img);
+        html += programChairCardHtml(fullName, programDisplay, img);
       }
       container.innerHTML = html;
     }
@@ -288,13 +292,13 @@ $apiExecutivesUrl = base_url('api/executives');
           }
 
           function step4() {
-            renderTier4(headOfficeEl, headOffice);
+            renderTier4(headOfficeEl, headOffice, 'หัวหน้าสำนักงาน');
             if (headOfficeWrap) headOfficeWrap.style.display = headOffice.length ? '' : 'none';
             setTimeout(step5, DELAY_MS);
           }
 
           function step5() {
-            renderTier4(headResearchEl, headResearch);
+            renderTier4(headResearchEl, headResearch, 'หัวหน้าหน่วยจัดการงานวิจัย');
             if (headResearchWrap) headResearchWrap.style.display = headResearch.length ? '' : 'none';
             setTimeout(step6, DELAY_MS);
           }
