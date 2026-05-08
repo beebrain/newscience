@@ -886,11 +886,17 @@ class Organization extends BaseController
         if ($this->personnelModel->db->fieldExists('position_detail', 'personnel')) {
             $updateData['position_detail'] = $positionDetailValue ?: null;
         }
-        if ($this->personnelModel->db->fieldExists('academic_title', 'personnel')) {
-            $updateData['academic_title'] = $this->request->getPost('academic_title') ?: null;
+        $postedAcademicTitle = trim((string) $this->request->getPost('academic_title'));
+        $postedAcademicTitleEn = trim((string) $this->request->getPost('academic_title_en'));
+
+        $hasPersonnelAcademicTitle = $this->personnelModel->db->fieldExists('academic_title', 'personnel');
+        $hasPersonnelAcademicTitleEn = $this->personnelModel->db->fieldExists('academic_title_en', 'personnel');
+
+        if ($hasPersonnelAcademicTitle) {
+            $updateData['academic_title'] = $postedAcademicTitle !== '' ? $postedAcademicTitle : null;
         }
-        if ($this->personnelModel->db->fieldExists('academic_title_en', 'personnel')) {
-            $updateData['academic_title_en'] = $this->request->getPost('academic_title_en') ?: null;
+        if ($hasPersonnelAcademicTitleEn) {
+            $updateData['academic_title_en'] = $postedAcademicTitleEn !== '' ? $postedAcademicTitleEn : null;
         }
         if ($this->personnelModel->db->fieldExists('program_id', 'personnel')) {
             $updateData['program_id'] = $programId;
@@ -925,6 +931,34 @@ class Organization extends BaseController
             } catch (DataException $e) {
                 if (strpos($e->getMessage(), 'no data to update') === false && strpos($e->getMessage(), 'empty') === false) {
                     throw $e;
+                }
+            }
+        }
+
+        /**
+         * Fallback for deployments that don't have personnel.academic_title columns.
+         * In that case, the admin "คำนำหน้า" dropdown would otherwise not persist anywhere.
+         *
+         * We update user.title (linked by personnel.user_uid or email) so the public display can change.
+         */
+        if (! $hasPersonnelAcademicTitle) {
+            $db = $this->userModel->db;
+            if ($db->tableExists('user') && $db->fieldExists('title', 'user')) {
+                $targetUser = null;
+                $targetUid = (int) ($person['user_uid'] ?? 0);
+                if ($targetUid > 0) {
+                    $targetUser = $this->userModel->find($targetUid);
+                }
+                if (! $targetUser) {
+                    $em = trim((string) ($email ?? $person['email'] ?? ''));
+                    if ($em !== '') {
+                        $targetUser = $this->userModel->where('email', $em)->first();
+                    }
+                }
+                if ($targetUser) {
+                    $this->userModel->update((int) ($targetUser['uid'] ?? 0), [
+                        'title' => $postedAcademicTitle !== '' ? $postedAcademicTitle : null,
+                    ]);
                 }
             }
         }
