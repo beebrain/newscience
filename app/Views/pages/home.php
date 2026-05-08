@@ -1566,21 +1566,20 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                 tagsHtml += '</div>';
             }
 
+            const href = `${baseUrl}news/${article.id}`;
             return `
-                <article class="card animate-on-scroll">
+                <a href="${href}" class="card animate-on-scroll" style="text-decoration:none;color:inherit;display:block;">
                     <img src="${imageUrl}" alt="${article.title}" class="card__image" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400&h=200&fit=crop';">
                     <div class="card__content card__content--${primaryTag}">
                         <span class="card__category">${primaryTagLabel}</span>
-                        <h3 class="card__title">
-                            <a href="${baseUrl}news/${article.id}">${title}</a>
-                        </h3>
+                        <h3 class="card__title">${title}</h3>
                         ${article.excerpt ? `<p class="card__excerpt">${article.excerpt.substring(0, 130)}${article.excerpt.length > 130 ? '…' : ''}</p>` : ''}
                         ${tagsHtml}
                         <div class="card__meta">
                             <span>${formatDate(article.published_at)}</span>
                         </div>
                     </div>
-                </article>
+                </a>
             `;
         }
 
