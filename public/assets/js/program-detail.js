@@ -524,12 +524,27 @@
     function renderNewsCards($grid, items) {
         $grid.empty();
         var baseUrl = resolvePublicBaseUrl();
+
+        function normalizeLink(rawUrl, fallbackId) {
+            var u = (rawUrl == null) ? '' : String(rawUrl);
+            u = u.replace(/\s+/g, ' ').trim();
+            if (!u || u === '#' || u.toLowerCase() === 'javascript:void(0)' || u.toLowerCase() === 'javascript:void(0);') {
+                return baseUrl + '/news/' + encodeURIComponent(String(fallbackId));
+            }
+            // Absolute URLs
+            if (/^https?:\/\//i.test(u)) return u;
+            // Root-relative
+            if (u[0] === '/') return u;
+            // Relative: e.g. "news/123" or "index.php/news/123"
+            return baseUrl + '/' + u.replace(/^\/+/, '');
+        }
+
         $.each(items, function (i, item) {
             var imgSrc = item.image_url || item.thumbnail || '';
             var imgHtml = imgSrc
                 ? '<div class="news-card__image"><img src="' + escAttr(imgSrc) + '" alt=""></div>'
                 : '';
-            var link = item.url || (baseUrl + '/news/' + encodeURIComponent(String(item.id)));
+            var link = normalizeLink(item.url, item.id);
             var html = '<a href="' + escAttr(link) + '" class="news-card" style="text-decoration:none;color:inherit;">' +
                 imgHtml +
                 '<div class="news-card__content">' +
