@@ -529,8 +529,8 @@ class Api extends BaseController
         $data['tier1'] = array_map($normalizePerson, $data['tier1']);
         $data['tier2'] = array_map($normalizePerson, $data['tier2']);
         $data['tier3'] = array_map($normalizePerson, $data['tier3']);
+        // หน้า /executives: แสดงเฉพาะ "ตำแหน่งบริหาร" + "หัวหน้าสำนักงาน" + "ประธานหลักสูตร"
         $data['headOffice'] = array_map($normalizePerson, $data['headOffice'] ?? []);
-        $data['headResearch'] = array_map($normalizePerson, $data['headResearch'] ?? []);
         $data['programChairs'] = array_map(function ($item) use ($normalizePerson) {
             $person = $item['person'] ?? null;
             if (! is_array($person)) {
@@ -541,6 +541,9 @@ class Api extends BaseController
                 'person' => $normalizePerson($person),
             ];
         }, $data['programChairs'] ?? []);
+
+        // แสดงหัวหน้าหน่วยจัดการงานวิจัยบนหน้านี้ด้วย
+        $data['headResearch'] = array_map($normalizePerson, $data['headResearch'] ?? []);
 
         return $this->response->setJSON([
             'success' => true,
