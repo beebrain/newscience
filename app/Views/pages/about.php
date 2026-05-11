@@ -423,9 +423,6 @@ PROSE;
                             <div class="orgflow__node orgflow__node--chip">ผู้ช่วยคณบดีฝ่ายเทคโนโลยีสารสนเทศและระบบดิจิทัล</div>
                             <div class="orgflow__node orgflow__node--chip">ผู้ช่วยคณบดีฝ่ายสื่อสารองค์กรและการรับนักศึกษา</div>
                             <div class="orgflow__node orgflow__node--chip">หัวหน้าหน่วยจัดการงานวิจัย</div>
-                        </div>
-
-                        <div class="orgflow__level orgflow__level--connected">
                             <div class="orgflow__node orgflow__node--secondary">หัวหน้าสำนักงานคณบดี</div>
                         </div>
 
