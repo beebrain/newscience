@@ -399,11 +399,11 @@ PROSE;
                     </div>
 
                     <div class="orgflow" role="region" aria-label="แผนผังโครงสร้างองค์กร">
-                        <div class="orgflow__level">
+                        <div class="orgflow__level orgflow__level--root">
                             <div class="orgflow__node orgflow__node--primary">คณบดีคณะวิทยาศาสตร์และเทคโนโลยี</div>
                         </div>
 
-                        <div class="orgflow__level orgflow__level--split">
+                        <div class="orgflow__level orgflow__level--split orgflow__level--connected">
                             <div class="orgflow__node">คณะกรรมการประจำคณะ</div>
                             <div class="orgflow__stack">
                                 <div class="orgflow__node">คณะกรรมการประจำคณะ</div>
@@ -412,24 +412,24 @@ PROSE;
                             </div>
                         </div>
 
-                        <div class="orgflow__level orgflow__level--triple">
+                        <div class="orgflow__level orgflow__level--triple orgflow__level--connected">
                             <div class="orgflow__node orgflow__node--accent">รองคณบดีฝ่ายวิชาการ</div>
                             <div class="orgflow__node orgflow__node--accent">รองคณบดีฝ่ายวิจัยและพันธกิจสัมพันธ์</div>
                             <div class="orgflow__node orgflow__node--accent">รองคณบดีฝ่ายกิจการนักศึกษา</div>
                         </div>
 
-                        <div class="orgflow__level orgflow__level--assist">
+                        <div class="orgflow__level orgflow__level--assist orgflow__level--connected">
                             <div class="orgflow__node orgflow__node--chip">ผู้ช่วยคณบดีฝ่ายยุทธศาสตร์และประกันคุณภาพ</div>
                             <div class="orgflow__node orgflow__node--chip">ผู้ช่วยคณบดีฝ่ายเทคโนโลยีสารสนเทศและระบบดิจิทัล</div>
                             <div class="orgflow__node orgflow__node--chip">ผู้ช่วยคณบดีฝ่ายสื่อสารองค์กรและการรับนักศึกษา</div>
                             <div class="orgflow__node orgflow__node--chip">หัวหน้าหน่วยจัดการงานวิจัย</div>
                         </div>
 
-                        <div class="orgflow__level">
+                        <div class="orgflow__level orgflow__level--connected">
                             <div class="orgflow__node orgflow__node--secondary">หัวหน้าสำนักงานคณบดี</div>
                         </div>
 
-                        <div class="orgflow__level orgflow__level--programs">
+                        <div class="orgflow__level orgflow__level--programs orgflow__level--connected">
                             <div class="orgflow__card">
                                 <div class="orgflow__card-title">หลักสูตรระดับปริญญาตรี</div>
                                 <ol class="orgflow__list">
@@ -1474,6 +1474,43 @@ PROSE;
         position: relative;
     }
 
+    /* Connectors: vertical line from previous level */
+    .orgflow__level--connected {
+        padding-top: 1.25rem;
+    }
+
+    .orgflow__level--connected::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2px;
+        height: 1.25rem;
+        background: rgba(30, 58, 95, 0.22);
+    }
+
+    /* Horizontal connector for levels that branch */
+    .orgflow__level--triple::after,
+    .orgflow__level--assist::after,
+    .orgflow__level--programs::after,
+    .orgflow__level--split::after {
+        content: '';
+        position: absolute;
+        top: 0.6rem;
+        left: 8%;
+        right: 8%;
+        height: 2px;
+        background: rgba(30, 58, 95, 0.18);
+        border-radius: 2px;
+    }
+
+    /* Split level: keep line tighter to avoid overlapping stacked column */
+    .orgflow__level--split::after {
+        left: 18%;
+        right: 18%;
+    }
+
     .orgflow__node {
         background: #fff;
         border: 1px solid rgba(15, 23, 42, 0.1);
@@ -1565,6 +1602,25 @@ PROSE;
     }
 
     @media (max-width: 640px) {
+        .orgflow {
+            gap: 1rem;
+        }
+
+        .orgflow__level--connected {
+            padding-top: 0.9rem;
+        }
+
+        .orgflow__level--connected::before {
+            height: 0.9rem;
+        }
+
+        .orgflow__level--triple::after,
+        .orgflow__level--assist::after,
+        .orgflow__level--programs::after,
+        .orgflow__level--split::after {
+            display: none;
+        }
+
         .orgflow__node {
             min-width: 100%;
         }
