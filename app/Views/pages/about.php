@@ -286,7 +286,13 @@ PROSE;
 
                     <div class="feature-section feature-section--reverse animate-on-scroll" style="margin-top:3rem;">
                         <div class="feature-section__image">
-                            <img src="<?= base_url('assets/images/community_service.png') ?>" alt="วิสัยทัศน์">
+                            <?php
+                            // ภาพประกอบวิสัยทัศน์คณะ — ลำดับ: vision_banner.png → community_service.png
+                            $visionImageRel = 'assets/images/vision_banner.png';
+                            $visionImageAbs = rtrim((string) FCPATH, "\\/") . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $visionImageRel);
+                            $visionImageUrl = is_file($visionImageAbs) ? base_url($visionImageRel) : base_url('assets/images/community_service.png');
+                            ?>
+                            <img src="<?= esc($visionImageUrl) ?>" alt="วิสัยทัศน์คณะ ศูนย์กลางองค์ความรู้และนวัตกรรมเพื่อท้องถิ่น">
                         </div>
                         <div class="feature-section__content">
                             <span class="feature-section__subtitle">วิสัยทัศน์</span>
