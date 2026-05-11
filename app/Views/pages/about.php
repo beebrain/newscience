@@ -37,6 +37,14 @@
                     </span>
                     <span class="about-tabs__btn-text">ปรัชญา &amp; วิสัยทัศน์</span>
                 </button>
+                <button type="button" class="about-tabs__btn" role="tab" aria-selected="false" data-tab="values">
+                    <span class="about-tabs__btn-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 12h4l3 8 4-16 3 8h4" />
+                        </svg>
+                    </span>
+                    <span class="about-tabs__btn-text">ค่านิยม</span>
+                </button>
                 <button type="button" class="about-tabs__btn" role="tab" aria-selected="false" data-tab="mission">
                     <span class="about-tabs__btn-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -281,7 +289,24 @@ PROSE;
                         </div>
                     </div>
 
-                    <div class="unity-model animate-on-scroll">
+                    <?php if (!empty($identity)): ?>
+                        <div class="about-callout animate-on-scroll" style="margin-top:3rem;">
+                            <span class="about-callout__label">อัตลักษณ์</span>
+                            <p class="about-callout__text"><?= esc($identity) ?></p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- TAB 3: VALUES (Unity Model) -->
+                <div class="about-tabs__panel" role="tabpanel" data-panel="values">
+                    <?php
+                    // Optional local image (when user uploads it to public/assets/images/)
+                    $unityImageRel = 'assets/images/image002.png';
+                    $unityImageAbs = rtrim((string) FCPATH, "\\/") . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $unityImageRel);
+                    $unityImageUrl = is_file($unityImageAbs) ? base_url($unityImageRel) : base_url('assets/images/research_laboratory.png');
+                    ?>
+
+                    <div class="unity-model animate-on-scroll" style="margin-top:0;padding-top:0;border-top:0;">
                         <div class="section-header unity-model__header">
                             <span class="section-header__subtitle">ค่านิยม</span>
                             <h2 class="section-header__title">Unity Model</h2>
@@ -340,13 +365,6 @@ PROSE;
                             <li class="about-list__item"><strong>Organizational Culture</strong> — การปลูกฝังวัฒนธรรมองค์กรที่โปร่งใส มีส่วนร่วม และเอื้อต่อการเปลี่ยนแปลงอย่างยั่งยืน</li>
                         </ul>
                     </div>
-
-                    <?php if (!empty($identity)): ?>
-                        <div class="about-callout animate-on-scroll" style="margin-top:3rem;">
-                            <span class="about-callout__label">อัตลักษณ์</span>
-                            <p class="about-callout__text"><?= esc($identity) ?></p>
-                        </div>
-                    <?php endif; ?>
                 </div>
 
                 <!-- TAB 3: MISSION & POLICY -->
