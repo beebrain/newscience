@@ -45,6 +45,17 @@
                     </span>
                     <span class="about-tabs__btn-text">ค่านิยม</span>
                 </button>
+                <button type="button" class="about-tabs__btn" role="tab" aria-selected="false" data-tab="org">
+                    <span class="about-tabs__btn-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1" />
+                            <rect x="14" y="3" width="7" height="7" rx="1" />
+                            <rect x="8.5" y="14" width="7" height="7" rx="1" />
+                            <path d="M6.5 10v2.5h5M17.5 10v2.5h-5" />
+                        </svg>
+                    </span>
+                    <span class="about-tabs__btn-text">โครงสร้างองค์กร</span>
+                </button>
                 <button type="button" class="about-tabs__btn" role="tab" aria-selected="false" data-tab="mission">
                     <span class="about-tabs__btn-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -379,7 +390,72 @@ PROSE;
                     </div>
                 </div>
 
-                <!-- TAB 3: MISSION & POLICY -->
+                <!-- TAB 4: ORGANIZATIONAL STRUCTURE (Flow) -->
+                <div class="about-tabs__panel" role="tabpanel" data-panel="org">
+                    <div class="section-header">
+                        <span class="section-header__subtitle">โครงสร้าง</span>
+                        <h2 class="section-header__title">โครงสร้างองค์กรคณะวิทยาศาสตร์และเทคโนโลยี</h2>
+                        <p class="section-header__description">สรุปเป็นแผนผังการกำกับดูแลและสายงาน (Flow) เพื่ออ่านง่ายและรองรับมือถือ</p>
+                    </div>
+
+                    <div class="orgflow" role="region" aria-label="แผนผังโครงสร้างองค์กร">
+                        <div class="orgflow__level">
+                            <div class="orgflow__node orgflow__node--primary">คณบดีคณะวิทยาศาสตร์และเทคโนโลยี</div>
+                        </div>
+
+                        <div class="orgflow__level orgflow__level--split">
+                            <div class="orgflow__node">คณะกรรมการประจำคณะ</div>
+                            <div class="orgflow__stack">
+                                <div class="orgflow__node">คณะกรรมการประจำคณะ</div>
+                                <div class="orgflow__node">คณะกรรมการบริหารคณะวิทยาศาสตร์และเทคโนโลยี</div>
+                                <div class="orgflow__node">คณะกรรมการบริหารวิชาการคณะวิทยาศาสตร์และเทคโนโลยี</div>
+                            </div>
+                        </div>
+
+                        <div class="orgflow__level orgflow__level--triple">
+                            <div class="orgflow__node orgflow__node--accent">รองคณบดีฝ่ายวิชาการ</div>
+                            <div class="orgflow__node orgflow__node--accent">รองคณบดีฝ่ายวิจัยและพันธกิจสัมพันธ์</div>
+                            <div class="orgflow__node orgflow__node--accent">รองคณบดีฝ่ายกิจการนักศึกษา</div>
+                        </div>
+
+                        <div class="orgflow__level orgflow__level--assist">
+                            <div class="orgflow__node orgflow__node--chip">ผู้ช่วยคณบดีฝ่ายยุทธศาสตร์และประกันคุณภาพ</div>
+                            <div class="orgflow__node orgflow__node--chip">ผู้ช่วยคณบดีฝ่ายเทคโนโลยีสารสนเทศและระบบดิจิทัล</div>
+                            <div class="orgflow__node orgflow__node--chip">ผู้ช่วยคณบดีฝ่ายสื่อสารองค์กรและการรับนักศึกษา</div>
+                            <div class="orgflow__node orgflow__node--chip">หัวหน้าหน่วยจัดการงานวิจัย</div>
+                        </div>
+
+                        <div class="orgflow__level">
+                            <div class="orgflow__node orgflow__node--secondary">หัวหน้าสำนักงานคณบดี</div>
+                        </div>
+
+                        <div class="orgflow__level orgflow__level--programs">
+                            <div class="orgflow__card">
+                                <div class="orgflow__card-title">หลักสูตรระดับปริญญาตรี</div>
+                                <ol class="orgflow__list">
+                                    <li>สาขาวิชาฟิสิกส์</li>
+                                    <li>หลักสูตรเคมี</li>
+                                    <li>หลักสูตรชีววิทยา</li>
+                                    <li>หลักสูตรวิทยาศาสตร์การกีฬาและการออกกำลังกาย</li>
+                                    <li>หลักสูตรอาหารและโภชนาการ</li>
+                                    <li>หลักสูตรสิ่งแวดล้อม</li>
+                                    <li>หลักสูตรวิทยาการคอมพิวเตอร์</li>
+                                    <li>หลักสูตรเทคโนโลยีสารสนเทศ</li>
+                                    <li>หลักสูตรคณิตศาสตร์ประยุกต์</li>
+                                </ol>
+                            </div>
+                            <div class="orgflow__card">
+                                <div class="orgflow__card-title">หลักสูตรระดับบัณฑิตศึกษา</div>
+                                <ol class="orgflow__list">
+                                    <li>หลักสูตรวิทยาศาสตรมหาบัณฑิต สาขาวิชาวิทยาศาสตร์ประยุกต์ (วท.ม.)</li>
+                                    <li>หลักสูตรปรัชญาดุษฎีบัณฑิต สาขาวิชาวิทยาศาสตร์ประยุกต์ (ปร.ด.)</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: MISSION & POLICY -->
                 <div class="about-tabs__panel" role="tabpanel" data-panel="mission">
                     <div class="section-header">
                         <span class="section-header__subtitle">พันธกิจ</span>
@@ -1379,6 +1455,127 @@ PROSE;
         display: block;
         object-fit: contain;
         background: #0f172a;
+    }
+
+    /* ============ ORG FLOW (โครงสร้างองค์กร) ============ */
+    .orgflow {
+        max-width: 1100px;
+        margin: 2rem auto 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .orgflow__level {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        position: relative;
+    }
+
+    .orgflow__node {
+        background: #fff;
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        border-radius: 16px;
+        padding: 0.9rem 1.1rem;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+        color: #1e293b;
+        font-weight: 700;
+        line-height: 1.35;
+        text-align: center;
+        min-width: min(320px, 100%);
+    }
+
+    .orgflow__node--primary {
+        background: linear-gradient(135deg, rgba(45, 125, 70, 0.12), rgba(30, 58, 95, 0.08));
+        border-color: rgba(45, 125, 70, 0.35);
+        color: #0f2a1c;
+        font-weight: 800;
+    }
+
+    .orgflow__node--secondary {
+        background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(255, 255, 255, 0.85));
+        border-color: rgba(234, 179, 8, 0.35);
+    }
+
+    .orgflow__node--accent {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(14, 165, 233, 0.08));
+        border-color: rgba(59, 130, 246, 0.25);
+        min-width: min(320px, 100%);
+    }
+
+    .orgflow__node--chip {
+        background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(255, 255, 255, 0.9));
+        border-color: rgba(249, 115, 22, 0.22);
+        font-weight: 700;
+        font-size: 0.95rem;
+        min-width: min(320px, 100%);
+    }
+
+    .orgflow__level--split {
+        align-items: flex-start;
+    }
+
+    .orgflow__stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        min-width: min(380px, 100%);
+    }
+
+    .orgflow__level--triple .orgflow__node,
+    .orgflow__level--assist .orgflow__node {
+        flex: 1 1 260px;
+        min-width: 260px;
+        max-width: 360px;
+    }
+
+    .orgflow__level--programs {
+        align-items: stretch;
+    }
+
+    .orgflow__card {
+        flex: 1 1 420px;
+        max-width: 520px;
+        background: #fff;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 18px;
+        box-shadow: 0 14px 40px rgba(15, 23, 42, 0.1);
+        overflow: hidden;
+    }
+
+    .orgflow__card-title {
+        padding: 1rem 1.25rem;
+        font-weight: 800;
+        color: #1e293b;
+        background: linear-gradient(135deg, rgba(30, 58, 95, 0.08), rgba(45, 125, 70, 0.06));
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .orgflow__list {
+        margin: 0;
+        padding: 1rem 1.5rem 1.2rem;
+        color: #334155;
+        line-height: 1.7;
+    }
+
+    .orgflow__list li + li {
+        margin-top: 0.35rem;
+    }
+
+    @media (max-width: 640px) {
+        .orgflow__node {
+            min-width: 100%;
+        }
+        .orgflow__level--triple .orgflow__node,
+        .orgflow__level--assist .orgflow__node {
+            min-width: 100%;
+            max-width: none;
+        }
+        .orgflow__card {
+            max-width: none;
+        }
     }
 
     /* ============ EXECUTIVE SLIDER — full-width, one at a time ============ */
