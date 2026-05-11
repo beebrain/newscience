@@ -44,7 +44,8 @@ INSERT INTO `site_settings` (`setting_key`, `setting_value`, `setting_type`, `ca
 ('hero_subtitle_en', 'Uttaradit Rajabhat University', 'text', 'hero'),
 ('hero_description_th', 'สร้างบัณฑิตที่มีความรู้ความสามารถ พัฒนางานวิจัยและนวัตกรรม เพื่อรับใช้ชุมชนและท้องถิ่น', 'textarea', 'hero'),
 ('hero_description_en', 'Producing knowledgeable graduates, developing research and innovation to serve communities.', 'textarea', 'hero'),
-('vision_th', 'เป็นองค์กรชั้นนำด้านวิทยาศาสตร์และเทคโนโลยีเพื่อพัฒนาท้องถิ่น', 'textarea', 'about'),
+('philosophy_th', 'วิทยาศาสตร์และเทคโนโลยีเพื่อการพัฒนาท้องถิ่นและประเทศ ด้วยองค์ความรู้ นวัตกรรมและความเป็นหนึ่งเดียวกับชุมชน', 'textarea', 'about'),
+('vision_th', 'คณะวิทยาศาสตร์และเทคโนโลยีจะเป็นองค์กรแห่งความเป็นหนึ่งเดียว เป็นศูนย์กลางองค์ความรู้และนวัตกรรมทางวิทยาศาสตร์และเทคโนโลยี สร้างบัณฑิตคุณภาพที่มีคุณธรรม จิตอาสา ความรู้ และทักษะวิชาชีพ เพื่อเป็นพลังขับเคลื่อนการพัฒนาท้องถิ่นและชุมชนสู่ความยั่งยืน', 'textarea', 'about'),
 ('vision_en', 'To be a leading organization in science and technology for local development', 'textarea', 'about'),
 ('mission_th', 'ผลิตบัณฑิตที่มีคุณภาพ สร้างงานวิจัยและนวัตกรรม บริการวิชาการ และทำนุบำรุงศิลปวัฒนธรรม', 'textarea', 'about'),
 ('mission_en', 'Produce quality graduates, create research and innovation, provide academic services, and preserve arts and culture', 'textarea', 'about');

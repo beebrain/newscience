@@ -170,6 +170,14 @@
                 <?php $navSvg = '<svg style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-left:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>'; ?>
                 <ul class="nav__list">
                     <li><a href="<?= base_url() ?>" class="nav__link <?= ($active_page ?? '') === 'home' ? 'active' : '' ?>">หน้าแรก</a></li>
+                    <li class="nav__item--has-dropdown">
+                        <a href="<?= base_url('about') ?>" class="nav__link <?= in_array($active_page ?? '', ['about', 'contact', 'calendar']) ? 'active' : '' ?>">เกี่ยวกับคณะ <?= $navSvg ?></a>
+                        <ul class="nav__dropdown">
+                            <li><a href="<?= base_url('about') ?>" class="nav__dropdown-link">เกี่ยวกับเรา</a></li>
+                            <li><a href="<?= base_url('contact') ?>" class="nav__dropdown-link">ติดต่อ</a></li>
+                            <li><a href="<?= base_url('calendar') ?>" class="nav__dropdown-link">ปฏิทินผู้บริหาร</a></li>
+                        </ul>
+                    </li>
                     <li><a href="<?= base_url('academics') ?>" class="nav__link <?= ($active_page ?? '') === 'academics' ? 'active' : '' ?>">หลักสูตร</a></li>
                     <li><a href="<?= base_url('research') ?>" class="nav__link <?= ($active_page ?? '') === 'research' ? 'active' : '' ?>">วิจัย</a></li>
                     <li><a href="<?= base_url('news') ?>" class="nav__link <?= ($active_page ?? '') === 'news' ? 'active' : '' ?>">ข่าว</a></li>
@@ -234,14 +242,6 @@
                             <li><a href="<?= base_url('dashboard') ?>" class="nav__dropdown-link">การจัดการ (Dashboard)</a></li>
                         </ul>
                     </li>
-                    <li class="nav__item--has-dropdown">
-                        <a href="<?= base_url('about') ?>" class="nav__link <?= in_array($active_page ?? '', ['about', 'contact', 'calendar']) ? 'active' : '' ?>">เกี่ยวกับคณะ <?= $navSvg ?></a>
-                        <ul class="nav__dropdown">
-                            <li><a href="<?= base_url('about') ?>" class="nav__dropdown-link">เกี่ยวกับเรา</a></li>
-                            <li><a href="<?= base_url('contact') ?>" class="nav__dropdown-link">ติดต่อ</a></li>
-                            <li><a href="<?= base_url('calendar') ?>" class="nav__dropdown-link">ปฏิทินผู้บริหาร</a></li>
-                        </ul>
-                    </li>
                     <?php if (session()->get('admin_logged_in')): ?>
                     <li>
                         <a href="<?= base_url('dashboard') ?>" class="nav__link nav__link--user" title="ไปที่ Dashboard"><?= esc(session()->get('admin_name') ?: session()->get('admin_email')) ?></a>
@@ -299,6 +299,16 @@
             <li><a href="http://old.sci.uru.ac.th" class="mobile-nav__link" target="_blank" rel="noopener noreferrer">เว็บคณะเดิม</a></li>
             <li class="mobile-nav__divider" role="presentation"></li>
             <li><a href="<?= base_url() ?>" class="mobile-nav__link">หน้าแรก</a></li>
+            <li class="mobile-nav__item mobile-nav__item--has-sub">
+                <button type="button" class="mobile-nav__subtoggle" aria-expanded="false" aria-controls="mn-sub-about">
+                    <span class="mobile-nav__subtoggle-text">เกี่ยวกับคณะ</span>
+                </button>
+                <ul class="mobile-nav__sub" id="mn-sub-about" hidden>
+                    <li><a href="<?= base_url('about') ?>" class="mobile-nav__sublink">เกี่ยวกับเรา</a></li>
+                    <li><a href="<?= base_url('contact') ?>" class="mobile-nav__sublink">ติดต่อ</a></li>
+                    <li><a href="<?= base_url('calendar') ?>" class="mobile-nav__sublink">ปฏิทินผู้บริหาร</a></li>
+                </ul>
+            </li>
             <li><a href="<?= base_url('academics') ?>" class="mobile-nav__link">หลักสูตร</a></li>
             <li><a href="<?= base_url('research') ?>" class="mobile-nav__link">วิจัย</a></li>
             <li><a href="<?= base_url('news') ?>" class="mobile-nav__link">ข่าว</a></li>
@@ -360,17 +370,6 @@
                         <li><a href="<?= esc($href) ?>" class="mobile-nav__sublink" <?= $isExt ? 'target="_blank" rel="noopener noreferrer"' : '' ?>><?= esc($ql['name']) ?></a></li>
                     <?php endforeach; ?>
                     <li><a href="<?= base_url('dashboard') ?>" class="mobile-nav__sublink">การจัดการ (Dashboard)</a></li>
-                </ul>
-            </li>
-
-            <li class="mobile-nav__item mobile-nav__item--has-sub">
-                <button type="button" class="mobile-nav__subtoggle" aria-expanded="false" aria-controls="mn-sub-about">
-                    <span class="mobile-nav__subtoggle-text">เกี่ยวกับคณะ</span>
-                </button>
-                <ul class="mobile-nav__sub" id="mn-sub-about" hidden>
-                    <li><a href="<?= base_url('about') ?>" class="mobile-nav__sublink">เกี่ยวกับเรา</a></li>
-                    <li><a href="<?= base_url('contact') ?>" class="mobile-nav__sublink">ติดต่อ</a></li>
-                    <li><a href="<?= base_url('calendar') ?>" class="mobile-nav__sublink">ปฏิทินผู้บริหาร</a></li>
                 </ul>
             </li>
 

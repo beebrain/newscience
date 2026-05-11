@@ -75,13 +75,25 @@ class Pages extends BaseController
             $executivePosters = $posterModel->getActivePosters();
         }
 
+        $philosophyCanonical = 'วิทยาศาสตร์และเทคโนโลยีเพื่อการพัฒนาท้องถิ่นและประเทศ ด้วยองค์ความรู้ นวัตกรรมและความเป็นหนึ่งเดียวกับชุมชน';
+        $visionCanonical = 'คณะวิทยาศาสตร์และเทคโนโลยีจะเป็นองค์กรแห่งความเป็นหนึ่งเดียว เป็นศูนย์กลางองค์ความรู้และนวัตกรรมทางวิทยาศาสตร์และเทคโนโลยี สร้างบัณฑิตคุณภาพที่มีคุณธรรม จิตอาสา ความรู้ และทักษะวิชาชีพ เพื่อเป็นพลังขับเคลื่อนการพัฒนาท้องถิ่นและชุมชนสู่ความยั่งยืน';
+
+        $philosophyOut = trim((string) ($siteInfo['philosophy_th'] ?? '')) !== '' ? trim($siteInfo['philosophy_th']) : $philosophyCanonical;
+        $visionOut = trim((string) ($siteInfo['vision_th'] ?? '')) !== '' ? trim($siteInfo['vision_th']) : $visionCanonical;
+        if (str_contains($visionOut, 'องค์กรแห่งความสุข')) {
+            $visionOut = trim(preg_replace('/\s+/', ' ', str_replace('องค์กรแห่งความสุข', '', $visionOut)) ?? $visionOut);
+            if ($visionOut === '') {
+                $visionOut = $visionCanonical;
+            }
+        }
+
         $data = array_merge($this->getCommonData(), [
             'page_title' => 'เกี่ยวกับคณะ | ' . ($siteInfo['site_name_th'] ?? 'About'),
-            'meta_description' => $siteInfo['vision_th'] ?? 'เรียนรู้เกี่ยวกับประวัติ ปรัชญา วิสัยทัศน์ และพันธกิจของคณะ',
+            'meta_description' => $visionOut !== '' ? $visionOut : 'เรียนรู้เกี่ยวกับประวัติ ปรัชญา วิสัยทัศน์ และพันธกิจของคณะ',
             'active_page' => 'about',
-            'vision' => $siteInfo['vision_th'] ?? '',
+            'vision' => $visionOut,
             'mission' => $siteInfo['mission_th'] ?? '',
-            'philosophy' => $siteInfo['philosophy_th'] ?? '',
+            'philosophy' => $philosophyOut,
             'identity' => $siteInfo['identity_th'] ?? '',
             'history' => $siteInfo['history_th'] ?? '',
             'policy' => $siteInfo['policy_th'] ?? '',

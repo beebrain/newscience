@@ -253,13 +253,20 @@ PROSE;
 
                 <!-- TAB 2: PHILOSOPHY & VISION -->
                 <div class="about-tabs__panel" role="tabpanel" data-panel="philosophy">
+                    <?php
+                    // Optional local image (when user uploads it to public/assets/images/)
+                    $unityImageRel = 'assets/images/image002.png';
+                    $unityImageAbs = rtrim((string) FCPATH, "\\/") . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $unityImageRel);
+                    $unityImageUrl = is_file($unityImageAbs) ? base_url($unityImageRel) : base_url('assets/images/research_laboratory.png');
+                    ?>
                     <div class="feature-section animate-on-scroll">
                         <div class="feature-section__image">
-                            <img src="<?= base_url('assets/images/research_laboratory.png') ?>" alt="ปรัชญา">
+                            <img src="<?= esc($unityImageUrl) ?>" alt="ปรัชญา">
                         </div>
                         <div class="feature-section__content">
                             <span class="feature-section__subtitle">ปรัชญา</span>
-                            <h2 class="feature-section__title"><?= esc($philosophy ?? 'สร้างองค์ความรู้และพัฒนาคนในชาติ ด้วยวิทยาศาสตร์และเทคโนโลยี') ?></h2>
+                            <h2 class="feature-section__title">ปรัชญาคณะ</h2>
+                            <p class="feature-section__description"><?= esc($philosophy ?? '') ?></p>
                         </div>
                     </div>
 
@@ -270,15 +277,68 @@ PROSE;
                         <div class="feature-section__content">
                             <span class="feature-section__subtitle">วิสัยทัศน์</span>
                             <h2 class="feature-section__title">วิสัยทัศน์คณะ</h2>
-                            <p class="feature-section__description">
-                                <?php
-                                $visionText = (string) ($vision ?? 'คณะวิทยาศาสตร์และเทคโนโลยี มุ่งพัฒนาและผลิตบัณฑิตให้เป็นคนดี คนเก่ง มีจิตอาสา นำพาสังคม พร้อมทั้งเป็นแหล่งเรียนรู้และบริการวิชาการแก่ชุมชน ท้องถิ่น ระดับชาติและนานาชาติ');
-                                $visionText = str_replace('องค์กรแห่งความสุข', '', $visionText);
-                                $visionText = trim(preg_replace('/\s+/', ' ', $visionText) ?? $visionText);
-                                ?>
-                                <?= esc($visionText) ?>
-                            </p>
+                            <p class="feature-section__description"><?= esc($vision ?? '') ?></p>
                         </div>
+                    </div>
+
+                    <div class="unity-model animate-on-scroll">
+                        <div class="section-header unity-model__header">
+                            <span class="section-header__subtitle">ค่านิยม</span>
+                            <h2 class="section-header__title">Unity Model</h2>
+                            <p class="section-header__description">ค่านิยมในการพัฒนาคณะวิทยาศาสตร์และเทคโนโลยี (พ.ศ. 2569–2572)</p>
+                        </div>
+
+                        <div class="unity-model__hero">
+                            <img src="<?= esc($unityImageUrl) ?>" alt="Unity Model" loading="lazy">
+                        </div>
+
+                        <div class="unity-model__core about-callout">
+                            <span class="about-callout__label">วงกลมแกนกลาง (Core Identity)</span>
+                            <p class="unity-model__core-tag">STRATEGIC UNITY – One Faculty, One Future</p>
+                            <ul class="unity-model__list">
+                                <li>การรวมพลังของบุคลากร นักศึกษา ศิษย์เก่า และพันธมิตรทุกฝ่าย ให้เดินไปในทิศทางเดียวกันภายใต้วิสัยทัศน์เดียว</li>
+                                <li>แสดงถึงอัตลักษณ์การบริหารที่เน้นความเป็นเอกภาพ (Unity) และการกำหนดเป้าหมายร่วม (Shared Vision)</li>
+                            </ul>
+                        </div>
+
+                        <h3 class="unity-model__subheading">วงกลมด้านใน (Core Pillars: U–N–I–T–Y)</h3>
+                        <p class="unity-model__lead">แกนยุทธศาสตร์ห้าประการ เป็นเสาหลักของการขับเคลื่อนคณะ</p>
+                        <div class="unity-pillars">
+                            <div class="unity-pillar">
+                                <span class="unity-pillar__letter">U</span>
+                                <strong class="unity-pillar__title">Unity &amp; Understanding</strong>
+                                <p class="unity-pillar__text">ความเป็นหนึ่งเดียวขององค์กร ชุมชน และมหาวิทยาลัย ควบคู่กับการทำความเข้าใจบริบทพื้นที่ผ่านการใช้ข้อมูลเชิงประจักษ์ (Data-driven Planning)</p>
+                            </div>
+                            <div class="unity-pillar">
+                                <span class="unity-pillar__letter">N</span>
+                                <strong class="unity-pillar__title">Networking &amp; Navigation</strong>
+                                <p class="unity-pillar__text">การสร้างเครือข่ายความร่วมมือ และการกำหนดทิศทางการพัฒนาผ่าน Roadmap ที่ชัดเจน</p>
+                            </div>
+                            <div class="unity-pillar">
+                                <span class="unity-pillar__letter">I</span>
+                                <strong class="unity-pillar__title">Innovation &amp; Insight</strong>
+                                <p class="unity-pillar__text">การผลิตงานวิจัยและนวัตกรรมที่มีคุณค่า พร้อมทั้งใช้การคาดการณ์อนาคตเพื่อปรับตัวต่อความเปลี่ยนแปลงทางวิทยาศาสตร์และสังคม</p>
+                            </div>
+                            <div class="unity-pillar">
+                                <span class="unity-pillar__letter">T</span>
+                                <strong class="unity-pillar__title">Talent &amp; Teamwork</strong>
+                                <p class="unity-pillar__text">การพัฒนาศักยภาพบุคลากรและนักศึกษา ควบคู่กับการส่งเสริมการทำงานแบบสหวิทยาการและเป็นทีม</p>
+                            </div>
+                            <div class="unity-pillar">
+                                <span class="unity-pillar__letter">Y</span>
+                                <strong class="unity-pillar__title">Youth &amp; Yield</strong>
+                                <p class="unity-pillar__text">การสร้างบัณฑิตที่มีคุณธรรม ความรู้ และจิตอาสา พร้อมกับการเน้นผลลัพธ์ที่ตรวจสอบได้ ทั้งด้านคุณภาพการศึกษา งานวิจัย และการพัฒนาท้องถิ่น</p>
+                            </div>
+                        </div>
+
+                        <h3 class="unity-model__subheading">วงกลมด้านนอก (Strategic Enablers)</h3>
+                        <p class="unity-model__lead">องค์ประกอบเสริมที่สนับสนุนให้ห้าแกนหลักดำเนินการได้อย่างสมบูรณ์และต่อเนื่อง</p>
+                        <ul class="about-list about-list--mission unity-model__enablers">
+                            <li class="about-list__item"><strong>Goal Setting &amp; Roadmap</strong> — การวางเป้าหมายเชิงกลยุทธ์ที่ชัดเจน พร้อมแผนดำเนินงานระยะสั้น ระยะกลาง และระยะยาว</li>
+                            <li class="about-list__item"><strong>Risk &amp; Resilience</strong> — การบริหารความเสี่ยงเชิงรุกและการสร้างความยืดหยุ่นให้แก่องค์กร เพื่อรับมือกับความไม่แน่นอน</li>
+                            <li class="about-list__item"><strong>Monitoring &amp; Feedback</strong> — ระบบติดตาม ประเมินผล และการสะท้อนกลับเพื่อการปรับปรุงอย่างต่อเนื่อง</li>
+                            <li class="about-list__item"><strong>Organizational Culture</strong> — การปลูกฝังวัฒนธรรมองค์กรที่โปร่งใส มีส่วนร่วม และเอื้อต่อการเปลี่ยนแปลงอย่างยั่งยืน</li>
+                        </ul>
                     </div>
 
                     <?php if (!empty($identity)): ?>
@@ -1159,6 +1219,136 @@ PROSE;
         font-size: 1.1rem;
         line-height: 1.7;
         color: #1e293b;
+    }
+
+    /* ============ UNITY MODEL (ปรัชญาแท็บ) ============ */
+    .unity-model {
+        margin-top: 3.5rem;
+        padding-top: 2.5rem;
+        border-top: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .unity-model__header {
+        margin-bottom: 2rem;
+    }
+
+    .unity-model__core {
+        margin-bottom: 2.5rem;
+    }
+
+    .unity-model__core-tag {
+        margin: 0 0 1rem;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #1e3a5f;
+        letter-spacing: 0.02em;
+    }
+
+    .unity-model__list {
+        margin: 0;
+        padding-left: 1.25rem;
+        color: #334155;
+        line-height: 1.75;
+    }
+
+    .unity-model__list li+li {
+        margin-top: 0.5rem;
+    }
+
+    .unity-model__subheading {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 2rem 0 0.35rem;
+    }
+
+    .unity-model__lead {
+        margin: 0 0 1.25rem;
+        color: #64748b;
+        font-size: 0.98rem;
+        line-height: 1.6;
+    }
+
+    .unity-pillars {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .unity-pillar {
+        background: linear-gradient(145deg, #fff 0%, #f8fafc 100%);
+        border: 1px solid rgba(30, 58, 95, 0.1);
+        border-radius: 16px;
+        padding: 1.25rem 1.35rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .unity-pillar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #1e3a5f, #2d7d46);
+        opacity: 0.85;
+    }
+
+    .unity-pillar__letter {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #1e3a5f, #2d7d46);
+        color: #fff;
+        font-weight: 800;
+        font-size: 1rem;
+        margin-bottom: 0.65rem;
+    }
+
+    .unity-pillar__title {
+        display: block;
+        font-size: 0.95rem;
+        color: #1e3a5f;
+        margin-bottom: 0.45rem;
+        line-height: 1.35;
+    }
+
+    .unity-pillar__text {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #475569;
+        line-height: 1.65;
+    }
+
+    .unity-model__enablers {
+        max-width: 880px;
+    }
+
+    .unity-model__enablers .about-list__item strong {
+        color: #1e3a5f;
+    }
+
+    .unity-model__hero {
+        max-width: 900px;
+        margin: 0 auto 2rem;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        background: #0f172a;
+    }
+
+    .unity-model__hero img {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: contain;
+        background: #0f172a;
     }
 
     /* ============ EXECUTIVE SLIDER — full-width, one at a time ============ */
