@@ -262,14 +262,20 @@ PROSE;
                 <!-- TAB 2: PHILOSOPHY & VISION -->
                 <div class="about-tabs__panel" role="tabpanel" data-panel="philosophy">
                     <?php
-                    // Optional local image (when user uploads it to public/assets/images/)
-                    $unityImageRel = 'assets/images/image002.png';
-                    $unityImageAbs = rtrim((string) FCPATH, "\\/") . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $unityImageRel);
-                    $unityImageUrl = is_file($unityImageAbs) ? base_url($unityImageRel) : base_url('assets/images/research_laboratory.png');
+                    // ภาพประกอบปรัชญาคณะ — ลำดับ: philosophy_banner.png → image002.png → research_laboratory.png
+                    $philosophyImageRel = 'assets/images/philosophy_banner.png';
+                    $philosophyImageAbs = rtrim((string) FCPATH, "\\/") . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $philosophyImageRel);
+                    if (is_file($philosophyImageAbs)) {
+                        $philosophyImageUrl = base_url($philosophyImageRel);
+                    } else {
+                        $fallbackRel = 'assets/images/image002.png';
+                        $fallbackAbs = rtrim((string) FCPATH, "\\/") . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $fallbackRel);
+                        $philosophyImageUrl = is_file($fallbackAbs) ? base_url($fallbackRel) : base_url('assets/images/research_laboratory.png');
+                    }
                     ?>
                     <div class="feature-section animate-on-scroll">
                         <div class="feature-section__image">
-                            <img src="<?= esc($unityImageUrl) ?>" alt="ปรัชญา">
+                            <img src="<?= esc($philosophyImageUrl) ?>" alt="ปรัชญาคณะ วิทยาศาสตร์และเทคโนโลยีเพื่อการพัฒนาท้องถิ่นและประเทศ">
                         </div>
                         <div class="feature-section__content">
                             <span class="feature-section__subtitle">ปรัชญา</span>
