@@ -108,7 +108,7 @@ class CertPdfGenerator
             $merged = array_merge($baseMap, $layout['field_mapping']);
             $out['field_mapping'] = json_encode($merged, JSON_UNESCAPED_UNICODE);
         }
-        foreach (['signature_x', 'signature_y', 'qr_x', 'qr_y', 'qr_size'] as $k) {
+        foreach (['signature_x', 'signature_y', 'qr_x', 'qr_y', 'qr_size', 'page_orientation'] as $k) {
             if (isset($layout[$k])) {
                 $out[$k] = $layout[$k];
             }
@@ -151,8 +151,14 @@ class CertPdfGenerator
         ?string $signatureImagePath
     ): ?string {
         $pdf = new Fpdi();
-        $pdf->AddPage();
-        $pdf->Image($absoluteImagePath, 0, 0, 210, 297, '', '', '', false, 300, '', false, false, 0, true);
+        $landscape = strtolower(trim((string) ($effective['page_orientation'] ?? ''))) === 'landscape';
+        if ($landscape) {
+            $pdf->AddPage('L', 'A4');
+            $pdf->Image($absoluteImagePath, 0, 0, 297, 210, '', '', '', false, 300, '', false, false, 0, true);
+        } else {
+            $pdf->AddPage();
+            $pdf->Image($absoluteImagePath, 0, 0, 210, 297, '', '', '', false, 300, '', false, false, 0, true);
+        }
 
         $this->drawOverlays($pdf, $effective, $student, $request, $verificationToken, $signatureImagePath);
 

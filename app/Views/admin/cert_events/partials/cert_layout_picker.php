@@ -35,17 +35,22 @@ if (is_array($event ?? null)
 
     <strong style="display:block; margin-bottom: 0.35rem; color: #1e40af;">ระบุตำแหน่งชื่อผู้ได้รับเกียรติบัตร</strong>
     <p style="margin: 0 0 0.75rem; font-size: 13px; color: #1e3a8a; line-height: 1.5;">
-        อัปโหลด<strong>รูป JPG/PNG</strong> ก่อน — สามารถ<strong>หมุน</strong>และ<strong>ครอบตามสัดส่วน A4 แนวตั้ง</strong> (210:297) ได้ก่อนลากกรอบชื่อ
-        — พื้นที่ลากด้านล่างแสดงเป็นมุมมองแนวนอน แต่พิกัดและ PDF ยังเป็น A4 แนวตั้ง
+        อัปโหลด<strong>รูป JPG/PNG</strong> ก่อน — สามารถ<strong>หมุน</strong>และ<strong>ครอบกรอบอิสระ</strong> (หด/ขยายกรอบได้) แล้วเลือกว่าใบ PDF จะเป็น<strong> A4 แนวตั้ง</strong>หรือ<strong>แนวนอน</strong>ก่อนลากกรอบชื่อ
     </p>
 
     <div class="cert-lp-review-tools" style="display:none; margin-bottom: 0.75rem; padding: 0.75rem; background: #fff; border: 1px solid #bfdbfe; border-radius: 0.5rem;">
         <strong style="display:block; margin-bottom: 0.5rem; font-size: 13px; color: #1e3a8a;">ปรับภาพแม่แบบ (Review)</strong>
         <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
-            <button type="button" class="btn btn-secondary btn-sm cert-lp-crop-open">หมุน / ครอบ A4</button>
-            <span class="cert-lp-crop-hint text-muted" style="font-size:12px;">กรอบครอบล็อกอัตราส่วน A4 แนวตั้ง</span>
+            <button type="button" class="btn btn-secondary btn-sm cert-lp-crop-open">หมุน / ครอบภาพ</button>
+            <span class="cert-lp-crop-hint text-muted" style="font-size:12px;">กรอบครอบปรับขนาดได้ — เลือกแนวหน้าใบด้านล่าง</span>
         </div>
         <div class="cert-lp-crop-panel" style="display:none; margin-top:0.75rem;">
+            <div class="cert-lp-crop-orient" style="font-size:12px; margin-bottom:0.5rem; color:#1e3a8a;">
+                <strong style="display:block; margin-bottom:0.35rem;">หน้า PDF หลังครอบ</strong>
+                <label style="margin-right:0.75rem; cursor:pointer;"><input type="radio" name="<?= esc($layoutHiddenId, 'attr') ?>__crop_orient" value="auto" checked> อัตโนมัติจากกรอบ</label>
+                <label style="margin-right:0.75rem; cursor:pointer;"><input type="radio" name="<?= esc($layoutHiddenId, 'attr') ?>__crop_orient" value="portrait"> A4 แนวตั้ง</label>
+                <label style="cursor:pointer;"><input type="radio" name="<?= esc($layoutHiddenId, 'attr') ?>__crop_orient" value="landscape"> A4 แนวนอน</label>
+            </div>
             <div style="max-height:min(70vh,560px); overflow:auto; background:#f1f5f9; border-radius:4px; padding:0.5rem;">
                 <img class="cert-lp-crop-target" alt="" src="" style="display:block; max-width:100%;">
             </div>
@@ -73,6 +78,6 @@ if (is_array($event ?? null)
                 <div class="cert-lp-ghost" style="display:none; position:absolute; z-index:5; font-size: 13px; font-weight: 600; color: #0f172a; text-shadow: 0 0 4px #fff, 0 0 6px #fff; pointer-events:none; writing-mode: horizontal-tb; text-orientation: mixed; unicode-bidi: plaintext;"></div>
             </div>
         </div>
-        <p style="margin: 0.5rem 0 0; font-size: 12px; color: #475569;">กดค้างแล้วลากบนภาพเพื่อวาดกรอบ — ปล่อยเมาส์เมื่อครอบคลุมพื้นที่ชื่อ</p>
+        <p style="margin: 0.5rem 0 0; font-size: 12px; color: #475569;">กดค้างแล้วลากบนภาพเพื่อวาดกรอบชื่อ — ถ้าเลือกใบแนวนอน A4 หลังครอบ พื้นที่ลากจะตรงกับหน้า PDF แนวนอน</p>
     </div>
 </div>

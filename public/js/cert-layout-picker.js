@@ -1,19 +1,29 @@
 /**
- * ระบุตำแหน่งชื่อผู้รับบนแม่แบบ A4 แนวตั้ง (210×297 mm ใน PDF)
- * พื้นที่ลากแสดงเป็น A4 แนวนอน (อัตราส่วน 297:210) โดยหมุนภาพ -90° — ค่า layout_json ยังเป็นหน่วย mm บนหน้าแนวตั้ง
+ * ระบุตำแหน่งชื่อผู้รับบนแม่แบบ — พิกัดเป็น mm บนหน้า A4
+ * - แนวตั้ง: 210×297 mm (sheet หมุน -90° บนพื้นที่ลาก)
+ * - แนวนอน: 297×210 mm (ไม่หมุน) — ค่า page_orientation ใน layout_json
  */
 (function (window) {
     'use strict';
 
-    var PAGE_W_MM = 210;
-    var PAGE_H_MM = 297;
+    var MM_PORTRAIT_W = 210;
+    var MM_PORTRAIT_H = 297;
+    var MM_LANDSCAPE_W = 297;
+    var MM_LANDSCAPE_H = 210;
 
     /** @type {Record<string, unknown>|null} */
     var activeDrag = null;
 
+    function getPageMm(layoutObj) {
+        var o = layoutObj && layoutObj.page_orientation;
+        if (o === 'landscape') {
+            return { wMm: MM_LANDSCAPE_W, hMm: MM_LANDSCAPE_H, mode: 'landscape' };
+        }
+        return { wMm: MM_PORTRAIT_W, hMm: MM_PORTRAIT_H, mode: 'portrait' };
+    }
+
     /**
-     * แปลงพิกัดหน้าจอ → พิกัดในระบบ "แผ่น A4 แนวตั้ง" (px) บน .cert-lp-sheet ก่อนหมุน
-     * (sheet หมุน -90° รอบจุดกลาง; ใช้สมการผกผันเดียวกับที่ตรวจมุมท้ายแผ่น)
+     * แปลงพิกัดหน้าจอ → พิกัดในระบบแผ่นแนวตั้งก่อนหมุน (px) — sheet หมุน -90°
      */
     function clientToPortraitLocal(clientX, clientY, sheet, w0, h0) {
         var r = sheet.getBoundingClientRect();
@@ -23,6 +33,26 @@
         var my = clientY - mcy;
         var lx = w0 / 2 - my;
         var ly = mx + h0 / 2;
+        if (lx < 0) {
+            lx = 0;
+        }
+        if (lx > w0) {
+            lx = w0;
+        }
+        if (ly < 0) {
+            ly = 0;
+        }
+        if (ly > h0) {
+            ly = h0;
+        }
+        return { lx: lx, ly: ly };
+    }
+
+    /** แนวนอน A4 — ไม่หมุน แมปตรงจาก rect ของ sheet */
+    function clientToFlatLocal(clientX, clientY, sheet, w0, h0) {
+        var r = sheet.getBoundingClientRect();
+        var lx = (clientX - r.left) * (w0 / r.width);
+        var ly = (clientY - r.top) * (h0 / r.height);
         if (lx < 0) {
             lx = 0;
         }
@@ -54,10 +84,10 @@
             var sheet = activeDrag.sheet;
             var pw = activeDrag.pw;
             var ph = activeDrag.ph;
-            if (!sheet || !(pw > 0) || !(ph > 0)) {
+            if (!sheet || !(pw > 0) || !(ph > 0) || typeof activeDrag.pointerClientToLocal !== 'function') {
                 return;
             }
-            var loc = clientToPortraitLocal(ev.clientX, ev.clientY, sheet, pw, ph);
+            var loc = activeDrag.pointerClientToLocal(ev.clientX, ev.clientY);
             var l = Math.min(activeDrag.startLx, loc.lx);
             var t = Math.min(activeDrag.startLy, loc.ly);
             var w = Math.abs(loc.lx - activeDrag.startLx);
@@ -75,15 +105,28 @@
             if (!activeDrag || !activeDrag.drawActive) {
                 return;
             }
-            var root = activeDrag.root;
             var sheet = activeDrag.sheet;
             var layoutInput = activeDrag.layoutInput;
             var defaultsJson = activeDrag.defaultsJson;
             var pw = activeDrag.pw;
             var ph = activeDrag.ph;
             activeDrag.drawActive = false;
-            var loc = clientToPortraitLocal(ev.clientX, ev.clientY, sheet, pw, ph);
-            var boxMm = pxRectToMm(activeDrag.startLx, activeDrag.startLy, loc.lx, loc.ly, { width: pw, height: ph });
+            var loc =
+                typeof activeDrag.pointerClientToLocal === 'function'
+                    ? activeDrag.pointerClientToLocal(ev.clientX, ev.clientY)
+                    : null;
+            var boxMm =
+                loc && layoutInput
+                    ? pxRectToMm(
+                          activeDrag.startLx,
+                          activeDrag.startLy,
+                          loc.lx,
+                          loc.ly,
+                          { width: pw, height: ph },
+                          activeDrag.pageWMm,
+                          activeDrag.pageHMm
+                      )
+                    : null;
             var rubber = activeDrag.rubberEl;
             if (rubber) {
                 rubber.style.display = 'none';
@@ -162,7 +205,7 @@
         layoutInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    function pxRectToMm(x0, y0, x1, y1, rect) {
+    function pxRectToMm(x0, y0, x1, y1, rect, pageWMm, pageHMm) {
         var l = Math.min(x0, x1);
         var t = Math.min(y0, y1);
         var r = Math.max(x0, x1);
@@ -177,20 +220,38 @@
             return null;
         }
         return {
-            x: (l / rect.width) * PAGE_W_MM,
-            y: (t / rect.height) * PAGE_H_MM,
-            w: (w / rect.width) * PAGE_W_MM,
-            h: (h / rect.height) * PAGE_H_MM
+            x: (l / rect.width) * pageWMm,
+            y: (t / rect.height) * pageHMm,
+            w: (w / rect.width) * pageWMm,
+            h: (h / rect.height) * pageHMm
         };
     }
 
-    function mmRectToPx(box, portraitPxRect) {
+    function mmRectToPx(box, pxRect, pageWMm, pageHMm) {
         return {
-            left: (box.x / PAGE_W_MM) * portraitPxRect.width,
-            top: (box.y / PAGE_H_MM) * portraitPxRect.height,
-            width: (box.w / PAGE_W_MM) * portraitPxRect.width,
-            height: (box.h / PAGE_H_MM) * portraitPxRect.height
+            left: (box.x / pageWMm) * pxRect.width,
+            top: (box.y / pageHMm) * pxRect.height,
+            width: (box.w / pageWMm) * pxRect.width,
+            height: (box.h / pageHMm) * pxRect.height
         };
+    }
+
+    function mergePageOrientation(layoutInput, defaultsJson, orientation, prevOrientation) {
+        var defaults = safeJsonParse(defaultsJson, {});
+        var current = safeJsonParse(String(layoutInput.value || '').trim(), {});
+        var prev = prevOrientation || current.page_orientation || 'portrait';
+        var out = Object.assign({}, defaults, current);
+        out.field_mapping = Object.assign(
+            {},
+            defaults.field_mapping || {},
+            current.field_mapping || {}
+        );
+        out.page_orientation = orientation;
+        if (prev !== orientation && out.field_mapping.student_name) {
+            delete out.field_mapping.student_name;
+        }
+        layoutInput.value = JSON.stringify(out);
+        layoutInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     function initRoot(root) {
@@ -205,6 +266,8 @@
         if (!layoutInput) {
             return;
         }
+
+        var cropOrientRadioName = hiddenId ? hiddenId + '__crop_orient' : '';
 
         var btnOpen = root.querySelector('.cert-lp-open');
         var stageWrap = root.querySelector('.cert-lp-stage-wrap');
@@ -230,6 +293,10 @@
         var btnCropRotL = root.querySelector('.cert-lp-crop-rotate-left');
         var btnCropRotR = root.querySelector('.cert-lp-crop-rotate-right');
         var cropperInstance = null;
+
+        function readLayoutObj() {
+            return safeJsonParse(String(layoutInput.value || '').trim(), safeJsonParse(defaultsJson, {}));
+        }
 
         function ensureCropperAssets(cb) {
             if (typeof window.Cropper === 'function') {
@@ -308,15 +375,16 @@
                     cropTarget.src = loader.src;
                     try {
                         cropperInstance = new window.Cropper(cropTarget, {
-                            aspectRatio: 210 / 297,
                             viewMode: 1,
                             dragMode: 'move',
-                            autoCropArea: 0.92,
+                            autoCropArea: 0.85,
                             restore: false,
                             guides: true,
                             center: true,
                             highlight: true,
                             background: true,
+                            cropBoxMovable: true,
+                            cropBoxResizable: true,
                             toggleDragModeOnDblclick: false
                         });
                     } catch (e) {
@@ -374,8 +442,8 @@
                     return;
                 }
                 var canvas = cropperInstance.getCroppedCanvas({
-                    width: 2310,
-                    height: 3267,
+                    maxWidth: 4096,
+                    maxHeight: 4096,
                     imageSmoothingQuality: 'high',
                     fillColor: '#ffffff'
                 });
@@ -383,6 +451,24 @@
                     window.alert('ไม่สามารถสร้างภาพจากกรอบครอบได้');
                     return;
                 }
+                var prevLayout = readLayoutObj();
+                var prevO = prevLayout.page_orientation || 'portrait';
+                var choice = 'auto';
+                if (cropOrientRadioName) {
+                    var sel = root.querySelector('input[name="' + cropOrientRadioName + '"]:checked');
+                    if (sel && sel.value) {
+                        choice = sel.value;
+                    }
+                }
+                var orient;
+                if (choice === 'portrait') {
+                    orient = 'portrait';
+                } else if (choice === 'landscape') {
+                    orient = 'landscape';
+                } else {
+                    orient = canvas.width > canvas.height ? 'landscape' : 'portrait';
+                }
+                mergePageOrientation(layoutInput, defaultsJson, orient, prevO);
                 canvas.toBlob(function (blob) {
                     if (!blob) {
                         window.alert('ส่งออกภาพไม่สำเร็จ');
@@ -394,7 +480,7 @@
                     var base = (fileInput.files && fileInput.files[0] && fileInput.files[0].name)
                         ? fileInput.files[0].name.replace(/\.[^.]+$/, '')
                         : 'certificate-background';
-                    var file = new File([blob], base + '-a4.png', { type: 'image/png' });
+                    var file = new File([blob], base + '-layout.png', { type: 'image/png' });
                     var dt = new DataTransfer();
                     dt.items.add(file);
                     fileInput.files = dt.files;
@@ -411,16 +497,29 @@
             if (sw < 8) {
                 return;
             }
-            var s = sw / 297;
-            var w0 = 210 * s;
-            var h0 = 297 * s;
-            sheet.style.width = w0 + 'px';
-            sheet.style.height = h0 + 'px';
-            sheet.dataset.lpW0 = String(w0);
-            sheet.dataset.lpH0 = String(h0);
+            var pm = getPageMm(readLayoutObj());
+            if (pm.mode === 'landscape') {
+                sheet.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+                var sh = stage.clientHeight;
+                sheet.style.width = sw + 'px';
+                sheet.style.height = sh + 'px';
+                sheet.dataset.lpW0 = String(sw);
+                sheet.dataset.lpH0 = String(sh);
+                sheet.dataset.lpMode = 'flat';
+            } else {
+                sheet.style.transform = 'translate(-50%, -50%) rotate(-90deg)';
+                var s = sw / 297;
+                var w0 = 210 * s;
+                var h0 = 297 * s;
+                sheet.style.width = w0 + 'px';
+                sheet.style.height = h0 + 'px';
+                sheet.dataset.lpW0 = String(w0);
+                sheet.dataset.lpH0 = String(h0);
+                sheet.dataset.lpMode = 'rotated';
+            }
         }
 
-        function getPortraitPx() {
+        function getSheetPx() {
             if (!sheet) {
                 return { w0: 0, h0: 0 };
             }
@@ -445,11 +544,12 @@
             if (!rectFinal || !img || img.style.display === 'none' || !boxMm) {
                 return;
             }
-            var dims = getPortraitPx();
+            var dims = getSheetPx();
             if (!(dims.w0 > 0) || !(dims.h0 > 0)) {
                 return;
             }
-            var px = mmRectToPx(boxMm, { width: dims.w0, height: dims.h0 });
+            var pm = getPageMm(readLayoutObj());
+            var px = mmRectToPx(boxMm, { width: dims.w0, height: dims.h0 }, pm.wMm, pm.hMm);
             rectFinal.style.display = 'block';
             rectFinal.style.left = px.left + 'px';
             rectFinal.style.top = px.top + 'px';
@@ -477,7 +577,7 @@
         }
 
         function syncFromLayoutInput() {
-            var layout = safeJsonParse(String(layoutInput.value || '').trim(), safeJsonParse(defaultsJson, {}));
+            var layout = readLayoutObj();
             var sn = getStudentNameLayout(layout);
             if (sn && typeof sn.x === 'number' && typeof sn.y === 'number' && img.style.display !== 'none') {
                 var bw = Number(sn.box_w);
@@ -613,7 +713,9 @@
                 if (!(w0 > 0) || !(h0 > 0)) {
                     return;
                 }
-                var loc = clientToPortraitLocal(ev.clientX, ev.clientY, sheet, w0, h0);
+                var pm = getPageMm(readLayoutObj());
+                var flat = sheet.dataset.lpMode === 'flat';
+                var loc = flat ? clientToFlatLocal(ev.clientX, ev.clientY, sheet, w0, h0) : clientToPortraitLocal(ev.clientX, ev.clientY, sheet, w0, h0);
                 activeDrag = {
                     root: root,
                     sheet: sheet,
@@ -626,7 +728,12 @@
                     startLx: loc.lx,
                     startLy: loc.ly,
                     drawActive: true,
-                    syncFromLayout: syncFromLayoutInput
+                    syncFromLayout: syncFromLayoutInput,
+                    pageWMm: pm.wMm,
+                    pageHMm: pm.hMm,
+                    pointerClientToLocal: function (cx, cy) {
+                        return flat ? clientToFlatLocal(cx, cy, sheet, w0, h0) : clientToPortraitLocal(cx, cy, sheet, w0, h0);
+                    }
                 };
                 showRubber(loc.lx, loc.ly, 0, 0);
                 if (sheet.setPointerCapture) {
@@ -637,6 +744,7 @@
         }
 
         layoutInput.addEventListener('change', function () {
+            layoutSheet();
             syncFromLayoutInput();
         });
 
