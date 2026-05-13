@@ -369,10 +369,8 @@
             }
             ensureCropperAssets(function () {
                 destroyCropperInstance();
-                var loader = new Image();
-                loader.crossOrigin = 'anonymous';
-                loader.onload = function () {
-                    cropTarget.src = loader.src;
+                cropTarget.removeAttribute('crossorigin');
+                function buildCropper() {
                     try {
                         var c = new window.Cropper(cropTarget, {
                             aspectRatio: NaN,
@@ -399,11 +397,27 @@
                     } catch (e) {
                         window.alert('ไม่สามารถเปิดตัวครอบภาพได้');
                     }
+                }
+                function afterImagePainted() {
+                    window.requestAnimationFrame(function () {
+                        window.requestAnimationFrame(buildCropper);
+                    });
+                }
+                if (cropTarget.src === img.src && cropTarget.complete && cropTarget.naturalWidth > 0) {
+                    afterImagePainted();
+                    return;
+                }
+                cropTarget.onload = function () {
+                    cropTarget.onload = null;
+                    cropTarget.onerror = null;
+                    afterImagePainted();
                 };
-                loader.onerror = function () {
+                cropTarget.onerror = function () {
+                    cropTarget.onload = null;
+                    cropTarget.onerror = null;
                     window.alert('โหลดภาพสำหรับครอบไม่สำเร็จ');
                 };
-                loader.src = img.src;
+                cropTarget.src = img.src;
             });
         }
 

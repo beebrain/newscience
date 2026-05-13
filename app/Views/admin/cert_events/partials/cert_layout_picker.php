@@ -51,8 +51,8 @@ if (is_array($event ?? null)
                 <label style="margin-right:0.75rem; cursor:pointer;"><input type="radio" name="<?= esc($layoutHiddenId, 'attr') ?>__crop_orient" value="portrait"> A4 แนวตั้ง</label>
                 <label style="cursor:pointer;"><input type="radio" name="<?= esc($layoutHiddenId, 'attr') ?>__crop_orient" value="landscape"> A4 แนวนอน</label>
             </div>
-            <div style="max-height:min(70vh,560px); overflow:auto; background:#f1f5f9; border-radius:4px; padding:0.5rem;">
-                <img class="cert-lp-crop-target" alt="" src="" style="display:block; max-width:100%;">
+            <div class="cert-lp-crop-viewport" style="max-height:min(70vh,560px); min-height:220px; overflow:auto; background:#f1f5f9; border-radius:4px; padding:0.5rem;">
+                <img class="cert-lp-crop-target" alt="" src="" style="display:block; max-width:100%; height:auto;">
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem; align-items:center;">
                 <button type="button" class="btn btn-secondary btn-sm cert-lp-crop-rotate-left">หมุนซ้าย 90°</button>
