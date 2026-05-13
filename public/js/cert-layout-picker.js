@@ -374,10 +374,11 @@
                 loader.onload = function () {
                     cropTarget.src = loader.src;
                     try {
-                        cropperInstance = new window.Cropper(cropTarget, {
+                        var c = new window.Cropper(cropTarget, {
+                            aspectRatio: NaN,
                             viewMode: 1,
                             dragMode: 'move',
-                            autoCropArea: 0.85,
+                            autoCropArea: 0.75,
                             restore: false,
                             guides: true,
                             center: true,
@@ -385,8 +386,16 @@
                             background: true,
                             cropBoxMovable: true,
                             cropBoxResizable: true,
-                            toggleDragModeOnDblclick: false
+                            toggleDragModeOnDblclick: true,
+                            ready: function () {
+                                try {
+                                    c.setAspectRatio(NaN);
+                                } catch (e2) {
+                                    /* ignore */
+                                }
+                            }
                         });
+                        cropperInstance = c;
                     } catch (e) {
                         window.alert('ไม่สามารถเปิดตัวครอบภาพได้');
                     }
@@ -415,10 +424,22 @@
                 }
             });
         }
+        function freeCropAspect() {
+            if (!cropperInstance) {
+                return;
+            }
+            try {
+                cropperInstance.setAspectRatio(NaN);
+            } catch (e) {
+                /* ignore */
+            }
+        }
+
         if (btnCropRotL) {
             btnCropRotL.addEventListener('click', function () {
                 if (cropperInstance) {
                     cropperInstance.rotate(-90);
+                    freeCropAspect();
                 }
             });
         }
@@ -426,6 +447,7 @@
             btnCropRotR.addEventListener('click', function () {
                 if (cropperInstance) {
                     cropperInstance.rotate(90);
+                    freeCropAspect();
                 }
             });
         }

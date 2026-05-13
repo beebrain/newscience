@@ -7,7 +7,11 @@
       "Bash(php:*)",
       "Bash(grep:*)",
       "Bash(curl:*)",
-      "Bash(C:/xampp/mysql/bin/mysql -u root -e \"SELECT COUNT\\(*\\) as cnt FROM personnel WHERE status = ''active''\" newscience)"
+      "Bash(C:/xampp/mysql/bin/mysql -u root -e \"SELECT COUNT\\(*\\) as cnt FROM personnel WHERE status = ''active''\" newscience)",
+      "PowerShell(Get-ChildItem \"c:/xampp/htdocs/newScience/writable/logs/\" | Sort-Object LastWriteTime -Descending | Select-Object -First 3 | ForEach-Object { Write-Host $_.FullName })",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }

@@ -42,7 +42,7 @@ if (is_array($event ?? null)
         <strong style="display:block; margin-bottom: 0.5rem; font-size: 13px; color: #1e3a8a;">ปรับภาพแม่แบบ (Review)</strong>
         <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
             <button type="button" class="btn btn-secondary btn-sm cert-lp-crop-open">หมุน / ครอบภาพ</button>
-            <span class="cert-lp-crop-hint text-muted" style="font-size:12px;">กรอบครอบปรับขนาดได้ — เลือกแนวหน้าใบด้านล่าง</span>
+            <span class="cert-lp-crop-hint text-muted" style="font-size:12px;">กรอบครอบ<strong>ไม่ล็อกอัตราส่วน</strong> — ลากมุมหด/ขยายได้ — เลือกแนวหน้าใบด้านล่าง</span>
         </div>
         <div class="cert-lp-crop-panel" style="display:none; margin-top:0.75rem;">
             <div class="cert-lp-crop-orient" style="font-size:12px; margin-bottom:0.5rem; color:#1e3a8a;">
