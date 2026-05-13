@@ -7,14 +7,23 @@ use App\Models\Edoc\EdoctagModel;
 use App\Models\Edoc\EdoctitleModel;
 use App\Models\Edoc\EdocDocumentTagModel;
 use App\Models\Edoc\EdocVolumeModel;
+use App\Models\Edoc\EdocUserLabelModel;
+use App\Models\Edoc\EdocUserFlagModel;
+use App\Models\Edoc\EdocDocumentLabelModel;
+use App\Models\Edoc\EdocForwardModel;
 
 class EdocController extends EdocBaseController
 {
+    protected $db;
     protected $edoctagModel;
     protected $edoctitleModel;
     protected $documentViews;
     protected $docTagModel;
     protected $volumeModel;
+    protected $labelModel;
+    protected $flagModel;
+    protected $docLabelModel;
+    protected $forwardModel;
 
     private function normalizeProfileImageUrl(?string $path): string
     {
@@ -120,11 +129,16 @@ class EdocController extends EdocBaseController
 
     public function __construct()
     {
+        $this->db = \Config\Database::connect();
         $this->edoctagModel = new EdoctagModel();
         $this->edoctitleModel = new EdoctitleModel();
         $this->documentViews = new DocumentViewModel();
         $this->docTagModel = new EdocDocumentTagModel();
         $this->volumeModel = new EdocVolumeModel();
+        $this->labelModel = new EdocUserLabelModel();
+        $this->flagModel = new EdocUserFlagModel();
+        $this->docLabelModel = new EdocDocumentLabelModel();
+        $this->forwardModel = new EdocForwardModel();
     }
 
     public function index()
@@ -489,15 +503,44 @@ class EdocController extends EdocBaseController
             log_message('debug', '[viewPDF] Target file: ' . $targetFileSafe . ' (basename: ' . $targetBasename . ')');
             log_message('debug', '[viewPDF] Resolved path: ' . ($filePath ?: 'NOT FOUND'));
 
+            // Resolve owner display name
+            $ownerRaw     = trim($docInfo['owner'] ?? '');
+            $ownerDisplay = $ownerRaw;
+            if ($ownerRaw !== '' && strpos($ownerRaw, '@') !== false) {
+                $names = $this->docTagModel->getDisplayNamesByEmails([$ownerRaw]);
+                $ownerDisplay = $names[strtolower($ownerRaw)] ?? $ownerRaw;
+            }
+
+            // Parse + resolve participants
+            $participantRaw   = trim($docInfo['participant'] ?? '');
+            $participantParts = $participantRaw !== ''
+                ? array_values(array_filter(array_map('trim', explode(',', $participantRaw))))
+                : [];
+            $emailParts = array_values(array_filter($participantParts, fn($p) => strpos($p, '@') !== false));
+            $emailToName = $this->docTagModel->getDisplayNamesByEmails($emailParts);
+            $participants = array_map(function ($p) use ($emailToName) {
+                return strpos($p, '@') !== false
+                    ? ($emailToName[strtolower($p)] ?? $p)
+                    : $p;
+            }, $participantParts);
+
+            $viewData = [
+                'title'         => $docInfo['title'] ?? 'เอกสาร',
+                'doc'           => $docInfo,
+                'owner_display' => $ownerDisplay,
+                'participants'  => $participants,
+            ];
+
             if (!$filePath || !file_exists($filePath)) {
                 $triedPaths = array_map(fn($b) => $b . $targetBasename, $basePaths);
                 log_message('error', '[viewPDF] File not found: ' . $targetFileSafe . ' Tried: ' . implode('; ', $triedPaths));
-                throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound(
-                    'ไฟล์นี้ไม่มีอยู่: ' . $targetBasename
-                );
+                return view('edoc/documents/pdfviewer', $viewData + ['pdf_url' => null, 'file_error' => 'ไม่พบไฟล์เอกสารในระบบ']);
             }
 
             if ($this->request->getGet('file') === 'true') {
+                if (filesize($filePath) === 0) {
+                    return view('edoc/documents/pdfviewer', $viewData + ['pdf_url' => null, 'file_error' => 'ไฟล์เอกสารยังไม่ถูกอัปโหลด']);
+                }
                 $mimeType = mime_content_type($filePath);
                 return $this->response
                     ->setHeader('Content-Type', $mimeType)
@@ -505,10 +548,8 @@ class EdocController extends EdocBaseController
                     ->setBody(file_get_contents($filePath));
             }
 
-            return view('edoc/documents/pdfviewer', [
-                'pdf_url' => base_url('index.php/edoc/viewPDF/' . $id . '?file=true' . ($targetFileForUrl ? '&subfile=' . urlencode($targetFileForUrl) : '')),
-                'title' => $docInfo['title']
-            ]);
+            $pdfUrl = base_url('index.php/edoc/viewPDF/' . $id . '?file=true' . ($targetFileForUrl ? '&subfile=' . urlencode($targetFileForUrl) : ''));
+            return view('edoc/documents/pdfviewer', $viewData + ['pdf_url' => $pdfUrl, 'file_error' => null]);
         } catch (\Exception $e) {
             log_message('error', '[EdocController::viewPDF] Error: ' . $e->getMessage());
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
@@ -620,5 +661,463 @@ class EdocController extends EdocBaseController
             log_message('error', '[EdocController::getVolumes] ' . $e->getMessage());
             return $this->response->setJSON(['status' => 'error', 'message' => $e->getMessage()]);
         }
+    }
+
+    // =====================================================================
+    // GMAIL-STYLE INBOX  (Phase B)
+    // =====================================================================
+
+    public function inbox()
+    {
+        try {
+            if (!$this->isLoggedIn()) {
+                return redirect()->to('/edoc');
+            }
+
+            $userModel = new \App\Models\UserModel();
+            $user = $userModel->find($this->edocUser['uid']);
+            $userEmail = strtolower(trim($user['email'] ?? ''));
+
+            $needsThaiName = (empty($user['tf_name']) || empty($user['tl_name']));
+
+            // Distinct doc types for category tabs
+            $doctypes = $this->db->table('edoctitle')
+                ->select('doctype')
+                ->distinct()
+                ->where('doctype IS NOT NULL')
+                ->where('doctype !=', '')
+                ->orderBy('doctype', 'ASC')
+                ->get()
+                ->getResultArray();
+            $doctypes = array_column($doctypes, 'doctype');
+
+            // Per-user labels for sidebar
+            $userLabels = $this->labelModel->listForUser($userEmail);
+
+            // Unread count (inbox only)
+            $unreadCount = $this->getInboxUnreadCount($userEmail);
+
+            $data = [
+                'infoUser'      => $user,
+                'edocUser'      => $this->edocUser,
+                'isEdocAdmin'   => $this->isEdocAdmin,
+                'doctypes'      => $doctypes,
+                'userLabels'    => $userLabels,
+                'unreadCount'   => $unreadCount,
+                'needsThaiName' => $needsThaiName,
+            ];
+
+            return view('edoc/documents/inbox', $data);
+        } catch (\Exception $e) {
+            log_message('error', '[EdocController::inbox] ' . $e->getMessage());
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด');
+        }
+    }
+
+    private function getInboxUnreadCount(string $userEmail): int
+    {
+        try {
+            // Documents visible to user
+            $builder = $this->db->table('edoctitle');
+            $builder->select('edoctitle.iddoc');
+            $builder->groupStart()
+                ->where('edoctitle.owner', $userEmail)
+                ->orLike('edoctitle.participant', $userEmail, 'both')
+                ->orLike('edoctitle.participant', 'ทุกคน', 'both')
+                ->groupEnd();
+            // Not archived + not read
+            $builder->join('edoc_user_flags f', 'f.document_id = edoctitle.iddoc AND f.user_email = ' . $this->db->escape($userEmail), 'left');
+            $builder->where('(f.is_archived IS NULL OR f.is_archived = 0)');
+            $builder->where('f.read_at IS NULL');
+            return $builder->countAllResults();
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    public function inboxData()
+    {
+        try {
+            if (!$this->isLoggedIn()) {
+                return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+            }
+
+            $userModel = new \App\Models\UserModel();
+            $user = $userModel->find($this->edocUser['uid']);
+            $userEmail = strtolower(trim($user['email'] ?? ''));
+            $ownerName = trim(($user['tf_name'] ?? '') . ' ' . ($user['tl_name'] ?? ''));
+            if ($ownerName === ' ') {
+                $ownerName = trim(($user['gf_name'] ?? '') . ' ' . ($user['gl_name'] ?? ''));
+            }
+            $ownerName = trim($ownerName);
+
+            $tab      = $this->request->getGet('tab') ?? 'inbox';
+            $doctype  = $this->request->getGet('doctype') ?? '';
+            $labelId  = (int) ($this->request->getGet('label_id') ?? 0);
+            $search   = trim($this->request->getGet('search') ?? '');
+            $page     = max(1, (int) ($this->request->getGet('page') ?? 1));
+            $perPage  = 30;
+            $offset   = ($page - 1) * $perPage;
+
+            if ($tab === 'forwarded') {
+                // Documents forwarded to this user
+                $forwardedIds = $this->forwardModel->getForwardedDocumentIds($userEmail);
+                if (empty($forwardedIds)) {
+                    return $this->response->setJSON([
+                        'status' => 'success', 'rows' => [], 'total' => 0, 'page' => $page,
+                    ]);
+                }
+
+                $builder = $this->db->table('edoctitle')
+                    ->select('edoctitle.iddoc, edoctitle.officeiddoc, edoctitle.datedoc, edoctitle.title, edoctitle.doctype, edoctitle.owner, edoctitle.participant, edoctitle.pages')
+                    ->whereIn('edoctitle.iddoc', $forwardedIds);
+            } else {
+                // Standard visibility
+                $builder = $this->db->table('edoctitle')
+                    ->select('edoctitle.iddoc, edoctitle.officeiddoc, edoctitle.datedoc, edoctitle.title, edoctitle.doctype, edoctitle.owner, edoctitle.participant, edoctitle.pages');
+
+                $builder->groupStart();
+                if ($userEmail !== '') {
+                    $builder->orWhere('edoctitle.owner', $userEmail);
+                    $builder->orLike('edoctitle.participant', $userEmail, 'both');
+                }
+                if ($ownerName !== '') {
+                    $builder->orWhere('edoctitle.owner', $ownerName);
+                    $builder->orLike('edoctitle.participant', $ownerName, 'both');
+                }
+                $builder->orLike('edoctitle.participant', 'ทุกคน', 'both');
+                $builder->groupEnd();
+            }
+
+            // Join flags (LEFT JOIN so docs with no flag row still show)
+            $builder->join(
+                'edoc_user_flags f',
+                'f.document_id = edoctitle.iddoc AND f.user_email = ' . $this->db->escape($userEmail),
+                'left'
+            );
+            $builder->select('f.is_starred, f.is_important, f.is_archived, f.read_at');
+
+            // Tab filters
+            switch ($tab) {
+                case 'starred':
+                    $builder->where('f.is_starred', 1);
+                    break;
+                case 'archived':
+                    $builder->where('f.is_archived', 1);
+                    break;
+                case 'inbox':
+                default:
+                    $builder->where('(f.is_archived IS NULL OR f.is_archived = 0)');
+                    break;
+            }
+
+            // Doctype filter
+            if ($doctype !== '') {
+                $builder->where('edoctitle.doctype', $doctype);
+            }
+
+            // Label filter
+            if ($labelId > 0) {
+                $builder->join(
+                    'edoc_document_labels dl',
+                    'dl.document_id = edoctitle.iddoc AND dl.user_email = ' . $this->db->escape($userEmail) . ' AND dl.label_id = ' . (int) $labelId,
+                    'inner'
+                );
+            }
+
+            // Search
+            if ($search !== '') {
+                $builder->groupStart()
+                    ->like('edoctitle.title', $search)
+                    ->orLike('edoctitle.officeiddoc', $search)
+                    ->orLike('edoctitle.owner', $search)
+                    ->orLike('edoctitle.doctype', $search)
+                    ->groupEnd();
+            }
+
+            $total = $builder->countAllResults(false);
+            $builder->orderBy('edoctitle.iddoc', 'DESC');
+            $builder->limit($perPage, $offset);
+            $results = $builder->get()->getResultArray();
+
+            if (empty($results)) {
+                return $this->response->setJSON([
+                    'status' => 'success', 'rows' => [], 'total' => $total, 'page' => $page,
+                ]);
+            }
+
+            $docIds    = array_map('intval', array_column($results, 'iddoc'));
+            $labelsMap = $this->docLabelModel->getLabelsForDocumentIds($docIds, $userEmail);
+
+            // Resolve sender display names
+            $allEmails = [];
+            foreach ($results as $row) {
+                $owner = trim((string) ($row['owner'] ?? ''));
+                if ($owner !== '' && strpos($owner, '@') !== false) {
+                    $allEmails[] = strtolower($owner);
+                }
+            }
+            $emailToName = $this->docTagModel->getDisplayNamesByEmails(array_unique($allEmails));
+
+            // Forward info per doc (for "Forwarded by" badge)
+            $forwardInfoMap = [];
+            if ($tab === 'forwarded') {
+                foreach ($docIds as $did) {
+                    $fw = $this->forwardModel->getForwardForUser($did, $userEmail);
+                    if ($fw) {
+                        $forwardInfoMap[$did] = $fw;
+                    }
+                }
+            }
+
+            $rows = array_map(function ($row) use ($labelsMap, $emailToName, $forwardInfoMap) {
+                $did   = (int) $row['iddoc'];
+                $owner = trim((string) ($row['owner'] ?? ''));
+                $ownerDisplay = '';
+                if (strpos($owner, '@') !== false) {
+                    $ownerDisplay = $emailToName[strtolower($owner)] ?? $owner;
+                } else {
+                    $ownerDisplay = $owner;
+                }
+                $fwInfo = $forwardInfoMap[$did] ?? null;
+
+                return [
+                    'iddoc'          => $did,
+                    'officeiddoc'    => $row['officeiddoc'] ?? '',
+                    'title'          => $row['title'] ?? '',
+                    'doctype'        => $row['doctype'] ?? '',
+                    'datedoc'        => $row['datedoc'] ?? '',
+                    'owner'          => $owner,
+                    'owner_display'  => $ownerDisplay,
+                    'is_starred'     => (int) ($row['is_starred'] ?? 0),
+                    'is_important'   => (int) ($row['is_important'] ?? 0),
+                    'is_archived'    => (int) ($row['is_archived'] ?? 0),
+                    'is_read'        => !empty($row['read_at']),
+                    'labels'         => $labelsMap[$did] ?? [],
+                    'forwarded_by'   => $fwInfo ? ($fwInfo['from_email'] ?? '') : '',
+                    'forward_note'   => $fwInfo ? ($fwInfo['note'] ?? '') : '',
+                ];
+            }, $results);
+
+            return $this->response->setJSON([
+                'status'   => 'success',
+                'rows'     => $rows,
+                'total'    => $total,
+                'page'     => $page,
+                'per_page' => $perPage,
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', '[EdocController::inboxData] ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
+
+    // =====================================================================
+    // PHASE C — Star / Read / Archive
+    // =====================================================================
+
+    public function toggleStar()
+    {
+        if (!$this->isLoggedIn()) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+        $docId = (int) ($this->request->getJSON(true)['doc_id'] ?? 0);
+        if ($docId <= 0) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Invalid doc_id']);
+        }
+        $userEmail = strtolower(trim(session()->get('admin_email') ?? ''));
+        $ok = $this->flagModel->toggleStar($docId, $userEmail);
+        $flags = $this->flagModel->getFlags($docId, $userEmail);
+        return $this->response->setJSON([
+            'status'     => $ok ? 'success' : 'error',
+            'is_starred' => (int) ($flags['is_starred'] ?? 0),
+        ]);
+    }
+
+    public function markRead()
+    {
+        if (!$this->isLoggedIn()) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+        $docId = (int) ($this->request->getJSON(true)['doc_id'] ?? 0);
+        if ($docId <= 0) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Invalid doc_id']);
+        }
+        $userEmail = strtolower(trim(session()->get('admin_email') ?? ''));
+        $ok = $this->flagModel->markRead($docId, $userEmail);
+        return $this->response->setJSON(['status' => $ok ? 'success' : 'error']);
+    }
+
+    public function archiveDoc()
+    {
+        if (!$this->isLoggedIn()) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+        $body     = $this->request->getJSON(true);
+        $docId    = (int) ($body['doc_id'] ?? 0);
+        $archived = isset($body['archived']) ? (bool) $body['archived'] : true;
+        if ($docId <= 0) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Invalid doc_id']);
+        }
+        $userEmail = strtolower(trim(session()->get('admin_email') ?? ''));
+        $ok = $this->flagModel->archive($docId, $userEmail, $archived);
+        return $this->response->setJSON(['status' => $ok ? 'success' : 'error']);
+    }
+
+    // =====================================================================
+    // PHASE D — User Labels
+    // =====================================================================
+
+    public function getLabels()
+    {
+        if (!$this->isLoggedIn()) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+        $userEmail = strtolower(trim(session()->get('admin_email') ?? ''));
+        $labels = $this->labelModel->listForUser($userEmail);
+        return $this->response->setJSON(['status' => 'success', 'labels' => $labels]);
+    }
+
+    public function createLabel()
+    {
+        if (!$this->isLoggedIn()) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+        $body  = $this->request->getJSON(true);
+        $name  = trim($body['name'] ?? '');
+        $color = trim($body['color'] ?? '#6b7280');
+        if ($name === '') {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'ชื่อ label ห้ามว่าง']);
+        }
+        $userEmail = strtolower(trim(session()->get('admin_email') ?? ''));
+        $id = $this->labelModel->createForUser($userEmail, $name, $color);
+        if (!$id) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'มี label ชื่อนี้แล้ว']);
+        }
+        $label = $this->labelModel->find($id);
+        return $this->response->setJSON(['status' => 'success', 'label' => $label]);
+    }
+
+    public function updateLabel(int $id)
+    {
+        if (!$this->isLoggedIn()) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+        $body  = $this->request->getJSON(true);
+        $name  = trim($body['name'] ?? '');
+        $color = trim($body['color'] ?? '');
+        if ($name === '') {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'ชื่อ label ห้ามว่าง']);
+        }
+        $userEmail = strtolower(trim(session()->get('admin_email') ?? ''));
+        $ok = $this->labelModel->renameForUser($id, $userEmail, $name, $color ?: null);
+        if (!$ok) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'ไม่พบ label']);
+        }
+        return $this->response->setJSON(['status' => 'success', 'label' => $this->labelModel->find($id)]);
+    }
+
+    public function deleteLabel(int $id)
+    {
+        if (!$this->isLoggedIn()) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+        $userEmail = strtolower(trim(session()->get('admin_email') ?? ''));
+        $ok = $this->labelModel->deleteForUser($id, $userEmail);
+        if (!$ok) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'ไม่พบ label']);
+        }
+        return $this->response->setJSON(['status' => 'success']);
+    }
+
+    public function applyDocLabel(int $docId)
+    {
+        if (!$this->isLoggedIn()) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+        $body    = $this->request->getJSON(true);
+        $labelId = (int) ($body['label_id'] ?? 0);
+        $remove  = (bool) ($body['remove'] ?? false);
+        if ($labelId <= 0) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Invalid label_id']);
+        }
+        $userEmail = strtolower(trim(session()->get('admin_email') ?? ''));
+
+        if ($remove) {
+            $ok = $this->docLabelModel->removeLabel($docId, $userEmail, $labelId);
+        } else {
+            $ok = $this->docLabelModel->applyLabel($docId, $userEmail, $labelId);
+        }
+
+        $currentLabels = $this->docLabelModel->getLabelsForDocument($docId, $userEmail);
+        return $this->response->setJSON(['status' => $ok ? 'success' : 'error', 'labels' => $currentLabels]);
+    }
+
+    // =====================================================================
+    // PHASE E — Forward
+    // =====================================================================
+
+    public function forwardDoc(int $docId)
+    {
+        if (!$this->isLoggedIn()) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $body   = $this->request->getJSON(true);
+        $emails = $body['to_emails'] ?? [];
+        $note   = trim($body['note'] ?? '');
+
+        if (empty($emails)) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'กรุณาระบุผู้รับ']);
+        }
+
+        $userEmail = strtolower(trim(session()->get('admin_email') ?? ''));
+
+        // Verify the sender has access to this document
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($this->edocUser['uid']);
+        $ownerName = trim(($user['tf_name'] ?? '') . ' ' . ($user['tl_name'] ?? ''));
+        if (!$this->edoctitleModel->canUserAccessDocument($docId, $userEmail, $ownerName)) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'ไม่มีสิทธิ์ส่งต่อเอกสารนี้']);
+        }
+
+        $forwarded = [];
+        $failed    = [];
+
+        foreach ($emails as $toEmail) {
+            $toEmail = strtolower(trim((string) $toEmail));
+            if ($toEmail === '' || $toEmail === $userEmail) {
+                continue;
+            }
+            // Log the forward
+            $logOk = $this->forwardModel->logForward($docId, $userEmail, $toEmail, $note ?: null);
+            // Grant access via edoc_document_tags (file not duplicated)
+            $tagOk = $this->docTagModel->addTag($docId, $toEmail, 'user');
+
+            if ($logOk && $tagOk) {
+                $forwarded[] = $toEmail;
+            } else {
+                $failed[] = $toEmail;
+            }
+        }
+
+        return $this->response->setJSON([
+            'status'    => empty($failed) ? 'success' : 'partial',
+            'forwarded' => $forwarded,
+            'failed'    => $failed,
+        ]);
+    }
+
+    public function suggestForwardEmails()
+    {
+        if (!$this->isLoggedIn()) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Unauthorized']);
+        }
+        $q = trim($this->request->getGet('q') ?? '');
+        if (mb_strlen($q) < 1) {
+            return $this->response->setJSON(['results' => []]);
+        }
+        $results = $this->docTagModel->searchTaggableEmails($q, 15);
+        return $this->response->setJSON(['results' => $results]);
     }
 }

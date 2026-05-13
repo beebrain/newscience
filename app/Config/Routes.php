@@ -509,13 +509,30 @@ $routes->group('program-admin', ['filter' => 'programadmin'], function ($routes)
 // ================================================================
 $routes->group('edoc', ['filter' => 'edocauth'], function ($routes) {
     // E-Document (User)
-    $routes->get('/', 'Edoc\EdocController::index');
+    $routes->get('/', 'Edoc\EdocController::inbox');
     $routes->post('getdocinfo', 'Edoc\EdocController::getDocInfo');
     $routes->post('getdoc', 'Edoc\EdocController::getDoc');
     $routes->post('getallviewers', 'Edoc\EdocController::getAllViewers');
     $routes->get('volumes', 'Edoc\EdocController::getVolumes');
     $routes->get('viewPDF/(:any)', 'Edoc\EdocController::viewPDF/$1');
     $routes->post('update-thai-name', 'Edoc\EdocController::updateThaiName');
+
+    // Gmail-style Inbox (Phase B-E)
+    $routes->get('inbox', 'Edoc\EdocController::inbox');
+    $routes->get('inbox/data', 'Edoc\EdocController::inboxData');
+    $routes->post('inbox/star', 'Edoc\EdocController::toggleStar');
+    $routes->post('inbox/mark-read', 'Edoc\EdocController::markRead');
+    $routes->post('inbox/archive', 'Edoc\EdocController::archiveDoc');
+    $routes->get('inbox/suggest-emails', 'Edoc\EdocController::suggestForwardEmails');
+    // Labels
+    $routes->get('labels', 'Edoc\EdocController::getLabels');
+    $routes->post('labels', 'Edoc\EdocController::createLabel');
+    $routes->put('labels/(:num)', 'Edoc\EdocController::updateLabel/$1');
+    $routes->delete('labels/(:num)', 'Edoc\EdocController::deleteLabel/$1');
+    // Document label apply
+    $routes->post('documents/(:num)/labels', 'Edoc\EdocController::applyDocLabel/$1');
+    // Forward
+    $routes->post('documents/(:num)/forward', 'Edoc\EdocController::forwardDoc/$1');
 
     // E-Document (Admin)
     $routes->get('admin', 'Edoc\AdminEdocController::index');
