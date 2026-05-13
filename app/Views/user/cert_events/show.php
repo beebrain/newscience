@@ -18,11 +18,12 @@
         <div>
             <h2 style="margin: 0;"><?= esc($event['title']) ?></h2>
             <small style="color: #666;">
-                <?= $event['event_date'] ? date('d/m/Y', strtotime($event['event_date'])) : 'ไม่ระบุวันที่' ?> |
+                <?= $event['event_date'] ? date('d/m/Y', strtotime($event['event_date'])) : 'ไม่ระบุวันที่' ?>
                 <?php if (! empty($event['background_file'])): ?>
-                    ไฟล์ใบรับรอง: <?= esc($event['background_kind'] ?? '') ?> — <?= esc($event['background_file']) ?>
+                    <?php $hdrFn = basename(str_replace('\\', '/', (string) $event['background_file'])); ?>
+                    | แม่แบบ: <?= esc($event['background_kind'] ?? '') ?> — <?= esc($hdrFn) ?>
                 <?php else: ?>
-                    <span style="color:#b45309;">ยังไม่มีไฟล์ใบรับรอง</span>
+                    | <span style="color:#b45309;">ยังไม่มีไฟล์ใบรับรอง</span>
                 <?php endif; ?>
             </small>
         </div>
@@ -68,14 +69,10 @@
                         -
                     <?php endif; ?>
                 </div>
-                <div>
-                    <strong>ไฟล์ใบรับรอง:</strong><br>
-                    <?php if (! empty($event['background_file'])): ?>
-                        <?= esc($event['background_kind'] ?? '') ?> — <code style="font-size: 11px;"><?= esc($event['background_file']) ?></code>
-                    <?php else: ?>
-                        <em style="color:#b45309;">ยังไม่อัปโหลด — ต้องมีก่อนออกใบ</em>
-                    <?php endif; ?>
-                </div>
+                <?= view('admin/cert_events/partials/cert_event_background_block', [
+                    'event'      => $event,
+                    'cert_base'  => $cert_base ?? '',
+                ]) ?>
             </div>
         </div>
 
