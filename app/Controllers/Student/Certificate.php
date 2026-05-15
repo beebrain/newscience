@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\CertEventRecipientModel;
 use App\Models\CertificateModel;
 use App\Models\StudentUserModel;
+use App\Services\CertificateEmailService;
 use Config\Certificate as CertificateConfig;
 
 /**
@@ -93,8 +94,9 @@ class Certificate extends BaseController
             return redirect()->back()->with('error', 'ไม่พบไฟล์ใบรับรอง');
         }
 
-        $fullPath = $this->resolvePublicPath($recipient['pdf_path']);
-        if (!is_file($fullPath)) {
+        $mailService = new CertificateEmailService();
+        $fullPath = $mailService->resolvePdfAbsolutePath((string) $recipient['pdf_path'], $this->certConfig);
+        if ($fullPath === null || ! is_file($fullPath)) {
             return redirect()->back()->with('error', 'ไฟล์ถูกลบหรือไม่สามารถเข้าถึงได้');
         }
 
@@ -114,19 +116,5 @@ class Certificate extends BaseController
     {
         // Redirect ไปยังหน้าตรวจสอบสาธารณะ
         return redirect()->to(base_url('verify/' . $token));
-    }
-
-    protected function resolvePublicPath(string $relative): string
-    {
-        if (str_starts_with($relative, 'uploads/certificates/')) {
-            return rtrim($this->certConfig->certificateOutputPath, DIRECTORY_SEPARATOR)
-                . DIRECTORY_SEPARATOR . basename($relative);
-        }
-
-        if (str_starts_with($relative, 'uploads/')) {
-            return FCPATH . $relative;
-        }
-
-        return $relative;
     }
 }

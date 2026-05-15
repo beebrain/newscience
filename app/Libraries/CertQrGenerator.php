@@ -20,10 +20,11 @@ class CertQrGenerator
         $verifyUrl = base_url('verify/' . $verificationToken);
 
         $options = new QROptions([
-            'outputType'   => QRCode::OUTPUT_MARKUP_SVG,
-            'eccLevel'     => QRCode::ECC_M,
+            'outputType'     => QRCode::OUTPUT_MARKUP_SVG,
+            'outputBase64'   => false,
+            'eccLevel'       => QRCode::ECC_M,
             'svgViewBoxSize' => $sizePixels,
-            'quietzoneSize' => 2,
+            'quietzoneSize'  => 2,
         ]);
 
         $qrcode = new QRCode($options);
@@ -35,9 +36,10 @@ class CertQrGenerator
         $verifyUrl = base_url('verify/' . $verificationToken);
 
         $options = new QROptions([
-            'outputType'   => QRCode::OUTPUT_IMAGE_PNG,
-            'eccLevel'     => QRCode::ECC_M,
-            'scale'        => max(4, (int) ($sizePixels / 25)),
+            'outputType'    => QRCode::OUTPUT_IMAGE_PNG,
+            'outputBase64'  => false,
+            'eccLevel'      => QRCode::ECC_M,
+            'scale'         => max(4, (int) ($sizePixels / 25)),
             'quietzoneSize' => 2,
         ]);
 

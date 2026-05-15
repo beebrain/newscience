@@ -19,7 +19,7 @@ class CertApprovalModel extends Model
     ];
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
-    protected $updatedField = false;
+    protected $updatedField = '';
 
     public function log(int $requestId, string $action, int $actorUid, ?string $role = null, ?string $comment = null, ?string $ip = null): bool
     {

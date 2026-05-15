@@ -5,15 +5,214 @@ namespace App\Libraries;
 use Config\Certificate as CertificateConfig;
 use setasign\Fpdi\Fpdi;
 
+if (! class_exists('FPDF', false)) {
+    $fpdfBootstrap = ROOTPATH . 'vendor/setasign/fpdf/fpdf.php';
+    if (is_file($fpdfBootstrap)) {
+        require_once $fpdfBootstrap;
+    }
+}
+
 class CertPdfGenerator
 {
     protected CertificateConfig $config;
     protected CertQrGenerator $qrGenerator;
 
+    /** Absolute path with trailing directory separator (FPDF AddFont) */
+    protected static function certPdfFontDir(): string
+    {
+        return rtrim(APPPATH . 'Fonts' . DIRECTORY_SEPARATOR . 'cert_pdf', DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    }
+
+    protected static function thaiFontDefinitionsPresent(): bool
+    {
+        $dir = self::certPdfFontDir();
+
+        return is_file($dir . 'THSarabunNew.php');
+    }
+
     public function __construct()
     {
         $this->config      = config(CertificateConfig::class);
         $this->qrGenerator = new CertQrGenerator();
+    }
+
+    /**
+     * ลงทะเบียน TH Sarabun (จาก app/Fonts/cert_pdf — สร้างด้วย vendor/setasign/fpdf/makefont)
+     */
+    protected function registerThaiFonts(Fpdi $pdf): void
+    {
+        $dir = self::certPdfFontDir();
+        if (! is_file($dir . 'THSarabunNew.php')) {
+            log_message('error', 'CertPdfGenerator: Missing font definition ' . $dir . 'THSarabunNew.php');
+
+            return;
+        }
+        $pdf->AddFont('THSarabun', '', 'THSarabunNew.php', $dir);
+        if (is_file($dir . 'THSarabunNew_Bold.php')) {
+            $pdf->AddFont('THSarabun', 'B', 'THSarabunNew_Bold.php', $dir);
+        }
+    }
+
+    /**
+     * FPDF ใช้ encoding iso-8859-11 ตามไฟล์ฟอนต์ที่ generate — แปลงจาก UTF-8
+     */
+    protected function encodeTextForThaiFont(string $utf8): string
+    {
+        if ($utf8 === '') {
+            return '';
+        }
+        if (function_exists('iconv')) {
+            $conv = @iconv('UTF-8', 'ISO-8859-11//IGNORE', $utf8);
+            if ($conv !== false && $conv !== '') {
+                return $conv;
+            }
+        }
+        if (function_exists('mb_convert_encoding')) {
+            $conv = @mb_convert_encoding($utf8, 'ISO-8859-11', 'UTF-8');
+            if ($conv !== false && $conv !== '') {
+                return $conv;
+            }
+        }
+
+        return $utf8;
+    }
+
+    /**
+     * อ่าน metrics จาก FPDF หลัง SetFont (ใช้จำลอง MultiCell)
+     *
+     * @return array{cw: array<string, float|int>, cMargin: float, fontSize: float}|null
+     */
+    protected function readFpdiFontLayoutState(Fpdi $pdf): ?array
+    {
+        try {
+            $ref = new \ReflectionObject($pdf);
+            $pCf = $ref->getProperty('CurrentFont');
+            $pCf->setAccessible(true);
+            $current = $pCf->getValue($pdf);
+            if (! is_array($current) || empty($current['cw']) || ! is_array($current['cw'])) {
+                return null;
+            }
+            $pCm = $ref->getProperty('cMargin');
+            $pCm->setAccessible(true);
+            $pFs = $ref->getProperty('FontSize');
+            $pFs->setAccessible(true);
+
+            return [
+                'cw'      => $current['cw'],
+                'cMargin' => (float) $pCm->getValue($pdf),
+                'fontSize'=> (float) $pFs->getValue($pdf),
+            ];
+        } catch (\Throwable $e) {
+            log_message('debug', 'CertPdfGenerator readFpdiFontLayoutState: ' . $e->getMessage());
+
+            return null;
+        }
+    }
+
+    /**
+     * นับจำนวนบรรทัดที่ MultiCell จะสร้าง (logic สอดคล้อง setasign/fpdf MultiCell, align ไม่ใช่ J)
+     */
+    protected function countMulticellLines(Fpdi $pdf, float $w, string $txt): int
+    {
+        $state = $this->readFpdiFontLayoutState($pdf);
+        if ($state === null || $w <= 0) {
+            return 1;
+        }
+        $cw      = $state['cw'];
+        $cMargin = $state['cMargin'];
+        $fontSize = $state['fontSize'];
+        $wmax    = ($w - 2 * $cMargin) * 1000 / $fontSize;
+
+        $s  = str_replace("\r", '', (string) $txt);
+        $nb = strlen($s);
+        if ($nb > 0 && $s[$nb - 1] === "\n") {
+            $nb--;
+        }
+
+        $sep = -1;
+        $i   = 0;
+        $j   = 0;
+        $l   = 0;
+        $ns  = 0;
+        $nl  = 1;
+
+        while ($i < $nb) {
+            $c = $s[$i];
+            if ($c === "\n") {
+                $i++;
+                $sep = -1;
+                $j   = $i;
+                $l   = 0;
+                $ns  = 0;
+                $nl++;
+                continue;
+            }
+            if ($c === ' ') {
+                $sep = $i;
+                $ns++;
+            }
+            $l += (float) ($cw[$c] ?? 0);
+            if ($l > $wmax) {
+                if ($sep === -1) {
+                    if ($i === $j) {
+                        $i++;
+                    }
+                } else {
+                    $i = $sep + 1;
+                }
+                $sep = -1;
+                $j   = $i;
+                $l   = 0;
+                $ns  = 0;
+                $nl++;
+            } else {
+                $i++;
+            }
+        }
+
+        return $nl;
+    }
+
+    /**
+     * เลือกขนาดฟอนต์ให้ข้อความพอดีกรอบ (กว้าง x สูง) โดยย่อจาก font_size ลงทีละขั้น
+     *
+     * @return array{fs: float, lineH: float, lines: int}
+     */
+    protected function resolveFontSizeForBox(
+        Fpdi $pdf,
+        string $fontFamily,
+        string $fontStyle,
+        string $drawText,
+        float $bw,
+        float $bh,
+        float $maxFs,
+        float $minFs,
+        float $lineHeightFactor = 0.45
+    ): array {
+        $minFs = max(6.0, min($minFs, $maxFs));
+        $maxFs = max($minFs, $maxFs);
+        $step  = 0.5;
+
+        for ($fs = $maxFs; $fs >= $minFs - 0.001; $fs -= $step) {
+            $pdf->SetFont($fontFamily, $fontStyle, $fs);
+            if ($this->readFpdiFontLayoutState($pdf) === null) {
+                return ['fs' => $fs, 'lineH' => max(4.0, $fs * $lineHeightFactor), 'lines' => 1];
+            }
+            $lineH = max(4.0, $fs * $lineHeightFactor);
+            $lines = $this->countMulticellLines($pdf, $bw, $drawText);
+            if ($lines * $lineH <= $bh) {
+                return ['fs' => $fs, 'lineH' => $lineH, 'lines' => $lines];
+            }
+        }
+
+        $pdf->SetFont($fontFamily, $fontStyle, $minFs);
+        $lineH = max(4.0, $minFs * $lineHeightFactor);
+
+        return [
+            'fs'    => $minFs,
+            'lineH' => $lineH,
+            'lines' => $this->countMulticellLines($pdf, $bw, $drawText),
+        ];
     }
 
     /**
@@ -113,6 +312,10 @@ class CertPdfGenerator
                 $out[$k] = $layout[$k];
             }
         }
+        // 'orientation' is the canonical key written by cert-layout-picker.js
+        if (isset($layout['orientation']) && ! isset($out['page_orientation'])) {
+            $out['page_orientation'] = $layout['orientation'];
+        }
 
         return $out;
     }
@@ -154,10 +357,10 @@ class CertPdfGenerator
         $landscape = strtolower(trim((string) ($effective['page_orientation'] ?? ''))) === 'landscape';
         if ($landscape) {
             $pdf->AddPage('L', 'A4');
-            $pdf->Image($absoluteImagePath, 0, 0, 297, 210, '', '', '', false, 300, '', false, false, 0, true);
+            $pdf->Image($absoluteImagePath, 0, 0, 297, 210);
         } else {
             $pdf->AddPage();
-            $pdf->Image($absoluteImagePath, 0, 0, 210, 297, '', '', '', false, 300, '', false, false, 0, true);
+            $pdf->Image($absoluteImagePath, 0, 0, 210, 297);
         }
 
         $this->drawOverlays($pdf, $effective, $student, $request, $verificationToken, $signatureImagePath);
@@ -178,8 +381,15 @@ class CertPdfGenerator
             $fieldMapping = [];
         }
 
+        $this->registerThaiFonts($pdf);
+        $hasThaiFont = self::thaiFontDefinitionsPresent();
+
         foreach ($fieldMapping as $field => $cfg) {
             if (! is_array($cfg)) {
+                continue;
+            }
+            // ชื่อกิจกรรมไม่ต้องพิมพ์ทับใบรับรอง — มีอยู่บนแม่แบบรูปอยู่แล้ว
+            if ($field === 'purpose') {
                 continue;
             }
             $value = $this->getFieldValue((string) $field, $student, $request);
@@ -189,16 +399,58 @@ class CertPdfGenerator
                 $fs = (float) ($cfg['font_size'] ?? 16);
                 $bw = isset($cfg['box_w']) ? (float) $cfg['box_w'] : 0.0;
                 $bh = isset($cfg['box_h']) ? (float) $cfg['box_h'] : 0.0;
+                $minFs = isset($cfg['font_size_min']) ? (float) $cfg['font_size_min'] : 8.0;
+                $fitBox = true;
+                if (isset($cfg['fit_box'])) {
+                    $fb = $cfg['fit_box'];
+                    $fitBox = ! ($fb === false || $fb === 0 || $fb === '0' || $fb === 'false');
+                }
+                $cellAlign = isset($cfg['text_align']) ? strtoupper(substr((string) $cfg['text_align'], 0, 1)) : 'C';
+                if (! in_array($cellAlign, ['L', 'C', 'R', 'J'], true)) {
+                    $cellAlign = 'C';
+                }
                 if ($field === 'student_name') {
                     $value = trim((string) preg_replace('/\s+/u', ' ', str_replace(["\r", "\n", "\t"], ' ', (string) $value)));
-                    $pdf->setRTL(false);
                 }
-                $pdf->SetFont('THSarabun', '', $fs);
-                if ($bw > 0 && $bh > 0) {
-                    $pdf->MultiCell($bw, 0, (string) $value, 0, 'C', false, 0, $x, $y, true, 0, false, true, $bh, 'M');
-                } else {
+                $fontStyle = '';
+                if (! empty($cfg['font_weight']) && strtolower((string) $cfg['font_weight']) === 'bold'
+                    && is_file(self::certPdfFontDir() . 'THSarabunNew_Bold.php')) {
+                    $fontStyle = 'B';
+                }
+                $fontFamily = $hasThaiFont ? 'THSarabun' : 'helvetica';
+                $drawText     = $hasThaiFont ? $this->encodeTextForThaiFont((string) $value) : (string) $value;
+
+                if ($bw > 0 && $bh > 0 && $fitBox) {
+                    // ให้ชื่อผู้รับใหญ่เท่ากรอบที่ผู้ใช้ลาก แล้วลด size ลงเองถ้าข้อความยาว
+                    // resolveFontSizeForBox ใช้ lineHeightFactor 0.45 (mm per pt) — สลับค่าให้ fs สูงสุดเต็มกรอบ 1 บรรทัด
+                    $maxFsForBox = ($field === 'student_name' && $bh > 0)
+                        ? max($fs, $bh / 0.45)
+                        : $fs;
+                    $picked = $this->resolveFontSizeForBox(
+                        $pdf,
+                        $fontFamily,
+                        $fontStyle,
+                        $drawText,
+                        $bw,
+                        $bh,
+                        $maxFsForBox,
+                        $minFs
+                    );
+                    $pdf->SetFont($fontFamily, $fontStyle, $picked['fs']);
+                    $lineH   = $picked['lineH'];
+                    $totalH  = $picked['lines'] * $lineH;
+                    $offsetY = max(0.0, ($bh - $totalH) / 2);
+                    $pdf->SetXY($x, $y + $offsetY);
+                    $pdf->MultiCell($bw, $lineH, $drawText, 0, $cellAlign, false);
+                } elseif ($bw > 0 && $bh > 0) {
+                    $pdf->SetFont($fontFamily, $fontStyle, $fs);
+                    $lineH = max(5.0, $fs * 0.45);
                     $pdf->SetXY($x, $y);
-                    $pdf->Cell(0, 0, (string) $value, 0, 0, 'L');
+                    $pdf->MultiCell($bw, $lineH, $drawText, 0, $cellAlign, false);
+                } else {
+                    $pdf->SetFont($fontFamily, $fontStyle, $fs);
+                    $pdf->SetXY($x, $y);
+                    $pdf->Cell(0, 0, $drawText, 0, 0, 'L');
                 }
             }
         }
@@ -214,8 +466,10 @@ class CertPdfGenerator
             );
         }
 
-        $qrSvg = $this->qrGenerator->generate($verificationToken, (int) ($effective['qr_size'] ?? 40));
-        $qrPath = $this->saveTempQr($qrSvg, $verificationToken);
+        // PNG โดยตรง (หลีกเลี่ยง SVG + DOMDocument; chillerlan v5 ค่าเริ่มต้น outputBase64 ทำให้ SVG ไม่ใช่ XML)
+        $qrPx   = max(120, min(800, (int) (($effective['qr_size'] ?? 40) * 8)));
+        $qrPng  = $this->qrGenerator->generatePng($verificationToken, $qrPx);
+        $qrPath = $this->saveTempQrPng($qrPng, $verificationToken);
         if ($qrPath) {
             $pdf->Image(
                 $qrPath,
@@ -334,37 +588,17 @@ class CertPdfGenerator
         return "{$d} {$m} {$y}";
     }
 
-    protected function saveTempQr(string $svgContent, string $token): ?string
+    protected function saveTempQrPng(string $pngBinary, string $token): ?string
     {
-        $tmpDir = sys_get_temp_dir();
-        $path   = $tmpDir . DIRECTORY_SEPARATOR . 'qr_' . $token . '.png';
-
-        $dom = new \DOMDocument();
-        $dom->loadXML($svgContent);
-
-        $svg    = $dom->documentElement;
-        $width  = $svg->getAttribute('width') ?: 200;
-        $height = $svg->getAttribute('height') ?: 200;
-
-        $image = imagecreatetruecolor((int) $width, (int) $height);
-        $white = imagecolorallocate($image, 255, 255, 255);
-        imagefill($image, 0, 0, $white);
-
-        $black = imagecolorallocate($image, 0, 0, 0);
-
-        $rects = $dom->getElementsByTagName('rect');
-        foreach ($rects as $rect) {
-            $x = (float) $rect->getAttribute('x');
-            $y = (float) $rect->getAttribute('y');
-            $w = (float) $rect->getAttribute('width');
-            $h = (float) $rect->getAttribute('height');
-            if ($w > 0 && $h > 0 && $rect->getAttribute('fill') !== 'none') {
-                imagefilledrectangle($image, (int) $x, (int) $y, (int) ($x + $w), (int) ($y + $h), $black);
-            }
+        if ($pngBinary === '') {
+            return null;
         }
+        $safeToken = preg_replace('/[^A-Za-z0-9._-]+/', '_', $token);
+        $path       = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'qr_' . $safeToken . '_' . bin2hex(random_bytes(4)) . '.png';
 
-        imagepng($image, $path);
-        imagedestroy($image);
+        if (@file_put_contents($path, $pngBinary) === false) {
+            return null;
+        }
 
         return $path;
     }

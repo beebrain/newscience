@@ -6,9 +6,7 @@
         <h2 style="margin: 0;">จัดการกิจกรรมใบรับรอง</h2>
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
             <a href="<?= esc($cert_base) ?>/issued-report" class="btn btn-secondary">รายงานใบที่ออกแล้ว</a>
-            <button type="button" class="btn btn-primary" onclick="openModal('certEventModal')">
-                + สร้างกิจกรรมใหม่
-            </button>
+            <a href="<?= esc($cert_base) ?>/create" class="btn btn-primary">+ สร้างกิจกรรมใหม่</a>
         </div>
     </div>
 
@@ -85,11 +83,7 @@
                             <td style="padding: 0.75rem; text-align: center;">
                                 <div class="action-buttons" style="display: flex; gap: 0.5rem; justify-content: center;">
                                     <a href="<?= esc($cert_base) ?>/<?= (int) $event['id'] ?>" class="btn btn-sm btn-primary">ดู</a>
-                                    <button type="button"
-                                        class="btn btn-sm btn-secondary"
-                                        onclick="editEvent(<?= $event['id'] ?>)">
-                                        แก้ไข
-                                    </button>
+                                    <a href="<?= esc($cert_base) ?>/<?= (int) $event['id'] ?>/edit" class="btn btn-sm btn-secondary">แก้ไข</a>
                                     <button type="button"
                                         class="btn btn-sm btn-danger"
                                         onclick="confirmDelete(<?= $event['id'] ?>, '<?= esc($event['title'], 'js') ?>')">
@@ -104,21 +98,6 @@
         <?php endif; ?>
     </div>
 </div>
-
-<!-- Create/Edit Modal -->
-<?= view('admin/components/modal_base', [
-    'modal_id' => 'certEventModal',
-    'title' => 'สร้างกิจกรรมใหม่',
-    'size' => 'lg',
-    'content' => view('admin/cert_events/_form', [
-        'event' => null,
-        'cert_base' => $cert_base,
-    ]),
-    'footer' => '
-        <button type="button" class="btn btn-secondary" onclick="closeModal(\'certEventModal\')">ยกเลิก</button>
-        <button type="submit" class="btn btn-primary" form="certEventForm">บันทึก</button>
-    '
-]) ?>
 
 <!-- Delete Confirmation Modal -->
 <?= view('admin/components/modal_base', [
@@ -158,158 +137,25 @@ function getStatusLabel($status): string
 }
 ?>
 
-<script src="<?= base_url('js/cert-layout-picker.js') ?>"></script>
 <script src="<?= base_url('js/ajax-form-handler.js') ?>"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        if (window.CertLayoutPicker) {
-            window.CertLayoutPicker.initAll();
-        }
-    });
-
-    // Edit event - load data and open modal
-    async function editEvent(eventId) {
-        try {
-            const response = await fetch(`<?= esc($cert_base, 'js') ?>/${eventId}/edit?ajax=1`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                // Update modal title
-                document.querySelector('#certEventModal .modal-title').textContent = 'แก้ไขกิจกรรม';
-
-                // Update form action
-                const form = document.getElementById('certEventForm');
-                form.action = `<?= esc($cert_base, 'js') ?>/${eventId}/update`;
-
-                // Populate form fields
-                form.querySelector('[name="title"]').value = data.event.title || '';
-                form.querySelector('[name="description"]').value = data.event.description || '';
-                form.querySelector('[name="event_date"]').value = data.event.event_date || '';
-
-                const layoutEl = form.querySelector('[name="layout_json"]');
-                if (layoutEl) {
-                    layoutEl.value = data.event.layout_json || '';
-                }
-                const picker = form.querySelector('[data-cert-layout-picker]');
-                if (picker) {
-                    picker.removeAttribute('data-cert-lp-inited');
-                    const b = '<?= esc(rtrim((string) ($cert_base ?? ''), '/'), 'js') ?>';
-                    if (String(data.event.background_kind || '').toLowerCase() === 'image' && data.event.id) {
-                        picker.setAttribute('data-preview-url', b + '/' + data.event.id + '/background-preview');
-                    } else {
-                        picker.setAttribute('data-preview-url', '');
-                    }
-                    if (window.CertLayoutPicker) {
-                        window.CertLayoutPicker.initAll();
-                    }
-                }
-                const bgFile = form.querySelector('[name="background_file"]');
-                if (bgFile) {
-                    bgFile.value = '';
-                }
-                const bgHint = document.getElementById('certEventBgHint');
-                if (bgHint) {
-                    const bf = data.event.background_file || '';
-                    const bk = data.event.background_kind || '';
-                    bgHint.textContent = bf
-                        ? `ไฟล์ปัจจุบัน: ${bk} — ${bf} (เลือกไฟล์ใหม่เพื่อแทนที่)`
-                        : 'ยังไม่มีไฟล์ — โปรดเลือกรูปหรือ PDF แม่แบบใบรับรอง';
-                }
-
-                openModal('certEventModal');
-            } else {
-                AjaxForm.showToast(data.message || 'ไม่สามารถโหลดข้อมูลได้', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            AjaxForm.showToast('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
-        }
-    }
-
-    // Confirm delete
     function confirmDelete(eventId, eventTitle) {
         document.getElementById('deleteConfirmText').textContent = `คุณแน่ใจหรือไม่ที่จะลบกิจกรรม "${eventTitle}"?`;
-
         const form = document.getElementById('deleteForm');
         form.action = `<?= esc($cert_base, 'js') ?>/${eventId}/delete`;
-
         openModal('deleteConfirmModal');
     }
-
-    // Reset modal when closing
-    document.getElementById('certEventModal')?.addEventListener('modal:close', function() {
-        const form = document.getElementById('certEventForm');
-        form.reset();
-        form.action = '<?= esc($cert_base, 'js') ?>/store';
-        document.querySelector('#certEventModal .modal-title').textContent = 'สร้างกิจกรรมใหม่';
-        const bgHint = document.getElementById('certEventBgHint');
-        if (bgHint) {
-            bgHint.textContent = 'ยังไม่มีไฟล์ — แนะนำแนบตอนสร้างหรือแก้ไขก่อนกดออกใบ';
-        }
-        const layoutEl = form.querySelector('[name="layout_json"]');
-        if (layoutEl) {
-            layoutEl.value = '';
-        }
-        const picker = document.querySelector('#certEventModal [data-cert-layout-picker]');
-        if (picker) {
-            picker.removeAttribute('data-cert-lp-inited');
-            picker.setAttribute('data-preview-url', '');
-            if (window.CertLayoutPicker) {
-                window.CertLayoutPicker.initAll();
-            }
-        }
-    });
 </script>
 
 <style>
-    .badge {
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 12px;
-    }
-
-    .badge-secondary {
-        background: #6c757d;
-        color: white;
-    }
-
-    .badge-success {
-        background: #28a745;
-        color: white;
-    }
-
-    .badge-primary {
-        background: #007bff;
-        color: white;
-    }
-
-    .badge-warning {
-        background: #ffc107;
-        color: black;
-    }
-
-    .badge-danger {
-        background: #dc3545;
-        color: white;
-    }
-
-    .action-buttons .btn {
-        padding: 0.25rem 0.5rem;
-        font-size: 12px;
-    }
-
-    .alert {
-        padding: 1rem;
-        border-radius: 4px;
-    }
-
-    .alert-info {
-        background: #e3f2fd;
-        color: #0d47a1;
-    }
+    .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 12px; }
+    .badge-secondary { background: #6c757d; color: white; }
+    .badge-success { background: #28a745; color: white; }
+    .badge-primary { background: #007bff; color: white; }
+    .badge-warning { background: #ffc107; color: black; }
+    .badge-danger  { background: #dc3545; color: white; }
+    .action-buttons .btn { padding: 0.25rem 0.5rem; font-size: 12px; }
+    .alert { padding: 1rem; border-radius: 4px; }
+    .alert-info { background: #e3f2fd; color: #0d47a1; }
 </style>
 <?= $this->endSection() ?>

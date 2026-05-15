@@ -605,6 +605,174 @@ class CertEvents extends BaseController
     }
 
     /**
+     * ออกใบรับรองให้ผู้รับรายเดียว (สร้าง PDF อย่างเดียว ไม่ส่งอีเมล)
+     * รองรับ re-issue: ถ้าผู้รับออกใบแล้ว จะใช้ certificate record + verification_token เดิม
+     * แต่สร้าง PDF ไฟล์ใหม่ (timestamp ใหม่ใน filename)
+     */
+    public function issueOneRecipient(int $recipientId)
+    {
+        $recipient = $this->recipientModel->find($recipientId);
+        if (! $recipient) {
+            return redirect()->back()->with('error', 'ไม่พบผู้รับ');
+        }
+        $event = $this->eventModel->getWithDetails((int) $recipient['event_id']);
+        if (! $event || ! CertOrganizerAccess::mayAccessEvent($event)) {
+            return redirect()->back()->with('error', 'ไม่มีสิทธิ์เข้าถึงกิจกรรมนี้');
+        }
+        if (trim((string) ($event['background_file'] ?? '')) === '' || trim((string) ($event['background_kind'] ?? '')) === '') {
+            return redirect()->back()->with('error', 'กรุณาอัปโหลดไฟล์แม่แบบใบรับรองที่หน้าแก้ไขก่อนออกใบ');
+        }
+        $em = CertOrganizerAccess::normalizeEmail((string) ($recipient['recipient_email'] ?? ''));
+        if ($em === '' || ! filter_var($em, FILTER_VALIDATE_EMAIL)) {
+            return redirect()->back()->with('error', 'ผู้รับต้องมีอีเมลถูกต้องก่อนออกใบรับรอง');
+        }
+
+        $template = $this->resolveTemplateForPdf($event);
+        if ($template === null) {
+            return redirect()->back()->with('error', 'ไม่สามารถเตรียมข้อมูล overlay สำหรับสร้าง PDF ได้');
+        }
+
+        $isReissue       = false;
+        $certificateData = null;
+        if ($recipient['status'] === 'issued' && ! empty($recipient['certificate_id'])) {
+            $existing = $this->certificateModel->find((int) $recipient['certificate_id']);
+            if ($existing) {
+                $certificateData = $existing;
+                $isReissue       = true;
+            }
+        }
+        if ($certificateData === null) {
+            $certificateData = $this->createCertificateRecord($recipient, $event);
+        }
+
+        try {
+            $studentData = $this->buildStudentData($recipient, $event);
+            $requestData = [
+                'request_number' => $certificateData['certificate_no'],
+                'purpose'        => $event['title'],
+            ];
+            $signaturePath = $this->getSignerSignature($event['signer_id']);
+
+            $pdfGenerator = new CertPdfGenerator();
+            $pdfPath      = $pdfGenerator->generate(
+                $requestData,
+                $template,
+                $studentData,
+                $certificateData['verification_token'],
+                $signaturePath,
+                $event
+            );
+
+            if (! $pdfPath) {
+                if (! $isReissue) {
+                    $this->recipientModel->markAsFailed($recipient['id'], 'ไม่สามารถสร้าง PDF ได้');
+                }
+                return redirect()->back()->with('error', 'สร้าง PDF ไม่สำเร็จ');
+            }
+
+            $mailService = new CertificateEmailService();
+            $absPdf      = $mailService->resolvePdfAbsolutePath($pdfPath, $this->certConfig);
+            $hash        = $absPdf ? $pdfGenerator->hashFile($absPdf) : '';
+
+            $this->certificateModel->update($certificateData['id'], [
+                'pdf_path' => $pdfPath,
+                'pdf_hash' => $hash,
+            ]);
+            if (! $isReissue) {
+                $this->recipientModel->markAsIssued($recipient['id'], $certificateData['id']);
+            }
+        } catch (\Exception $e) {
+            if (! $isReissue) {
+                $this->recipientModel->markAsFailed($recipient['id'], $e->getMessage());
+            }
+            return redirect()->back()->with('error', 'ออกใบไม่สำเร็จ: ' . $e->getMessage());
+        }
+
+        $msg = $isReissue
+            ? 'ออกใบรับรองใหม่เรียบร้อย (เลขที่เดิม) — สามารถดาวน์โหลดหรือกดส่งอีเมลใหม่ได้'
+            : 'ออกใบรับรองเรียบร้อย — กดปุ่ม "ส่งอีเมล" เพื่อแนบและส่งให้ผู้รับ';
+        return redirect()->back()->with('success', $msg);
+    }
+
+    /**
+     * ส่งอีเมลใบรับรองให้ผู้รับรายเดียว (ต้องออกใบรับรองและมี pdf_path แล้ว)
+     */
+    public function sendCertEmail(int $recipientId)
+    {
+        $recipient = $this->recipientModel
+            ->select('cert_event_recipients.*, certificates.pdf_path')
+            ->join('certificates', 'certificates.id = cert_event_recipients.certificate_id', 'left')
+            ->where('cert_event_recipients.id', $recipientId)
+            ->first();
+        if (! $recipient) {
+            return redirect()->back()->with('error', 'ไม่พบผู้รับ');
+        }
+        $event = $this->eventModel->getWithDetails((int) $recipient['event_id']);
+        if (! $event || ! CertOrganizerAccess::mayAccessEvent($event)) {
+            return redirect()->back()->with('error', 'ไม่มีสิทธิ์เข้าถึงกิจกรรมนี้');
+        }
+        if ($recipient['status'] !== 'issued' || empty($recipient['pdf_path'])) {
+            return redirect()->back()->with('error', 'ต้องออกใบรับรอง (สร้าง PDF) ให้ผู้รับนี้ก่อนจึงส่งอีเมลได้');
+        }
+        $em = CertOrganizerAccess::normalizeEmail((string) ($recipient['recipient_email'] ?? ''));
+        if ($em === '' || ! filter_var($em, FILTER_VALIDATE_EMAIL)) {
+            return redirect()->back()->with('error', 'อีเมลผู้รับไม่ถูกต้อง');
+        }
+
+        $mailService = new CertificateEmailService();
+        $absPdf      = $mailService->resolvePdfAbsolutePath((string) $recipient['pdf_path'], $this->certConfig);
+        if (! $absPdf || ! is_file($absPdf)) {
+            return redirect()->back()->with('error', 'ไม่พบไฟล์ PDF บนดิสก์ (อาจถูกลบ หรือเส้นทางไม่ถูกต้อง)');
+        }
+
+        $verifyUrl = null;
+        if (! empty($recipient['certificate_id'])) {
+            $cert = $this->certificateModel->find((int) $recipient['certificate_id']);
+            if ($cert && ! empty($cert['verification_token'])) {
+                $verifyUrl = base_url('verify/' . $cert['verification_token']);
+            }
+        }
+
+        $send = $mailService->sendIssuedCertificate($recipient, $event, $absPdf, $verifyUrl);
+        $mailService->persistSendResult((int) $recipient['id'], $send['ok'], $send['ok'] ? null : ($send['error'] ?? 'unknown'));
+
+        if (! $send['ok']) {
+            return redirect()->back()->with('error', 'ส่งอีเมลไม่สำเร็จ: ' . ($send['error'] ?? 'unknown'));
+        }
+        return redirect()->back()->with('success', 'ส่งอีเมลใบรับรองเรียบร้อยถึง ' . $em);
+    }
+
+    /**
+     * ดาวน์โหลด PDF ใบรับรองของผู้รับ (ไฟล์อยู่ใต้ writable — ต้องส่งผ่าน controller)
+     */
+    public function downloadRecipientPdf(int $recipientId)
+    {
+        $recipient = $this->recipientModel
+            ->select('cert_event_recipients.*, certificates.pdf_path')
+            ->join('certificates', 'certificates.id = cert_event_recipients.certificate_id', 'left')
+            ->where('cert_event_recipients.id', $recipientId)
+            ->first();
+        if (! $recipient) {
+            return redirect()->back()->with('error', 'ไม่พบผู้รับ');
+        }
+        $event = $this->eventModel->getWithDetails((int) $recipient['event_id']);
+        if (! $event || ! CertOrganizerAccess::mayAccessEvent($event)) {
+            return redirect()->back()->with('error', 'ไม่มีสิทธิ์เข้าถึงกิจกรรมนี้');
+        }
+        if (($recipient['status'] ?? '') !== 'issued' || empty($recipient['pdf_path'])) {
+            return redirect()->back()->with('error', 'ยังไม่มีไฟล์ PDF สำหรับผู้รับนี้');
+        }
+
+        $mailService = new CertificateEmailService();
+        $absPdf      = $mailService->resolvePdfAbsolutePath((string) $recipient['pdf_path'], $this->certConfig);
+        if (! $absPdf || ! is_file($absPdf)) {
+            return redirect()->back()->with('error', 'ไม่พบไฟล์ PDF บนดิสก์');
+        }
+
+        return $this->response->download($absPdf, null)->setFileName(basename((string) $recipient['pdf_path']));
+    }
+
+    /**
      * หน้า Import รายชื่อจาก CSV/Excel
      */
     public function importForm(int $eventId)
@@ -762,7 +930,7 @@ class CertEvents extends BaseController
         $token = bin2hex(random_bytes($this->certConfig->verificationTokenBytes));
 
         $data = [
-            'request_id'         => 0, // ไม่ผูกกับ cert_requests ในระบบใหม่
+            'request_id'         => null, // กิจกรรมไม่ผูก cert_requests (คอลัมน์ต้องเป็น NULL ได้)
             'certificate_no'     => $certificateNo,
             'pdf_path'           => '', // จะอัปเดตหลังสร้าง PDF
             'pdf_hash'           => '', // จะอัปเดตหลังสร้าง PDF
@@ -875,10 +1043,10 @@ class CertEvents extends BaseController
         if ($ext === 'jpeg') {
             $ext = 'jpg';
         }
-        $kind = in_array($ext, ['jpg', 'png'], true) ? 'image' : ($ext === 'pdf' ? 'pdf' : null);
-        if ($kind === null) {
-            return ['_error' => 'รองรับเฉพาะไฟล์พื้นหลัง PDF, JPG หรือ PNG'];
+        if (! in_array($ext, ['jpg', 'png'], true)) {
+            return ['_error' => 'รองรับเฉพาะไฟล์ JPG หรือ PNG (ไม่รองรับ PDF แล้ว)'];
         }
+        $kind = 'image';
 
         if ($file->getSize() > $this->certConfig->maxTemplateSize) {
             return ['_error' => 'ไฟล์พื้นหลังใหญ่เกินกำหนด'];
@@ -981,7 +1149,6 @@ class CertEvents extends BaseController
         }
         $fieldMapping = $defaults['field_mapping'] ?? [
             'student_name' => ['x' => 90, 'y' => 145, 'font_size' => 22],
-            'purpose'      => ['x' => 90, 'y' => 168, 'font_size' => 14],
         ];
 
         return [

@@ -81,6 +81,40 @@ class AcademicServiceModel extends Model
     }
 
     /**
+     * รายการบริการวิชาการตามตัวกรองรายงาน (ปี พ.ศ. + ช่วงวันที่) ไม่ใส่ keyword
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findForReportFilters(?string $year, ?string $dateFrom, ?string $dateTo, bool $onlyPersonResponsible = false): array
+    {
+        $builder = $this->builder()
+            ->select('id, title, academic_year, service_date, service_date_end, responsible_type, responsible_person_text')
+            ->orderBy('service_date', 'DESC');
+        if ($year !== null && $year !== '') {
+            $builder->where('academic_year', $year);
+        }
+        if ($dateFrom !== null && $dateFrom !== '') {
+            $builder->where(
+                'COALESCE(service_date_end, service_date) >= ' . $this->db->escape($dateFrom),
+                null,
+                false
+            );
+        }
+        if ($dateTo !== null && $dateTo !== '') {
+            $builder->where(
+                'service_date <= ' . $this->db->escape($dateTo),
+                null,
+                false
+            );
+        }
+        if ($onlyPersonResponsible) {
+            $builder->where('responsible_type', 'person');
+        }
+
+        return $builder->get()->getResultArray();
+    }
+
+    /**
      * Get one service with its participants (joined)
      */
     public function getWithParticipants(int $id): ?array
@@ -112,5 +146,38 @@ class AcademicServiceModel extends Model
             ->orderBy('academic_year', 'DESC')
             ->findAll();
         return array_column($rows, 'academic_year');
+    }
+
+    /**
+     * จำนวน user ในระบบ (uid) ที่เกี่ยวข้องกับบริการวิชาการอย่างน้อยหนึ่งรายการ:
+     * ทั้งจากผู้ร่วม (participants) และผู้รับผิดชอบระดับบุคคล (responsible_person_text)
+     */
+    public function countDistinctInvolvedUserUids(): int
+    {
+        $db = $this->db;
+        $uidSet = [];
+        if ($db->tableExists('academic_service_participants')) {
+            $rows = $db->table('academic_service_participants')
+                ->select('user_uid')
+                ->distinct()
+                ->where('user_uid IS NOT NULL', null, false)
+                ->get()
+                ->getResultArray();
+            foreach ($rows as $r) {
+                $uidSet[(int) $r['user_uid']] = true;
+            }
+        }
+        if ($db->tableExists('academic_services')) {
+            $rows = $this->select('responsible_person_text')
+                ->where('responsible_type', 'person')
+                ->where('responsible_person_text IS NOT NULL', null, false)
+                ->where('responsible_person_text !=', '')
+                ->findAll();
+            foreach ($rows as $row) {
+                AcademicServiceParticipantModel::mergeUserUidsFromResponsiblePersonJson($row['responsible_person_text'] ?? null, $uidSet);
+            }
+        }
+
+        return count($uidSet);
     }
 }

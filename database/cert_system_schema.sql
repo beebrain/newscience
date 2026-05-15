@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS cert_approvals (
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS certificates (
     id                  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    request_id          INT UNSIGNED NOT NULL,
+    request_id          INT UNSIGNED NULL COMMENT 'cert_requests.id; NULL for event-based certificates',
     certificate_no      VARCHAR(30) NOT NULL UNIQUE,
     pdf_path            VARCHAR(500) NOT NULL,
     pdf_hash            VARCHAR(64) NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS certificates (
     revoked_at          DATETIME NULL,
     created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_certificates_request (request_id),
-    CONSTRAINT fk_certificates_request FOREIGN KEY (request_id) REFERENCES cert_requests(id),
+    CONSTRAINT fk_certificates_request FOREIGN KEY (request_id) REFERENCES cert_requests(id) ON DELETE RESTRICT,
     CONSTRAINT fk_certificates_signed_by FOREIGN KEY (signed_by) REFERENCES user(uid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

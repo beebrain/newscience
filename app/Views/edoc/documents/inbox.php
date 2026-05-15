@@ -129,6 +129,78 @@
         .spinner { border: 3px solid #e0e0e0; border-top-color: #1a73e8; border-radius: 50%; width: 32px; height: 32px; animation: spin 0.7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         #loading-wrap { display: flex; align-items: center; justify-content: center; padding: 48px; }
+
+        /* Hamburger / mobile menu */
+        #hamburger-btn { display: none; padding: 8px; border-radius: 50%; cursor: pointer; transition: background 0.15s; }
+        #hamburger-btn:hover { background: #e8eaed; }
+        #sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 40; }
+        #sidebar-backdrop.open { display: block; }
+
+        /* ============== MOBILE (<=768px) ============== */
+        @media (max-width: 768px) {
+            #hamburger-btn { display: flex; align-items: center; justify-content: center; }
+            #top-bar { padding: 0 12px; gap: 8px; }
+            #top-bar > a.text-xl { font-size: 1rem; }
+            #top-bar > a.text-xl i { font-size: 1.125rem; }
+            #top-bar > a.text-xl span,
+            #top-bar > a.text-xl { white-space: nowrap; }
+            #search-input { height: 38px; font-size: 0.875rem; padding: 0 14px; min-width: 0; }
+            #top-bar .ml-auto > span,
+            #top-bar .ml-auto > a { display: none; }
+
+            /* Sidebar → drawer */
+            #sidebar {
+                position: fixed; top: 64px; left: 0; bottom: 0;
+                width: 280px; z-index: 50;
+                background: #fff;
+                box-shadow: 4px 0 16px rgba(0,0,0,.15);
+                transform: translateX(-100%); transition: transform 0.25s ease;
+            }
+            #sidebar.open { transform: translateX(0); }
+
+            /* Doc row — compact */
+            .doc-row { padding: 0 8px; height: auto; min-height: 60px; flex-wrap: wrap; gap: 4px 6px; padding-top: 6px; padding-bottom: 6px; }
+            .doc-row .chk { margin-right: 4px; }
+            .doc-row .star-btn { margin-right: 4px; }
+            .doc-row .sender-col {
+                width: auto; max-width: 50%;
+                font-size: 0.75rem; padding-right: 0;
+                font-weight: 600; color: #444;
+            }
+            .doc-row .subject-col {
+                flex: 1 1 100%; order: 3;
+                font-size: 0.8125rem;
+                white-space: normal; overflow: visible;
+            }
+            .doc-row .date-col {
+                width: auto; margin-left: auto;
+                font-size: 0.7rem;
+            }
+            .doc-row .doctype-badge { font-size: 0.625rem; padding: 1px 6px; }
+            .doc-row .label-chip { max-width: 60px; }
+
+            /* Toolbar — compact */
+            #toolbar { padding: 0 8px; }
+            .toolbar-btn { padding: 6px 8px; font-size: 0.75rem; }
+
+            /* Category tabs */
+            .cat-tab { padding: 12px 14px; font-size: 0.8125rem; }
+
+            /* Pagination */
+            #pagination { padding: 10px 12px; font-size: 0.75rem; flex-wrap: wrap; justify-content: center; }
+
+            /* Modals */
+            .modal-box { width: 95vw !important; max-height: 90vh; overflow-y: auto; }
+            .modal-header { padding: 12px 14px; font-size: 0.9375rem; }
+            .modal-body { padding: 12px 14px; }
+            .modal-footer { padding: 10px 14px; flex-wrap: wrap; }
+        }
+
+        @media (max-width: 480px) {
+            #top-bar > a.text-xl span:not(.material-icons) { display: none; }
+            .cat-tab { padding: 10px 12px; }
+            .doc-row .sender-col { max-width: 60%; }
+        }
     </style>
 </head>
 <body>
@@ -137,8 +209,11 @@
 
     <!-- Top Bar -->
     <div id="top-bar">
+        <div id="hamburger-btn" onclick="toggleSidebar()" title="เมนู">
+            <i class="fas fa-bars text-gray-600"></i>
+        </div>
         <a href="<?= base_url('index.php/edoc') ?>" class="text-xl font-bold text-indigo-700 flex items-center gap-2" style="white-space:nowrap">
-            <i class="fas fa-inbox"></i> E-Document
+            <i class="fas fa-inbox"></i> <span>E-Document</span>
         </a>
         <input id="search-input" type="text" placeholder="ค้นหาเอกสาร...">
         <div class="ml-auto flex items-center gap-3">
@@ -148,6 +223,9 @@
             <span class="text-sm text-gray-600"><?= esc($infoUser['tf_name'] ?? '') ?> <?= esc($infoUser['tl_name'] ?? '') ?></span>
         </div>
     </div>
+
+    <!-- Mobile sidebar backdrop -->
+    <div id="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
 
     <!-- Main -->
     <div id="main-area">
@@ -445,6 +523,14 @@ function renderPagination(total, page, perPage) {
 // ============================================================
 // Navigation
 // ============================================================
+function toggleSidebar(force) {
+    const sb = document.getElementById('sidebar');
+    const bd = document.getElementById('sidebar-backdrop');
+    const open = (typeof force === 'boolean') ? force : !sb.classList.contains('open');
+    sb.classList.toggle('open', open);
+    bd.classList.toggle('open', open);
+}
+
 function switchTab(tab, el) {
     currentTab = tab;
     currentDoctype = '';
@@ -455,6 +541,7 @@ function switchTab(tab, el) {
     if (el) el.classList.add('active');
     resetDoctypeTab();
     loadInbox();
+    if (window.matchMedia('(max-width:768px)').matches) toggleSidebar(false);
 }
 
 function switchDoctype(dt, el) {
@@ -475,6 +562,7 @@ function switchLabel(labelId, el) {
     if (el) el.classList.add('active');
     resetDoctypeTab();
     loadInbox();
+    if (window.matchMedia('(max-width:768px)').matches) toggleSidebar(false);
 }
 
 function resetDoctypeTab() {

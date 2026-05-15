@@ -108,7 +108,7 @@ class Certificate extends BaseConfig
      * ค่าเริ่มต้น overlay เมื่อกิจกรรมไม่ใช้ cert_templates (ตำแหน่ง mm บนหน้า A4 แนวตั้ง)
      * แก้ได้ผ่าน env cert.eventDefaultLayoutJson (string JSON เต็ม)
      */
-    public string $eventCertificateDefaultLayoutJson = '{"field_mapping":{"student_name":{"x":90,"y":145,"font_size":22},"purpose":{"x":90,"y":168,"font_size":14}},"signature_x":150,"signature_y":200,"qr_x":18,"qr_y":262,"qr_size":22}';
+    public string $eventCertificateDefaultLayoutJson = '{"field_mapping":{"student_name":{"x":90,"y":145,"font_size":22,"box_w":110,"box_h":22,"font_size_min":8,"text_align":"C"}},"signature_x":150,"signature_y":200,"qr_x":18,"qr_y":262,"qr_size":22}';
 
     /**
      * ถ้า user.faculty มีข้อความย่อยใดย่อยหนึ่งในรายการนี้ (ไม่สนตัวพิมพ์) ถือว่าเป็นสังกัดคณะวิทยาศาสตร์และเทคโนโลยี

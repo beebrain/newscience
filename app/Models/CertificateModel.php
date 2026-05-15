@@ -28,7 +28,7 @@ class CertificateModel extends Model
     ];
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
-    protected $updatedField = false;
+    protected $updatedField = '';
 
     public function findByToken(string $token): ?array
     {

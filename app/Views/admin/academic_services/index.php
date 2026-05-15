@@ -72,7 +72,7 @@
                             <th style="width: 80px;">ปี (พ.ศ.)</th>
                             <th>ชื่อโครงการ/กิจกรรม</th>
                             <th style="width: 140px;">ลักษณะบริการ</th>
-                            <th style="width: 80px;">ผู้ร่วมงาน</th>
+                            <th style="width: 100px;" title="รวมผู้รับผิดชอบระดับบุคคลและผู้ร่วมบริการ (ไม่นับซ้ำ)">ผู้เกี่ยวข้อง</th>
                             <th style="width: 90px;">เอกสารแนบ</th>
                             <th style="min-width: 180px;">จัดการ</th>
                         </tr>

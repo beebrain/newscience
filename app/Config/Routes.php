@@ -132,6 +132,9 @@ $routes->group('dashboard/cert-events', ['filter' => 'certorganizer'], static fu
     $routes->get('(:num)/delete', 'User\CertEvents::delete/$1');
     $routes->post('(:num)/add-recipient', 'User\CertEvents::addRecipient/$1');
     $routes->get('recipient/(:num)/remove', 'User\CertEvents::removeRecipient/$1');
+    $routes->get('recipient/(:num)/issue', 'User\CertEvents::issueOneRecipient/$1');
+    $routes->get('recipient/(:num)/send', 'User\CertEvents::sendCertEmail/$1');
+    $routes->get('recipient/(:num)/pdf', 'User\CertEvents::downloadRecipientPdf/$1');
     $routes->get('(:num)/import', 'User\CertEvents::importForm/$1');
     $routes->post('(:num)/import', 'User\CertEvents::processImport/$1');
     $routes->get('(:num)/export', 'User\CertEvents::exportRecipients/$1');
@@ -330,6 +333,9 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->get('cert-events/(:num)/delete', 'Admin\CertEvents::delete/$1');
     $routes->post('cert-events/(:num)/add-recipient', 'Admin\CertEvents::addRecipient/$1');
     $routes->get('cert-events/recipient/(:num)/remove', 'Admin\CertEvents::removeRecipient/$1');
+    $routes->get('cert-events/recipient/(:num)/issue', 'Admin\CertEvents::issueOneRecipient/$1');
+    $routes->get('cert-events/recipient/(:num)/send', 'Admin\CertEvents::sendCertEmail/$1');
+    $routes->get('cert-events/recipient/(:num)/pdf', 'Admin\CertEvents::downloadRecipientPdf/$1');
     $routes->get('cert-events/(:num)/import', 'Admin\CertEvents::importForm/$1');
     $routes->post('cert-events/(:num)/import', 'Admin\CertEvents::processImport/$1');
     $routes->get('cert-events/(:num)/export', 'Admin\CertEvents::exportRecipients/$1');
@@ -370,6 +376,8 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->get('academic-services/search-users', 'Admin\AcademicServices::searchUsers');
     $routes->get('academic-services/report', 'Admin\AcademicServices::report');
     $routes->get('academic-services/report-data', 'Admin\AcademicServices::reportData');
+    $routes->get('academic-services/report/people', 'Admin\AcademicServices::reportPeople');
+    $routes->get('academic-services/report/person-tree', 'Admin\AcademicServices::reportPersonTree');
     $routes->get('academic-services/report/export', 'Admin\AcademicServices::reportExport');
 
     // Site Settings Management

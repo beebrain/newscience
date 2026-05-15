@@ -42,7 +42,11 @@ class AcademicServices extends BaseController
 
         $participantCounts = [];
         foreach ($list as $row) {
-            $participantCounts[$row['id']] = $this->participantModel->countByServiceId((int) $row['id']);
+            $participantCounts[$row['id']] = $this->participantModel->countDistinctInvolvedForService(
+                (int) $row['id'],
+                $row['responsible_type'] ?? null,
+                $row['responsible_person_text'] ?? null
+            );
         }
 
         $serviceIds = array_map(static fn ($r) => (int) $r['id'], $list);
@@ -213,6 +217,7 @@ class AcademicServices extends BaseController
         $rows = $builder->get()->getResultArray();
         $labels = [];
         $data = [];
+        $rowsForTable = [];
         $labelMap = $labelsMap[$dimension] ?? [];
 
         foreach ($rows as $row) {
@@ -226,19 +231,11 @@ class AcademicServices extends BaseController
             }
             $labels[] = $label;
             $data[] = (int) $row['count'];
-        }
-
-        $rowsForTable = [];
-        foreach ($rows as $row) {
-            $key = $row[$groupColumn] ?? '';
-            if ($key === null || $key === '') {
-                $key = '_empty';
-            }
-            $label = $dimension === 'year' ? (string) $key : ($labelMap[$key] ?? $key);
-            if ($label === '_empty' || $label === '') {
-                $label = '(ไม่ระบุ)';
-            }
-            $rowsForTable[] = ['label' => $label, 'count' => (int) $row['count']];
+            $rowsForTable[] = [
+                'label'      => $label,
+                'count'      => (int) $row['count'],
+                'bucket_key' => (string) $key,
+            ];
         }
 
         return ['labels' => $labels, 'data' => $data, 'rows' => $rowsForTable];
@@ -258,9 +255,8 @@ class AcademicServices extends BaseController
             $total = (int) $this->serviceModel->countAllResults();
             $years = $this->serviceModel->getDistinctYears();
         }
-        if ($db->tableExists('academic_service_participants')) {
-            $row = $db->query('SELECT COUNT(DISTINCT user_uid) AS c FROM academic_service_participants WHERE user_uid IS NOT NULL')->getRow();
-            $distinctParticipants = (int) ($row->c ?? 0);
+        if ($db->tableExists('academic_services') || $db->tableExists('academic_service_participants')) {
+            $distinctParticipants = $this->serviceModel->countDistinctInvolvedUserUids();
         }
 
         $dimension = $this->request->getGet('dimension') ?: 'service_type';
@@ -356,6 +352,311 @@ class AcademicServices extends BaseController
             ->setHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->setBody($buf);
+    }
+
+    /**
+     * หน้ารายชื่อบุคคลที่เกี่ยวข้อง (ตามตัวกรอง + scope) — คลิกชื่อเพื่อเปิด modal แสดง D3 tree การมีส่วนร่วม
+     */
+    public function reportPeople()
+    {
+        $db = \Config\Database::connect();
+        if (! $db->tableExists('academic_services')) {
+            return redirect()->to(base_url('admin/academic-services/report'))->with('error', 'ยังไม่มีตารางบริการวิชาการ');
+        }
+        $year     = $this->readReportFilterYear();
+        $dateFrom = $this->readReportFilterDateFrom();
+        $dateTo   = $this->readReportFilterDateTo();
+        $scope    = $this->readReportInvolvedScope();
+        $rows     = $this->buildReportInvolvedDetailRows($year, $dateFrom, $dateTo, $scope === 'person_responsible');
+        $people   = $this->aggregatePeopleFromInvolvedRows($rows);
+        $years    = $this->serviceModel->getDistinctYears();
+
+        $data = [
+            'page_title'    => 'บุคคลที่เกี่ยวข้อง — บริการวิชาการ',
+            'people'        => $people,
+            'years'         => $years,
+            'year_filter'   => $year,
+            'date_from'     => $dateFrom,
+            'date_to'       => $dateTo,
+            'scope'         => $scope,
+            'scope_label'   => $scope === 'person_responsible'
+                ? 'เฉพาะรายการที่ผู้รับผิดชอบเป็นระดับบุคคล'
+                : 'ทุกรายการที่ผ่านตัวกรอง',
+        ];
+
+        return view('admin/academic_services/report_people', $data);
+    }
+
+    /**
+     * JSON สำหรับ D3 tree — โครงสร้าง { name, children? } ตาม person_key
+     */
+    public function reportPersonTree()
+    {
+        $db = \Config\Database::connect();
+        if (! $db->tableExists('academic_services')) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'ไม่พบข้อมูล']);
+        }
+        $personKey = (string) ($this->request->getGet('person_key') ?? '');
+        if ($personKey === '' || (! preg_match('/^u:\d+$/', $personKey) && ! str_starts_with($personKey, 'n:'))) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'person_key ไม่ถูกต้อง']);
+        }
+        $year     = $this->readReportFilterYear();
+        $dateFrom = $this->readReportFilterDateFrom();
+        $dateTo   = $this->readReportFilterDateTo();
+        $scope    = $this->readReportInvolvedScope();
+        $rows     = $this->buildReportInvolvedDetailRows($year, $dateFrom, $dateTo, $scope === 'person_responsible');
+        $tree     = $this->buildPersonTreeHierarchy($rows, $personKey);
+        if ($tree === null) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'ไม่พบบุคคลนี้ในช่วงที่กรอง']);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'tree'    => $tree,
+        ]);
+    }
+
+    private function readReportFilterYear(): ?string
+    {
+        $y = $this->request->getGet('year');
+
+        return ($y !== null && $y !== '') ? (string) $y : null;
+    }
+
+    private function readReportFilterDateFrom(): ?string
+    {
+        $v = $this->request->getGet('date_from');
+
+        return ($v !== null && $v !== '') ? (string) $v : null;
+    }
+
+    private function readReportFilterDateTo(): ?string
+    {
+        $v = $this->request->getGet('date_to');
+
+        return ($v !== null && $v !== '') ? (string) $v : null;
+    }
+
+    private function readReportInvolvedScope(): string
+    {
+        $scope = (string) ($this->request->getGet('scope') ?: 'filtered');
+        if (! in_array($scope, ['filtered', 'person_responsible'], true)) {
+            return 'filtered';
+        }
+
+        return $scope;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     */
+    private function aggregatePeopleFromInvolvedRows(array $rows): array
+    {
+        $map = [];
+        foreach ($rows as $r) {
+            $uid = isset($r['user_uid']) ? (int) $r['user_uid'] : 0;
+            $key = $uid > 0 ? 'u:' . $uid : 'n:' . rawurlencode((string) ($r['person_name'] ?? ''));
+            if (! isset($map[$key])) {
+                $map[$key] = [
+                    'person_key'  => $key,
+                    'user_uid'    => $uid > 0 ? $uid : null,
+                    'person_name' => (string) ($r['person_name'] ?? ''),
+                    'email'       => $r['email'] ?? null,
+                    'service_ids' => [],
+                ];
+            }
+            $sid = (int) ($r['service_id'] ?? 0);
+            if ($sid > 0) {
+                $map[$key]['service_ids'][$sid] = true;
+            }
+        }
+        $out = [];
+        foreach ($map as $m) {
+            $m['service_count'] = count($m['service_ids']);
+            unset($m['service_ids']);
+            $out[] = $m;
+        }
+        usort($out, static function (array $a, array $b): int {
+            return strcasecmp((string) ($a['person_name'] ?? ''), (string) ($b['person_name'] ?? ''));
+        });
+
+        return $out;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @return array{name: string, children: list<array{name: string, children: list<array{name: string}>}>}|null
+     */
+    private function buildPersonTreeHierarchy(array $rows, string $personKey): ?array
+    {
+        $match = [];
+        foreach ($rows as $r) {
+            $uid = isset($r['user_uid']) ? (int) $r['user_uid'] : 0;
+            $key = $uid > 0 ? 'u:' . $uid : 'n:' . rawurlencode((string) ($r['person_name'] ?? ''));
+            if ($key === $personKey) {
+                $match[] = $r;
+            }
+        }
+        if ($match === []) {
+            return null;
+        }
+        $rootName = (string) ($match[0]['person_name'] ?? '');
+        $byService = [];
+        foreach ($match as $r) {
+            $sid = (int) ($r['service_id'] ?? 0);
+            if ($sid < 1) {
+                continue;
+            }
+            if (! isset($byService[$sid])) {
+                $byService[$sid] = [
+                    'title' => (string) ($r['service_title'] ?? ''),
+                    'year'  => $r['academic_year'] ?? null,
+                    'roles' => [],
+                ];
+            }
+            $byService[$sid]['roles'][] = (string) ($r['role'] ?? '');
+        }
+        $children = [];
+        foreach ($byService as $svc) {
+            $roles = array_values(array_unique(array_filter($svc['roles'])));
+            $roleStr = $roles !== [] ? implode(' / ', $roles) : '—';
+            $y       = $svc['year'] !== null && $svc['year'] !== '' ? (string) $svc['year'] : '—';
+            $children[] = [
+                'name'     => $svc['title'],
+                'children' => [
+                    ['name' => $roleStr . ' · ปีการศึกษา ' . $y],
+                ],
+            ];
+        }
+
+        return [
+            'name'     => $rootName,
+            'children' => $children,
+        ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function buildReportInvolvedDetailRows(?string $year, ?string $dateFrom, ?string $dateTo, bool $personResponsibleServicesOnly): array
+    {
+        $db = \Config\Database::connect();
+        if (! $db->tableExists('academic_services')) {
+            return [];
+        }
+        $services = $this->serviceModel->findForReportFilters($year, $dateFrom, $dateTo, $personResponsibleServicesOnly);
+        $serviceIds = array_values(array_unique(array_filter(array_map(static fn ($s) => (int) ($s['id'] ?? 0), $services))));
+        if ($serviceIds === []) {
+            return [];
+        }
+        $bySid = [];
+        if ($db->tableExists('academic_service_participants')) {
+            foreach ($this->participantModel->getByServiceIds($serviceIds) as $row) {
+                $sid = (int) ($row['academic_service_id'] ?? 0);
+                if ($sid > 0) {
+                    $bySid[$sid][] = $row;
+                }
+            }
+        }
+        $draft = [];
+        foreach ($services as $svc) {
+            $sid = (int) ($svc['id'] ?? 0);
+            if ($sid < 1) {
+                continue;
+            }
+            if (($svc['responsible_type'] ?? '') === 'person' && ! empty($svc['responsible_person_text'])) {
+                $decoded = json_decode((string) $svc['responsible_person_text'], true);
+                if (is_array($decoded)) {
+                    foreach ($decoded as $item) {
+                        $uid = isset($item['uid']) ? (int) $item['uid'] : 0;
+                        $label = isset($item['label']) ? trim((string) $item['label']) : '';
+                        if ($uid <= 0 && $label === '') {
+                            continue;
+                        }
+                        $draft[] = [
+                            'user_uid'      => $uid > 0 ? $uid : null,
+                            'fallback_name' => $label !== '' ? $label : null,
+                            'role'          => 'ผู้รับผิดชอบการดำเนินงาน',
+                            'service'       => $svc,
+                        ];
+                    }
+                }
+            }
+            foreach ($bySid[$sid] ?? [] as $p) {
+                $uid = isset($p['user_uid']) ? (int) $p['user_uid'] : 0;
+                $dn  = trim((string) ($p['display_name'] ?? ''));
+                if ($uid <= 0 && $dn === '') {
+                    continue;
+                }
+                $role = (($p['role'] ?? '') === 'responsible') ? 'ผู้รับผิดชอบ (ร่วม)' : 'ผู้ร่วมบริการวิชาการ';
+                $draft[] = [
+                    'user_uid'      => $uid > 0 ? $uid : null,
+                    'fallback_name' => $dn !== '' ? $dn : null,
+                    'role'          => $role,
+                    'service'       => $svc,
+                ];
+            }
+        }
+        $uids = array_values(array_unique(array_filter(array_map(static fn ($d) => $d['user_uid'], $draft))));
+        $usersByUid = [];
+        if ($uids !== []) {
+            foreach ($this->userModel->whereIn('uid', $uids)->findAll() as $u) {
+                $usersByUid[(int) ($u['uid'] ?? 0)] = $u;
+            }
+        }
+        $out = [];
+        foreach ($draft as $d) {
+            $svc = $d['service'];
+            $nm  = $d['fallback_name'] ?? '';
+            $em  = null;
+            if (! empty($d['user_uid'])) {
+                $u = $usersByUid[(int) $d['user_uid']] ?? null;
+                if ($u !== null) {
+                    $resolved = $this->userThaiDisplayNameFromRow($u);
+                    if ($resolved !== '') {
+                        $nm = $resolved;
+                    }
+                    $em = $u['email'] ?? null;
+                }
+            }
+            if ($nm === null || $nm === '') {
+                $nm = '—';
+            }
+            $out[] = [
+                'user_uid'         => $d['user_uid'],
+                'person_name'      => $nm,
+                'email'            => $em,
+                'role'             => $d['role'],
+                'service_id'       => (int) ($svc['id'] ?? 0),
+                'service_title'    => (string) ($svc['title'] ?? ''),
+                'academic_year'    => $svc['academic_year'] ?? null,
+                'service_date'     => $svc['service_date'] ?? null,
+                'service_date_end' => $svc['service_date_end'] ?? null,
+            ];
+        }
+        usort($out, static function (array $a, array $b): int {
+            $cmp = strcasecmp((string) ($a['person_name'] ?? ''), (string) ($b['person_name'] ?? ''));
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            $da = (string) ($a['service_date'] ?? '');
+            $db = (string) ($b['service_date'] ?? '');
+
+            return strcmp($db, $da);
+        });
+
+        return $out;
+    }
+
+    private function userThaiDisplayNameFromRow(array $u): string
+    {
+        $th = trim((string) (($u['tf_name'] ?? '') . ' ' . ($u['tl_name'] ?? '')));
+        if ($th !== '') {
+            return $th;
+        }
+
+        return trim((string) (($u['gf_name'] ?? '') . ' ' . ($u['gl_name'] ?? '')));
     }
 
     /**

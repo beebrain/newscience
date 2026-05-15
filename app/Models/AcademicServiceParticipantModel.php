@@ -96,10 +96,87 @@ class AcademicServiceParticipantModel extends Model
     }
 
     /**
+     * @param int[] $serviceIds
+     * @return list<array<string, mixed>>
+     */
+    public function getByServiceIds(array $serviceIds): array
+    {
+        $serviceIds = array_values(array_unique(array_filter(array_map('intval', $serviceIds))));
+        if ($serviceIds === []) {
+            return [];
+        }
+
+        return $this->whereIn('academic_service_id', $serviceIds)
+            ->orderBy('academic_service_id', 'ASC')
+            ->orderBy('sort_order', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+    }
+
+    /**
      * Count participants for a service
      */
     public function countByServiceId(int $serviceId): int
     {
         return (int) $this->where('academic_service_id', $serviceId)->countAllResults();
+    }
+
+    /**
+     * จำนวนคนที่เกี่ยวข้องกับรายการนี้: ผู้รับผิดชอบระดับบุคคล (จาก responsible_person_text)
+     * บวกผู้ร่วมในตาราง participants — ไม่นับซ้ำเมื่อ uid หรือชื่อ (กรณีไม่มี uid) ตรงกัน
+     */
+    public function countDistinctInvolvedForService(int $serviceId, ?string $responsibleType, ?string $responsiblePersonJson): int
+    {
+        $keys = [];
+        if ($responsibleType === 'person' && $responsiblePersonJson !== null && $responsiblePersonJson !== '') {
+            $decoded = json_decode($responsiblePersonJson, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $item) {
+                    $uid   = isset($item['uid']) ? (int) $item['uid'] : 0;
+                    $label = isset($item['label']) ? trim((string) $item['label']) : '';
+                    if ($uid <= 0 && $label === '') {
+                        continue;
+                    }
+                    $keys[$uid > 0 ? 'u:' . $uid : 'n:' . strtolower($label)] = true;
+                }
+            }
+        }
+
+        $rows = $this->select('user_uid, display_name')
+            ->where('academic_service_id', $serviceId)
+            ->findAll();
+        foreach ($rows as $r) {
+            $uid  = isset($r['user_uid']) ? (int) $r['user_uid'] : 0;
+            $name = trim((string) ($r['display_name'] ?? ''));
+            if ($uid > 0) {
+                $keys['u:' . $uid] = true;
+            } elseif ($name !== '') {
+                $keys['n:' . strtolower($name)] = true;
+            }
+        }
+
+        return count($keys);
+    }
+
+    /**
+     * รวม user_uid จาก JSON ผู้รับผิดชอบระดับบุคคล (ใช้คู่กับรายการ participants)
+     *
+     * @param array<int, true> $uidSet
+     */
+    public static function mergeUserUidsFromResponsiblePersonJson(?string $json, array &$uidSet): void
+    {
+        if ($json === null || $json === '') {
+            return;
+        }
+        $decoded = json_decode($json, true);
+        if (! is_array($decoded)) {
+            return;
+        }
+        foreach ($decoded as $item) {
+            $uid = isset($item['uid']) ? (int) $item['uid'] : 0;
+            if ($uid > 0) {
+                $uidSet[$uid] = true;
+            }
+        }
     }
 }

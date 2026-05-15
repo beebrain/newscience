@@ -247,9 +247,8 @@ class ExecutiveStats extends BaseController
         }
 
         $distinctParticipants = 0;
-        if ($this->db->tableExists('academic_service_participants')) {
-            $row = $this->db->query('SELECT COUNT(DISTINCT user_uid) AS c FROM academic_service_participants WHERE user_uid IS NOT NULL')->getRow();
-            $distinctParticipants = (int) ($row->c ?? 0);
+        if ($this->db->tableExists('academic_services') || $this->db->tableExists('academic_service_participants')) {
+            $distinctParticipants = model(\App\Models\AcademicServiceModel::class)->countDistinctInvolvedUserUids();
         }
 
         return $this->respond([
