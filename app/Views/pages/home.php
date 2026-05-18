@@ -483,10 +483,7 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
     </div>
 </section>
 
-<!-- Link to old faculty website -->
-<div class="container" style="padding: 0.5rem 1rem; text-align: center;">
-    <a href="http://old.sci.uru.ac.th" target="_blank" rel="noopener noreferrer" aria-label="เว็บคณะเดิม (เปิดในแท็บใหม่)" style="display: inline-block; font-size: 0.875rem; color: var(--color-gray-600, #6b7280); text-decoration: none;">เว็บคณะเดิม (old.sci.uru.ac.th)</a>
-</div>
+
 
 <!-- Admission CTA Section (เน้นการรับสมัครก่อน) -->
 <section class="cta-section section-dark-blue">
@@ -689,102 +686,7 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                 <a href="http://edoc.sci.uru.ac.th/" target="_blank" rel="noopener" style="font-size: 0.8rem; color: #555; text-decoration: none; margin-top: auto; padding-top: 0.35rem;">เข้าสู่ edoc เดิม</a>
             </div>
 
-            <a href="http://sci.uru.ac.th/scienceadmin" target="_blank" class="service-card">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                        <line x1="8" y1="21" x2="16" y2="21"></line>
-                        <line x1="12" y1="17" x2="12" y2="21"></line>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">ฐานข้อมูลบริหาร</h3>
-                    <span class="service-card__desc">Management DB</span>
-                </div>
-            </a>
-
-            <a href="https://advisor.uru.ac.th" target="_blank" class="service-card">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">อาจารย์ที่ปรึกษา</h3>
-                    <span class="service-card__desc">Advisor System</span>
-                </div>
-            </a>
-
-            <a href="https://workload.uru.ac.th/" target="_blank" class="service-card">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">ภาระงาน</h3>
-                    <span class="service-card__desc">Workload</span>
-                </div>
-            </a>
-
-            <a href="https://sci.uru.ac.th/docs/qa2568.pdf" target="_blank" class="service-card">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">ประกันคุณภาพ</h3>
-                    <span class="service-card__desc">QA System</span>
-                </div>
-            </a>
-
-            <!-- Journals -->
-            <a href="https://ph03.tci-thaijo.org/index.php/ajsas" target="_blank" class="service-card service-card--journal">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">วารสารวิทยาศาสตร์ฯ</h3>
-                    <span class="service-card__desc">AJSAS Journal</span>
-                </div>
-            </a>
-
-            <a href="http://www.rmj.uru.ac.th/" target="_blank" class="service-card service-card--journal">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">วารสารคณิตศาสตร์</h3>
-                    <span class="service-card__desc">RMS Journal</span>
-                </div>
-            </a>
-
-            <a href="https://sci.uru.ac.th/academic" target="_blank" class="service-card">
-                <div class="service-card__icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
-                        <path d="M12 14l6.16-3.422a12.083 12.083 0 0 1 .665 6.479A11.952 11.952 0 0 0 12 20.055a11.952 11.952 0 0 0-6.824-2.998 12.078 12.078 0 0 1 .665-6.479L12 14z"></path>
-                        <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
-                        <path d="M12 14v6"></path>
-                    </svg>
-                </div>
-                <div class="service-card__content">
-                    <h3 class="service-card__title">ตำแหน่งทางวิชาการ</h3>
-                    <span class="service-card__desc">Academic Rank</span>
-                </div>
-            </a>
+            <!-- Remaining service cards are already using internal base_url('edoc') or valid external links -->
 
             <button type="button" class="service-card service-card--button" id="btn-qr-generator" aria-label="เปิดเครื่องมือสร้าง QR Code">
                 <div class="service-card__icon">

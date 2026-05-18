@@ -222,7 +222,7 @@ function getProgramCardImageUrl(array $program): string
         <p class="cta-section__description">
             เริ่มต้นเส้นทางการศึกษาของคุณกับ <?= esc($site_info['site_name_th'] ?? 'คณะวิทยาศาสตร์และเทคโนโลยี') ?>
         </p>
-        <a href="<?= base_url('admission') ?>" class="btn btn-secondary btn-lg">สมัครเรียน</a>
+        <a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">สมัครเรียน</a>
     </div>
 </section>
 

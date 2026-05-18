@@ -193,27 +193,20 @@
                         <ul class="nav__dropdown">
                             <li><a href="<?= base_url('documents') ?>" class="nav__dropdown-link">บริการด้านเอกสาร</a></li>
                             <li><a href="<?= base_url('complaints') ?>" class="nav__dropdown-link">แจ้งข้อร้องเรียน</a></li>
+                            <li><a href="https://www.facebook.com/ScienceRMUURU" target="_blank" class="nav__dropdown-link" rel="noopener">Facebook คณะ</a></li>
                             <li class="nav__item--has-dropdown nav__item--has-subdropdown">
                                 <span class="nav__dropdown-link nav__dropdown-link--subtrigger">ระบบและวารสาร</span>
                                 <ul class="nav__dropdown nav__dropdown--sub">
                                     <li><a href="http://edoc.sci.uru.ac.th/" target="_blank" class="nav__dropdown-link" rel="noopener">งานวิชาการ (e-Doc)</a></li>
-                                    <li><a href="http://sci.uru.ac.th/scienceadmin" target="_blank" class="nav__dropdown-link" rel="noopener">ฐานข้อมูลบริหาร</a></li>
-                                    <li><a href="https://advisor.uru.ac.th" target="_blank" class="nav__dropdown-link" rel="noopener">อาจารย์ที่ปรึกษา</a></li>
-                                    <li><a href="https://workload.uru.ac.th/" target="_blank" class="nav__dropdown-link" rel="noopener">ภาระงาน</a></li>
                                     <li><a href="https://sci.uru.ac.th/docs/qa2568.pdf" target="_blank" class="nav__dropdown-link" rel="noopener">ประกันคุณภาพ</a></li>
                                     <li><a href="https://ph03.tci-thaijo.org/index.php/ajsas" target="_blank" class="nav__dropdown-link" rel="noopener">วารสารวิทยาศาสตร์ฯ (AJSAS)</a></li>
-                                    <li><a href="http://www.rmj.uru.ac.th/" target="_blank" class="nav__dropdown-link" rel="noopener">วารสารคณิตศาสตร์ (RMS)</a></li>
-                                    <li><a href="https://sci.uru.ac.th/academic" target="_blank" class="nav__dropdown-link" rel="noopener">ตำแหน่งทางวิชาการ</a></li>
                                 </ul>
                             </li>
                             <li class="nav__item--has-dropdown nav__item--has-subdropdown">
                                 <span class="nav__dropdown-link nav__dropdown-link--subtrigger">เว็บหน่วยงาน</span>
                                 <ul class="nav__dropdown nav__dropdown--sub">
-                                    <li><a href="http://202.29.52.60/~dicenter" target="_blank" class="nav__dropdown-link" rel="noopener">ศูนย์ดิจิทัลเพื่อพัฒนาท้องถิ่น</a></li>
                                     <li><a href="https://www.facebook.com/ScienceRMUURU" target="_blank" class="nav__dropdown-link" rel="noopener">หน่วยจัดการงานวิจัยและพันธกิจสัมพันธ์</a></li>
-                                    <li><a href="https://sci.uru.ac.th/csrm" target="_blank" class="nav__dropdown-link" rel="noopener">ศูนย์ประสานงานโครงการ CSRM</a></li>
                                     <li><a href="http://scirmu.sci.uru.ac.th/" target="_blank" class="nav__dropdown-link" rel="noopener">ศูนย์พลังงานและสิ่งแวดล้อม</a></li>
-                                    <li><a href="https://sci.uru.ac.th/scienceweek" target="_blank" class="nav__dropdown-link" rel="noopener">สัปดาห์วิทยาศาสตร์แห่งชาติ</a></li>
                                 </ul>
                             </li>
                         </ul>
@@ -296,7 +289,8 @@
             <li><a href="#" class="mobile-nav__link">นักศึกษา</a></li>
             <li><a href="#" class="mobile-nav__link">บุคลากร</a></li>
             <li><a href="#" class="mobile-nav__link">ศิษย์เก่า</a></li>
-            <li><a href="http://old.sci.uru.ac.th" class="mobile-nav__link" target="_blank" rel="noopener noreferrer">เว็บคณะเดิม</a></li>
+            <li class="mobile-nav__divider" role="presentation"></li>
+            <li><a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener noreferrer" class="mobile-nav__link mobile-nav__link--highlight">สมัครเรียน</a></li>
             <li class="mobile-nav__divider" role="presentation"></li>
             <li><a href="<?= base_url() ?>" class="mobile-nav__link">หน้าแรก</a></li>
             <li class="mobile-nav__item mobile-nav__item--has-sub">
@@ -336,13 +330,8 @@
                         </button>
                         <ul class="mobile-nav__sub mobile-nav__sub--nested" id="mn-sub-services-sys" hidden>
                             <li><a href="http://edoc.sci.uru.ac.th/" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">งานวิชาการ (e-Doc)</a></li>
-                            <li><a href="http://sci.uru.ac.th/scienceadmin" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ฐานข้อมูลบริหาร</a></li>
-                            <li><a href="https://advisor.uru.ac.th" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">อาจารย์ที่ปรึกษา</a></li>
-                            <li><a href="https://workload.uru.ac.th/" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ภาระงาน</a></li>
                             <li><a href="https://sci.uru.ac.th/docs/qa2568.pdf" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ประกันคุณภาพ</a></li>
                             <li><a href="https://ph03.tci-thaijo.org/index.php/ajsas" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">วารสารวิทยาศาสตร์ฯ (AJSAS)</a></li>
-                            <li><a href="http://www.rmj.uru.ac.th/" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">วารสารคณิตศาสตร์ (RMS)</a></li>
-                            <li><a href="https://sci.uru.ac.th/academic" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ตำแหน่งทางวิชาการ</a></li>
                         </ul>
                     </li>
                     <li class="mobile-nav__item mobile-nav__item--has-sub">
@@ -350,11 +339,8 @@
                             <span class="mobile-nav__subtoggle-text">เว็บหน่วยงาน</span>
                         </button>
                         <ul class="mobile-nav__sub mobile-nav__sub--nested" id="mn-sub-services-units" hidden>
-                            <li><a href="http://202.29.52.60/~dicenter" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ศูนย์ดิจิทัลเพื่อพัฒนาท้องถิ่น</a></li>
                             <li><a href="https://www.facebook.com/ScienceRMUURU" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">หน่วยจัดการงานวิจัยและพันธกิจสัมพันธ์</a></li>
-                            <li><a href="https://sci.uru.ac.th/csrm" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ศูนย์ประสานงานโครงการ CSRM</a></li>
                             <li><a href="http://scirmu.sci.uru.ac.th/" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ศูนย์พลังงานและสิ่งแวดล้อม</a></li>
-                            <li><a href="https://sci.uru.ac.th/scienceweek" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">สัปดาห์วิทยาศาสตร์แห่งชาติ</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -373,7 +359,6 @@
                 </ul>
             </li>
 
-            <li><a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener noreferrer" class="mobile-nav__link">สมัครเรียน</a></li>
             <li class="mobile-nav__divider" role="presentation"></li>
             <?php if (session()->get('admin_logged_in')): ?>
                 <li class="mobile-nav__item mobile-nav__item--has-sub">

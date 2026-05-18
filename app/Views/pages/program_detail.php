@@ -22,9 +22,9 @@
             <h1 class="pd-hero__title" id="pd-hero-title"></h1>
             <p class="pd-hero__degree" id="pd-hero-degree"></p>
             <div class="hero__actions">
-                <a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener" class="btn btn-primary btn-lg">สมัครเรียน</a>
-                <a href="#pd-overview" class="btn btn-outline btn-lg" style="border-color:#fff;color:#fff;">ดูรายละเอียด</a>
-            </div>
+                  <a href="https://academic.uru.ac.th/smarturu/" target="_blank" rel="noopener" class="btn btn-primary btn-lg">สมัครเรียน</a>
+                  <a href="#pd-overview" class="btn btn-outline btn-lg" style="border-color:#fff;color:#fff;">ดูรายละเอียด</a>
+              </div>
             <div class="pd-hero__stats">
                 <div class="pd-hero__stat">
                     <div class="pd-hero__stat-number" id="pd-hero-credits">-</div>

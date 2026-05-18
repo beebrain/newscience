@@ -11,7 +11,23 @@
       "PowerShell(Get-ChildItem \"c:/xampp/htdocs/newScience/writable/logs/\" | Sort-Object LastWriteTime -Descending | Select-Object -First 3 | ForEach-Object { Write-Host $_.FullName })",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(npx marp *)",
+      "Bash(npm install *)",
+      "Bash(node generate-pptx.mjs)",
+      "Bash(ls /Applications/ | grep -i \"chrome\\\\|chromium\\\\|brave\\\\|edge\\\\|firefox\")",
+      "Read(//Applications/**)",
+      "Bash(mdfind \"kMDItemCFBundleIdentifier == 'com.google.Chrome'\")",
+      "Bash(mdfind \"kMDItemCFBundleIdentifier == 'com.microsoft.edgemac'\")",
+      "Bash(mdfind \"kMDItemCFBundleIdentifier == 'com.brave.Browser'\")",
+      "Bash(npx puppeteer *)",
+      "Bash(CHROME_PATH=\"/Users/boobee/.cache/puppeteer/chrome/mac_arm-148.0.7778.167/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing\" npx marp newscience-presentation.md --pdf --allow-local-files --output newscience-presentation.pdf)",
+      "Bash(git -C /Users/boobee/Docker/projects/newScience diff HEAD app/Views/pages/home.php)",
+      "Bash(git -C /Users/boobee/Docker/projects/newScience status)",
+      "Bash(git -C /Users/boobee/Docker/projects/newScience log --oneline -3)",
+      "Bash(git -C /Users/boobee/Docker/projects/newScience diff --stat HEAD)",
+      "Bash(git -C /Users/boobee/Docker/projects/newScience diff HEAD -- app/Views/layouts/main_layout.php app/Views/pages/academics.php app/Views/pages/program.php app/Views/pages/program_detail.php)",
+      "Bash(git -C /Users/boobee/Docker/projects/newScience add app/Views/layouts/main_layout.php app/Views/pages/academics.php app/Views/pages/home.php app/Views/pages/program.php app/Views/pages/program_detail.php package.json package-lock.json .claude/settings.local.json)"
     ]
   }
 }

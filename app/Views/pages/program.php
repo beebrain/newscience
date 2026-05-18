@@ -1,5 +1,6 @@
 <?= $this->extend($layout ?? 'layouts/main_layout') ?>
 
+
 <?= $this->section('content') ?>
 
 <?php

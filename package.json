@@ -8,6 +8,10 @@
     "test:e2e:debug": "playwright test --debug"
   },
   "devDependencies": {
+    "@marp-team/marp-cli": "^4.4.0",
     "@playwright/test": "^1.49.1"
+  },
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
   }
 }
