@@ -26,7 +26,7 @@ class App extends BaseConfig
      * Typically this will be your index.php file, unless you've renamed it to
      * something more secure. In either case, set this here.
      */
-    public string $indexPage = 'index.php';
+    public string $indexPage = '';
 
     /**
      * --------------------------------------------------------------------------
