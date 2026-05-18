@@ -98,7 +98,14 @@ const UniversityAPI = (function ($) {
          * Get news by category/tag slug (1 ข่าวมีได้หลาย tag)
          */
         getByCategory: function (categorySlug, limit = config.defaultLimit, options = {}) {
-            return request('news/category/' + encodeURIComponent(categorySlug), {
+            return request('news/tag/' + encodeURIComponent(categorySlug), {
+                data: { limit },
+                ...options
+            });
+        },
+
+        getByTag: function (tagSlug, limit = config.defaultLimit, options = {}) {
+            return request('news/tag/' + encodeURIComponent(tagSlug), {
                 data: { limit },
                 ...options
             });
@@ -498,10 +505,10 @@ $(document).ready(function () {
         UniversityAPI.config.baseUrl = baseUrlMeta;
     }
 
-    // Initialize components if they exist
-    if ($('.news-section').length) {
-        UniversityAPI.initNewsSection('.news-section');
-    }
+    // Initialize paginated news grid only (not homepage .featured-news AJAX blocks)
+    $('.news-section').has('.news-grid').each(function () {
+        UniversityAPI.initNewsSection(this);
+    });
 
     if ($('.featured-news-grid').length) {
         UniversityAPI.initFeaturedNews('.featured-news-grid');

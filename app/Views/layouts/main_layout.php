@@ -42,6 +42,8 @@
         ? filemtime(FCPATH . 'assets/css/base.css') : '1';
     $site_nav_ver = (defined('FCPATH') && is_file(FCPATH . 'assets/js/site-nav.js'))
         ? filemtime(FCPATH . 'assets/js/site-nav.js') : '1';
+    $home_scroll_ver = (defined('FCPATH') && is_file(FCPATH . 'assets/js/home-scroll.js'))
+        ? filemtime(FCPATH . 'assets/js/home-scroll.js') : '1';
     ?>
     <!-- Central CSS: theme + base + components (โหลด parallel), home/pages ตามหน้าที่ใช้ -->
     <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>?v=<?= $css_ver ?>">
@@ -547,6 +549,9 @@
     <!-- Main Scripts -->
     <script src="<?= base_url('assets/js/main.js') ?>"></script>
     <script src="<?= base_url('assets/js/site-nav.js') ?>?v=<?= $site_nav_ver ?>"></script>
+    <?php if ($is_home): ?>
+        <script src="<?= base_url('assets/js/home-scroll.js') ?>?v=<?= $home_scroll_ver ?>"></script>
+    <?php endif; ?>
     <!-- Silent Auto-Login Iframes (trigger login on other apps) -->
     <?php if (session()->getFlashdata('sso_autologin_urls')): ?>
         <div style="width:0;height:0;overflow:hidden;position:absolute;">

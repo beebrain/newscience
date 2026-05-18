@@ -85,54 +85,58 @@ class Api extends BaseController
      */
     public function news()
     {
-        $page = (int) $this->request->getGet('page') ?? 1;
-        $limit = (int) $this->request->getGet('limit') ?? 6;
-        $status = $this->request->getGet('status') ?? 'published';
+        try {
+            $page = (int) $this->request->getGet('page') ?? 1;
+            $limit = (int) $this->request->getGet('limit') ?? 6;
+            $status = $this->request->getGet('status') ?? 'published';
 
-        $page = max(1, $page);
-        $limit = min(50, max(1, $limit));
-        $offset = ($page - 1) * $limit;
+            $page = max(1, $page);
+            $limit = min(50, max(1, $limit));
+            $offset = ($page - 1) * $limit;
 
-        // Get total count
-        $total = $this->newsModel->where('news.status', $status)->countAllResults(false);
+            $total = $this->newsModel->where('news.status', $status)->countAllResults(false);
+            $news = $this->newsModel
+                ->where('status', $status)
+                ->orderBy('published_at', 'DESC')
+                ->findAll($limit, $offset);
 
-        // Get news articles
-        $news = $this->newsModel
-            ->select('news.*, user.gf_name, user.gl_name')
-            ->join('user', 'user.uid = news.author_id', 'left')
-            ->where('news.status', $status)
-            ->orderBy('news.published_at', 'DESC')
-            ->limit($limit, $offset)
-            ->find();
+            $data = [];
+            foreach ($news as $article) {
+                $data[] = [
+                    'id' => $article['id'],
+                    'title' => $article['title'] ?? '',
+                    'slug' => $article['slug'] ?? '',
+                    'excerpt' => $article['excerpt'] ?? mb_substr(strip_tags($article['content'] ?? ''), 0, 150) . '...',
+                    'content' => $article['content'] ?? '',
+                    'featured_image' => $this->formatFeaturedImageThumb($article['featured_image'] ?? ''),
+                    'author' => '',
+                    'published_at' => $article['published_at'] ?? null,
+                    'formatted_date' => date('M j, Y', strtotime($article['published_at'] ?? $article['created_at'] ?? 'now')),
+                    'primary_tag' => 'general',
+                ];
+            }
+            $data = $this->attachTagsToArticles($data);
 
-        // Format the response
-        $data = [];
-        foreach ($news as $article) {
-            $data[] = [
-                'id' => $article['id'],
-                'title' => $article['title'],
-                'slug' => $article['slug'],
-                'excerpt' => $article['excerpt'] ?? mb_substr(strip_tags($article['content']), 0, 150) . '...',
-                'content' => $article['content'],
-                'featured_image' => $this->formatFeaturedImageThumb($article['featured_image'] ?? ''),
-                'author' => trim(($article['gf_name'] ?? '') . ' ' . ($article['gl_name'] ?? '')),
-                'published_at' => $article['published_at'],
-                'formatted_date' => date('M j, Y', strtotime($article['published_at'] ?? $article['created_at']))
-            ];
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $data,
+                'pagination' => [
+                    'current_page' => $page,
+                    'per_page' => $limit,
+                    'total' => $total,
+                    'total_pages' => $total > 0 ? (int) ceil($total / $limit) : 0,
+                    'has_more' => ($page * $limit) < $total,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'news list API: {msg}', ['msg' => $e->getMessage()]);
+
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Failed to load news',
+                'data' => [],
+            ]);
         }
-        $data = $this->attachTagsToArticles($data);
-
-        return $this->response->setJSON([
-            'success' => true,
-            'data' => $data,
-            'pagination' => [
-                'current_page' => $page,
-                'per_page' => $limit,
-                'total' => $total,
-                'total_pages' => ceil($total / $limit),
-                'has_more' => ($page * $limit) < $total
-            ]
-        ]);
     }
 
     /**
@@ -238,57 +242,60 @@ class Api extends BaseController
             ]);
         }
 
-        $limit = (int) ($this->request->getGet('limit') ?? 6);
-        $limit = min(50, max(1, $limit));
-        $db = \Config\Database::connect();
-        if (!$db->tableExists('news_tags') || !$db->tableExists('news_news_tags')) {
+        try {
+            $limit = (int) ($this->request->getGet('limit') ?? 6);
+            $limit = min(50, max(1, $limit));
+            $db = \Config\Database::connect();
+            if (!$db->tableExists('news_tags') || !$db->tableExists('news_news_tags')) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'data' => [],
+                    'tag' => $tagSlug,
+                    'count' => 0
+                ]);
+            }
+
+            $news = $this->newsModel->getPublishedByTag($tagSlug, $limit);
+            if ($tagSlug === 'general' && $news === []) {
+                $news = $this->newsModel->getPublished($limit);
+            }
+
+            $data = [];
+            foreach ($news as $article) {
+                $data[] = [
+                    'id' => $article['id'],
+                    'title' => $article['title'] ?? '',
+                    'slug' => $article['slug'] ?? '',
+                    'excerpt' => $article['excerpt'] ?? mb_substr(strip_tags($article['content'] ?? ''), 0, 150) . '...',
+                    'content' => $article['content'] ?? '',
+                    'featured_image' => $this->formatFeaturedImageThumb($article['featured_image'] ?? ''),
+                    'author' => '',
+                    'published_at' => $article['published_at'] ?? null,
+                    'formatted_date' => date('d M Y', strtotime($article['published_at'] ?? $article['created_at'] ?? 'now')),
+                    'primary_tag' => $tagSlug
+                ];
+            }
+            $data = $this->attachTagsToArticles($data);
+
             return $this->response->setJSON([
                 'success' => true,
+                'data' => $data,
+                'tag' => $tagSlug,
+                'count' => count($data)
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'newsByTag({tag}): {msg}', [
+                'tag' => $tagSlug,
+                'msg' => $e->getMessage(),
+            ]);
+
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Failed to load news by tag',
                 'data' => [],
                 'tag' => $tagSlug,
-                'count' => 0
             ]);
         }
-
-        $tagRow = $this->newsTagModel->findBySlug($tagSlug);
-        $news = [];
-        if ($tagRow) {
-            $news = $this->newsModel
-                ->select('news.*, user.gf_name, user.gl_name')
-                ->join('news_news_tags', 'news_news_tags.news_id = news.id')
-                ->join('news_tags', 'news_tags.id = news_news_tags.news_tag_id')
-                ->join('user', 'user.uid = news.author_id', 'left')
-                ->where('news.status', 'published')
-                ->where('news_tags.slug', $tagSlug)
-                ->orderBy('news.published_at', 'DESC')
-                ->groupBy('news.id')
-                ->limit($limit)
-                ->find();
-        }
-
-        $data = [];
-        foreach ($news as $article) {
-            $data[] = [
-                'id' => $article['id'],
-                'title' => $article['title'],
-                'slug' => $article['slug'],
-                'excerpt' => $article['excerpt'] ?? mb_substr(strip_tags($article['content'] ?? ''), 0, 150) . '...',
-                'content' => $article['content'] ?? '',
-                'featured_image' => $this->formatFeaturedImageThumb($article['featured_image'] ?? ''),
-                'author' => trim(($article['gf_name'] ?? '') . ' ' . ($article['gl_name'] ?? '')),
-                'published_at' => $article['published_at'],
-                'formatted_date' => date('d M Y', strtotime($article['published_at'] ?? $article['created_at'])),
-                'primary_tag' => $tagSlug
-            ];
-        }
-        $data = $this->attachTagsToArticles($data);
-
-        return $this->response->setJSON([
-            'success' => true,
-            'data' => $data,
-            'tag' => $tagSlug,
-            'count' => count($data)
-        ]);
     }
 
     /**
@@ -300,58 +307,68 @@ class Api extends BaseController
      */
     public function newsResearch()
     {
-        $limit = (int) ($this->request->getGet('limit') ?? 6);
-        $limit = min(50, max(1, $limit));
+        try {
+            $limit = (int) ($this->request->getGet('limit') ?? 6);
+            $limit = min(50, max(1, $limit));
 
-        $db = \Config\Database::connect();
-        if (!$db->tableExists('news_tags') || !$db->tableExists('news_news_tags')) {
+            $db = \Config\Database::connect();
+            if (!$db->tableExists('news_tags') || !$db->tableExists('news_news_tags')) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'data' => [],
+                    'category' => 'research',
+                    'count' => 0
+                ]);
+            }
+
+            $news = $this->newsModel
+                ->select('news.*')
+                ->join('news_news_tags', 'news_news_tags.news_id = news.id')
+                ->join('news_tags', 'news_tags.id = news_news_tags.news_tag_id')
+                ->where('news.status', 'published')
+                ->groupStart()
+                ->where('news_tags.slug', 'research')
+                ->orWhere('news_tags.slug', 'research_grant')
+                ->groupEnd()
+                ->orderBy('news.published_at', 'DESC')
+                ->groupBy('news.id')
+                ->limit($limit)
+                ->find();
+
+            $data = [];
+            foreach ($news as $article) {
+                $data[] = [
+                    'id' => $article['id'],
+                    'title' => $article['title'] ?? '',
+                    'slug' => $article['slug'] ?? '',
+                    'excerpt' => $article['excerpt'] ?? mb_substr(strip_tags($article['content'] ?? ''), 0, 150) . '...',
+                    'content' => $article['content'] ?? '',
+                    'featured_image' => $this->formatFeaturedImageThumb($article['featured_image'] ?? ''),
+                    'author' => '',
+                    'published_at' => $article['published_at'] ?? null,
+                    'formatted_date' => date('d M Y', strtotime($article['published_at'] ?? $article['created_at'] ?? 'now')),
+                    'category' => 'research',
+                    'primary_tag' => 'research',
+                ];
+            }
+            $data = $this->attachTagsToArticles($data);
+
             return $this->response->setJSON([
                 'success' => true,
+                'data' => $data,
+                'category' => 'research',
+                'count' => count($data)
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'newsResearch: {msg}', ['msg' => $e->getMessage()]);
+
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Failed to load research news',
                 'data' => [],
                 'category' => 'research',
-                'count' => 0
             ]);
         }
-
-        // Get news that has either 'research' or 'research_grant' tags
-        $news = $this->newsModel
-            ->select('news.*, user.gf_name, user.gl_name')
-            ->join('news_news_tags', 'news_news_tags.news_id = news.id')
-            ->join('news_tags', 'news_tags.id = news_news_tags.news_tag_id')
-            ->join('user', 'user.uid = news.author_id', 'left')
-            ->where('news.status', 'published')
-            ->groupStart()
-            ->where('news_tags.slug', 'research')
-            ->orWhere('news_tags.slug', 'research_grant')
-            ->groupEnd()
-            ->orderBy('news.published_at', 'DESC')
-            ->groupBy('news.id')
-            ->limit($limit)
-            ->find();
-
-        $data = [];
-        foreach ($news as $article) {
-            $data[] = [
-                'id' => $article['id'],
-                'title' => $article['title'],
-                'slug' => $article['slug'],
-                'excerpt' => $article['excerpt'] ?? mb_substr(strip_tags($article['content'] ?? ''), 0, 150) . '...',
-                'content' => $article['content'] ?? '',
-                'featured_image' => $this->formatFeaturedImageThumb($article['featured_image'] ?? ''),
-                'author' => trim(($article['gf_name'] ?? '') . ' ' . ($article['gl_name'] ?? '')),
-                'published_at' => $article['published_at'],
-                'formatted_date' => date('d M Y', strtotime($article['published_at'] ?? $article['created_at'])),
-                'category' => 'research'
-            ];
-        }
-        $data = $this->attachTagsToArticles($data);
-
-        return $this->response->setJSON([
-            'success' => true,
-            'data' => $data,
-            'category' => 'research',
-            'count' => count($data)
-        ]);
     }
 
     /**

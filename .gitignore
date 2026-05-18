@@ -42,6 +42,8 @@ $RECYCLE.BIN/
 # These should never be under version control,
 # as it poses a security risk.
 .env
+# อย่าเก็บสำเนา config ชื่อ env (ไม่มีจุด) — CI4 โหลดเฉพาะ `.env`
+/env
 scripts/ftp_server_49.env
 .vagrant
 Vagrantfile

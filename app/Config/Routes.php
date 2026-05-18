@@ -448,6 +448,7 @@ $routes->group('api', function ($routes) {
     $routes->get('news/featured', 'Api::newsFeatured');
     $routes->get('news/search', 'Api::newsSearch');
     $routes->get('news/tag/(:segment)', 'Api::newsByTag/$1');
+    $routes->get('news/category/(:segment)', 'Api::newsByTag/$1');
     $routes->get('news/research', 'Api::newsResearch');
     $routes->get('news-tags', 'Api::newsTags');
     $routes->get('news/(:num)', 'Api::newsDetail/$1');
