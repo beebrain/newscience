@@ -177,3 +177,4 @@ playwright/.cache/
 # Python Backup Tool
 #-------------------------
 newscience-backup/writable/cv_ai_uploads/
+writable/cv_ai_uploads/
