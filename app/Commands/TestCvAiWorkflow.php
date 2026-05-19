@@ -69,7 +69,7 @@ class TestCvAiWorkflow extends BaseCommand
         file_put_contents($validPath, "%PDF-1.4\n%%EOF\n");
         $this->step('storage: valid name', CvAiFileStorage::isValidStoredName($validName));
         $dlUrl = CvAiFileStorage::publicDownloadUrl($validName);
-        $this->step('storage: download URL', str_contains($dlUrl, '/cv-ai/download/'), $dlUrl);
+        $this->step('storage: download URL', str_contains($dlUrl, 'cv-ai-serve.php') || str_contains($dlUrl, '/cv-ai/download/'), $dlUrl);
 
         if (function_exists('curl_init')) {
             $ch = curl_init($dlUrl);

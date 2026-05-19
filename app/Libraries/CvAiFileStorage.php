@@ -179,7 +179,8 @@ final class CvAiFileStorage
         $app  = config(\Config\App::class);
         $base = rtrim($cfg->filePublicBaseUrl !== '' ? $cfg->filePublicBaseUrl : (string) ($app->baseURL ?? ''), '/');
 
-        return $base . '/cv-ai/download/' . rawurlencode($storedName);
+        // cv-ai-serve.php ไม่พึ่ง CI router (เหมาะกับ IIS บน production)
+        return $base . '/cv-ai-serve.php?f=' . rawurlencode($storedName);
     }
 
     public static function mimeForFilename(string $filename): string
