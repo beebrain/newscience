@@ -5,10 +5,6 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-// CV AI — ส่งไฟล์ให้ n8n (ไม่ต้องล็อกอิน, วางไว้บนสุด)
-$routes->get('cv-ai/download/(:any)', 'CvAiFileController::download/$1');
-$routes->get('cv-ai/file/(:any)', 'CvAiFileController::download/$1');
-
 $routes->get('/', 'Home::index');
 $routes->get('/about', 'Pages::about');
 $routes->get('/academics', 'Pages::academics');
@@ -594,6 +590,11 @@ $routes->group('edoc', ['filter' => 'edocauth'], function ($routes) {
 // Edoc public routes (no auth required — accessed via email link)
 $routes->get('edoc/public/secure-access', 'Edoc\GeneralController::secureAccess');
 $routes->get('edoc/public/view-file/(:any)', 'Edoc\GeneralController::publicViewFile/$1');
+
+// CV AI public file (n8n — ไม่ต้องล็อกอิน, แบบ edoc/public/view-file)
+$routes->get('cv-ai/public/file/(:segment)', 'CvAiFileController::publicFile/$1');
+$routes->get('cv-ai/download/(:segment)', 'CvAiFileController::publicFile/$1');
+$routes->get('cv-ai/file/(:segment)', 'CvAiFileController::publicFile/$1');
 // Edoc notifications — ดึงข้อมูลข่าว/เอกสารประจำวัน (ไม่ต้อง login)
 $routes->get('edoc/notifications', 'Edoc\GeneralController::getDocumentNotificationsData');
 $routes->get('edoc/notifications/(:segment)', 'Edoc\GeneralController::getDocumentNotificationsData/$1');

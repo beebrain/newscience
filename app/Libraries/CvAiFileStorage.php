@@ -7,9 +7,7 @@ namespace App\Libraries;
 use Config\AiCv;
 
 /**
- * เก็บไฟล์ชั่วคราวสำหรับส่ง URL ให้ n8n วิเคราะห์ (แบบ Research Record)
- *
- * เก็บที่ writable/uploads/cv_ai/ (หรือ public ถ้าเขียนได้) — ดาวน์โหลดผ่าน CvAiFileController (/cv-ai/download/)
+ * เก็บไฟล์ชั่วคราวสำหรับ n8n (แบบ Edoc — writable เท่านั้น + route cv-ai/public/file)
  */
 final class CvAiFileStorage
 {
@@ -17,66 +15,27 @@ final class CvAiFileStorage
 
     private const MAX_BYTES = 10_485_760; // 10MB
 
-    /** โฟลเดอร์ที่ใช้เขียนล่าสุด (public หรือ writable) */
-    private static ?string $activeUploadDir = null;
-
-    public static function publicUploadDir(): string
+    /** writable/uploads/cv_ai/ (เทียบ Edoc → writable/edoc_documents/) */
+    public static function uploadDir(): string
     {
-        return rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR;
+        $dir = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR;
+        if (! is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+            @file_put_contents($dir . 'index.html', '');
+        }
+
+        return $dir;
     }
 
-    public static function writableUploadDir(): string
-    {
-        return rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR;
-    }
-
-    /** @deprecated ใช้ uploadDir() */
-    public static function legacyWritableUploadDirV1(): string
+    private static function legacyWritableUploadDirV1(): string
     {
         return rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'cv_ai_uploads' . DIRECTORY_SEPARATOR;
     }
 
-    /**
-     * โฟลเดอร์สำหรับอัปโหลด — เลือก public ถ้าเขียนได้ ไม่งั้น writable
-     */
-    public static function uploadDir(): string
+    /** @deprecated ไฟล์เก่าที่ mirror ไป public */
+    public static function publicUploadDir(): string
     {
-        if (self::$activeUploadDir !== null && is_dir(self::$activeUploadDir) && is_writable(self::$activeUploadDir)) {
-            return self::$activeUploadDir;
-        }
-
-        foreach ([self::publicUploadDir(), self::writableUploadDir()] as $dir) {
-            if (self::ensureDirectory($dir)) {
-                self::$activeUploadDir = $dir;
-
-                return $dir;
-            }
-        }
-
-        return self::writableUploadDir();
-    }
-
-    public static function isPublicUploadDir(string $dir): bool
-    {
-        $pub = realpath(self::publicUploadDir());
-        $got = realpath(rtrim($dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR);
-
-        return $pub !== false && $got !== false && $got === $pub;
-    }
-
-    private static function ensureDirectory(string $dir): bool
-    {
-        if (is_dir($dir)) {
-            return is_writable($dir);
-        }
-
-        if (! @mkdir($dir, 0755, true) && ! is_dir($dir)) {
-            return false;
-        }
-
-        @file_put_contents($dir . 'index.html', '');
-
-        return is_dir($dir) && is_writable($dir);
+        return rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR;
     }
 
     /**
@@ -98,21 +57,16 @@ final class CvAiFileStorage
         }
 
         $dir = self::uploadDir();
-        if (! is_writable($dir)) {
+        if (! is_dir($dir) || ! is_writable($dir)) {
             return [
                 'success' => false,
-                'message' => 'เซิร์ฟเวอร์สร้างโฟลเดอร์อัปโหลดไม่ได้ — ตรวจสิทธิ์เขียนที่ public\\uploads\\cv_ai หรือ writable\\uploads\\cv_ai',
+                'message' => 'เซิร์ฟเวอร์สร้างโฟลเดอร์อัปโหลดไม่ได้ — ตรวจสิทธิ์เขียนที่ writable\\uploads\\cv_ai',
             ];
         }
 
         $storedName = bin2hex(random_bytes(16)) . '.' . $ext;
         if (! $file->move($dir, $storedName)) {
             return ['success' => false, 'message' => 'บันทึกไฟล์ไม่สำเร็จ'];
-        }
-
-        // ถ้าเขียนได้แค่ writable แต่ public เขียนได้ — คัดลอกให้ IIS เสิร์ฟตรง (ไม่บังคับ)
-        if (! self::isPublicUploadDir($dir)) {
-            self::tryMirrorToPublic($dir . $storedName, $storedName);
         }
 
         return [
@@ -124,63 +78,78 @@ final class CvAiFileStorage
         ];
     }
 
-    /** คัดลอกไป public ถ้าทำได้ (n8n ใช้ URL /uploads/cv_ai/) */
-    private static function tryMirrorToPublic(string $sourcePath, string $storedName): void
-    {
-        if (! is_file($sourcePath) || ! self::ensureDirectory(self::publicUploadDir())) {
-            return;
-        }
-        $dest = self::publicUploadDir() . $storedName;
-        if (! is_file($dest)) {
-            @copy($sourcePath, $dest);
-        }
-    }
-
     public static function isValidStoredName(string $storedName): bool
     {
         return (bool) preg_match('/^[a-f0-9]{32}\.(pdf|doc|docx|jpg|jpeg|png|gif|txt)$/i', $storedName);
     }
 
-    public static function pathForStoredName(string $storedName): ?string
+    /**
+     * หา path ไฟล์จริง (เทียบ Edoc publicViewFile — ลองหลาย base path)
+     */
+    public static function resolveReadablePath(string $storedName): ?string
     {
         if (! self::isValidStoredName($storedName)) {
             return null;
         }
-        foreach (self::candidatePaths($storedName) as $path) {
-            $resolved = realpath($path);
-            if ($resolved !== false && is_file($resolved) && is_readable($resolved)) {
-                return $resolved;
+        $basename = basename($storedName);
+        $bases    = [
+            self::uploadDir(),
+            self::legacyWritableUploadDirV1(),
+            self::publicUploadDir(),
+        ];
+        foreach ($bases as $base) {
+            foreach ([$basename, $storedName] as $name) {
+                if ($name === '') {
+                    continue;
+                }
+                $candidate = $base . $name;
+                if (file_exists($candidate) && is_file($candidate) && is_readable($candidate)) {
+                    return realpath($candidate) ?: $candidate;
+                }
             }
         }
 
         return null;
     }
 
-    /**
-     * @return list<string>
-     */
-    public static function candidatePaths(string $storedName): array
+    public static function pathForStoredName(string $storedName): ?string
     {
-        $filename = basename($storedName);
-
-        return [
-            self::publicUploadDir() . $filename,
-            self::writableUploadDir() . $filename,
-            self::legacyWritableUploadDirV1() . $filename,
-        ];
+        return self::resolveReadablePath($storedName);
     }
 
     /**
-     * URL สาธารณะให้ n8n — ผ่าน CvAiFileController (อ่านไฟล์จาก disk ด้วย PHP)
+     * URL สาธารณะให้ n8n — route cv-ai/public/file (แบบ edoc/public/view-file)
      */
     public static function publicDownloadUrl(string $storedName): string
     {
-        $cfg  = config(AiCv::class);
-        $app  = config(\Config\App::class);
-        $base = rtrim($cfg->filePublicBaseUrl !== '' ? $cfg->filePublicBaseUrl : (string) ($app->baseURL ?? ''), '/');
+        $encoded = rawurlencode(basename($storedName));
+        $cfg     = config(AiCv::class);
 
-        // cv-ai-serve.php ไม่พึ่ง CI router (เหมาะกับ IIS บน production)
-        return $base . '/cv-ai-serve.php?f=' . rawurlencode($storedName);
+        if ($cfg->filePublicBaseUrl !== '') {
+            $base = rtrim($cfg->filePublicBaseUrl, '/');
+            if (self::useIndexPhpInPublicUrl()) {
+                return $base . '/index.php/cv-ai/public/file/' . $encoded;
+            }
+
+            return $base . '/cv-ai/public/file/' . $encoded;
+        }
+
+        if (self::useIndexPhpInPublicUrl()) {
+            return base_url('index.php/cv-ai/public/file/' . $encoded);
+        }
+
+        return base_url('cv-ai/public/file/' . $encoded);
+    }
+
+    /** บน IIS/production ใช้ index.php ใน URL เหมือน Edoc (document_view.php) */
+    private static function useIndexPhpInPublicUrl(): bool
+    {
+        $v = env('AI_CV_URL_USE_INDEX_PHP');
+        if ($v !== null && $v !== '') {
+            return filter_var($v, FILTER_VALIDATE_BOOL);
+        }
+
+        return PHP_OS_FAMILY === 'Windows';
     }
 
     public static function mimeForFilename(string $filename): string

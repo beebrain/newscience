@@ -8,36 +8,41 @@ use App\Libraries\CvAiFileStorage;
 use CodeIgniter\HTTP\ResponseInterface;
 
 /**
- * ส่งไฟล์ CV AI ให้ n8n / ภายนอก (อ่านจาก writable หรือ public — ไม่ต้องพึ่ง static file บน IIS)
+ * ส่งไฟล์ CV AI ให้ n8n / ภายนอก (แบบ Edoc public/view-file — route + controller อ่านจาก writable)
  */
 class CvAiFileController extends BaseController
 {
     /**
-     * GET /cv-ai/download/{storedName}
-     * GET /cv-ai/file/{storedName} (alias)
+     * GET cv-ai/public/file/{storedName}
+     * ไม่ต้องล็อกอิน — ชื่อไฟล์สุ่ม 32 hex ทำหน้าที่เป็น secret (เทียบ token ของ Edoc)
      */
-    public function download(string $storedName): ResponseInterface
+    public function publicFile(string $storedName): ResponseInterface
     {
         $storedName = basename($storedName);
         if (! CvAiFileStorage::isValidStoredName($storedName)) {
-            return $this->response->setStatusCode(404)->setBody('Not found');
+            return $this->response->setStatusCode(404)->setBody('File not found');
         }
 
-        $path = CvAiFileStorage::pathForStoredName($storedName);
-        if ($path === null) {
-            return $this->response->setStatusCode(404)->setBody('Not found');
+        $filePath = CvAiFileStorage::resolveReadablePath($storedName);
+        if ($filePath === null) {
+            return $this->response->setStatusCode(404)->setBody('File not found');
         }
 
-        $body = file_get_contents($path);
-        if ($body === false) {
-            return $this->response->setStatusCode(500)->setBody('Cannot read file');
+        $mimeType = mime_content_type($filePath);
+        if ($mimeType === false || $mimeType === 'application/octet-stream') {
+            $mimeType = CvAiFileStorage::mimeForFilename($storedName);
         }
 
         return $this->response
-            ->setHeader('Content-Type', CvAiFileStorage::mimeForFilename($storedName))
+            ->setHeader('Content-Type', $mimeType)
             ->setHeader('Content-Disposition', 'inline; filename="' . str_replace('"', '\\"', $storedName) . '"')
             ->setHeader('Cache-Control', 'private, max-age=3600')
-            ->setHeader('Content-Length', (string) strlen($body))
-            ->setBody($body);
+            ->setBody((string) file_get_contents($filePath));
+    }
+
+    /** @deprecated ใช้ publicFile — alias สำหรับ route เก่า */
+    public function download(string $storedName): ResponseInterface
+    {
+        return $this->publicFile($storedName);
     }
 }

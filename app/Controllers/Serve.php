@@ -67,23 +67,11 @@ class Serve extends BaseController
     }
 
     /**
-     * GET serve/uploads/cv_ai/{storedName} — สำหรับ n8n / ภายนอก (รองรับโฟลเดอร์เก่า cv_ai_uploads)
+     * GET serve/uploads/cv_ai/{storedName} — backward compat → cv-ai/public/file
      */
     public function cvAiFile(string $filename): ResponseInterface
     {
-        $filename = basename($filename);
-        if ($filename === '' || strpos($filename, '..') !== false) {
-            return $this->response->setStatusCode(404);
-        }
-        if (! preg_match('/^[a-f0-9]{32}\.(pdf|doc|docx|jpg|jpeg|png|gif|txt)$/i', $filename)) {
-            return $this->response->setStatusCode(404);
-        }
-        $path = $this->resolveCvAiUploadPath($filename);
-        if ($path === null) {
-            return $this->response->setStatusCode(404);
-        }
-
-        return $this->sendFileResponse($path, $filename);
+        return redirect()->to(\App\Libraries\CvAiFileStorage::publicDownloadUrl(basename($filename)), null, 302);
     }
 
     /**

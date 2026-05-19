@@ -9,7 +9,7 @@ use Config\AiCv;
 /**
  * แปลงข้อความหรือ URL ไฟล์ (หลังอัปโหลด) เป็น JSON ผลงาน CV
  *
- * **n8n (AI_CV_N8N_URL):** POST JSON `{"url":"https://…/cv-ai/download/…"}` แบบ Research Record extract-article-v2
+ * **n8n (AI_CV_N8N_URL):** POST JSON `{"url":"https://…/cv-ai/public/file/…"}` แบบ Research Record extract-article-v2
  * หรือ `{"text":"…"}` สำหรับข้อความ/BibTeX
  */
 final class AiPublicationParser
