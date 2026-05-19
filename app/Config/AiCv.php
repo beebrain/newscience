@@ -20,8 +20,7 @@ class AiCv extends BaseConfig
     public string $n8nBearerToken = '';
 
     /**
-     * Base URL ที่ n8n ดึงไฟล์ได้ (โดเมนรากเดียวกับ Edoc — ว่างแล้วใช้ app.baseURL)
-     * เช่น https://sci.uru.ac.th → …/index.php/cv-ai/file/{storedName}
+     * @deprecated ใช้ app.baseURL แทน — ไม่โหลดจาก env แล้ว
      */
     public string $filePublicBaseUrl = '';
 
@@ -43,7 +42,7 @@ class AiCv extends BaseConfig
         parent::__construct();
         $this->n8nUrl             = trim((string) env('AI_CV_N8N_URL', ''));
         $this->n8nBearerToken     = trim((string) env('AI_CV_N8N_TOKEN', ''));
-        $this->filePublicBaseUrl  = rtrim(trim((string) env('AI_CV_FILE_PUBLIC_BASE_URL', '')), '/');
+        // URL ไฟล์สาธารณะ: base_url('index.php/cv-ai/file/…') จาก app.baseURL เท่านั้น
         $this->apiKey          = trim((string) env('AI_CV_API_KEY', ''));
         $this->apiUrl          = rtrim(trim((string) env('AI_CV_API_URL', '')), '/');
         $this->model           = trim((string) env('AI_CV_MODEL', 'gpt-4o-mini'));

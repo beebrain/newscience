@@ -41,11 +41,11 @@ class TestCvAiWorkflow extends BaseCommand
         $cfg = config(AiCv::class);
         $this->step('config: AiCv::isReady()', $cfg->isReady(), $cfg->isReady() ? 'OK' : 'ตั้ง AI_CV_N8N_URL ใน .env');
         $this->step('config: n8n URL', $cfg->n8nUrl !== '', $cfg->n8nUrl !== '' ? $cfg->n8nUrl : '(ว่าง)');
-        $pubBase = $cfg->filePublicBaseUrl !== '' ? $cfg->filePublicBaseUrl : (string) config(\Config\App::class)->baseURL;
+        $pubBase = rtrim((string) config(\Config\App::class)->baseURL, '/');
         if (str_contains($pubBase, 'localhost') || str_contains($pubBase, '127.0.0.1')) {
-            $this->step('config: file public URL for n8n', false, 'ตั้ง AI_CV_FILE_PUBLIC_BASE_URL เป็นโดเมนจริง', true);
+            $this->step('config: app.baseURL สำหรับ n8n', false, 'ตั้ง app.baseURL เป็นโดเมน production', true);
         } else {
-            $this->step('config: file public base', $pubBase !== '', $pubBase);
+            $this->step('config: app.baseURL', $pubBase !== '', $pubBase);
         }
 
         $fixture = ROOTPATH . 'tests/fixtures/cv_ai_n8n_response_sample.json';

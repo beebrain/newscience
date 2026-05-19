@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Libraries\CvAiFileStorage;
-use Config\AiCv;
 
 /**
  * อ่านและส่งไฟล์ CV AI จาก writable (สำหรับ n8n / URL สาธารณะ)
@@ -57,21 +56,11 @@ final class CvAiFileService
     }
 
     /**
-     * URL สาธารณะ — รูปแบบเดียวกับ Edoc viewPDF (base_url + index.php/…)
-     * ตัวอย่าง: https://sci.uru.ac.th/index.php/cv-ai/file/{storedName}
+     * URL สาธารณะ — ใช้ app.baseURL อย่างเดียว (แบบ Edoc viewPDF ไม่มี env แยก)
      */
     public function publicDownloadUrl(string $storedName): string
     {
-        $encoded = rawurlencode(basename($storedName));
-        $cfg     = config(AiCv::class);
-
-        if ($cfg->filePublicBaseUrl !== '') {
-            $base = rtrim($cfg->filePublicBaseUrl, '/');
-
-            return $base . '/index.php/cv-ai/file/' . $encoded;
-        }
-
-        return base_url('index.php/cv-ai/file/' . $encoded);
+        return base_url('index.php/cv-ai/file/' . rawurlencode(basename($storedName)));
     }
 
     /**
