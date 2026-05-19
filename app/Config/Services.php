@@ -19,6 +19,15 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
+    public static function cvAiFile(bool $getShared = true): \App\Services\CvAiFileService
+    {
+        if ($getShared) {
+            return static::getSharedInstance('cvAiFile');
+        }
+
+        return new \App\Services\CvAiFileService();
+    }
+
     /*
      * public static function example($getShared = true)
      * {

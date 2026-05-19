@@ -1,0 +1,122 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+use App\Libraries\CvAiFileStorage;
+use Config\AiCv;
+
+/**
+ * อ่านและส่งไฟล์ CV AI จาก writable (สำหรับ n8n / URL สาธารณะ)
+ */
+final class CvAiFileService
+{
+    /**
+     * @return array{path: string, filename: string, mime: string, size: int}|null
+     */
+    public function resolveForDownload(string $storedName): ?array
+    {
+        $filename = basename($storedName);
+        if (! CvAiFileStorage::isValidStoredName($filename)) {
+            return null;
+        }
+
+        $path = $this->resolveAbsolutePath($filename);
+        if ($path === null) {
+            return null;
+        }
+
+        $mime = mime_content_type($path);
+        if ($mime === false || $mime === 'application/octet-stream') {
+            $mime = CvAiFileStorage::mimeForFilename($filename);
+        }
+
+        return [
+            'path'     => $path,
+            'filename' => $filename,
+            'mime'     => $mime,
+            'size'     => (int) filesize($path),
+        ];
+    }
+
+    public function resolveAbsolutePath(string $storedName): ?string
+    {
+        $filename = basename($storedName);
+        if (! CvAiFileStorage::isValidStoredName($filename)) {
+            return null;
+        }
+
+        foreach ($this->candidatePaths($filename) as $candidate) {
+            if ($this->canOpenForRead($candidate)) {
+                $resolved = realpath($candidate);
+
+                return $resolved !== false ? $resolved : $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    public function publicDownloadUrl(string $storedName): string
+    {
+        $basename = basename($storedName);
+        $cfg      = config(AiCv::class);
+        $base     = rtrim($cfg->filePublicBaseUrl !== '' ? $cfg->filePublicBaseUrl : (string) config(\Config\App::class)->baseURL, '/');
+        $query    = 'cv-ai/file?f=' . rawurlencode($basename);
+
+        if ($this->useIndexPhpInPublicUrl()) {
+            return $base . '/index.php/' . $query;
+        }
+
+        return $base . '/' . $query;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function candidatePaths(string $filename): array
+    {
+        $bases = [
+            CvAiFileStorage::uploadDir(),
+            rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'cv_ai_uploads' . DIRECTORY_SEPARATOR,
+            CvAiFileStorage::publicUploadDir(),
+        ];
+
+        if (defined('ROOTPATH')) {
+            $bases[] = rtrim(ROOTPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'writable' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR;
+        }
+
+        $paths = [];
+        foreach ($bases as $base) {
+            $paths[] = $base . $filename;
+        }
+
+        return $paths;
+    }
+
+    private function canOpenForRead(string $path): bool
+    {
+        if (! file_exists($path) || ! is_file($path)) {
+            return false;
+        }
+
+        $handle = @fopen($path, 'rb');
+        if ($handle === false) {
+            return false;
+        }
+        fclose($handle);
+
+        return true;
+    }
+
+    private function useIndexPhpInPublicUrl(): bool
+    {
+        $v = env('AI_CV_URL_USE_INDEX_PHP');
+        if ($v !== null && $v !== '') {
+            return filter_var($v, FILTER_VALIDATE_BOOL);
+        }
+
+        return PHP_OS_FAMILY === 'Windows';
+    }
+}

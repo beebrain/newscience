@@ -71,7 +71,7 @@ class TestCvAiWorkflow extends BaseCommand
         $dlUrl = CvAiFileStorage::publicDownloadUrl($validName);
         $this->step(
             'storage: download URL',
-            str_contains($dlUrl, 'cv-ai-serve.php') || str_contains($dlUrl, 'cv-ai/public/file'),
+            str_contains($dlUrl, 'cv-ai/file?f=') || str_contains($dlUrl, 'cv-ai/public/file'),
             $dlUrl
         );
 

@@ -4,46 +4,53 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Libraries\CvAiFileStorage;
 use CodeIgniter\HTTP\ResponseInterface;
 
 /**
- * ส่งไฟล์ CV AI ให้ n8n / ภายนอก (แบบ Edoc public/view-file — route + controller อ่านจาก writable)
+ * ส่งไฟล์ CV AI ให้ n8n / ภายนอก — รับชื่อไฟล์แล้ว return เป็นไฟล์
  */
 class CvAiFileController extends BaseController
 {
     /**
+     * GET cv-ai/file?f={storedName}
+     * แนะนำบน IIS — ไม่มี .pdf ใน path segment
+     */
+    public function serve(): ResponseInterface
+    {
+        $name = trim((string) ($this->request->getGet('f') ?? $this->request->getGet('name') ?? ''));
+
+        return $this->respondWithFile($name);
+    }
+
+    /**
      * GET cv-ai/public/file/{storedName}
-     * ไม่ต้องล็อกอิน — ชื่อไฟล์สุ่ม 32 hex ทำหน้าที่เป็น secret (เทียบ token ของ Edoc)
      */
     public function publicFile(string $storedName): ResponseInterface
     {
-        $storedName = basename($storedName);
-        if (! CvAiFileStorage::isValidStoredName($storedName)) {
-            return $this->response->setStatusCode(404)->setBody('File not found');
-        }
-
-        $filePath = CvAiFileStorage::resolveReadablePath($storedName);
-        if ($filePath === null) {
-            return $this->response->setStatusCode(404)->setBody('File not found');
-        }
-
-        $mimeType = mime_content_type($filePath);
-        if ($mimeType === false || $mimeType === 'application/octet-stream') {
-            $mimeType = CvAiFileStorage::mimeForFilename($storedName);
-        }
-
-        return $this->response
-            ->setHeader('Content-Type', $mimeType)
-            ->setHeader('Content-Disposition', 'inline; filename="' . str_replace('"', '\\"', $storedName) . '"')
-            ->setHeader('Cache-Control', 'private, max-age=3600')
-            ->setHeader('Content-Length', (string) filesize($filePath))
-            ->setBody((string) file_get_contents($filePath));
+        return $this->respondWithFile($storedName);
     }
 
-    /** @deprecated ใช้ publicFile — alias สำหรับ route เก่า */
+    /** @deprecated alias */
     public function download(string $storedName): ResponseInterface
     {
         return $this->publicFile($storedName);
+    }
+
+    private function respondWithFile(string $storedName): ResponseInterface
+    {
+        $file = service('cvAiFile')->resolveForDownload($storedName);
+        if ($file === null) {
+            return $this->response->setStatusCode(404)->setBody('File not found');
+        }
+
+        $safeName = str_replace('"', '\\"', $file['filename']);
+
+        return $this->response
+            ->setStatusCode(200)
+            ->setHeader('Content-Type', $file['mime'])
+            ->setHeader('Content-Disposition', 'inline; filename="' . $safeName . '"')
+            ->setHeader('Content-Length', (string) $file['size'])
+            ->setHeader('Cache-Control', 'private, max-age=3600')
+            ->setBody((string) file_get_contents($file['path']));
     }
 }

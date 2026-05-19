@@ -88,28 +88,7 @@ final class CvAiFileStorage
      */
     public static function resolveReadablePath(string $storedName): ?string
     {
-        if (! self::isValidStoredName($storedName)) {
-            return null;
-        }
-        $basename = basename($storedName);
-        $bases    = [
-            self::uploadDir(),
-            self::legacyWritableUploadDirV1(),
-            self::publicUploadDir(),
-        ];
-        foreach ($bases as $base) {
-            foreach ([$basename, $storedName] as $name) {
-                if ($name === '') {
-                    continue;
-                }
-                $candidate = $base . $name;
-                if (self::isServeableFile($candidate)) {
-                    return realpath($candidate) ?: $candidate;
-                }
-            }
-        }
-
-        return null;
+        return service('cvAiFile')->resolveAbsolutePath($storedName);
     }
 
     public static function pathForStoredName(string $storedName): ?string
@@ -117,59 +96,10 @@ final class CvAiFileStorage
         return self::resolveReadablePath($storedName);
     }
 
-    /**
-     * URL สาธารณะให้ n8n — cv-ai-serve.php บน IIS (ไม่พึ่ง CI router) หรือ route cv-ai/public/file
-     */
+    /** URL สาธารณะให้ n8n — CvAiFileController + CvAiFileService */
     public static function publicDownloadUrl(string $storedName): string
     {
-        $basename = basename($storedName);
-        $cfg      = config(AiCv::class);
-        $base     = rtrim($cfg->filePublicBaseUrl !== '' ? $cfg->filePublicBaseUrl : (string) config(\Config\App::class)->baseURL, '/');
-
-        if (self::useDirectServeScript()) {
-            return $base . '/cv-ai-serve.php?f=' . rawurlencode($basename);
-        }
-
-        $encoded = rawurlencode($basename);
-        if (self::useIndexPhpInPublicUrl()) {
-            return $base . '/index.php/cv-ai/public/file/' . $encoded;
-        }
-
-        return $base . '/cv-ai/public/file/' . $encoded;
-    }
-
-    /** IIS: ใช้ cv-ai-serve.php แทน CI route (หลีกเลี่ยง 404 จาก router/extension) */
-    private static function useDirectServeScript(): bool
-    {
-        $v = env('AI_CV_USE_DIRECT_SERVE');
-        if ($v !== null && $v !== '') {
-            return filter_var($v, FILTER_VALIDATE_BOOL);
-        }
-
-        return PHP_OS_FAMILY === 'Windows';
-    }
-
-    /** บน IIS/production ใช้ index.php ใน URL เมื่อไม่ใช้ cv-ai-serve.php */
-    private static function useIndexPhpInPublicUrl(): bool
-    {
-        $v = env('AI_CV_URL_USE_INDEX_PHP');
-        if ($v !== null && $v !== '') {
-            return filter_var($v, FILTER_VALIDATE_BOOL);
-        }
-
-        return PHP_OS_FAMILY === 'Windows';
-    }
-
-    private static function isServeableFile(string $path): bool
-    {
-        if (! file_exists($path) || ! is_file($path)) {
-            return false;
-        }
-        if (is_readable($path)) {
-            return true;
-        }
-
-        return PHP_OS_FAMILY === 'Windows';
+        return service('cvAiFile')->publicDownloadUrl($storedName);
     }
 
     public static function mimeForFilename(string $filename): string

@@ -40,7 +40,7 @@ class ProbeCvAiFile extends BaseCommand
             'public/uploads/cv_ai'   => CvAiFileStorage::publicUploadDir() . $filename,
         ];
 
-        $found = CvAiFileStorage::resolveReadablePath($filename);
+        $found = service('cvAiFile')->resolveAbsolutePath($filename);
         foreach ($paths as $label => $path) {
             $real = realpath($path);
             $ok   = $real !== false && is_file($real) && is_readable($real);
