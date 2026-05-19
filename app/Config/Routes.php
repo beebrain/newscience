@@ -5,6 +5,10 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
+// CV AI — ส่งไฟล์ให้ n8n (ไม่ต้องล็อกอิน, วางไว้บนสุด)
+$routes->get('cv-ai/download/(:any)', 'CvAiFileController::download/$1');
+$routes->get('cv-ai/file/(:any)', 'CvAiFileController::download/$1');
+
 $routes->get('/', 'Home::index');
 $routes->get('/about', 'Pages::about');
 $routes->get('/academics', 'Pages::academics');
@@ -115,7 +119,6 @@ $routes->post('/dashboard/profile/cv/orcid/import', 'User\ProfileCv::importOrcid
 $routes->post('/dashboard/profile/cv/orcid/save', 'User\ProfileCv::saveOrcidId', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/ai-publication-upload', 'User\ProfileCv::aiPublicationUpload', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/ai-publication-preview', 'User\ProfileCv::aiPublicationPreview', ['filter' => 'loggedin']);
-$routes->get('/cv-ai/file/(:any)', 'User\ProfileCv::aiPublicationFile/$1');
 $routes->get('/dashboard/profile/research-record-sync', 'User\ResearchRecordSync::index', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/research-record-sync/compare', 'User\ResearchRecordSync::compare', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/research-record-sync/apply', 'User\ResearchRecordSync::apply', ['filter' => 'loggedin']);

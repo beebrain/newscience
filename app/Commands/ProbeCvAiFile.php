@@ -6,7 +6,7 @@ use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 
 /**
- * ตรวจว่า PHP อ่านไฟล์ CV AI จาก public/uploads/cv_ai ได้ (รันบน server IIS)
+ * ตรวจว่า PHP อ่านไฟล์ CV AI ได้ (รันบน server IIS) — URL ใช้ /cv-ai/download/
  *
  * php spark cv:probe-ai-file 6050a989121639dde899d02191d57b66.pdf
  */

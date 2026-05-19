@@ -1327,18 +1327,6 @@ class ProfileCv extends BaseController
     }
 
     /**
-     * GET — backward compat (/cv-ai/file/…) → redirect ไป public/uploads/cv_ai/
-     */
-    public function aiPublicationFile(string $storedName)
-    {
-        if (CvAiFileStorage::pathForStoredName($storedName) === null) {
-            return $this->response->setStatusCode(404)->setBody('Not found');
-        }
-
-        return redirect()->to(CvAiFileStorage::publicDownloadUrl($storedName), null, 302);
-    }
-
-    /**
      * POST AJAX — วิเคราะห์ผลงาน: ไฟล์ที่อัปโหลด (ส่ง url) / URL ภายนอก / ข้อความ
      */
     public function aiPublicationPreview()

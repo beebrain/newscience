@@ -9,7 +9,7 @@ use Config\AiCv;
 /**
  * เก็บไฟล์ชั่วคราวสำหรับส่ง URL ให้ n8n วิเคราะห์ (แบบ Research Record)
  *
- * พยายามเก็บที่ public/uploads/cv_ai/ (IIS เสิร์ฟตรง) — ถ้าเขียนไม่ได้ใช้ writable/uploads/cv_ai/ + /serve/uploads/cv_ai/
+ * เก็บที่ writable/uploads/cv_ai/ (หรือ public ถ้าเขียนได้) — ดาวน์โหลดผ่าน CvAiFileController (/cv-ai/download/)
  */
 final class CvAiFileStorage
 {
@@ -171,20 +171,32 @@ final class CvAiFileStorage
     }
 
     /**
-     * URL สาธารณะให้ n8n — ใช้ /uploads/cv_ai/ ถ้าไฟล์อยู่ public ไม่งั้น /serve/uploads/cv_ai/
+     * URL สาธารณะให้ n8n — ผ่าน CvAiFileController (อ่านไฟล์จาก disk ด้วย PHP)
      */
     public static function publicDownloadUrl(string $storedName): string
     {
         $cfg  = config(AiCv::class);
         $app  = config(\Config\App::class);
         $base = rtrim($cfg->filePublicBaseUrl !== '' ? $cfg->filePublicBaseUrl : (string) ($app->baseURL ?? ''), '/');
-        $name = rawurlencode($storedName);
-        $pub  = self::publicUploadDir() . basename($storedName);
-        if (is_file($pub) && is_readable($pub)) {
-            return $base . '/uploads/cv_ai/' . $name;
-        }
 
-        return $base . '/serve/uploads/cv_ai/' . $name;
+        return $base . '/cv-ai/download/' . rawurlencode($storedName);
+    }
+
+    public static function mimeForFilename(string $filename): string
+    {
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $map = [
+            'pdf'  => 'application/pdf',
+            'doc'  => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png'  => 'image/png',
+            'gif'  => 'image/gif',
+            'txt'  => 'text/plain; charset=UTF-8',
+        ];
+
+        return $map[$ext] ?? 'application/octet-stream';
     }
 
     public static function rememberUploadForUser(int $userId, string $storedName): void
