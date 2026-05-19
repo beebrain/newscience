@@ -103,7 +103,7 @@ final class CvAiFileStorage
                     continue;
                 }
                 $candidate = $base . $name;
-                if (file_exists($candidate) && is_file($candidate) && is_readable($candidate)) {
+                if (self::isServeableFile($candidate)) {
                     return realpath($candidate) ?: $candidate;
                 }
             }
@@ -118,35 +118,55 @@ final class CvAiFileStorage
     }
 
     /**
-     * URL สาธารณะให้ n8n — route cv-ai/public/file (แบบ edoc/public/view-file)
+     * URL สาธารณะให้ n8n — cv-ai-serve.php บน IIS (ไม่พึ่ง CI router) หรือ route cv-ai/public/file
      */
     public static function publicDownloadUrl(string $storedName): string
     {
-        $encoded = rawurlencode(basename($storedName));
-        $cfg     = config(AiCv::class);
+        $basename = basename($storedName);
+        $cfg      = config(AiCv::class);
+        $base     = rtrim($cfg->filePublicBaseUrl !== '' ? $cfg->filePublicBaseUrl : (string) config(\Config\App::class)->baseURL, '/');
 
-        if ($cfg->filePublicBaseUrl !== '') {
-            $base = rtrim($cfg->filePublicBaseUrl, '/');
-            if (self::useIndexPhpInPublicUrl()) {
-                return $base . '/index.php/cv-ai/public/file/' . $encoded;
-            }
-
-            return $base . '/cv-ai/public/file/' . $encoded;
+        if (self::useDirectServeScript()) {
+            return $base . '/cv-ai-serve.php?f=' . rawurlencode($basename);
         }
 
+        $encoded = rawurlencode($basename);
         if (self::useIndexPhpInPublicUrl()) {
-            return base_url('index.php/cv-ai/public/file/' . $encoded);
+            return $base . '/index.php/cv-ai/public/file/' . $encoded;
         }
 
-        return base_url('cv-ai/public/file/' . $encoded);
+        return $base . '/cv-ai/public/file/' . $encoded;
     }
 
-    /** บน IIS/production ใช้ index.php ใน URL เหมือน Edoc (document_view.php) */
+    /** IIS: ใช้ cv-ai-serve.php แทน CI route (หลีกเลี่ยง 404 จาก router/extension) */
+    private static function useDirectServeScript(): bool
+    {
+        $v = env('AI_CV_USE_DIRECT_SERVE');
+        if ($v !== null && $v !== '') {
+            return filter_var($v, FILTER_VALIDATE_BOOL);
+        }
+
+        return PHP_OS_FAMILY === 'Windows';
+    }
+
+    /** บน IIS/production ใช้ index.php ใน URL เมื่อไม่ใช้ cv-ai-serve.php */
     private static function useIndexPhpInPublicUrl(): bool
     {
         $v = env('AI_CV_URL_USE_INDEX_PHP');
         if ($v !== null && $v !== '') {
             return filter_var($v, FILTER_VALIDATE_BOOL);
+        }
+
+        return PHP_OS_FAMILY === 'Windows';
+    }
+
+    private static function isServeableFile(string $path): bool
+    {
+        if (! file_exists($path) || ! is_file($path)) {
+            return false;
+        }
+        if (is_readable($path)) {
+            return true;
         }
 
         return PHP_OS_FAMILY === 'Windows';

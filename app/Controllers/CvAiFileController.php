@@ -37,6 +37,7 @@ class CvAiFileController extends BaseController
             ->setHeader('Content-Type', $mimeType)
             ->setHeader('Content-Disposition', 'inline; filename="' . str_replace('"', '\\"', $storedName) . '"')
             ->setHeader('Cache-Control', 'private, max-age=3600')
+            ->setHeader('Content-Length', (string) filesize($filePath))
             ->setBody((string) file_get_contents($filePath));
     }
 
