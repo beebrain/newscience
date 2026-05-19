@@ -39,7 +39,8 @@ $routes->get('p/(:num)/data', 'ProgramSpaController::getData/$1');
 $routes->get('p/(:num)/main', 'ProgramSpaController::main/$1');
 
 // Serve uploaded files from writable (fallback to public)
-// ใส่ path เต็มก่อน (programs/8/hero/xxx.jpg) ไป fileByPath — เหลือ 2 segments ค่อยไป file()
+// CV AI ต้องมาก่อน catch-all (.+) — n8n ดึง PDF จากภายนอก
+$routes->get('serve/uploads/cv_ai/(:segment)', 'Serve::cvAiFile/$1');
 $routes->get('serve/uploads/(.+)', 'Serve::fileByPath/$1');
 $routes->get('serve/uploads/(:segment)/(:segment)', 'Serve::file/$1/$2');
 $routes->get('serve/thumb/(:segment)/(:segment)', 'Serve::thumb/$1/$2');

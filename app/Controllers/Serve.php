@@ -55,16 +55,35 @@ class Serve extends BaseController
                 $path = $publicPathP;
             }
         }
+        if ($path === null && $type === 'cv_ai') {
+            $path = $this->resolveCvAiUploadPath($filename);
+        }
 
         if ($path === null) {
             return $this->response->setStatusCode(404);
         }
 
-        $mime = $this->mimeFromFilename($filename);
-        $disposition = $this->dispositionForFilename($filename);
-        $this->response->setHeader('Content-Type', $mime);
-        $this->response->setHeader('Content-Disposition', $disposition . '; filename="' . str_replace('"', '\\"', $filename) . '"');
-        return $this->response->setBody(file_get_contents($path));
+        return $this->sendFileResponse($path, $filename);
+    }
+
+    /**
+     * GET serve/uploads/cv_ai/{storedName} — สำหรับ n8n / ภายนอก (รองรับโฟลเดอร์เก่า cv_ai_uploads)
+     */
+    public function cvAiFile(string $filename): ResponseInterface
+    {
+        $filename = basename($filename);
+        if ($filename === '' || strpos($filename, '..') !== false) {
+            return $this->response->setStatusCode(404);
+        }
+        if (! preg_match('/^[a-f0-9]{32}\.(pdf|doc|docx|jpg|jpeg|png|gif|txt)$/i', $filename)) {
+            return $this->response->setStatusCode(404);
+        }
+        $path = $this->resolveCvAiUploadPath($filename);
+        if ($path === null) {
+            return $this->response->setStatusCode(404);
+        }
+
+        return $this->sendFileResponse($path, $filename);
     }
 
     /**
@@ -146,17 +165,16 @@ class Serve extends BaseController
      */
     public function fileByPath(string $path = ''): ResponseInterface
     {
-        // ดึง path เต็มจาก URI เพราะ route pass ที่มี / จะถูกแยกเป็นหลาย parameter
-        $uriPath = $this->request->getUri()->getPath();
-        $prefix = 'serve/uploads';
-        $pos = strpos($uriPath, $prefix);
-        if ($pos !== false) {
-            $path = substr($uriPath, $pos + strlen($prefix));
-            $path = trim(str_replace('\\', '/', $path), '/');
-        }
-        $path = str_replace(['\\', '..'], ['/', ''], $path);
-        if ($path === '' || strpos($path, '..') !== false) {
+        $path = $this->extractUploadsRelativePath();
+        if ($path === null) {
             return $this->response->setStatusCode(404);
+        }
+        if (preg_match('#^cv_ai/([a-f0-9]{32}\.(?:pdf|doc|docx|jpg|jpeg|png|gif|txt))$#i', $path, $m)) {
+            $resolved = $this->resolveCvAiUploadPath($m[1]);
+
+            return $resolved !== null
+                ? $this->sendFileResponse($resolved, $m[1])
+                : $this->response->setStatusCode(404);
         }
         $writableBase = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
         $sep = DIRECTORY_SEPARATOR;
@@ -251,12 +269,63 @@ class Serve extends BaseController
                 }
             }
         }
-        $filename = basename($fullPath);
+        return $this->sendFileResponse($fullPath, basename($fullPath));
+    }
+
+    private function extractUploadsRelativePath(): ?string
+    {
+        $candidates = [
+            str_replace('\\', '/', $this->request->getUri()->getPath()),
+        ];
+        $serverUri = $_SERVER['REQUEST_URI'] ?? '';
+        if ($serverUri !== '') {
+            $pathOnly = parse_url($serverUri, PHP_URL_PATH);
+            if (is_string($pathOnly) && $pathOnly !== '') {
+                $candidates[] = str_replace('\\', '/', $pathOnly);
+            }
+        }
+        foreach ($candidates as $uriPath) {
+            if (preg_match('#serve/uploads/(.+)$#i', $uriPath, $m)) {
+                $path = trim($m[1], '/');
+                $path = str_replace(['\\', '..'], ['/', ''], $path);
+                if ($path !== '' && strpos($path, '..') === false) {
+                    return $path;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function resolveCvAiUploadPath(string $filename): ?string
+    {
+        $filename = basename($filename);
+        $writableBase = rtrim(WRITEPATH, DIRECTORY_SEPARATOR);
+        $publicBase   = rtrim(FCPATH, DIRECTORY_SEPARATOR);
+        $candidates   = [
+            $writableBase . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR . $filename,
+            $writableBase . DIRECTORY_SEPARATOR . 'cv_ai_uploads' . DIRECTORY_SEPARATOR . $filename,
+            $publicBase . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR . $filename,
+        ];
+        foreach ($candidates as $path) {
+            $resolved = realpath($path);
+            if ($resolved !== false && is_file($resolved) && is_readable($resolved)) {
+                return $resolved;
+            }
+        }
+
+        return null;
+    }
+
+    private function sendFileResponse(string $path, string $filename): ResponseInterface
+    {
         $mime = $this->mimeFromFilename($filename);
         $disposition = $this->dispositionForFilename($filename);
         $this->response->setHeader('Content-Type', $mime);
         $this->response->setHeader('Content-Disposition', $disposition . '; filename="' . str_replace('"', '\\"', $filename) . '"');
-        return $this->response->setBody(file_get_contents($fullPath));
+        $this->response->setHeader('Cache-Control', 'private, max-age=3600');
+
+        return $this->response->setBody((string) file_get_contents($path));
     }
 
     private function mimeFromFilename(string $filename): string
