@@ -9,7 +9,7 @@ use Config\AiCv;
 /**
  * เก็บไฟล์ชั่วคราวสำหรับส่ง URL ให้ n8n วิเคราะห์ (แบบ Research Record)
  *
- * เก็บที่ public/uploads/cv_ai/ — IIS/Apache เสิร์ฟไฟล์โดยตรง (n8n เข้าถึงจากภายนอกได้ง่าย)
+ * พยายามเก็บที่ public/uploads/cv_ai/ (IIS เสิร์ฟตรง) — ถ้าเขียนไม่ได้ใช้ writable/uploads/cv_ai/ + /serve/uploads/cv_ai/
  */
 final class CvAiFileStorage
 {
@@ -17,28 +17,66 @@ final class CvAiFileStorage
 
     private const MAX_BYTES = 10_485_760; // 10MB
 
-    /** public/uploads/cv_ai/ */
-    public static function uploadDir(): string
-    {
-        $dir = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR;
-        if (! is_dir($dir)) {
-            mkdir($dir, 0755, true);
-            @file_put_contents($dir . 'index.html', '');
-        }
+    /** โฟลเดอร์ที่ใช้เขียนล่าสุด (public หรือ writable) */
+    private static ?string $activeUploadDir = null;
 
-        return $dir;
+    public static function publicUploadDir(): string
+    {
+        return rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR;
     }
 
-    /** writable/uploads/cv_ai/ (ก่อนย้ายมา public) */
-    private static function legacyWritableUploadDir(): string
+    public static function writableUploadDir(): string
     {
         return rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR;
     }
 
-    /** writable/cv_ai_uploads/ (รุ่นแรก) */
-    private static function legacyWritableUploadDirV1(): string
+    /** @deprecated ใช้ uploadDir() */
+    public static function legacyWritableUploadDirV1(): string
     {
         return rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'cv_ai_uploads' . DIRECTORY_SEPARATOR;
+    }
+
+    /**
+     * โฟลเดอร์สำหรับอัปโหลด — เลือก public ถ้าเขียนได้ ไม่งั้น writable
+     */
+    public static function uploadDir(): string
+    {
+        if (self::$activeUploadDir !== null && is_dir(self::$activeUploadDir) && is_writable(self::$activeUploadDir)) {
+            return self::$activeUploadDir;
+        }
+
+        foreach ([self::publicUploadDir(), self::writableUploadDir()] as $dir) {
+            if (self::ensureDirectory($dir)) {
+                self::$activeUploadDir = $dir;
+
+                return $dir;
+            }
+        }
+
+        return self::writableUploadDir();
+    }
+
+    public static function isPublicUploadDir(string $dir): bool
+    {
+        $pub = realpath(self::publicUploadDir());
+        $got = realpath(rtrim($dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR);
+
+        return $pub !== false && $got !== false && $got === $pub;
+    }
+
+    private static function ensureDirectory(string $dir): bool
+    {
+        if (is_dir($dir)) {
+            return is_writable($dir);
+        }
+
+        if (! @mkdir($dir, 0755, true) && ! is_dir($dir)) {
+            return false;
+        }
+
+        @file_put_contents($dir . 'index.html', '');
+
+        return is_dir($dir) && is_writable($dir);
     }
 
     /**
@@ -59,8 +97,23 @@ final class CvAiFileStorage
             return ['success' => false, 'message' => 'รองรับเฉพาะ PDF, DOC, DOCX, JPG, PNG, GIF, TXT'];
         }
 
+        $dir = self::uploadDir();
+        if (! is_writable($dir)) {
+            return [
+                'success' => false,
+                'message' => 'เซิร์ฟเวอร์สร้างโฟลเดอร์อัปโหลดไม่ได้ — ตรวจสิทธิ์เขียนที่ public\\uploads\\cv_ai หรือ writable\\uploads\\cv_ai',
+            ];
+        }
+
         $storedName = bin2hex(random_bytes(16)) . '.' . $ext;
-        $file->move(self::uploadDir(), $storedName);
+        if (! $file->move($dir, $storedName)) {
+            return ['success' => false, 'message' => 'บันทึกไฟล์ไม่สำเร็จ'];
+        }
+
+        // ถ้าเขียนได้แค่ writable แต่ public เขียนได้ — คัดลอกให้ IIS เสิร์ฟตรง (ไม่บังคับ)
+        if (! self::isPublicUploadDir($dir)) {
+            self::tryMirrorToPublic($dir . $storedName, $storedName);
+        }
 
         return [
             'success'       => true,
@@ -69,6 +122,18 @@ final class CvAiFileStorage
             'original_name' => $file->getClientName(),
             'file_size'     => (int) $file->getSize(),
         ];
+    }
+
+    /** คัดลอกไป public ถ้าทำได้ (n8n ใช้ URL /uploads/cv_ai/) */
+    private static function tryMirrorToPublic(string $sourcePath, string $storedName): void
+    {
+        if (! is_file($sourcePath) || ! self::ensureDirectory(self::publicUploadDir())) {
+            return;
+        }
+        $dest = self::publicUploadDir() . $storedName;
+        if (! is_file($dest)) {
+            @copy($sourcePath, $dest);
+        }
     }
 
     public static function isValidStoredName(string $storedName): bool
@@ -99,27 +164,29 @@ final class CvAiFileStorage
         $filename = basename($storedName);
 
         return [
-            self::uploadDir() . $filename,
-            self::legacyWritableUploadDir() . $filename,
+            self::publicUploadDir() . $filename,
+            self::writableUploadDir() . $filename,
             self::legacyWritableUploadDirV1() . $filename,
         ];
     }
 
     /**
-     * URL สาธารณะให้ n8n ดึงไฟล์ — โดยตรงจาก public/uploads/cv_ai/
+     * URL สาธารณะให้ n8n — ใช้ /uploads/cv_ai/ ถ้าไฟล์อยู่ public ไม่งั้น /serve/uploads/cv_ai/
      */
     public static function publicDownloadUrl(string $storedName): string
     {
         $cfg  = config(AiCv::class);
         $app  = config(\Config\App::class);
         $base = rtrim($cfg->filePublicBaseUrl !== '' ? $cfg->filePublicBaseUrl : (string) ($app->baseURL ?? ''), '/');
+        $name = rawurlencode($storedName);
+        $pub  = self::publicUploadDir() . basename($storedName);
+        if (is_file($pub) && is_readable($pub)) {
+            return $base . '/uploads/cv_ai/' . $name;
+        }
 
-        return $base . '/uploads/cv_ai/' . rawurlencode($storedName);
+        return $base . '/serve/uploads/cv_ai/' . $name;
     }
 
-    /**
-     * บันทึกใน session ว่า user นี้อัปโหลดไฟล์นี้ (ใช้ตอนเรียก preview)
-     */
     public static function rememberUploadForUser(int $userId, string $storedName): void
     {
         $key  = 'cv_ai_uploads_' . $userId;
