@@ -299,22 +299,7 @@ class Serve extends BaseController
 
     private function resolveCvAiUploadPath(string $filename): ?string
     {
-        $filename = basename($filename);
-        $writableBase = rtrim(WRITEPATH, DIRECTORY_SEPARATOR);
-        $publicBase   = rtrim(FCPATH, DIRECTORY_SEPARATOR);
-        $candidates   = [
-            $writableBase . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR . $filename,
-            $writableBase . DIRECTORY_SEPARATOR . 'cv_ai_uploads' . DIRECTORY_SEPARATOR . $filename,
-            $publicBase . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR . $filename,
-        ];
-        foreach ($candidates as $path) {
-            $resolved = realpath($path);
-            if ($resolved !== false && is_file($resolved) && is_readable($resolved)) {
-                return $resolved;
-            }
-        }
-
-        return null;
+        return \App\Libraries\CvAiFileStorage::pathForStoredName($filename);
     }
 
     private function sendFileResponse(string $path, string $filename): ResponseInterface

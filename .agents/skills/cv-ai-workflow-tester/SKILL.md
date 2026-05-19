@@ -18,8 +18,8 @@ sequenceDiagram
   participant N8N as n8n extract-article-v2
 
   U->>NS: อัปโหลด PDF/รูป
-  NS->>NS: writable/cv_ai_uploads/
-  NS-->>U: download_url (/serve/uploads/cv_ai/…)
+  NS->>NS: public/uploads/cv_ai/
+  NS-->>U: download_url (/uploads/cv_ai/…)
   U->>NS: วิเคราะห์ด้วย AI
   NS->>N8N: POST {"url":"…"}
   N8N-->>NS: JSON (output / title_th …)
@@ -42,7 +42,7 @@ sequenceDiagram
 - `app/Libraries/AiPublicationParser.php`
 - `app/Controllers/User/ProfileCv.php` — `aiPublicationUpload`, `aiPublicationFile`, `aiPublicationPreview`
 - `app/Views/user/profile/cv_manage.php` — modal + JS
-- Routes: `POST …/ai-publication-upload`, `POST …/ai-publication-preview`, `GET /serve/uploads/cv_ai/…` (และ `/cv-ai/file/…` legacy)
+- Routes: `POST …/ai-publication-upload`, `POST …/ai-publication-preview`, ไฟล์ที่ `public/uploads/cv_ai/` (URL `/uploads/cv_ai/…`)
 
 ## รันทดสอบอัตโนมัติ (ทำทุกครั้ง)
 
@@ -82,7 +82,7 @@ Exit code `0` = ผ่านทุกขั้นที่บังคับ; `-
 | อาการ | สาเหตุที่พบบ่อย |
 |--------|------------------|
 | อัปโหลดไม่ได้ | CSRF, ขนาดไฟล์ >10MB, นามสกุลไม่รองรับ |
-| n8n ไม่ได้รับไฟล์ | `AI_CV_FILE_PUBLIC_BASE_URL` เป็น localhost หรือ URL ยังเป็น `/cv-ai/file` (ต้อง deploy ใหม่ → `/serve/uploads/cv_ai/`) |
+| n8n ไม่ได้รับไฟล์ | `AI_CV_FILE_PUBLIC_BASE_URL` เป็น localhost หรือไฟล์ไม่อยู่ `public/uploads/cv_ai/` |
 | n8n HTTP 4xx/5xx | URL webhook ผิด, token, workflow ปิด |
 | ไม่มี title ใน preview | JSON ไม่ตรงรูปแบบ — ดู `tests/fixtures/cv_ai_n8n_response_sample.json` |
 | ปุ่ม AI ไม่ขึ้น | `AiCv::isReady()` false — ตั้ง `AI_CV_N8N_URL` |

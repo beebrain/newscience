@@ -6,7 +6,7 @@ use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 
 /**
- * ตรวจว่า PHP อ่านไฟล์ CV AI จาก writable/uploads/cv_ai ได้ (รันบน server IIS)
+ * ตรวจว่า PHP อ่านไฟล์ CV AI จาก public/uploads/cv_ai ได้ (รันบน server IIS)
  *
  * php spark cv:probe-ai-file 6050a989121639dde899d02191d57b66.pdf
  */
@@ -29,20 +29,15 @@ class ProbeCvAiFile extends BaseCommand
             return 1;
         }
         $filename = basename($filename);
-        $w        = rtrim(WRITEPATH, DIRECTORY_SEPARATOR);
-        $paths    = [
-            'writable/uploads/cv_ai' => $w . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR . $filename,
-            'writable/cv_ai_uploads' => $w . DIRECTORY_SEPARATOR . 'cv_ai_uploads' . DIRECTORY_SEPARATOR . $filename,
-        ];
-
-        CLI::write('WRITEPATH: ' . WRITEPATH, 'cyan');
         CLI::write('FCPATH:    ' . FCPATH, 'cyan');
+        CLI::write('WRITEPATH: ' . WRITEPATH, 'cyan');
         CLI::newLine();
 
         $found = null;
-        foreach ($paths as $label => $path) {
-            $real = realpath($path);
-            $ok   = $real !== false && is_file($real) && is_readable($real);
+        foreach (\App\Libraries\CvAiFileStorage::candidatePaths($filename) as $i => $path) {
+            $label = ['public/uploads/cv_ai', 'writable/uploads/cv_ai (เก่า)', 'writable/cv_ai_uploads (เก่า)'][$i] ?? 'path';
+            $real  = realpath($path);
+            $ok    = $real !== false && is_file($real) && is_readable($real);
             CLI::write($label, 'yellow');
             CLI::write('  path:      ' . $path);
             CLI::write('  realpath:  ' . ($real !== false ? $real : '(ไม่พบ)'));
@@ -56,12 +51,12 @@ class ProbeCvAiFile extends BaseCommand
 
         if ($found !== null) {
             CLI::write('OK — PHP อ่านไฟล์ได้', 'green');
-            CLI::write('ทดสอบ URL: ' . rtrim((string) config(\Config\App::class)->baseURL, '/') . '/serve/uploads/cv_ai/' . rawurlencode($filename));
+            CLI::write('ทดสอบ URL: ' . \App\Libraries\CvAiFileStorage::publicDownloadUrl($filename));
 
             return 0;
         }
 
-        CLI::error('ไม่พบไฟล์หรือ PHP อ่านไม่ได้ — ตรวจสิทธิ์ IIS (IIS_IUSRS) บน writable\\uploads\\cv_ai');
+        CLI::error('ไม่พบไฟล์ — ตรวจสิทธิ์ IIS (IIS_IUSRS) บน public\\uploads\\cv_ai');
 
         return 1;
     }

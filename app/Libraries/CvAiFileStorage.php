@@ -8,6 +8,8 @@ use Config\AiCv;
 
 /**
  * เก็บไฟล์ชั่วคราวสำหรับส่ง URL ให้ n8n วิเคราะห์ (แบบ Research Record)
+ *
+ * เก็บที่ public/uploads/cv_ai/ — IIS/Apache เสิร์ฟไฟล์โดยตรง (n8n เข้าถึงจากภายนอกได้ง่าย)
  */
 final class CvAiFileStorage
 {
@@ -15,18 +17,26 @@ final class CvAiFileStorage
 
     private const MAX_BYTES = 10_485_760; // 10MB
 
+    /** public/uploads/cv_ai/ */
     public static function uploadDir(): string
     {
-        $dir = rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR;
+        $dir = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR;
         if (! is_dir($dir)) {
             mkdir($dir, 0755, true);
+            @file_put_contents($dir . 'index.html', '');
         }
 
         return $dir;
     }
 
-    /** โฟลเดอร์เก่า (ก่อนย้ายไป uploads/cv_ai) */
-    private static function legacyUploadDir(): string
+    /** writable/uploads/cv_ai/ (ก่อนย้ายมา public) */
+    private static function legacyWritableUploadDir(): string
+    {
+        return rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cv_ai' . DIRECTORY_SEPARATOR;
+    }
+
+    /** writable/cv_ai_uploads/ (รุ่นแรก) */
+    private static function legacyWritableUploadDirV1(): string
     {
         return rtrim(WRITEPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'cv_ai_uploads' . DIRECTORY_SEPARATOR;
     }
@@ -71,17 +81,32 @@ final class CvAiFileStorage
         if (! self::isValidStoredName($storedName)) {
             return null;
         }
-        $path = self::uploadDir() . $storedName;
-        if (is_file($path)) {
-            return $path;
+        foreach (self::candidatePaths($storedName) as $path) {
+            $resolved = realpath($path);
+            if ($resolved !== false && is_file($resolved) && is_readable($resolved)) {
+                return $resolved;
+            }
         }
-        $legacy = self::legacyUploadDir() . $storedName;
 
-        return is_file($legacy) ? $legacy : null;
+        return null;
     }
 
     /**
-     * URL สาธารณะให้ n8n ดึงไฟล์ — ใช้ /serve/uploads/cv_ai/ (รองรับ IIS บน production)
+     * @return list<string>
+     */
+    public static function candidatePaths(string $storedName): array
+    {
+        $filename = basename($storedName);
+
+        return [
+            self::uploadDir() . $filename,
+            self::legacyWritableUploadDir() . $filename,
+            self::legacyWritableUploadDirV1() . $filename,
+        ];
+    }
+
+    /**
+     * URL สาธารณะให้ n8n ดึงไฟล์ — โดยตรงจาก public/uploads/cv_ai/
      */
     public static function publicDownloadUrl(string $storedName): string
     {
@@ -89,17 +114,7 @@ final class CvAiFileStorage
         $app  = config(\Config\App::class);
         $base = rtrim($cfg->filePublicBaseUrl !== '' ? $cfg->filePublicBaseUrl : (string) ($app->baseURL ?? ''), '/');
 
-        return $base . '/serve/uploads/cv_ai/' . rawurlencode($storedName);
-    }
-
-    /** เส้นทางเดิม (backward compat) */
-    public static function legacyPublicDownloadUrl(string $storedName): string
-    {
-        $cfg  = config(AiCv::class);
-        $app  = config(\Config\App::class);
-        $base = rtrim($cfg->filePublicBaseUrl !== '' ? $cfg->filePublicBaseUrl : (string) ($app->baseURL ?? ''), '/');
-
-        return $base . '/cv-ai/file/' . rawurlencode($storedName);
+        return $base . '/uploads/cv_ai/' . rawurlencode($storedName);
     }
 
     /**

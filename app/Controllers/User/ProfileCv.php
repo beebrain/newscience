@@ -1327,30 +1327,15 @@ class ProfileCv extends BaseController
     }
 
     /**
-     * GET — backward compat (/cv-ai/file/…) — ส่งไฟล์ inline เหมือน /serve/uploads/cv_ai/
+     * GET — backward compat (/cv-ai/file/…) → redirect ไป public/uploads/cv_ai/
      */
     public function aiPublicationFile(string $storedName)
     {
-        $path = CvAiFileStorage::pathForStoredName($storedName);
-        if ($path === null) {
+        if (CvAiFileStorage::pathForStoredName($storedName) === null) {
             return $this->response->setStatusCode(404)->setBody('Not found');
         }
 
-        $mime = 'application/octet-stream';
-        $ext  = strtolower(pathinfo($storedName, PATHINFO_EXTENSION));
-        if ($ext === 'pdf') {
-            $mime = 'application/pdf';
-        } elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'], true)) {
-            $mime = 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext);
-        } elseif ($ext === 'txt') {
-            $mime = 'text/plain; charset=UTF-8';
-        }
-
-        return $this->response
-            ->setHeader('Content-Type', $mime)
-            ->setHeader('Content-Disposition', 'inline; filename="' . str_replace('"', '\\"', $storedName) . '"')
-            ->setHeader('Cache-Control', 'private, max-age=3600')
-            ->setBody((string) file_get_contents($path));
+        return redirect()->to(CvAiFileStorage::publicDownloadUrl($storedName), null, 302);
     }
 
     /**
