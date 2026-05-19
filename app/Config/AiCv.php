@@ -20,8 +20,8 @@ class AiCv extends BaseConfig
     public string $n8nBearerToken = '';
 
     /**
-     * Base URL ที่ n8n ดึงไฟล์ได้จากอินเทอร์เน็ต (ต้องชี้โดเมนจริง ไม่ใช่ localhost)
-     * เช่น https://sci.uru.ac.th/newscience/public
+     * Base URL ที่ n8n ดึงไฟล์ได้ (โดเมนรากเดียวกับ Edoc — ว่างแล้วใช้ app.baseURL)
+     * เช่น https://sci.uru.ac.th → …/index.php/cv-ai/file/{storedName}
      */
     public string $filePublicBaseUrl = '';
 

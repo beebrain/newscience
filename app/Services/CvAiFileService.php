@@ -48,28 +48,30 @@ final class CvAiFileService
         }
 
         foreach ($this->candidatePaths($filename) as $candidate) {
-            if ($this->canOpenForRead($candidate)) {
-                $resolved = realpath($candidate);
-
-                return $resolved !== false ? $resolved : $candidate;
+            if (file_exists($candidate) && is_file($candidate)) {
+                return realpath($candidate) ?: $candidate;
             }
         }
 
         return null;
     }
 
+    /**
+     * URL สาธารณะ — รูปแบบเดียวกับ Edoc viewPDF (base_url + index.php/…)
+     * ตัวอย่าง: https://sci.uru.ac.th/index.php/cv-ai/file/{storedName}
+     */
     public function publicDownloadUrl(string $storedName): string
     {
-        $basename = rawurlencode(basename($storedName));
-        $cfg      = config(AiCv::class);
-        $base     = rtrim($cfg->filePublicBaseUrl !== '' ? $cfg->filePublicBaseUrl : (string) config(\Config\App::class)->baseURL, '/');
-        $path     = 'cv-ai/file/' . $basename;
+        $encoded = rawurlencode(basename($storedName));
+        $cfg     = config(AiCv::class);
 
-        if ($this->useIndexPhpInPublicUrl()) {
-            return $base . '/index.php/' . $path;
+        if ($cfg->filePublicBaseUrl !== '') {
+            $base = rtrim($cfg->filePublicBaseUrl, '/');
+
+            return $base . '/index.php/cv-ai/file/' . $encoded;
         }
 
-        return $base . '/' . $path;
+        return base_url('index.php/cv-ai/file/' . $encoded);
     }
 
     /**
@@ -95,28 +97,4 @@ final class CvAiFileService
         return $paths;
     }
 
-    private function canOpenForRead(string $path): bool
-    {
-        if (! file_exists($path) || ! is_file($path)) {
-            return false;
-        }
-
-        $handle = @fopen($path, 'rb');
-        if ($handle === false) {
-            return false;
-        }
-        fclose($handle);
-
-        return true;
-    }
-
-    private function useIndexPhpInPublicUrl(): bool
-    {
-        $v = env('AI_CV_URL_USE_INDEX_PHP');
-        if ($v !== null && $v !== '') {
-            return filter_var($v, FILTER_VALIDATE_BOOL);
-        }
-
-        return PHP_OS_FAMILY === 'Windows';
-    }
 }

@@ -41,12 +41,10 @@ class CvAiFileController extends BaseController
 
         $safeName = str_replace('"', '\\"', $file['filename']);
 
+        // ส่งไฟล์แบบเดียวกับ EdocController::viewPDF (?file=true)
         return $this->response
-            ->setStatusCode(200)
             ->setHeader('Content-Type', $file['mime'])
             ->setHeader('Content-Disposition', 'inline; filename="' . $safeName . '"')
-            ->setHeader('Content-Length', (string) $file['size'])
-            ->setHeader('Cache-Control', 'private, max-age=3600')
             ->setBody((string) file_get_contents($file['path']));
     }
 }
