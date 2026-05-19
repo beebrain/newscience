@@ -140,8 +140,14 @@ class ResearchRecordCvSyncClient
             return ['success' => false, 'error' => $data['error'] ?? 'API_ERROR', 'message' => (string) ($data['message'] ?? json_encode($data))];
         }
 
-        $msg = is_array($data) ? ($data['message'] ?? $data['error'] ?? 'HTTP ' . $code) : $body;
+        if (is_array($data)) {
+            return [
+                'success' => false,
+                'error'   => (string) ($data['error'] ?? 'API_ERROR'),
+                'message' => (string) ($data['message'] ?? $data['error'] ?? 'HTTP ' . $code),
+            ];
+        }
 
-        return ['success' => false, 'error' => 'API_ERROR', 'message' => (string) $msg];
+        return ['success' => false, 'error' => 'API_ERROR', 'message' => (string) $body];
     }
 }

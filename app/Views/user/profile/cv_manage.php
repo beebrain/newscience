@@ -1,5 +1,6 @@
 <?php
 helper(['form', 'security']);
+$ai_cv_publication_enabled = ! empty($ai_cv_publication_enabled);
 ?>
 <?= $this->extend('layouts/user_layout') ?>
 
@@ -490,7 +491,7 @@ $account_user = $account_user ?? null;
                         <?php if ($research_sync_configured): ?>
                             <div class="flex flex-wrap items-stretch gap-2 shrink-0">
                                 <form method="post" action="<?= base_url('dashboard/profile/cv/sync-from-rr') ?>" class="inline-flex"
-                                      onsubmit="if (!confirm('ดึง CV และผลงานจาก กบศ มาแทนที่ข้อมูลใน ฐานข้อมูลคณะ ตอนนี้?')) return false; var b=this.querySelector('button[type=submit]'); if (b.dataset.busy==='1') return false; b.dataset.busy='1'; b.disabled=true; return true;">
+                                      onsubmit="if (!confirm('ซิงค์จาก กบศ แบบเสริม (รักษาข้อมูลที่กรอกใน ฐานข้อมูลคณะ) ตอนนี้?')) return false; var b=this.querySelector('button[type=submit]'); if (b.dataset.busy==='1') return false; b.dataset.busy='1'; b.disabled=true; return true;">
                                     <?= csrf_field() ?>
                                     <button type="submit"
                                             class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-[6px] bg-emerald-600 text-white font-semibold shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors">
@@ -799,6 +800,14 @@ $account_user = $account_user ?? null;
                                         if ($ePubLbl !== '') {
                                             $metaBits[] = $ePubLbl;
                                         }
+                                        $srcRaw = (string) ($entry['metadata_array']['source'] ?? '');
+                                        if ($srcRaw === 'research_record') {
+                                            $metaBits[] = 'กบศ';
+                                        } elseif ($srcRaw === 'ai_assistant') {
+                                            $metaBits[] = 'AI';
+                                        } elseif ($srcRaw === 'orcid') {
+                                            $metaBits[] = 'ORCID';
+                                        }
                                         $descFlat = preg_replace('/\s+/u', ' ', trim((string) ($entry['description'] ?? '')));
                                         if ($descFlat !== '') {
                                             $metaBits[] = function_exists('mb_strlen') && mb_strlen($descFlat) > 180
@@ -849,11 +858,20 @@ $account_user = $account_user ?? null;
 
                         <div class="cv-section-foot py-4 sm:py-5 border-t border-gray-100 bg-gray-50/80 flex flex-wrap items-center justify-between gap-3">
                             <p class="text-sm text-gray-600">เพิ่มหรือแก้ไขรายการในหัวข้อนี้</p>
-                            <button type="button"
-                                    onclick="openCvEntryModal(<?= $sid ?>)"
-                                    class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold shadow-sm transition-colors">
-                                <span aria-hidden="true">+</span> เพิ่มรายการ
-                            </button>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <?php if ($ai_cv_publication_enabled && $showPublicationType): ?>
+                                <button type="button"
+                                        onclick="openCvAiModal(<?= $sid ?>)"
+                                        class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg border border-violet-300 bg-violet-50 text-violet-900 font-semibold hover:bg-violet-100 transition-colors">
+                                    <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
+                                </button>
+                                <?php endif; ?>
+                                <button type="button"
+                                        onclick="openCvEntryModal(<?= $sid ?>)"
+                                        class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold shadow-sm transition-colors">
+                                    <span aria-hidden="true">+</span> เพิ่มรายการ
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -879,6 +897,7 @@ $account_user = $account_user ?? null;
                 <input type="hidden" name="extra_info" value="">
                 <input type="hidden" name="funding_amount" value="">
                 <input type="hidden" name="is_current" id="cv-m-current" value="0">
+                <input type="hidden" name="entry_metadata_source" id="cv-m-meta-src" value="">
 
                 <div class="flex flex-col flex-1 min-h-0">
                     <div class="cv-entry-modal__body flex-1 min-w-0 bg-white px-5 py-6 pt-12 sm:px-8 sm:py-8 sm:pt-12">
@@ -940,6 +959,19 @@ $account_user = $account_user ?? null;
                                     <?php endforeach; ?>
                                 </select>
                             </div>
+                            <div id="cv-m-pub-ident-wrap" class="hidden rounded-lg border border-slate-200 bg-slate-50/90 p-3 sm:p-4 space-y-3">
+                                <div class="cv-entry-modal__grid2">
+                                    <div>
+                                        <label for="cv-m-doi" class="cv-edit-modal-label">DOI</label>
+                                        <input type="text" name="entry_doi" id="cv-m-doi" class="cv-edit-modal-input" maxlength="255" placeholder="เช่น 10.1234/example หรือลิงก์ https://doi.org/…" autocomplete="off">
+                                    </div>
+                                    <div>
+                                        <label for="cv-m-rrid" class="cv-edit-modal-label">รหัสผลงานใน กบศ</label>
+                                        <input type="text" name="publication_rr_id" id="cv-m-rrid" class="cv-edit-modal-input" maxlength="12" inputmode="numeric" pattern="[0-9]*" placeholder="ถ้าทราบ (ตัวเลข)" autocomplete="off">
+                                    </div>
+                                </div>
+                                <p class="text-xs text-slate-600 leading-relaxed">ใส่ DOI หรือรหัสผลงานกบศเพื่อจับคู่กับข้อมูลที่ซิงค์จากกบศ — ลดรายการซ้ำ</p>
+                            </div>
                             <div>
                                 <label for="cv-m-url" class="cv-edit-modal-label">ลิงก์ (URL)</label>
                                 <input type="text" name="entry_url" maxlength="2048" id="cv-m-url" class="cv-edit-modal-input" placeholder="https://...">
@@ -959,6 +991,42 @@ $account_user = $account_user ?? null;
             </form>
         </div>
     </div>
+
+    <?php if ($ai_cv_publication_enabled): ?>
+    <div id="cv-ai-modal" class="fixed inset-0 z-[6100] hidden flex flex-col items-stretch justify-start sm:justify-center overflow-y-auto bg-slate-900/50 backdrop-blur-[2px] p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="cv-ai-modal-title" onclick="if(event.target===this)closeCvAiModal()">
+        <div class="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-auto my-4 sm:my-8 overflow-hidden" onclick="event.stopPropagation()">
+            <button type="button" class="absolute top-3 right-3 z-10 h-10 w-10 rounded-full bg-white text-slate-600 shadow ring-1 ring-slate-200 hover:bg-slate-50" onclick="closeCvAiModal()" aria-label="ปิด">&times;</button>
+            <div class="p-6 sm:p-8 pt-12">
+                <h2 id="cv-ai-modal-title" class="text-lg font-bold text-slate-900">ช่วยเติมด้วย AI</h2>
+                <p class="text-sm text-slate-600 mt-2">อัปโหลดไฟล์ PDF/รูปก่อน (แบบ กบศ) แล้วส่ง URL ให้ AI วิเคราะห์ — หรือวางข้อความ/BibTeX</p>
+                <input type="hidden" id="cv-ai-section-id" value="">
+                <div class="mt-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700">1. อัปโหลดไฟล์ (แนะนำ)</label>
+                        <p class="text-xs text-slate-500 mt-1">PDF, DOC, DOCX, JPG, PNG — สูงสุด 10MB</p>
+                        <input type="file" id="cv-ai-file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt" class="mt-2 block w-full text-sm text-slate-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-violet-50 file:text-violet-800 file:font-semibold">
+                        <p id="cv-ai-file-status" class="text-xs text-slate-600 mt-1 min-h-[1rem]"></p>
+                    </div>
+                    <div class="border-t border-slate-200 pt-4">
+                        <label for="cv-ai-url" class="block text-sm font-medium text-slate-700">2. หรือ URL บทความ / DOI</label>
+                        <input type="url" id="cv-ai-url" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" placeholder="https://doi.org/10.xxxx/… หรือลิงก์หน้าบทความ">
+                    </div>
+                    <div class="border-t border-slate-200 pt-4">
+                        <label for="cv-ai-text" class="block text-sm font-medium text-slate-700">3. หรือวางข้อความ</label>
+                        <textarea id="cv-ai-text" rows="6" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono" placeholder="@article{ ... } หรือบทคัดย่อ"></textarea>
+                    </div>
+                </div>
+                <p id="cv-ai-status" class="text-sm text-slate-600 mt-3 min-h-[1.25rem]"></p>
+                <div id="cv-ai-preview" class="hidden mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm text-slate-800 whitespace-pre-wrap"></div>
+                <div class="flex flex-wrap justify-end gap-2 mt-6">
+                    <button type="button" onclick="closeCvAiModal()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50">ปิด</button>
+                    <button type="button" id="cv-ai-run" onclick="runCvAiPreview()" class="px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700">วิเคราะห์ด้วย AI</button>
+                    <button type="button" id="cv-ai-apply" class="hidden px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700" onclick="applyCvAiToEntryForm()">ใส่ในฟอร์มรายการ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
     <?php endif; ?>
 </div>
 
@@ -1101,14 +1169,17 @@ $account_user = $account_user ?? null;
     function setPublicationFieldVisible(show) {
         var wrap = document.getElementById('cv-m-pubtype-wrap');
         var sel = document.getElementById('cv-m-pubtype');
+        var ident = document.getElementById('cv-m-pub-ident-wrap');
         if (!wrap || !sel) return;
         if (show) {
             wrap.classList.remove('hidden');
             sel.disabled = false;
+            if (ident) ident.classList.remove('hidden');
         } else {
             wrap.classList.add('hidden');
             sel.disabled = true;
             sel.value = '';
+            if (ident) ident.classList.add('hidden');
         }
     }
 
@@ -1129,6 +1200,12 @@ $account_user = $account_user ?? null;
         document.getElementById('cv-m-desc').value = '';
         document.getElementById('cv-m-current').value = '0';
         document.getElementById('cv-m-vis').checked = true;
+        var doiEl = document.getElementById('cv-m-doi');
+        if (doiEl) doiEl.value = '';
+        var rridEl = document.getElementById('cv-m-rrid');
+        if (rridEl) rridEl.value = '';
+        var msrc = document.getElementById('cv-m-meta-src');
+        if (msrc) msrc.value = '';
     }
 
     function openCvEntryModalShell(sectionId) {
@@ -1189,6 +1266,12 @@ $account_user = $account_user ?? null;
         document.getElementById('cv-m-desc').value = e.description || '';
         document.getElementById('cv-m-current').value = String(e.is_current) === '1' ? '1' : '0';
         document.getElementById('cv-m-vis').checked = String(e.visible_on_public) !== '0';
+        var doiEl = document.getElementById('cv-m-doi');
+        if (doiEl) doiEl.value = e.entry_doi || '';
+        var rridEl = document.getElementById('cv-m-rrid');
+        if (rridEl) rridEl.value = e.publication_rr_id || '';
+        var msrc = document.getElementById('cv-m-meta-src');
+        if (msrc) msrc.value = '';
         var pubSel = document.getElementById('cv-m-pubtype');
         var row = cvSectionRow(sectionId);
         var showPub = row && row.dataset.showPub === '1';
@@ -1281,7 +1364,168 @@ $account_user = $account_user ?? null;
         }
     };
 
+    window.__cvAiLastPub = null;
+    window.__cvAiUploaded = null;
+    window.openCvAiModal = function (sectionId) {
+        var m = document.getElementById('cv-ai-modal');
+        if (!m) return;
+        var sid = document.getElementById('cv-ai-section-id');
+        if (sid) sid.value = String(sectionId);
+        var tx = document.getElementById('cv-ai-text');
+        if (tx) tx.value = '';
+        var urlIn = document.getElementById('cv-ai-url');
+        if (urlIn) urlIn.value = '';
+        var fi = document.getElementById('cv-ai-file');
+        if (fi) fi.value = '';
+        var fs = document.getElementById('cv-ai-file-status');
+        if (fs) fs.textContent = '';
+        var st = document.getElementById('cv-ai-status');
+        if (st) st.textContent = '';
+        var pv = document.getElementById('cv-ai-preview');
+        if (pv) { pv.textContent = ''; pv.classList.add('hidden'); }
+        var ap = document.getElementById('cv-ai-apply');
+        if (ap) ap.classList.add('hidden');
+        window.__cvAiLastPub = null;
+        window.__cvAiUploaded = null;
+        m.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    };
+    window.closeCvAiModal = function () {
+        var m = document.getElementById('cv-ai-modal');
+        if (m) {
+            m.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+    };
+    window.uploadCvAiFile = async function (file) {
+        var fs = document.getElementById('cv-ai-file-status');
+        if (!file) {
+            window.__cvAiUploaded = null;
+            if (fs) fs.textContent = '';
+            return null;
+        }
+        if (fs) fs.textContent = 'กำลังอัปโหลด…';
+        var fd = new FormData();
+        fd.append('file', file);
+        fd.append('<?= esc($csrfName) ?>', '<?= esc($csrfHash) ?>');
+        var res = await fetch('<?= base_url('dashboard/profile/cv/ai-publication-upload') ?>', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: fd
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!data.success || !data.file) {
+            window.__cvAiUploaded = null;
+            if (fs) fs.textContent = data.message || 'อัปโหลดไม่สำเร็จ';
+            return null;
+        }
+        window.__cvAiUploaded = data.file;
+        if (fs) fs.textContent = '✓ ' + (data.file.original_name || 'อัปโหลดแล้ว');
+        return data.file;
+    };
+
+    window.runCvAiPreview = async function () {
+        var tx = document.getElementById('cv-ai-text');
+        var urlIn = document.getElementById('cv-ai-url');
+        var fileIn = document.getElementById('cv-ai-file');
+        var st = document.getElementById('cv-ai-status');
+        var btn = document.getElementById('cv-ai-run');
+        if (!st) return;
+        st.textContent = 'กำลังเรียก AI…';
+        if (btn) btn.disabled = true;
+        try {
+            if (fileIn && fileIn.files && fileIn.files[0] && !window.__cvAiUploaded) {
+                await window.uploadCvAiFile(fileIn.files[0]);
+            }
+            var p = csrfBody();
+            if (window.__cvAiUploaded && window.__cvAiUploaded.stored_name) {
+                p.append('stored_name', window.__cvAiUploaded.stored_name);
+            } else if (urlIn && urlIn.value.trim()) {
+                p.append('url', urlIn.value.trim());
+            } else if (tx && tx.value.trim()) {
+                p.append('text', tx.value.trim());
+            } else {
+                st.textContent = 'กรุณาอัปโหลดไฟล์ ใส่ URL หรือวางข้อความ';
+                return;
+            }
+            var res = await fetch('<?= base_url('dashboard/profile/cv/ai-publication-preview') ?>', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: p.toString()
+            });
+            var data = await res.json().catch(function () { return {}; });
+            if (!data.success) {
+                st.textContent = data.message || 'ผิดพลาด';
+                return;
+            }
+            window.__cvAiLastPub = data.publication || null;
+            var pv = document.getElementById('cv-ai-preview');
+            var ap = document.getElementById('cv-ai-apply');
+            if (pv) {
+                pv.textContent = JSON.stringify(data.publication, null, 2);
+                pv.classList.remove('hidden');
+            }
+            if (ap) ap.classList.remove('hidden');
+            st.textContent = 'ตรวจรายการด้านบน แล้วกดใส่ในฟอร์มรายการ';
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    };
+    window.applyCvAiToEntryForm = function () {
+        var pub = window.__cvAiLastPub;
+        if (!pub) return;
+        var sidEl = document.getElementById('cv-ai-section-id');
+        var sid = sidEl ? parseInt(sidEl.value, 10) : 0;
+        if (!sid) return;
+        closeCvAiModal();
+        openCvEntryModal(sid);
+        document.getElementById('cv-m-title').value = pub.title || '';
+        document.getElementById('cv-m-org').value = pub.organization || '';
+        if (pub.year) {
+            document.getElementById('cv-m-start').value = String(pub.year) + '-01-01';
+        } else {
+            document.getElementById('cv-m-start').value = '';
+        }
+        document.getElementById('cv-m-desc').value = pub.description || '';
+        var d = document.getElementById('cv-m-doi');
+        if (d) d.value = pub.doi || '';
+        var msrc = document.getElementById('cv-m-meta-src');
+        if (msrc) msrc.value = 'ai_assistant';
+        var urlEl = document.getElementById('cv-m-url');
+        if (urlEl) {
+            if (window.__cvAiUploaded && window.__cvAiUploaded.download_url) {
+                urlEl.value = window.__cvAiUploaded.download_url;
+            } else {
+                var extUrl = document.getElementById('cv-ai-url');
+                if (extUrl && extUrl.value.trim()) urlEl.value = extUrl.value.trim();
+            }
+        }
+        var pubSel = document.getElementById('cv-m-pubtype');
+        if (pubSel && pub.publication_type) {
+            if (!Array.from(pubSel.options).some(function (o) { return o.value === pub.publication_type; })) {
+                var opt = document.createElement('option');
+                opt.value = pub.publication_type;
+                opt.textContent = 'จาก AI: ' + pub.publication_type;
+                opt.setAttribute('data-temp-option', '1');
+                pubSel.appendChild(opt);
+            }
+            pubSel.value = pub.publication_type;
+        }
+    };
+
     document.addEventListener('DOMContentLoaded', function () {
+        var cvAiFile = document.getElementById('cv-ai-file');
+        if (cvAiFile) {
+            cvAiFile.addEventListener('change', function () {
+                if (this.files && this.files[0]) {
+                    window.uploadCvAiFile(this.files[0]);
+                } else {
+                    window.__cvAiUploaded = null;
+                    var fs = document.getElementById('cv-ai-file-status');
+                    if (fs) fs.textContent = '';
+                }
+            });
+        }
         var sc = document.getElementById('cv-sections-container');
         if (sc && typeof Sortable !== 'undefined' && sc.querySelectorAll('.cv-section-item').length >= 2) {
             new Sortable(sc, {

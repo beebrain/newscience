@@ -35,12 +35,13 @@ class PullScienceFacultyCvFromRrByUser extends BaseCommand
 
     protected $description = 'ดึง CV จาก กบศ ให้ user คณะวิทยาศาสตร์ฯ (จากตาราง user — อีเมลเป็นตัวเชื่อม)';
 
-    protected $usage = 'research:pull-sci-faculty-cv-by-user [--list] [--email=a@b.c] [--faculty=ชื่อคณะ]';
+    protected $usage = 'research:pull-sci-faculty-cv-by-user [--list] [--email=a@b.c] [--faculty=ชื่อคณะ] [--force]';
 
     protected $arguments = [
         '--list'     => 'แสดงรายชื่อจาก user + สถานะโดยไม่เรียก API กบศ',
         '--email='   => 'จำกัดหนึ่งอีเมล (ต้องเป็นคณะที่เลือก)',
         '--faculty=' => 'กรอง faculty เป็นข้อความเดียว (ค่าเริ่มต้น = คณะวิทยาศาสตร์และเทคโนโลยี + รูปแบบสะกดเดิมใน Edoc)',
+        '--force'    => 'ดึงซ้ำแม้เคยดึงสำเร็จแล้ว (ถ้ามีข้อมูลในกบศ)',
     ];
 
     public function run(array $params)
@@ -120,6 +121,7 @@ class PullScienceFacultyCvFromRrByUser extends BaseCommand
             return;
         }
 
+        $force     = CLI::getOption('force') !== null;
         $ok        = 0;
         $fail      = 0;
         $skipNp    = 0;
@@ -137,7 +139,7 @@ class PullScienceFacultyCvFromRrByUser extends BaseCommand
                 continue;
             }
 
-            if ($r['already_pulled']) {
+            if ($r['already_pulled'] && ! $force) {
                 CLI::write('[ข้าม เคยดึงจาก กบศ สำเร็จแล้ว]', 'light_gray');
                 $skipPul++;
 
@@ -146,7 +148,11 @@ class PullScienceFacultyCvFromRrByUser extends BaseCommand
 
             $peek = ResearchRecordCvSyncClient::fetchCvBundle($email);
             if (! $peek['success'] || empty($peek['bundle'])) {
-                CLI::write('[ข้าม ไม่มีข้อมูล CV ใน กบศ] ' . ($peek['message'] ?? ''), 'yellow');
+                $rrErr = (string) ($peek['error'] ?? '');
+                $hint  = $rrErr === 'USER_NOT_FOUND'
+                    ? 'ไม่มี user นี้ในระบบกบศ (อีเมลต้องตรงกับที่ลงทะเบียนใน RR)'
+                    : ($peek['message'] ?? $rrErr);
+                CLI::write('[ข้าม ไม่มีข้อมูล CV ใน กบศ] ' . $hint, 'yellow');
                 $skipNoRr++;
 
                 continue;

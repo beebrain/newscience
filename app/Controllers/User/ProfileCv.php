@@ -3,7 +3,11 @@
 namespace App\Controllers\User;
 
 use App\Controllers\BaseController;
+use App\Libraries\AiPublicationParser;
+use App\Libraries\CvAiFileStorage;
 use App\Libraries\CvProfile;
+use App\Libraries\CvPublicationDedupe;
+use App\Libraries\PublicationIdentity;
 use App\Libraries\RrPublicationType;
 use App\Libraries\OrcidPublicRecord;
 use App\Libraries\ResearchRecordCvPull;
@@ -12,6 +16,7 @@ use App\Models\CvEntryModel;
 use App\Models\CvSectionModel;
 use App\Models\PersonnelModel;
 use App\Models\UserModel;
+use Config\AiCv;
 use Config\ResearchApi;
 use Config\ResearchRecordSync as ResearchRecordSyncConfig;
 
@@ -302,8 +307,8 @@ class ProfileCv extends BaseController
                     $rrSyncNotice        = [
                         'type' => 'success',
                         'text' => $trigger === ResearchRecordCvPull::TRIGGER_AUTO_EMPTY
-                            ? 'ดึง CV จาก กบศ ลง ฐานข้อมูลคณะ อัตโนมัติแล้ว (ยังไม่มีข้อมูลในระบบ)'
-                            : 'อัปเดต CV จาก กบศ อัตโนมัติแล้ว (ครั้งดึงล่าสุดเกิน ' . $syncCfg->autoPullMaxAgeDays . ' วัน)',
+                            ? 'ซิงค์จาก กบศ แบบเสริมอัตโนมัติแล้ว (ยังไม่มีข้อมูลในระบบ — รักษาข้อมูลที่กรอกใน ฐานข้อมูลคณะเป็นหลัก)'
+                            : 'ซิงค์จาก กบศ แบบเสริมอัตโนมัติแล้ว (ครั้งดึงล่าสุดเกิน ' . $syncCfg->autoPullMaxAgeDays . ' วัน — ข้อมูลที่กรอกใน ฐานข้อมูลคณะไม่ถูกแทนที่ด้วยกบศ)',
                         'detail' => $pullRes['message'] ?? '',
                     ];
                 } else {
@@ -324,6 +329,8 @@ class ProfileCv extends BaseController
         $cvEditTabs = ['identity', 'narrative', 'photo', 'orcid', 'sections'];
         $cvEditActiveTab = in_array($tabRaw, $cvEditTabs, true) ? $tabRaw : 'narrative';
 
+        $aiCvCfg = config(AiCv::class);
+
         return view('user/profile/cv_manage', [
             'page_title'                 => 'จัดการ CV',
             'person'                     => $person,
@@ -335,6 +342,7 @@ class ProfileCv extends BaseController
             'rr_last_pull_at'            => $rrLastPullFormatted,
             'rr_auto_pull_max_age_days'  => $researchSyncConfigured ? $syncCfg->autoPullMaxAgeDays : null,
             'cv_edit_active_tab'         => $cvEditActiveTab,
+            'ai_cv_publication_enabled'  => $aiCvCfg->isReady(),
         ]);
     }
 
@@ -746,8 +754,60 @@ class ProfileCv extends BaseController
             } elseif (RrPublicationType::isValidPublicationTypeCode($ptype)) {
                 $meta['rr_publication_type'] = mb_substr($ptype, 0, 80);
             }
+
+            $doiRaw = trim((string) $this->request->getPost('entry_doi'));
+            $doiNorm = PublicationIdentity::normalizeDoi($doiRaw);
+            if ($doiNorm !== '') {
+                $meta['doi'] = $doiNorm;
+            } else {
+                unset($meta['doi']);
+            }
+
+            $postRr = trim((string) $this->request->getPost('publication_rr_id'));
+            if ($postRr !== '' && ctype_digit($postRr) && (int) $postRr > 0) {
+                $meta['rr_publication_id'] = (int) $postRr;
+            } else {
+                unset($meta['rr_publication_id']);
+            }
+
+            $symEk = PublicationIdentity::syncExternalKeyFromMetadata($meta);
+            if ($symEk !== '') {
+                $meta['sync_external_key'] = $symEk;
+            } else {
+                unset($meta['sync_external_key']);
+            }
+
+            $srcPost = trim((string) $this->request->getPost('entry_metadata_source'));
+            if ($srcPost === 'ai_assistant') {
+                $meta['source'] = 'ai_assistant';
+            }
         } else {
             unset($meta['rr_publication_type']);
+            unset($meta['doi'], $meta['rr_publication_id'], $meta['sync_external_key']);
+            if (($meta['source'] ?? '') === 'ai_assistant') {
+                unset($meta['source']);
+            }
+        }
+
+        if ($entryId <= 0 && in_array($secType, ['research', 'articles'], true)) {
+            $dupId = CvPublicationDedupe::findDuplicateEntryId($personnelId, $meta, 0);
+            if ($dupId !== null) {
+                $entryId   = $dupId;
+                $existing  = $cvEntryModel->find($dupId);
+                $oldMeta   = $existing ? CvEntryModel::decodeMetadata($existing['metadata'] ?? null) : [];
+                if (empty($meta['rr_publication_id']) && ! empty($oldMeta['rr_publication_id'])) {
+                    $meta['rr_publication_id'] = (int) $oldMeta['rr_publication_id'];
+                }
+                if (empty($meta['source']) && ! empty($oldMeta['source'])) {
+                    $meta['source'] = (string) $oldMeta['source'];
+                }
+                $symEk = PublicationIdentity::syncExternalKeyFromMetadata($meta);
+                if ($symEk !== '') {
+                    $meta['sync_external_key'] = $symEk;
+                } else {
+                    unset($meta['sync_external_key']);
+                }
+            }
         }
 
         $metadataJson = $meta !== [] ? json_encode($meta, JSON_UNESCAPED_UNICODE) : null;
@@ -769,6 +829,9 @@ class ProfileCv extends BaseController
 
         if ($entryId > 0) {
             $entryData['sort_order'] = $postSort > 0 ? $postSort : (int) ($existing['sort_order'] ?? 0);
+            if ($existing !== null && (int) ($existing['section_id'] ?? 0) !== $sectionId) {
+                $entryData['section_id'] = $sectionId;
+            }
             $cvEntryModel->update($entryId, $entryData);
             $savedId = $entryId;
         } else {
@@ -832,6 +895,9 @@ class ProfileCv extends BaseController
         $entry['metadata_array'] = CvEntryModel::decodeMetadata($entry['metadata'] ?? null);
         $entry['entry_url']      = (string) ($entry['metadata_array']['url'] ?? $entry['metadata_array']['legacy_url'] ?? '');
         $entry['publication_type'] = (string) ($entry['metadata_array']['rr_publication_type'] ?? '');
+        $entry['entry_doi']        = (string) ($entry['metadata_array']['doi'] ?? '');
+        $rrPid                     = (int) ($entry['metadata_array']['rr_publication_id'] ?? 0);
+        $entry['publication_rr_id'] = $rrPid > 0 ? (string) $rrPid : '';
         foreach (['start_date', 'end_date'] as $df) {
             if (!empty($entry[$df]) && strlen((string) $entry[$df]) > 10) {
                 $entry[$df] = substr((string) $entry[$df], 0, 10);
@@ -1221,5 +1287,118 @@ class ProfileCv extends BaseController
         $newId = (int) $cvSectionModel->getInsertID();
 
         return $cvSectionModel->find($newId);
+    }
+
+    /**
+     * POST AJAX — อัปโหลดไฟล์ก่อนส่ง URL ให้ n8n (แบบ Research Record)
+     */
+    public function aiPublicationUpload()
+    {
+        if (! $this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+        $personnelId = $this->personnelIdOrRedirect();
+        if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+        $uid = (int) session()->get('admin_id');
+        if ($uid <= 0) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $file = $this->request->getFile('file');
+        $res  = CvAiFileStorage::storeUploadedFile($file);
+        if (! ($res['success'] ?? false)) {
+            return $this->response->setJSON($res);
+        }
+
+        $stored = (string) ($res['stored_name'] ?? '');
+        CvAiFileStorage::rememberUploadForUser($uid, $stored);
+
+        return $this->response->setJSON([
+            'success'      => true,
+            'file'         => [
+                'stored_name'   => $stored,
+                'download_url'  => $res['download_url'] ?? '',
+                'original_name' => $res['original_name'] ?? '',
+                'file_size'     => $res['file_size'] ?? 0,
+            ],
+        ]);
+    }
+
+    /**
+     * GET — ให้ n8n ดึงไฟล์ที่อัปโหลด (ไม่ต้องล็อกอิน — ชื่อไฟล์สุ่ม)
+     */
+    public function aiPublicationFile(string $storedName)
+    {
+        $path = CvAiFileStorage::pathForStoredName($storedName);
+        if ($path === null) {
+            return $this->response->setStatusCode(404)->setBody('Not found');
+        }
+
+        return $this->response->download($path, null);
+    }
+
+    /**
+     * POST AJAX — วิเคราะห์ผลงาน: ไฟล์ที่อัปโหลด (ส่ง url) / URL ภายนอก / ข้อความ
+     */
+    public function aiPublicationPreview()
+    {
+        if (! $this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
+        }
+        $personnelId = $this->personnelIdOrRedirect();
+        if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+        $cfg = config(AiCv::class);
+        if (! $cfg->isReady()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ยังไม่ได้ตั้งค่า AI (AI_CV_N8N_URL หรือ AI_CV_API_URL + AI_CV_API_KEY)']);
+        }
+        $uid = (int) session()->get('admin_id');
+        if ($uid <= 0 || ! $this->consumeAiCvRateSlot($uid, $cfg)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ใช้งาน AI เกินขีดจำกัดต่อชั่วโมง กรุณารอ']);
+        }
+
+        $storedName = trim((string) $this->request->getPost('stored_name'));
+        $extUrl     = trim((string) $this->request->getPost('url'));
+        $text       = trim((string) $this->request->getPost('text'));
+
+        if ($storedName !== '') {
+            if (! CvAiFileStorage::userOwnsUpload($uid, $storedName)) {
+                return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบไฟล์ที่อัปโหลด — กรุณาอัปโหลดใหม่']);
+            }
+            $analyzeUrl = CvAiFileStorage::publicDownloadUrl($storedName);
+            $r          = AiPublicationParser::parseFromUrl($analyzeUrl);
+        } elseif ($extUrl !== '') {
+            $r = AiPublicationParser::parseFromUrl($extUrl);
+        } elseif ($text !== '') {
+            $r = AiPublicationParser::parseFromText($text);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'กรุณาอัปโหลดไฟล์ ใส่ URL หรือวางข้อความ']);
+        }
+
+        if (! $r['success']) {
+            return $this->response->setJSON($r);
+        }
+
+        return $this->response->setJSON(['success' => true, 'publication' => $r['publication']]);
+    }
+
+    private function consumeAiCvRateSlot(int $userId, AiCv $cfg): bool
+    {
+        $key    = 'ai_cv_rl_' . $userId;
+        $now    = time();
+        $bucket = session()->get($key);
+        if (! is_array($bucket) || $now - (int) ($bucket['t'] ?? 0) > 3600) {
+            $bucket = ['t' => $now, 'n' => 0];
+        }
+        if ((int) ($bucket['n'] ?? 0) >= $cfg->rateLimitPerHour) {
+            return false;
+        }
+        $bucket['n'] = (int) $bucket['n'] + 1;
+        session()->set($key, $bucket);
+
+        return true;
     }
 }

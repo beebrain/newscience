@@ -4,11 +4,36 @@
  * อ่าน database.server.* (ต้นทาง) และ database.default.* (ปลายทาง) จาก .env เท่านั้น
  * รันบนเครื่องเดียว: Server -> Local (แทนที่ข้อมูลใน Local ทั้งหมด)
  *
- * ใช้: php scripts/sync_server_to_local.php
+ * ใช้:
+ *   php scripts/sync_server_to_local.php
+ *   php scripts/sync_server_to_local.php --tables=news,personnel,user
+ *   php scripts/sync_server_to_local.php --dry-run
+ *
+ * หรือ wrapper: ./scripts/sync_server_to_local.sh [--method=auto|dump|php] [--yes]
  */
 
 $projectRoot = dirname(__DIR__);
 $envFile = $projectRoot . DIRECTORY_SEPARATOR . '.env';
+
+$opts = getopt('', ['tables:', 'dry-run', 'help']);
+if (isset($opts['help'])) {
+    fwrite(STDOUT, "Usage: php scripts/sync_server_to_local.php [--tables=a,b] [--dry-run]\n");
+    exit(0);
+}
+$dryRun = isset($opts['dry-run']);
+$onlyTables = [];
+if (!empty($opts['tables'])) {
+    foreach (explode(',', (string) $opts['tables']) as $t) {
+        $t = trim($t);
+        if ($t !== '' && preg_match('/^[a-zA-Z0-9_]+$/', $t)) {
+            $onlyTables[] = $t;
+        }
+    }
+    if ($onlyTables === []) {
+        fwrite(STDERR, "Error: --tables must list valid table names (letters, numbers, underscore)\n");
+        exit(1);
+    }
+}
 
 if (!is_file($envFile) || !is_readable($envFile)) {
     fwrite(STDERR, "Error: .env not found or not readable at: " . $envFile . "\n");
@@ -129,6 +154,8 @@ if ($local->connect_error) {
     exit(3);
 }
 $local->set_charset('utf8mb4');
+// Local MySQL 8 มักเข้มงวดกว่า server — อนุญาต zero date ชั่วคราวระหว่าง import
+$local->query("SET SESSION sql_mode = ''");
 
 $db = $server->real_escape_string($serverConfig['database']);
 $res = $server->query("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = '{$db}' AND TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_NAME");
@@ -141,6 +168,23 @@ while ($row = $res->fetch_array()) {
     $tables[] = $row[0];
 }
 
+if ($onlyTables !== []) {
+    $missing = array_diff($onlyTables, $tables);
+    if ($missing !== []) {
+        fwrite(STDERR, "Warning: tables not on server: " . implode(', ', $missing) . "\n");
+    }
+    $tables = array_values(array_intersect($onlyTables, $tables));
+    if ($tables === []) {
+        fwrite(STDERR, "Error: none of the requested --tables exist on server\n");
+        exit(4);
+    }
+    echo "Syncing selected tables only: " . implode(', ', $tables) . "\n\n";
+}
+
+if ($dryRun) {
+    echo "DRY RUN — no local changes\n\n";
+}
+
 $local->query("SET FOREIGN_KEY_CHECKS = 0");
 
 $batchSize = 500;
@@ -151,6 +195,11 @@ foreach ($tables as $table) {
     $tableEsc = $local->real_escape_string($table);
     $countRes = $server->query("SELECT COUNT(*) FROM `{$tableEsc}`");
     $numRows = $countRes ? (int) $countRes->fetch_array()[0] : 0;
+
+    if ($dryRun) {
+        echo "Would sync {$table} ({$numRows} rows on server)\n";
+        continue;
+    }
 
     try {
         $local->query("TRUNCATE TABLE `{$tableEsc}`");
@@ -210,6 +259,8 @@ foreach ($tables as $table) {
             foreach ($common as $col) {
                 $v = $row[$col] ?? null;
                 if ($v === null) {
+                    $vals[] = 'NULL';
+                } elseif (is_string($v) && preg_match('/^0000-00-00/', $v)) {
                     $vals[] = 'NULL';
                 } elseif (is_numeric($v) && (string)(int)$v === (string)$v) {
                     $vals[] = (int) $v;

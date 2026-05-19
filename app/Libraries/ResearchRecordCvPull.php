@@ -11,6 +11,9 @@ use DateTimeInterface;
 /**
  * ดึง CV + ผลงานจาก กบศ ลง ฐานข้อมูลคณะ (ใช้ร่วมกับ pull-all, auto บนหน้าแก้ไข CV, manual)
  *
+ * การรวมข้อมูล: **ฐานข้อมูลคณะ (NS) เป็นหลัก** — ดึงจากกบศมาเสริม (หัวข้อ/รายการที่มีเฉพาะใน RR จะถูกเพิ่ม;
+ * รายการที่มีทั้งสองฝั่งตาม external_key เดียวกันเก็บข้อมูลจาก NS)
+ *
  * การเรียก API กบศใช้ **อีเมลที่ normalize แล้ว** เป็นตัวระบุบุคคล (canonical) — ไม่ใช้ uid เป็นหลัก
  */
 class ResearchRecordCvPull
@@ -167,7 +170,14 @@ class ResearchRecordCvPull
         }
 
         try {
-            ResearchRecordCvSyncMerge::replaceNewScienceCvFromBundle($personnelId, $rr['bundle']);
+            $rrBundle = CvBundleCanonical::ensureBundleSectionEntryKeys($rr['bundle']);
+            $merged   = ResearchRecordCvSyncMerge::mergedCvBundle(
+                [],
+                $nsBundle,
+                $rrBundle,
+                CvProfile::normalizeEmail($canonicalEmail)
+            );
+            ResearchRecordCvSyncMerge::replaceNewScienceCvFromBundle($personnelId, $merged);
 
             $pubStats = ['inserted' => 0, 'updated' => 0, 'skipped_unchanged' => 0];
             $pubRes   = ResearchRecordCvSyncClient::fetchPublicationsSyncBundle($canonicalEmail);
@@ -197,7 +207,7 @@ class ResearchRecordCvPull
             }
 
             $pubChanged = $pubStats['inserted'] + $pubStats['updated'];
-            $msg        = 'แทนที่ CV บน ฐานข้อมูลคณะ ด้วยข้อมูลจาก กบศ แล้ว';
+            $msg        = 'ซิงค์จาก กบศ แบบเสริมแล้ว (รักษาข้อมูลที่กรอกใน ฐานข้อมูลคณะ — เพิ่มจากกบศที่ยังไม่มีในระบบ)';
             if ($pubChanged > 0) {
                 $msg .= sprintf(
                     ' (ผลงาน: เพิ่ม %d, อัปเดต %d',

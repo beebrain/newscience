@@ -89,7 +89,7 @@ class ResearchRecordSync extends BaseController
                 'error'   => $rr['error'] ?? null,
             ]);
         }
-        $rrBundle = $rr['bundle'] ?? [];
+        $rrBundle = CvBundleCanonical::ensureBundleSectionEntryKeys(is_array($rr['bundle'] ?? null) ? $rr['bundle'] : []);
 
         $mergeRows = ResearchRecordCvSyncMerge::buildMergeRows($nsBundle, $rrBundle);
 

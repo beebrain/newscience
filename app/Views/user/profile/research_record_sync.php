@@ -12,7 +12,7 @@ $email = $sync_email ?? '';
                 <div class="w-1 h-6 bg-emerald-600 rounded-full"></div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-800">ดึงจาก กบศ → ฐานข้อมูลคณะ</h1>
             </div>
-            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — <strong class="text-gray-700">แนวหลัก:</strong> ดึง snapshot CV และผลงานจาก กบศ ลง ฐานข้อมูลคณะ ปุ่มเปรียบเทียบใช้เมื่อต้องการเลือกทีละแถว การส่งกลับไป กบศ เป็นทางเลือกเสริม</p>
+            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — <strong class="text-gray-700">แนวหลัก:</strong> ฐานข้อมูลคณะเป็นหลัก — ดึงจาก กบศ มาเสริมรายการที่ยังไม่มี และนำเข้าผลงานตีพิมพ์ ปุ่มเปรียบเทียบใช้เมื่อต้องการเลือกทีละแถว การส่งกลับไป กบศ เป็นทางเลือกเสริม</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="<?= base_url('dashboard/profile') ?>" class="text-sm px-3 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">โปรไฟล์</a>
@@ -31,8 +31,8 @@ $email = $sync_email ?? '';
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4">
         <?php if ($apiOk): ?>
             <div class="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-950">
-                <p class="font-semibold mb-1">แนวทางหลัก: กบศ → ฐานข้อมูลคณะ</p>
-                <p class="text-emerald-900/90">กด <strong>ดึงทั้งหมดจาก กบศ → ฐานข้อมูลคณะ</strong> เพื่อแทนที่ CV บน ฐานข้อมูลคณะ ด้วยข้อมูลล่าสุดจาก กบศ และนำเข้าผลงานตีพิมพ์ (รายการที่ข้อมูลเท่าเดิมจะไม่เขียนทับซ้ำ)</p>
+                <p class="font-semibold mb-1">แนวทางหลัก: ฐานข้อมูลคณะเป็นหลัก — กบศเสริม</p>
+                <p class="text-emerald-900/90">กด <strong>ดึงทั้งหมดจาก กบศ → ฐานข้อมูลคณะ</strong> เพื่อซิงค์แบบเสริม: รักษาข้อมูลที่กรอกใน ฐานข้อมูลคณะ และเพิ่มจากกบศที่ยังไม่มีในระบบ พร้อมนำเข้าผลงานตีพิมพ์ (รายการที่ข้อมูลเท่าเดิมจะไม่เขียนทับซ้ำ)</p>
             </div>
         <?php endif; ?>
 
@@ -93,7 +93,7 @@ $email = $sync_email ?? '';
         if (row.kind === 'publication') return 'rr';
         if (row.has_rr && !row.has_ns) return 'rr';
         if (row.has_ns && !row.has_rr) return 'ns';
-        return 'rr';
+        return 'ns';
     }
 
     function renderTable() {
@@ -187,7 +187,7 @@ $email = $sync_email ?? '';
     });
 
     document.getElementById('rrsync-btn-pull') && document.getElementById('rrsync-btn-pull').addEventListener('click', async function () {
-        if (!confirm('แทนที่ CV ทั้งหมดบน ฐานข้อมูลคณะ ด้วยข้อมูลจาก กบศ และนำเข้าผลงานตีพิมพ์จาก กบศ (ถ้ามี)?')) return;
+        if (!confirm('ซิงค์จาก กบศ แบบเสริม (รักษาข้อมูลที่กรอกใน ฐานข้อมูลคณะ) และนำเข้าผลงานตีพิมพ์จาก กบศ (ถ้ามี)?')) return;
         var btn = this;
         setStatus('กำลังดึง…');
         btn.disabled = true;

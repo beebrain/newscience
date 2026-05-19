@@ -1,0 +1,12 @@
+{
+  "output": {
+    "source": "ai_extraction",
+    "type": "journal",
+    "title_th": "ตัวอย่างบทความทดสอบ workflow",
+    "title_en": "Sample Article for Workflow Test",
+    "journalname": "Journal of Testing",
+    "year_en": 2024,
+    "doi": "10.1000/workflow.test",
+    "abstract_th": "บทคัดย่อทดสอบ"
+  }
+}

@@ -156,6 +156,68 @@ class CvBundleCanonical
     }
 
     /**
+     * เติม external_key ให้ section/entry ใน bundle จากกบศที่ไม่มีคีย์ — ให้ merge (NS + RR) ไม่ทิ้งรายการ
+     *
+     * @param array<string,mixed> $bundle
+     *
+     * @return array<string,mixed>
+     */
+    public static function ensureBundleSectionEntryKeys(array $bundle): array
+    {
+        $sections = $bundle['sections'] ?? [];
+        if (! is_array($sections) || $sections === []) {
+            return $bundle;
+        }
+
+        $outSections = [];
+        $idx         = 0;
+        foreach ($sections as $sec) {
+            if (! is_array($sec)) {
+                continue;
+            }
+            $idx++;
+            $sortOrder = (int) ($sec['sort_order'] ?? $idx);
+            $secOut    = $sec;
+            if (trim((string) ($secOut['external_key'] ?? '')) === '') {
+                $secOut['external_key'] = self::sectionExternalKey([
+                    'type'       => (string) ($sec['type'] ?? 'custom'),
+                    'title'      => (string) ($sec['title'] ?? ''),
+                    'sort_order' => $sortOrder,
+                ]);
+            }
+
+            $entryOut = [];
+            $ej       = 0;
+            foreach ($sec['entries'] ?? [] as $en) {
+                if (! is_array($en)) {
+                    continue;
+                }
+                $ej++;
+                $enOut = $en;
+                $meta  = $en['metadata'] ?? [];
+                if (! is_array($meta)) {
+                    $meta = [];
+                }
+                if (trim((string) ($enOut['external_key'] ?? '')) === '') {
+                    $enOut['external_key'] = self::entryExternalKeyFromMetadata(
+                        $meta,
+                        (string) ($en['title'] ?? ''),
+                        (string) ($en['organization'] ?? ''),
+                        isset($en['start_date']) ? (string) $en['start_date'] : null
+                    );
+                }
+                $entryOut[] = $enOut;
+            }
+            $secOut['entries'] = $entryOut;
+            $outSections[]     = $secOut;
+        }
+        $bundle['sections'] = $outSections;
+        $bundle['content_hash'] = self::hashBundle($bundle);
+
+        return $bundle;
+    }
+
+    /**
      * @return array<string,mixed>
      */
     public static function emptyBundle(?string $email): array

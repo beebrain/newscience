@@ -10,7 +10,8 @@ use App\Models\PersonnelModel;
  * เปรียบเทียบ bundle และเขียนกลับ newScience
  *
  * แผนการดึงจาก RR (ลดการบันทึกซ้ำ):
- * - CV จาก `cv-bundle`: pull แบบแทนที่ทั้งชุดต่อ personnel — สะท้อน RR ล่าสุด ไม่สะสมแถวซ้ำหลายเวอร์ชัน
+ * - CV จาก `cv-bundle`: รวมแบบ **NS เป็นหลัก** (`mergedCvBundle` ว่าง) แล้วค่อยเขียนลง DB — เสริมรายการจาก RR
+ *   ที่ยังไม่มีใน NS; รายการที่จับคู่ด้วย `external_key` เดียวกันเก็บฝั่ง NS
  * - ผลงานตีพิมพ์: จับคู่ด้วย `metadata.sync_external_key` / `metadata.rr_publication_id`; ถ้า fingerprint
  *   ของข้อมูลจาก RR (`rr_pull_fingerprint`) เท่ากับที่เก็บไว้แล้ว จะข้าม (ไม่อัปเดต DB)
  * - ประวัติ: `cv_sync_log` + content_hash จาก API
@@ -338,17 +339,35 @@ class ResearchRecordCvSyncMerge
         $sectionId    = (int) ($section['id'] ?? 0);
         $cvEntryModel = new CvEntryModel();
 
-        $byRrId = [];
-        $byKey  = [];
-        foreach ($cvEntryModel->where('section_id', $sectionId)->findAll() as $row) {
-            $m = CvEntryModel::decodeMetadata($row['metadata'] ?? null);
-            $rid = (int) ($m['rr_publication_id'] ?? 0);
-            if ($rid > 0) {
-                $byRrId[$rid] = $row;
+        $byRrId    = [];
+        $byKey     = [];
+        $byDoiNorm = [];
+        $allSections = $cvSectionModel->where('personnel_id', $personnelId)
+            ->groupStart()
+            ->where('type', 'research')
+            ->orWhere('type', 'articles')
+            ->groupEnd()
+            ->orderBy('sort_order', 'ASC')
+            ->findAll();
+        foreach ($allSections as $secRow) {
+            $sid = (int) ($secRow['id'] ?? 0);
+            if ($sid <= 0) {
+                continue;
             }
-            $ek = (string) ($m['sync_external_key'] ?? '');
-            if ($ek !== '') {
-                $byKey[$ek] = $row;
+            foreach ($cvEntryModel->where('section_id', $sid)->findAll() as $row) {
+                $m   = CvEntryModel::decodeMetadata($row['metadata'] ?? null);
+                $rid = (int) ($m['rr_publication_id'] ?? 0);
+                if ($rid > 0 && ! isset($byRrId[$rid])) {
+                    $byRrId[$rid] = $row;
+                }
+                $ek = (string) ($m['sync_external_key'] ?? '');
+                if ($ek !== '' && ! isset($byKey[$ek])) {
+                    $byKey[$ek] = $row;
+                }
+                $dn = PublicationIdentity::normalizedDoiFromMetadata($m);
+                if ($dn !== '' && ! isset($byDoiNorm[$dn])) {
+                    $byDoiNorm[$dn] = $row;
+                }
             }
         }
 
@@ -370,6 +389,11 @@ class ResearchRecordCvSyncMerge
                 $existing = $byRrId[$rrPid];
             } elseif (isset($byKey[$key])) {
                 $existing = $byKey[$key];
+            } else {
+                $pubDoiNorm = PublicationIdentity::normalizeDoi((string) ($pub['doi'] ?? ''));
+                if ($pubDoiNorm !== '' && isset($byDoiNorm[$pubDoiNorm])) {
+                    $existing = $byDoiNorm[$pubDoiNorm];
+                }
             }
 
             $fingerprint = self::publicationRrFingerprint($pub);
@@ -383,12 +407,13 @@ class ResearchRecordCvSyncMerge
             }
 
             $pubTypeRaw = trim((string) ($pub['publication_type'] ?? ''));
+            $doiNorm    = PublicationIdentity::normalizeDoi((string) ($pub['doi'] ?? ''));
             $meta       = [
-                'source'              => 'research_record',
-                'sync_external_key'   => $key,
-                'rr_publication_id'   => $pub['rr_publication_id'] ?? null,
-                'doi'                   => $pub['doi'] ?? null,
-                'rr_pull_fingerprint'   => $fingerprint,
+                'source'                => 'research_record',
+                'sync_external_key'     => $key,
+                'rr_publication_id'     => $pub['rr_publication_id'] ?? null,
+                'doi'                   => $doiNorm !== '' ? $doiNorm : null,
+                'rr_pull_fingerprint'    => $fingerprint,
                 'rr_publication_type'   => $pubTypeRaw !== '' ? $pubTypeRaw : null,
             ];
             $title = mb_substr((string) ($pub['title'] ?? ''), 0, 500);
@@ -410,8 +435,21 @@ class ResearchRecordCvSyncMerge
 
             if ($existing !== null) {
                 $rowData['sort_order'] = (int) ($existing['sort_order'] ?? 0);
-                $cvEntryModel->update((int) $existing['id'], $rowData);
+                $eidUp = (int) $existing['id'];
+                $cvEntryModel->update($eidUp, $rowData);
                 $stats['updated']++;
+                $updatedRow = $cvEntryModel->find($eidUp);
+                if (is_array($updatedRow)) {
+                    $ridU = (int) ($pub['rr_publication_id'] ?? 0);
+                    if ($ridU > 0) {
+                        $byRrId[$ridU] = $updatedRow;
+                    }
+                    $byKey[$key] = $updatedRow;
+                    $ndU = PublicationIdentity::normalizedDoiFromMetadata(CvEntryModel::decodeMetadata($updatedRow['metadata'] ?? null));
+                    if ($ndU !== '') {
+                        $byDoiNorm[$ndU] = $updatedRow;
+                    }
+                }
             } else {
                 $rowData['sort_order'] = $cvEntryModel->nextSortOrder($sectionId);
                 $cvEntryModel->insert($rowData);
@@ -424,6 +462,10 @@ class ResearchRecordCvSyncMerge
                         $byRrId[$rid] = $newRow;
                     }
                     $byKey[$key] = $newRow;
+                    $nd = PublicationIdentity::normalizedDoiFromMetadata(CvEntryModel::decodeMetadata($newRow['metadata'] ?? null));
+                    if ($nd !== '') {
+                        $byDoiNorm[$nd] = $newRow;
+                    }
                 }
             }
         }
