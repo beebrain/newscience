@@ -7,33 +7,29 @@ namespace App\Controllers;
 use CodeIgniter\HTTP\ResponseInterface;
 
 /**
- * ส่งไฟล์ CV AI ให้ n8n / ภายนอก — รับชื่อไฟล์แล้ว return เป็นไฟล์
+ * ส่งไฟล์ CV AI ให้ n8n / ภายนอก — รับชื่อไฟล์ใน path แล้ว return เป็นไฟล์
  */
 class CvAiFileController extends BaseController
 {
     /**
-     * GET cv-ai/file?f={storedName}
-     * แนะนำบน IIS — ไม่มี .pdf ใน path segment
+     * GET cv-ai/file/{storedName}
+     * ตัวอย่าง: …/index.php/cv-ai/file/362d8a2f2c1c61dec811af5fe4651088.pdf
      */
-    public function serve(): ResponseInterface
-    {
-        $name = trim((string) ($this->request->getGet('f') ?? $this->request->getGet('name') ?? ''));
-
-        return $this->respondWithFile($name);
-    }
-
-    /**
-     * GET cv-ai/public/file/{storedName}
-     */
-    public function publicFile(string $storedName): ResponseInterface
+    public function file(string $storedName): ResponseInterface
     {
         return $this->respondWithFile($storedName);
+    }
+
+    /** @deprecated ใช้ file() — alias เดิม */
+    public function publicFile(string $storedName): ResponseInterface
+    {
+        return $this->file($storedName);
     }
 
     /** @deprecated alias */
     public function download(string $storedName): ResponseInterface
     {
-        return $this->publicFile($storedName);
+        return $this->file($storedName);
     }
 
     private function respondWithFile(string $storedName): ResponseInterface

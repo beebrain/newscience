@@ -60,16 +60,16 @@ final class CvAiFileService
 
     public function publicDownloadUrl(string $storedName): string
     {
-        $basename = basename($storedName);
+        $basename = rawurlencode(basename($storedName));
         $cfg      = config(AiCv::class);
         $base     = rtrim($cfg->filePublicBaseUrl !== '' ? $cfg->filePublicBaseUrl : (string) config(\Config\App::class)->baseURL, '/');
-        $query    = 'cv-ai/file?f=' . rawurlencode($basename);
+        $path     = 'cv-ai/file/' . $basename;
 
         if ($this->useIndexPhpInPublicUrl()) {
-            return $base . '/index.php/' . $query;
+            return $base . '/index.php/' . $path;
         }
 
-        return $base . '/' . $query;
+        return $base . '/' . $path;
     }
 
     /**

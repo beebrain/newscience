@@ -591,10 +591,10 @@ $routes->group('edoc', ['filter' => 'edocauth'], function ($routes) {
 $routes->get('edoc/public/secure-access', 'Edoc\GeneralController::secureAccess');
 $routes->get('edoc/public/view-file/(:any)', 'Edoc\GeneralController::publicViewFile/$1');
 
-// CV AI public file (n8n — ไม่ต้องล็อกอิน) — แนะนำ ?f= บน IIS
-$routes->get('cv-ai/file', 'CvAiFileController::serve');
-$routes->get('cv-ai/public/file/(:any)', 'CvAiFileController::publicFile/$1');
-$routes->get('cv-ai/download/(:any)', 'CvAiFileController::publicFile/$1');
+// CV AI public file (n8n — ไม่ต้องล็อกอิน) — ชื่อไฟล์ใน path: cv-ai/file/{storedName}
+$routes->get('cv-ai/file/(:any)', 'CvAiFileController::file/$1');
+$routes->get('cv-ai/public/file/(:any)', 'CvAiFileController::file/$1');
+$routes->get('cv-ai/download/(:any)', 'CvAiFileController::file/$1');
 // Edoc notifications — ดึงข้อมูลข่าว/เอกสารประจำวัน (ไม่ต้อง login)
 $routes->get('edoc/notifications', 'Edoc\GeneralController::getDocumentNotificationsData');
 $routes->get('edoc/notifications/(:segment)', 'Edoc\GeneralController::getDocumentNotificationsData/$1');
