@@ -15,7 +15,7 @@ use CodeIgniter\HTTP\ResponseInterface;
  */
 class Serve extends BaseController
 {
-    private const ALLOWED_TYPES = ['news', 'events', 'hero', 'staff', 'programs', 'personnel', 'faculty-downloads', 'popups', 'urgent_popups'];
+    private const ALLOWED_TYPES = ['news', 'events', 'hero', 'staff', 'programs', 'personnel', 'faculty-downloads', 'popups', 'urgent_popups', 'cv_ai'];
 
     /**
      * Serve a file by type and filename.

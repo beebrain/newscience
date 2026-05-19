@@ -1327,7 +1327,7 @@ class ProfileCv extends BaseController
     }
 
     /**
-     * GET — ให้ n8n ดึงไฟล์ที่อัปโหลด (ไม่ต้องล็อกอิน — ชื่อไฟล์สุ่ม)
+     * GET — backward compat (/cv-ai/file/…) — ส่งไฟล์ inline เหมือน /serve/uploads/cv_ai/
      */
     public function aiPublicationFile(string $storedName)
     {
@@ -1336,7 +1336,21 @@ class ProfileCv extends BaseController
             return $this->response->setStatusCode(404)->setBody('Not found');
         }
 
-        return $this->response->download($path, null);
+        $mime = 'application/octet-stream';
+        $ext  = strtolower(pathinfo($storedName, PATHINFO_EXTENSION));
+        if ($ext === 'pdf') {
+            $mime = 'application/pdf';
+        } elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'], true)) {
+            $mime = 'image/' . ($ext === 'jpg' ? 'jpeg' : $ext);
+        } elseif ($ext === 'txt') {
+            $mime = 'text/plain; charset=UTF-8';
+        }
+
+        return $this->response
+            ->setHeader('Content-Type', $mime)
+            ->setHeader('Content-Disposition', 'inline; filename="' . str_replace('"', '\\"', $storedName) . '"')
+            ->setHeader('Cache-Control', 'private, max-age=3600')
+            ->setBody((string) file_get_contents($path));
     }
 
     /**
