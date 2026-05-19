@@ -45,5 +45,19 @@ final class AiPublicationParserTest extends CIUnitTestCase
         $this->assertTrue($r['success']);
         $this->assertSame('ชื่อไทย', $r['publication']['title']);
         $this->assertSame('journal', $r['publication']['publication_type']);
+        $this->assertSame('https://doi.org/10.1000/test', $r['publication']['url']);
+    }
+
+    public function testNormalizeIncludesAuthorsAndLocation(): void
+    {
+        $r = AiPublicationParser::normalizePublicationFromRrLikeArray([
+            'title'    => 'Paper',
+            'authors'  => ['A. One', 'B. Two'],
+            'location' => 'Bangkok',
+            'year'     => 2022,
+        ]);
+        $this->assertTrue($r['success']);
+        $this->assertSame('Bangkok', $r['publication']['location']);
+        $this->assertStringContainsString('ผู้แต่ง:', $r['publication']['description']);
     }
 }

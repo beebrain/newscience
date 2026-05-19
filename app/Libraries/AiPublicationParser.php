@@ -47,18 +47,69 @@ final class AiPublicationParser
             $ptype = '';
         }
 
+        $loc = trim((string) ($pub['location'] ?? $pub['place'] ?? $pub['city'] ?? ''));
+        if ($loc === '') {
+            $loc = trim((string) ($pub['conference_place'] ?? $pub['conference_location'] ?? $pub['country'] ?? ''));
+        }
+
+        $url = trim((string) ($pub['url'] ?? $pub['link'] ?? $pub['article_url'] ?? $pub['source_url'] ?? ''));
+        if ($url === '' && $doiNorm !== '') {
+            $url = 'https://doi.org/' . $doiNorm;
+        }
+
+        $rrIdRaw = $pub['rr_publication_id'] ?? $pub['publication_id'] ?? $pub['id'] ?? null;
+        $rrId    = is_numeric($rrIdRaw) && (int) $rrIdRaw > 0 ? (int) $rrIdRaw : null;
+
         $desc = trim((string) ($pub['description'] ?? $pub['abstract'] ?? $pub['abstract_th'] ?? $pub['abstract_en'] ?? $pub['notes'] ?? $pub['extra_info'] ?? ''));
+        $authors = self::formatAuthorsLine($pub);
+        if ($authors !== '' && $desc !== '') {
+            $desc = $authors . "\n\n" . $desc;
+        } elseif ($authors !== '') {
+            $desc = $authors;
+        }
 
         $out = [
             'title'            => mb_substr($title, 0, 500),
             'organization'     => mb_substr($org, 0, 500) ?: null,
+            'location'         => mb_substr($loc, 0, 500) ?: null,
             'year'             => $y,
             'doi'              => $doiNorm !== '' ? $doiNorm : null,
+            'url'              => $url !== '' ? mb_substr($url, 0, 2048) : null,
             'publication_type' => $ptype !== '' ? $ptype : null,
+            'rr_publication_id'=> $rrId,
             'description'      => mb_substr($desc, 0, 20000) ?: null,
         ];
 
         return ['success' => true, 'publication' => $out];
+    }
+
+    /**
+     * @param array<string, mixed> $pub
+     */
+    private static function formatAuthorsLine(array $pub): string
+    {
+        $authors = $pub['authors'] ?? $pub['author'] ?? null;
+        if (is_string($authors)) {
+            $authors = trim($authors);
+
+            return $authors !== '' ? 'ผู้แต่ง: ' . mb_substr($authors, 0, 2000) : '';
+        }
+        if (! is_array($authors) || $authors === []) {
+            return '';
+        }
+        $parts = [];
+        foreach ($authors as $a) {
+            if (is_string($a) && trim($a) !== '') {
+                $parts[] = trim($a);
+            } elseif (is_array($a)) {
+                $name = trim((string) ($a['name'] ?? $a['full_name'] ?? $a['display_name'] ?? ''));
+                if ($name !== '') {
+                    $parts[] = $name;
+                }
+            }
+        }
+
+        return $parts !== [] ? 'ผู้แต่ง: ' . mb_substr(implode('; ', $parts), 0, 2000) : '';
     }
 
     /**

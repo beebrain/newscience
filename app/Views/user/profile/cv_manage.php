@@ -1020,8 +1020,8 @@ $account_user = $account_user ?? null;
                 <div id="cv-ai-preview" class="hidden mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm text-slate-800 whitespace-pre-wrap"></div>
                 <div class="flex flex-wrap justify-end gap-2 mt-6">
                     <button type="button" onclick="closeCvAiModal()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50">ปิด</button>
-                    <button type="button" id="cv-ai-run" onclick="runCvAiPreview()" class="px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700">วิเคราะห์ด้วย AI</button>
-                    <button type="button" id="cv-ai-apply" class="hidden px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700" onclick="applyCvAiToEntryForm()">ใส่ในฟอร์มรายการ</button>
+                    <button type="button" id="cv-ai-run" onclick="runCvAiPreview()" class="px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700">วิเคราะห์และกรอกฟอร์ม</button>
+                    <button type="button" id="cv-ai-apply" class="hidden px-4 py-2 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-900 text-sm font-semibold hover:bg-emerald-100" onclick="applyCvAiToEntryForm()">เปิดฟอร์มอีกครั้ง</button>
                 </div>
             </div>
         </div>
@@ -1462,38 +1462,74 @@ $account_user = $account_user ?? null;
             var pv = document.getElementById('cv-ai-preview');
             var ap = document.getElementById('cv-ai-apply');
             if (pv) {
-                pv.textContent = JSON.stringify(data.publication, null, 2);
+                pv.textContent = formatCvAiPreview(data.publication);
                 pv.classList.remove('hidden');
             }
             if (ap) ap.classList.remove('hidden');
-            st.textContent = 'ตรวจรายการด้านบน แล้วกดใส่ในฟอร์มรายการ';
+            applyCvAiToEntryForm();
+            st.textContent = 'กรอกข้อมูลในฟอร์มรายการให้แล้ว — ตรวจสอบแล้วกดบันทึก';
         } finally {
             if (btn) btn.disabled = false;
         }
     };
-    window.applyCvAiToEntryForm = function () {
-        var pub = window.__cvAiLastPub;
-        if (!pub) return;
-        var sidEl = document.getElementById('cv-ai-section-id');
-        var sid = sidEl ? parseInt(sidEl.value, 10) : 0;
-        if (!sid) return;
-        closeCvAiModal();
-        openCvEntryModal(sid);
-        document.getElementById('cv-m-title').value = pub.title || '';
-        document.getElementById('cv-m-org').value = pub.organization || '';
-        if (pub.year) {
-            document.getElementById('cv-m-start').value = String(pub.year) + '-01-01';
-        } else {
-            document.getElementById('cv-m-start').value = '';
+    function formatCvAiPreview(pub) {
+        if (!pub || typeof pub !== 'object') return '';
+        var lines = [];
+        if (pub.title) lines.push('ชื่อ: ' + pub.title);
+        if (pub.organization) lines.push('หน่วยงาน/วารสาร: ' + pub.organization);
+        if (pub.location) lines.push('สถานที่: ' + pub.location);
+        if (pub.year) lines.push('ปี: ' + pub.year);
+        if (pub.publication_type) lines.push('ประเภท: ' + pub.publication_type);
+        if (pub.doi) lines.push('DOI: ' + pub.doi);
+        if (pub.rr_publication_id) lines.push('รหัส กบศ: ' + pub.rr_publication_id);
+        if (pub.url) lines.push('ลิงก์: ' + pub.url);
+        if (pub.description) lines.push('รายละเอียด:\n' + pub.description);
+        return lines.join('\n');
+    }
+
+    function setCvPublicationTypeValue(pubSel, code) {
+        if (!pubSel || !code) return;
+        var pv = String(code);
+        if (!Array.from(pubSel.options).some(function (o) { return o.value === pv; })) {
+            var opt = document.createElement('option');
+            opt.value = pv;
+            opt.textContent = 'จาก AI: ' + pv;
+            opt.setAttribute('data-temp-option', '1');
+            pubSel.appendChild(opt);
         }
-        document.getElementById('cv-m-desc').value = pub.description || '';
-        var d = document.getElementById('cv-m-doi');
-        if (d) d.value = pub.doi || '';
+        pubSel.value = pv;
+    }
+
+    /** กรอกฟอร์มรายการ CV จากผล AI (แบบ Research Record auto-fill) */
+    function fillCvEntryFormFromPublication(pub) {
+        if (!pub) return;
+        var titleEl = document.getElementById('cv-m-title');
+        if (titleEl) titleEl.value = pub.title || '';
+        var orgEl = document.getElementById('cv-m-org');
+        if (orgEl) orgEl.value = pub.organization || '';
+        var locEl = document.getElementById('cv-m-loc');
+        if (locEl) locEl.value = pub.location || '';
+        var startEl = document.getElementById('cv-m-start');
+        var endEl = document.getElementById('cv-m-end');
+        if (startEl) {
+            startEl.value = pub.year ? String(pub.year) + '-01-01' : '';
+        }
+        if (endEl) {
+            endEl.value = pub.year ? String(pub.year) + '-12-31' : '';
+        }
+        var descEl = document.getElementById('cv-m-desc');
+        if (descEl) descEl.value = pub.description || '';
+        var doiEl = document.getElementById('cv-m-doi');
+        if (doiEl) doiEl.value = pub.doi || '';
+        var rridEl = document.getElementById('cv-m-rrid');
+        if (rridEl) rridEl.value = pub.rr_publication_id ? String(pub.rr_publication_id) : '';
         var msrc = document.getElementById('cv-m-meta-src');
         if (msrc) msrc.value = 'ai_assistant';
         var urlEl = document.getElementById('cv-m-url');
         if (urlEl) {
-            if (window.__cvAiUploaded && window.__cvAiUploaded.download_url) {
+            if (pub.url) {
+                urlEl.value = pub.url;
+            } else if (window.__cvAiUploaded && window.__cvAiUploaded.download_url) {
                 urlEl.value = window.__cvAiUploaded.download_url;
             } else {
                 var extUrl = document.getElementById('cv-ai-url');
@@ -1502,15 +1538,21 @@ $account_user = $account_user ?? null;
         }
         var pubSel = document.getElementById('cv-m-pubtype');
         if (pubSel && pub.publication_type) {
-            if (!Array.from(pubSel.options).some(function (o) { return o.value === pub.publication_type; })) {
-                var opt = document.createElement('option');
-                opt.value = pub.publication_type;
-                opt.textContent = 'จาก AI: ' + pub.publication_type;
-                opt.setAttribute('data-temp-option', '1');
-                pubSel.appendChild(opt);
-            }
-            pubSel.value = pub.publication_type;
+            setCvPublicationTypeValue(pubSel, pub.publication_type);
         }
+    }
+
+    window.applyCvAiToEntryForm = function () {
+        var pub = window.__cvAiLastPub;
+        if (!pub) return;
+        var sidEl = document.getElementById('cv-ai-section-id');
+        var sid = sidEl ? parseInt(sidEl.value, 10) : 0;
+        if (!sid) return;
+        closeCvAiModal();
+        openCvEntryModal(sid);
+        fillCvEntryFormFromPublication(pub);
+        var titleEl = document.getElementById('cv-m-title');
+        if (titleEl) titleEl.focus();
     };
 
     document.addEventListener('DOMContentLoaded', function () {
