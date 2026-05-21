@@ -5,7 +5,7 @@ namespace App\Services;
 /**
  * Export/import JSON bundle ต่อหลักสูตร (programs + program_pages only)
  * schema_version 2 exports inline source metadata per field; v1 remains import-compatible.
- * Shared feature tables (staff/news/downloads/activities/facilities) are intentionally excluded.
+ * Shared feature tables (staff/news/downloads/facilities) are intentionally excluded.
  */
 class ProgramContentBundleService
 {

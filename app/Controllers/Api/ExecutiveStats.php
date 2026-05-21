@@ -7,7 +7,6 @@ use App\Models\PersonnelModel;
 use App\Models\OrganizationUnitModel;
 use App\Models\ProgramModel;
 use App\Models\ProgramPageModel;
-use App\Models\ProgramActivityModel;
 use App\Models\PersonnelProgramModel;
 use App\Models\NewsModel;
 use App\Models\NewsTagModel;
@@ -37,7 +36,6 @@ class ExecutiveStats extends BaseController
     protected $organizationUnitModel;
     protected $programModel;
     protected $programPageModel;
-    protected $programActivityModel;
     protected $personnelProgramModel;
     protected $newsModel;
     protected $newsTagModel;
@@ -57,7 +55,6 @@ class ExecutiveStats extends BaseController
         $this->organizationUnitModel = new OrganizationUnitModel();
         $this->programModel = new ProgramModel();
         $this->programPageModel = new ProgramPageModel();
-        $this->programActivityModel = new ProgramActivityModel();
         $this->personnelProgramModel = new PersonnelProgramModel();
         $this->newsModel = new NewsModel();
         $this->newsTagModel = new NewsTagModel();
@@ -325,7 +322,7 @@ class ExecutiveStats extends BaseController
     }
 
     /**
-     * GET programs: by level, published pages count, activities per program
+     * GET programs: by level, published pages count
      */
     public function programs()
     {
@@ -354,28 +351,12 @@ class ExecutiveStats extends BaseController
             $publishedTotal = $this->programPageModel->where('is_published', 1)->countAllResults();
         }
 
-        $activitiesPerProgram = [];
-        if ($this->db->tableExists('program_activities') && $this->db->tableExists('programs')) {
-            $rows = $this->db->table('program_activities pa')
-                ->select('p.name_th as name, COUNT(*) as count')
-                ->join('programs p', 'p.id = pa.program_id', 'inner')
-                ->groupBy('pa.program_id')
-                ->orderBy('count', 'DESC')
-                ->limit(15)
-                ->get()
-                ->getResultArray();
-            foreach ($rows as $row) {
-                $activitiesPerProgram[] = ['name' => $row['name'] ?: '-', 'count' => (int) $row['count']];
-            }
-        }
-
         return $this->respond([
             'success' => true,
             'data' => [
                 'by_level' => $byLevel,
                 'program_pages_total' => $pagesTotal,
                 'program_pages_published' => $publishedTotal,
-                'activities_per_program' => $activitiesPerProgram,
             ],
         ]);
     }
@@ -866,7 +847,7 @@ class ExecutiveStats extends BaseController
     }
 
     /**
-     * GET program-summary: per-program breakdown (personnel, students, activities, downloads, facilities, page, news, research).
+     * GET program-summary: per-program breakdown (personnel, students, downloads, facilities, page, news, research).
      */
     public function programSummary()
     {
@@ -898,11 +879,6 @@ class ExecutiveStats extends BaseController
             $studentCount = 0;
             if ($this->db->tableExists('student_user')) {
                 $studentCount = (int) $this->studentUserModel->where('program_id', $id)->where('status', 'active')->countAllResults();
-            }
-
-            $activityCount = 0;
-            if ($this->db->tableExists('program_activities')) {
-                $activityCount = (int) $this->db->table('program_activities')->where('program_id', $id)->countAllResults();
             }
 
             $downloadCount = 0;
@@ -937,7 +913,6 @@ class ExecutiveStats extends BaseController
                 'program_level' => $level,
                 'personnel_count' => $personnelCount,
                 'student_count' => $studentCount,
-                'activity_count' => $activityCount,
                 'download_count' => $downloadCount,
                 'facility_count' => $facilityCount,
                 'page_published' => $pagePublished,

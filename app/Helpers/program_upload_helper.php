@@ -8,8 +8,6 @@
  *   writable/uploads/
  *   ├── news/                      ← ข่าวทั้งหมด ชื่อไฟล์ใช้ prefix p1_, p2_ = หลักสูตร
  *   │   └── thumbs/
- *   ├── activities/                ← รูปกิจกรรมทั้งหมด ชื่อไฟล์ใช้ prefix p1_, p2_ = หลักสูตร
- *   │   └── thumbs/
  *   ├── downloads/                 ← ไฟล์เอกสารดาวน์โหลดทั้งหมด ชื่อไฟล์ใช้ prefix p1_, p2_ = หลักสูตร
  *   ├── events/
  *   ├── hero/
@@ -56,15 +54,15 @@ if (!function_exists('upload_path')) {
 if (!function_exists('program_upload_path')) {
     /**
      * Get writable upload path for a program feature. Creates directory if missing.
-     * news, activities, downloads เก็บรวมในโฟลเดอร์ตาม feature — ใช้รหัสหลักสูตรในชื่อไฟล์ (p1_xxx)
+     * news, downloads เก็บรวมในโฟลเดอร์ตาม feature — ใช้รหัสหลักสูตรในชื่อไฟล์ (p1_xxx)
      *
      * @param int $programId Program ID
-     * @param string $feature One of: 'news', 'downloads', 'activities', หรือโฟลเดอร์ใต้ programs/{id}/ เช่น 'hero', 'data'
+     * @param string $feature One of: 'news', 'downloads', หรือโฟลเดอร์ใต้ programs/{id}/ เช่น 'hero', 'data'
      * @return string Absolute path (with trailing slash)
      */
     function program_upload_path(int $programId, string $feature): string
     {
-        if (in_array($feature, ['news', 'activities', 'downloads'], true)) {
+        if (in_array($feature, ['news', 'downloads'], true)) {
             return upload_path($feature);
         }
         $pid = (int) $programId;
@@ -131,16 +129,16 @@ if (!function_exists('featured_image_filename')) {
 if (!function_exists('program_upload_relative_path')) {
     /**
      * Relative path from uploads/ for storing in DB (ใช้กับ serve/uploads/...).
-     * news, activities, downloads: {feature}/filename (ชื่อไฟล์ควรมี prefix p{id}_ จาก caller)
+     * news, downloads: {feature}/filename (ชื่อไฟล์ควรมี prefix p{id}_ จาก caller)
      *
      * @param int $programId
-     * @param string $feature 'news' | 'activities' | 'downloads'
+     * @param string $feature 'news' | 'downloads'
      * @param string $filename
-     * @return string Path สัมพันธ์ เช่น activities/p1_img_xxx.jpg, downloads/p1_doc_xxx.pdf
+     * @return string Path สัมพันธ์ เช่น downloads/p1_doc_xxx.pdf
      */
     function program_upload_relative_path(int $programId, string $feature, string $filename): string
     {
-        if (in_array($feature, ['news', 'activities', 'downloads'], true)) {
+        if (in_array($feature, ['news', 'downloads'], true)) {
             return $feature . '/' . $filename;
         }
         return 'programs/' . (int) $programId . '/' . $feature . '/' . $filename;
@@ -149,7 +147,7 @@ if (!function_exists('program_upload_relative_path')) {
 
 if (!function_exists('program_create_image_thumbnail')) {
     /**
-     * สร้าง thumbnail สำหรับรูปที่อัปโหลด (news/, programs/1/activities)
+     * สร้าง thumbnail สำหรับรูปที่อัปโหลด (news/, programs/{id}/...)
      * เก็บที่โฟลเดอร์ thumbs ข้างๆ ไฟล์ต้นฉบับ (เช่น news/thumbs/)
      *
      * @param string $fullPath path เต็มของไฟล์รูป
@@ -188,7 +186,7 @@ if (!function_exists('upload_resolve_full_path')) {
     /**
      * แปลง relative path (จาก DB) เป็น full path บนดิสก์ สำหรับลบไฟล์
      *
-     * @param string $relativePath เช่น activities/p1_img_xxx.jpg, downloads/p1_doc.pdf
+     * @param string $relativePath เช่น downloads/p1_doc.pdf, news/p1_img_xxx.jpg
      * @return string path เต็มใน writable/uploads/
      */
     function upload_resolve_full_path(string $relativePath): string

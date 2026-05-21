@@ -5,8 +5,6 @@ namespace App\Controllers;
 use App\Models\ProgramModel;
 use App\Models\ProgramPageModel;
 use App\Models\ProgramDownloadModel;
-use App\Models\ProgramActivityModel;
-use App\Models\ProgramActivityImageModel;
 use App\Models\ProgramFacilityModel;
 use App\Models\PersonnelModel;
 use App\Models\PersonnelProgramModel;
@@ -137,7 +135,7 @@ class ProgramSpaController extends BaseController
         }
 
         $db = \Config\Database::connect();
-        $requiredTables = ['programs', 'program_pages', 'program_downloads', 'program_activities', 'program_facilities', 'news'];
+        $requiredTables = ['programs', 'program_pages', 'program_downloads', 'program_facilities', 'news'];
         foreach ($requiredTables as $table) {
             if (!$db->tableExists($table)) {
                 return $this->response->setJSON([
@@ -166,7 +164,7 @@ class ProgramSpaController extends BaseController
     }
 
     /**
-     * Get all data for SPA (program + page + staff + documents + news + activities + facilities).
+     * Get all data for SPA (program + page + staff + documents + news + facilities).
      * GET /p/{id}/data
      */
     public function getData($id)
@@ -195,8 +193,6 @@ class ProgramSpaController extends BaseController
         $personnelModel = new PersonnelModel();
         $personnelProgramModel = new PersonnelProgramModel();
         $newsModel = new NewsModel();
-        $activityModel = new ProgramActivityModel();
-        $activityImageModel = new ProgramActivityImageModel();
         $facilityModel = new ProgramFacilityModel();
 
         $levelLabels = [
@@ -314,29 +310,6 @@ class ProgramSpaController extends BaseController
             log_message('debug', 'ProgramSpaController::getData news: ' . $e->getMessage());
         }
 
-        $activities = [];
-        $activityRows = $activityModel->getPublishedByProgramId($id);
-        foreach ($activityRows as $act) {
-            $actId = (int) ($act['id'] ?? 0);
-            $images = $activityImageModel->getByActivityId($actId);
-            $imageList = [];
-            foreach ($images as $im) {
-                $path = trim($im['image_path'] ?? '');
-                $imageList[] = [
-                    'url'     => $path !== '' ? (strpos($path, 'http') === 0 ? $path : base_url('serve/' . $path)) : '',
-                    'caption' => $im['caption'] ?? '',
-                ];
-            }
-            $activities[] = [
-                'id'          => $actId,
-                'title'       => $act['title'] ?? '',
-                'description' => $act['description'] ?? '',
-                'activity_date' => $act['activity_date'] ?? null,
-                'location'    => $act['location'] ?? '',
-                'images'      => $imageList,
-            ];
-        }
-
         $facilities = [];
         $facilityRows = $facilityModel->getPublishedByProgramId($id);
         foreach ($facilityRows as $f) {
@@ -424,7 +397,6 @@ class ProgramSpaController extends BaseController
             'staff'                => $staff,
             'documents'             => $documents,
             'news'                  => $news,
-            'activities'           => $activities,
             'facilities'            => $facilities,
             'alumni'                => $alumni,
         ];

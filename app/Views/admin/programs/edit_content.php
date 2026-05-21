@@ -71,14 +71,6 @@
                 </svg>
                 ข่าวหลักสูตร
             </button>
-            <button type="button" class="tab-button" data-tab="activities" onclick="window.location.href='<?= base_url('program-admin/activities/' . $program['id']) ?>'">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 20V10"></path>
-                    <path d="M12 20V4"></path>
-                    <path d="M6 20v-6"></path>
-                </svg>
-                กิจกรรม
-            </button>
             <button type="button" class="tab-button" data-tab="personnel" onclick="switchTab('personnel')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
@@ -969,7 +961,7 @@
                 <!-- นำเข้า / ส่งออก JSON — 3 namespace: ข้อมูลพื้นฐาน + เนื้อหาหลักสูตร + การตั้งค่า -->
                 <div class="program-bundle-panel" style="margin: 0 1.5rem 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--color-gray-200); border-radius: 8px; background: #fff; font-size: 0.875rem;">
                     <h4 class="form-section-title" style="margin: 0 0 0.5rem 0; font-size: 1rem;">นำเข้า / ส่งออก JSON (ข้อมูลพื้นฐาน · เนื้อหาหลักสูตร · การตั้งค่า)</h4>
-                    <p class="form-text text-muted" style="margin: 0 0 0.75rem 0; font-size: 0.8125rem;">เอกสาร JSON v2 ครอบ 3 ส่วน (<code>basic</code>/<code>content</code>/<code>settings</code>) และทุก field มี <code>value/source/table/column/importable</code>. Export เฉพาะข้อมูลหลักสูตรจาก <code>programs</code> + <code>program_pages</code> ไม่รวมข้อมูลที่ใช้ร่วมกับ feature อื่น เช่น บุคลากร ข่าว ดาวน์โหลด กิจกรรม สิ่งอำนวยความสะดวก. ไฟล์ต้องระบุ <code>schema_version</code> กับ <code>program_id</code> ให้ตรงหลักสูตรนี้ (<?= (int) $program['id'] ?>). หลังส่งออกหรือหลังนำเข้าสำเร็จ ระบบบันทึกสำเนาไว้ที่ <code style="font-size:0.75rem;">writable/uploads/programs/<?= (int) $program['id'] ?>/data/content-bundle-latest.json</code> (รองรับนำเข้า v1 และรูปแบบเดิม <code>{program, page}</code> อัตโนมัติ)</p>
+                    <p class="form-text text-muted" style="margin: 0 0 0.75rem 0; font-size: 0.8125rem;">เอกสาร JSON v2 ครอบ 3 ส่วน (<code>basic</code>/<code>content</code>/<code>settings</code>) และทุก field มี <code>value/source/table/column/importable</code>. Export เฉพาะข้อมูลหลักสูตรจาก <code>programs</code> + <code>program_pages</code> ไม่รวมข้อมูลที่ใช้ร่วมกับ feature อื่น เช่น บุคลากร ข่าว ดาวน์โหลด สิ่งอำนวยความสะดวก. ไฟล์ต้องระบุ <code>schema_version</code> กับ <code>program_id</code> ให้ตรงหลักสูตรนี้ (<?= (int) $program['id'] ?>). หลังส่งออกหรือหลังนำเข้าสำเร็จ ระบบบันทึกสำเนาไว้ที่ <code style="font-size:0.75rem;">writable/uploads/programs/<?= (int) $program['id'] ?>/data/content-bundle-latest.json</code> (รองรับนำเข้า v1 และรูปแบบเดิม <code>{program, page}</code> อัตโนมัติ)</p>
                     <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;">
                         <a href="<?= base_url('program-admin/bundle-export/' . (int) $program['id']) ?>" class="btn btn-outline btn-sm" download>ดาวน์โหลด JSON ปัจจุบัน</a>
                         <a href="<?= base_url('program-admin/bundle-template/' . (int) $program['id']) ?>" class="btn btn-outline btn-sm" download>ดาวน์โหลดแม่แบบว่าง</a>
@@ -1113,7 +1105,7 @@
 
     function syncProgramEditUrl() {
         var t = getActiveMainTab();
-        if (!t || t === 'activities') { return; }
+        if (!t) { return; }
         var u = new URL(window.location.href);
         u.search = '';
         u.searchParams.set('tab', t);

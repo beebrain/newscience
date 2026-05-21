@@ -60,7 +60,6 @@
                 <div class="card" style="padding: 1rem;"><h3 style="margin: 0 0 1rem 0; font-size: 1rem;">หลักสูตรตามระดับ</h3><div id="chart-programs-level" style="min-height: 260px;"></div></div>
                 <div class="card" style="padding: 1rem;"><h3 style="margin: 0 0 1rem 0; font-size: 1rem;">เว็บไซต์หลักสูตร (เผยแพร่/ทั้งหมด)</h3><div id="chart-programs-pages" style="min-height: 260px;"></div></div>
             </div>
-            <div class="card" style="margin-top: 1.5rem; padding: 1rem;"><h3 style="margin: 0 0 1rem 0; font-size: 1rem;">กิจกรรมต่อหลักสูตร</h3><div id="chart-programs-activities" style="min-height: 280px;"></div></div>
         </div>
 
         <!-- News section -->
@@ -264,7 +263,6 @@
                 var el = document.getElementById('chart-programs-pages');
                 if (el) el.innerHTML = '<p style="color:var(--color-gray-500);padding:1rem;">ไม่มีข้อมูล</p>';
             }
-            barChart('chart-programs-activities', d.activities_per_program.map(function(x) { return x.name; }), d.activities_per_program.map(function(x) { return x.count; }), { horizontal: true });
         });
     }
 
@@ -342,22 +340,21 @@
         fetchApi('program-summary', {}).then(function(res) {
             if (!res.success || !res.data || !res.data.programs) return;
             var rows = res.data.programs;
-            var thead = '<thead><tr><th>หลักสูตร</th><th>ระดับ</th><th>บุคลากร</th><th>นักศึกษา</th><th>กิจกรรม</th><th>ดาวน์โหลด</th><th>สิ่งอำนวยความสะดวก</th><th>เผยแพร่เว็บ</th><th>ข่าว</th><th>งานวิจัย</th></tr></thead>';
+            var thead = '<thead><tr><th>หลักสูตร</th><th>ระดับ</th><th>บุคลากร</th><th>นักศึกษา</th><th>ดาวน์โหลด</th><th>สิ่งอำนวยความสะดวก</th><th>เผยแพร่เว็บ</th><th>ข่าว</th><th>งานวิจัย</th></tr></thead>';
             var tbody = '<tbody>';
-            var totals = { personnel_count: 0, student_count: 0, activity_count: 0, download_count: 0, facility_count: 0, news_count: 0, research_count: 0 };
+            var totals = { personnel_count: 0, student_count: 0, download_count: 0, facility_count: 0, news_count: 0, research_count: 0 };
             rows.forEach(function(r) {
                 totals.personnel_count += r.personnel_count || 0;
                 totals.student_count += r.student_count || 0;
-                totals.activity_count += r.activity_count || 0;
                 totals.download_count += r.download_count || 0;
                 totals.facility_count += r.facility_count || 0;
                 totals.news_count += r.news_count || 0;
                 totals.research_count += r.research_count || 0;
                 var pub = r.page_published ? '<span class="cell-yes">ใช่</span>' : '<span class="cell-zero">ไม่</span>';
                 var cn = function(n) { return n > 0 ? 'cell-num' : 'cell-num cell-zero'; };
-                tbody += '<tr><td>' + (r.program_name || '') + '</td><td>' + (r.program_level || '') + '</td><td class="' + cn(r.personnel_count) + '">' + (r.personnel_count || 0) + '</td><td class="' + cn(r.student_count) + '">' + (r.student_count || 0) + '</td><td class="' + cn(r.activity_count) + '">' + (r.activity_count || 0) + '</td><td class="' + cn(r.download_count) + '">' + (r.download_count || 0) + '</td><td class="' + cn(r.facility_count) + '">' + (r.facility_count || 0) + '</td><td>' + pub + '</td><td class="' + cn(r.news_count) + '">' + (r.news_count || 0) + '</td><td class="' + cn(r.research_count) + '">' + (r.research_count || 0) + '</td></tr>';
+                tbody += '<tr><td>' + (r.program_name || '') + '</td><td>' + (r.program_level || '') + '</td><td class="' + cn(r.personnel_count) + '">' + (r.personnel_count || 0) + '</td><td class="' + cn(r.student_count) + '">' + (r.student_count || 0) + '</td><td class="' + cn(r.download_count) + '">' + (r.download_count || 0) + '</td><td class="' + cn(r.facility_count) + '">' + (r.facility_count || 0) + '</td><td>' + pub + '</td><td class="' + cn(r.news_count) + '">' + (r.news_count || 0) + '</td><td class="' + cn(r.research_count) + '">' + (r.research_count || 0) + '</td></tr>';
             });
-            tbody += '<tr style="font-weight:600;background:var(--color-gray-100);"><td colspan="2">รวม</td><td class="cell-num">' + totals.personnel_count + '</td><td class="cell-num">' + totals.student_count + '</td><td class="cell-num">' + totals.activity_count + '</td><td class="cell-num">' + totals.download_count + '</td><td class="cell-num">' + totals.facility_count + '</td><td></td><td class="cell-num">' + totals.news_count + '</td><td class="cell-num">' + totals.research_count + '</td></tr></tbody>';
+            tbody += '<tr style="font-weight:600;background:var(--color-gray-100);"><td colspan="2">รวม</td><td class="cell-num">' + totals.personnel_count + '</td><td class="cell-num">' + totals.student_count + '</td><td class="cell-num">' + totals.download_count + '</td><td class="cell-num">' + totals.facility_count + '</td><td></td><td class="cell-num">' + totals.news_count + '</td><td class="cell-num">' + totals.research_count + '</td></tr></tbody>';
             var tableEl = document.getElementById('table-program-summary');
             if (tableEl) tableEl.innerHTML = rows.length ? '<table>' + thead + tbody + '</table>' : '<p style="color:var(--color-gray-500);padding:1rem;">ไม่มีข้อมูลหลักสูตร</p>';
         });

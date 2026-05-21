@@ -506,15 +506,6 @@ $routes->group('program-admin', ['filter' => 'programadmin'], function ($routes)
     $routes->get('news/(:num)', 'Admin\ProgramAdmin\Dashboard::programNews/$1');
     $routes->post('news/(:num)/create', 'Admin\ProgramAdmin\Dashboard::createProgramNews/$1');
 
-    // Activities (replace Content Builder)
-    $routes->get('activities/(:num)', 'Admin\ProgramAdmin\Activities::index/$1');
-    $routes->get('activities/(:num)/create', 'Admin\ProgramAdmin\Activities::createActivity/$1');
-    $routes->post('activities/(:num)/store', 'Admin\ProgramAdmin\Activities::storeActivity/$1');
-    $routes->get('activity/(:num)/edit', 'Admin\ProgramAdmin\Activities::editActivity/$1');
-    $routes->post('activity/(:num)/update', 'Admin\ProgramAdmin\Activities::updateActivity/$1');
-    $routes->post('activity/(:num)/delete', 'Admin\ProgramAdmin\Activities::deleteActivity/$1');
-    $routes->post('activity/(:num)/upload-image', 'Admin\ProgramAdmin\Activities::uploadActivityImage/$1');
-    $routes->post('activity-image/(:num)/delete', 'Admin\ProgramAdmin\Activities::deleteActivityImage/$1');
 });
 
 // ================================================================
