@@ -222,14 +222,15 @@ class Dashboard extends BaseController
         }
 
         $data = [
-            'page_title' => 'แก้ไขเนื้อหา - ' . ($program['name_th'] ?? $program['name_en']),
-            'program' => $program,
-            'program_page' => $programPage,
-            'downloads' => $downloads,
-            'coordinator' => $coordinator,
-            'personnel_list' => $personnelList,
-            'personnel_programs' => $personnelPrograms,
-            'layout' => 'admin/layouts/admin_layout',
+            'page_title'            => 'แก้ไขเนื้อหา - ' . ($program['name_th'] ?? $program['name_en']),
+            'program'               => $program,
+            'program_page'          => $programPage,
+            'downloads'             => $downloads,
+            'programDownloadModel'  => $this->programDownloadModel,
+            'coordinator'           => $coordinator,
+            'personnel_list'        => $personnelList,
+            'personnel_programs'    => $personnelPrograms,
+            'layout'                => 'admin/layouts/admin_layout',
         ];
 
         return view('admin/programs/edit_content', $data);
@@ -749,10 +750,11 @@ class Dashboard extends BaseController
         $downloads = $this->programDownloadModel->getByProgramId($programId);
 
         $data = [
-            'page_title' => 'จัดการดาวน์โหลด - ' . ($program['name_th'] ?? $program['name_en']),
-            'program' => $program,
-            'downloads' => $downloads,
-            'layout' => 'admin/layouts/admin_layout',
+            'page_title'           => 'จัดการดาวน์โหลด - ' . ($program['name_th'] ?? $program['name_en']),
+            'program'              => $program,
+            'downloads'            => $downloads,
+            'programDownloadModel' => $this->programDownloadModel,
+            'layout'               => 'admin/layouts/admin_layout',
         ];
 
         return view('admin/programs/downloads', $data);
