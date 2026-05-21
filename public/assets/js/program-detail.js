@@ -463,8 +463,12 @@
 
         if (!data.documents || !data.documents.length) {
             $('#pd-docs').hide();
+            $('.pd-sticky-nav__link[href="#pd-docs"]').closest('li').hide();
             return;
         }
+
+        $('#pd-docs').show();
+        $('.pd-sticky-nav__link[href="#pd-docs"]').closest('li').show();
 
         $.each(data.documents, function (i, doc) {
             var isLocked = !doc.is_public;

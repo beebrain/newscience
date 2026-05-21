@@ -285,7 +285,7 @@ class ProgramSpaController extends BaseController
                 'type'      => strtoupper($d['file_type'] ?? 'PDF'),
                 'size'      => $programDownloadModel->getFormattedSize((int) ($d['file_size'] ?? 0)),
                 'is_public' => true,
-                'url'       => base_url('serve/' . $d['file_path']),
+                'url'       => \App\Models\ProgramDownloadModel::serveUrlForPath((string) ($d['file_path'] ?? '')),
             ];
         }
 

@@ -111,11 +111,16 @@ class ProgramDownloadModel extends Model
         if (!$download) {
             return '';
         }
-        
-        $fp = $download['file_path'];
-        if (strpos($fp, 'programs/') === 0) {
-            return base_url('serve/uploads/' . $fp);
-        }
-        return base_url('serve/' . $fp);
+
+        helper('program_upload');
+
+        return program_download_serve_url((string) ($download['file_path'] ?? ''));
+    }
+
+    public static function serveUrlForPath(string $relativePath): string
+    {
+        helper('program_upload');
+
+        return program_download_serve_url($relativePath);
     }
 }

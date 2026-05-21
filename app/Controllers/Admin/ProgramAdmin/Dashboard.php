@@ -775,26 +775,22 @@ class Dashboard extends BaseController
         }
 
         $validationRules = [
-            'title'     => 'required|max_length[255]',
-            'file'      => 'uploaded[file]|max_size[file,10240]|ext_in[file,pdf,doc,docx,xlsx,ppt,pptx,zip,rar,jpg,jpeg,png,gif,mp4,mp3,txt]',
-            'file_type' => 'required|max_length[50]',
+            'title' => 'required|max_length[255]',
+            'file'  => 'uploaded[file]|max_size[file,10240]|ext_in[file,pdf,doc,docx,xlsx,ppt,pptx,zip,rar,jpg,jpeg,png,gif,mp4,mp3,txt]',
         ];
 
         if (! $this->validate($validationRules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            return $this->redirectToDownloadsTab((int) $programId)->withInput()->with('errors', $this->validator->getErrors());
         }
 
         $file = $this->request->getFile('file');
         if ($file === null || ! $file->isValid() || $file->hasMoved()) {
-            return redirect()->back()->with('error', 'ไฟล์ไม่ถูกต้องหรือส่งมาไม่สมบูรณ์');
+            return $this->redirectToDownloadsTab((int) $programId)->with('error', 'ไฟล์ไม่ถูกต้องหรือส่งมาไม่สมบูรณ์');
         }
 
-        // Validate file type
-        $allowedTypes = ['pdf', 'doc', 'docx', 'xlsx', 'pptx', 'ppt', 'zip', 'rar', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'mp3', 'txt'];
-        $fileType = strtolower($file->getExtension() ?: pathinfo($file->getClientName(), PATHINFO_EXTENSION));
-
-        if (!in_array($fileType, $allowedTypes)) {
-            return redirect()->back()->withInput()->with('error', 'ประเภทที่ไม่อนุญาต');
+        $fileType = $this->detectDownloadFileType($file);
+        if ($fileType === null) {
+            return $this->redirectToDownloadsTab((int) $programId)->withInput()->with('error', 'ประเภทไฟล์ไม่รองรับ');
         }
 
         helper('program_upload');
@@ -818,12 +814,71 @@ class Dashboard extends BaseController
                 'sort_order' => 0,
             ];
 
-            $downloadId = $this->programDownloadModel->addDownload($programId, $downloadData);
+            $this->programDownloadModel->addDownload($programId, $downloadData);
 
-            return redirect()->back()->with('success', 'อัปโหลดไฟล์เรียบร้อยแล้ว');
+            return $this->redirectToDownloadsTab((int) $programId)->with('success', 'อัปโหลดไฟล์เรียบร้อยแล้ว');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            return $this->redirectToDownloadsTab((int) $programId)->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * แก้ไขชื่อเอกสาร และ/หรือเปลี่ยนไฟล์
+     */
+    public function updateDownload($downloadId)
+    {
+        $download = $this->programDownloadModel->find((int) $downloadId);
+        if (! $download) {
+            return redirect()->back()->with('error', 'ไม่พบข้อมูลไฟล์');
+        }
+
+        $programId = (int) $download['program_id'];
+        if (! $this->canManageProgram($programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการดาวน์โหลด');
+        }
+
+        $title = trim((string) $this->request->getPost('title'));
+        if ($title === '') {
+            return $this->redirectToDownloadsTab($programId)->with('error', 'กรุณาระบุชื่อเอกสาร');
+        }
+
+        $rowData = ['title' => mb_substr($title, 0, 255)];
+
+        $file = $this->request->getFile('file');
+        if ($file !== null && $file->getError() !== UPLOAD_ERR_NO_FILE) {
+            if (! $file->isValid() || $file->hasMoved()) {
+                return $this->redirectToDownloadsTab($programId)->with('error', 'ไฟล์ใหม่ไม่ถูกต้อง');
+            }
+            $fileType = $this->detectDownloadFileType($file);
+            if ($fileType === null) {
+                return $this->redirectToDownloadsTab($programId)->with('error', 'ประเภทไฟล์ไม่รองรับ');
+            }
+
+            helper('program_upload');
+            $uploadPath   = program_upload_path($programId, 'downloads');
+            $fileName     = 'p' . $programId . '_' . program_unique_filename($file, 'doc');
+            $relativePath = program_upload_relative_path($programId, 'downloads', $fileName);
+            $fileSize     = $file->getSize();
+
+            $oldPath = upload_resolve_full_path((string) $download['file_path']);
+            if (is_file($oldPath)) {
+                @unlink($oldPath);
+            }
+
+            try {
+                $file->move($uploadPath, $fileName);
+            } catch (\Exception $e) {
+                return $this->redirectToDownloadsTab($programId)->with('error', 'ย้ายไฟล์ไม่สำเร็จ: ' . $e->getMessage());
+            }
+
+            $rowData['file_path']  = $relativePath;
+            $rowData['file_type']  = $fileType;
+            $rowData['file_size']  = $fileSize > 0 ? $fileSize : (is_file($uploadPath . $fileName) ? filesize($uploadPath . $fileName) : 0);
+        }
+
+        $this->programDownloadModel->updateDownload((int) $downloadId, $rowData);
+
+        return $this->redirectToDownloadsTab($programId)->with('success', 'บันทึกการแก้ไขเอกสารเรียบร้อยแล้ว');
     }
 
     /**
@@ -850,9 +905,37 @@ class Dashboard extends BaseController
         }
 
         // Delete from database
-        $this->programDownloadModel->deleteDownload($downloadId);
+        $this->programDownloadModel->deleteDownload((int) $downloadId);
 
-        return redirect()->back()->with('success', 'ลบไฟล์เรียบร้อยแล้ว');
+        return $this->redirectToDownloadsTab($programId)->with('success', 'ลบไฟล์เรียบร้อยแล้ว');
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function allowedDownloadExtensions(): array
+    {
+        return ['pdf', 'doc', 'docx', 'xlsx', 'pptx', 'ppt', 'zip', 'rar', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'mp3', 'txt'];
+    }
+
+    private function detectDownloadFileType(\CodeIgniter\HTTP\Files\UploadedFile $file): ?string
+    {
+        $ext = strtolower($file->getExtension() ?: pathinfo($file->getClientName(), PATHINFO_EXTENSION));
+
+        return in_array($ext, $this->allowedDownloadExtensions(), true) ? $ext : null;
+    }
+
+    /**
+     * กลับไปแท็บเอกสารดาวน์โหลด (หน้าแก้ไขเนื้อหา) หรือหน้า downloads แยก
+     */
+    private function redirectToDownloadsTab(int $programId)
+    {
+        $referer = (string) ($this->request->getServer('HTTP_REFERER') ?? '');
+        if ($referer !== '' && str_contains($referer, 'program-admin/edit/' . $programId)) {
+            return redirect()->to(base_url('program-admin/edit/' . $programId . '?tab=downloads'));
+        }
+
+        return redirect()->to(base_url('program-admin/downloads/' . $programId));
     }
 
     /**

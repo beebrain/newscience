@@ -198,6 +198,24 @@ if (!function_exists('upload_resolve_full_path')) {
     }
 }
 
+if (!function_exists('program_download_serve_url')) {
+    /**
+     * URL สำหรับดาวน์โหลดเอกสารหลักสูตร (path ใน DB เช่น downloads/p1_doc_xxx.pdf)
+     */
+    function program_download_serve_url(string $relativePath): string
+    {
+        $relativePath = ltrim(str_replace('\\', '/', trim($relativePath)), '/');
+        if ($relativePath === '') {
+            return '';
+        }
+        if (strpos($relativePath, 'uploads/') === 0) {
+            return base_url('serve/' . $relativePath);
+        }
+
+        return base_url('serve/uploads/' . $relativePath);
+    }
+}
+
 if (!function_exists('featured_image_serve_url')) {
     /**
      * คืน URL สำหรับแสดงรูป featured_image (ข่าว/หลักสูตร)
