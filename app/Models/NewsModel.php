@@ -131,6 +131,49 @@ class NewsModel extends Model
     }
 
     /**
+     * ข่าวประชาสัมพันธ์: มี tag general หรือเป็นข่าวหลักสูตร (program_*)
+     */
+    public function getPublishedForPublicRelations(int $limit = 10, int $offset = 0): array
+    {
+        $db = \Config\Database::connect();
+        if (! $db->tableExists('news_tags') || ! $db->tableExists('news_news_tags')) {
+            return $this->getPublished($limit, $offset);
+        }
+
+        return $this->select('news.*')
+            ->join('news_news_tags', 'news_news_tags.news_id = news.id')
+            ->join('news_tags', 'news_tags.id = news_news_tags.news_tag_id')
+            ->where('news.status', 'published')
+            ->groupStart()
+                ->where('news_tags.slug', NewsTagModel::PUBLIC_RELATIONS_TAG_SLUG)
+                ->orLike('news_tags.slug', NewsTagModel::PROGRAM_TAG_PREFIX, 'after')
+            ->groupEnd()
+            ->groupBy('news.id')
+            ->orderBy('news.published_at', 'DESC')
+            ->findAll($limit, $offset);
+    }
+
+    public function countPublishedForPublicRelations(): int
+    {
+        $db = \Config\Database::connect();
+        if (! $db->tableExists('news_tags') || ! $db->tableExists('news_news_tags')) {
+            return $this->where('status', 'published')->countAllResults();
+        }
+
+        $row = $this->select('COUNT(DISTINCT news.id) AS cnt')
+            ->join('news_news_tags', 'news_news_tags.news_id = news.id')
+            ->join('news_tags', 'news_tags.id = news_news_tags.news_tag_id')
+            ->where('news.status', 'published')
+            ->groupStart()
+                ->where('news_tags.slug', NewsTagModel::PUBLIC_RELATIONS_TAG_SLUG)
+                ->orLike('news_tags.slug', NewsTagModel::PROGRAM_TAG_PREFIX, 'after')
+            ->groupEnd()
+            ->first();
+
+        return (int) ($row['cnt'] ?? 0);
+    }
+
+    /**
      * Get news by slug
      */
     public function findBySlug(string $slug)

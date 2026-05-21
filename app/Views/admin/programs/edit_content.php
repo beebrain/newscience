@@ -723,7 +723,7 @@
                 <div style="padding: 1.5rem;">
                     <div class="section-header" style="margin-bottom: 1.5rem;">
                         <h4>ข่าวหลักสูตร</h4>
-                        <p style="color: var(--color-gray-600);">ข่าวที่เชื่อมกับหลักสูตรนี้</p>
+                        <p style="color: var(--color-gray-600);">ข่าวที่เชื่อมกับหลักสูตรนี้ — เมื่อเผยแพร่จะแสดงในหน้าหลักสูตรและใน <strong>ข่าวประชาสัมพันธ์</strong> (หมวดข่าวทั่วไป) โดยอัตโนมัติ ไม่สามารถจำกัดให้เห็นแค่หลักสูตรเดียวบนหน้าสาธารณะได้</p>
                     </div>
                     <div id="program-news-list" style="margin-bottom: 2rem;">
                         <p style="color: var(--color-gray-500);">กำลังโหลด...</p>

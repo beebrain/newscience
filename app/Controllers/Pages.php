@@ -286,9 +286,17 @@ class Pages extends BaseController
         $newsModel = new NewsModel();
         $dateFilter = $this->request->getGet('date');
         $dateFilter = is_string($dateFilter) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFilter) ? $dateFilter : null;
-        $allNews = $dateFilter !== null
-            ? $newsModel->getPublishedOnDate($dateFilter, 100)
-            : $newsModel->getPublished(100);
+        $tagFilter = trim((string) ($this->request->getGet('tag') ?? ''));
+        if ($tagFilter !== '' && \App\Models\NewsTagModel::isProgramTagSlug($tagFilter)) {
+            $tagFilter = '';
+        }
+        if ($dateFilter !== null) {
+            $allNews = $newsModel->getPublishedOnDate($dateFilter, 100);
+        } elseif ($tagFilter !== '') {
+            $allNews = $newsModel->getPublishedByTag($tagFilter, 100);
+        } else {
+            $allNews = $newsModel->getPublishedForPublicRelations(100);
+        }
 
         $data = array_merge($this->getCommonData(), [
             'page_title' => 'ข่าวสาร | ' . ($siteInfo['site_name_th'] ?? 'News'),

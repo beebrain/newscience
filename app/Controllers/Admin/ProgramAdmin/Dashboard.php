@@ -1095,9 +1095,12 @@ class Dashboard extends BaseController
             return redirect()->back()->withInput()->with('error', 'บันทึกข่าวไม่สำเร็จ');
         }
 
-        $programTag = $this->newsTagModel->findOrCreateForProgram($programId, $program['name_th'] ?? $program['name_en']);
-        if ($programTag) {
-            $this->newsTagModel->setTagsForNews((int) $newsId, [(int) $programTag['id']]);
+        $tagIds = $this->newsTagModel->tagIdsForProgramNews(
+            $programId,
+            (string) ($program['name_th'] ?? $program['name_en'] ?? '')
+        );
+        if ($tagIds !== []) {
+            $this->newsTagModel->setTagsForNews((int) $newsId, $tagIds);
         }
 
         $uploadPath = program_upload_path($programId, 'news');

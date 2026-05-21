@@ -289,7 +289,7 @@ class ProgramSpaController extends BaseController
         try {
             $db = \Config\Database::connect();
             if ($db->tableExists('news_tags') && $db->tableExists('news_news_tags')) {
-                $newsRows = $newsModel->getPublishedByTag('program_' . $id, 1, 0);
+                $newsRows = $newsModel->getPublishedByTag('program_' . $id, 12, 0);
                 foreach ($newsRows as $n) {
                     $nid = (int) ($n['id'] ?? 0);
                     $img = $this->formatFeaturedImageThumb($n['featured_image'] ?? '');

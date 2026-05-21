@@ -94,11 +94,16 @@ class Api extends BaseController
             $limit = min(50, max(1, $limit));
             $offset = ($page - 1) * $limit;
 
-            $total = $this->newsModel->where('news.status', $status)->countAllResults(false);
-            $news = $this->newsModel
-                ->where('status', $status)
-                ->orderBy('published_at', 'DESC')
-                ->findAll($limit, $offset);
+            if ($status === 'published') {
+                $news = $this->newsModel->getPublishedForPublicRelations($limit, $offset);
+                $total = $this->newsModel->countPublishedForPublicRelations();
+            } else {
+                $total = $this->newsModel->where('news.status', $status)->countAllResults(false);
+                $news = $this->newsModel
+                    ->where('status', $status)
+                    ->orderBy('published_at', 'DESC')
+                    ->findAll($limit, $offset);
+            }
 
             $data = [];
             foreach ($news as $article) {
@@ -242,6 +247,15 @@ class Api extends BaseController
             ]);
         }
 
+        if (\App\Models\NewsTagModel::isProgramTagSlug((string) $tagSlug)) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'success' => false,
+                'message' => 'ไม่สามารถกรองข่าวตามหลักสูตรเดียวในหน้าสาธารณะได้',
+                'data'    => [],
+                'tag'     => $tagSlug,
+            ]);
+        }
+
         try {
             $limit = (int) ($this->request->getGet('limit') ?? 6);
             $limit = min(50, max(1, $limit));
@@ -255,9 +269,10 @@ class Api extends BaseController
                 ]);
             }
 
-            $news = $this->newsModel->getPublishedByTag($tagSlug, $limit);
-            if ($tagSlug === 'general' && $news === []) {
-                $news = $this->newsModel->getPublished($limit);
+            if ($tagSlug === \App\Models\NewsTagModel::PUBLIC_RELATIONS_TAG_SLUG) {
+                $news = $this->newsModel->getPublishedForPublicRelations($limit);
+            } else {
+                $news = $this->newsModel->getPublishedByTag($tagSlug, $limit);
             }
 
             $data = [];
