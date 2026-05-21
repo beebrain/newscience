@@ -13,7 +13,9 @@ class ProgramDownloadModel extends Model
         'program_id', 'title', 'file_path', 'file_type', 'file_size', 'sort_order'
     ];
     protected $useTimestamps = true;
-    protected $createdField = 'created_at';
+    protected $createdField  = 'created_at';
+    /** ตาราง program_downloads มีแค่ created_at (ไม่มี updated_at) */
+    protected $updatedField  = '';
     
     /**
      * Get downloads for a program

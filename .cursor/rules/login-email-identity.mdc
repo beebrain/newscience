@@ -1,0 +1,11 @@
+---
+description: newScience — ใช้ email เป็นตัวระบุหลักสำหรับล็อกอินและจับคู่ผู้ใช้
+alwaysApply: true
+---
+
+# Identity: Email เป็น PK ฝั่งแอป
+
+- ในโปรเจกต์นี้ **email (หลัง normalize: lowercase + trim)** คือ **canonical key** สำหรับล็อกอิน, `findOrCreate*`, และการผูกบัญชีกับ OAuth/Portal
+- **อย่า** ใช้ `login_uid`, `username`, หรือรหัสจาก Portal เป็นตัวหลักในการตัดสินว่าเป็นคนเดียวกันแทน email โดยไม่จำเป็น — ใช้เป็นข้อมูลเสริม/อัปเดตได้
+- คีย์ `PRIMARY KEY` ในตาราง (เช่น `uid`, `id`) ยังเป็น surrogate ของ DB ได้; การค้นหา/สร้าง user ในโค้ดต้องอิง **email** เป็นหลัก
+- รายละเอียดและจุดอ้างอิงในโค้ด: อ่าน skill `.cursor/skills/login-email-primary-key/SKILL.md`

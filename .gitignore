@@ -146,8 +146,10 @@ _modules/*
 # Visual Studio Code
 .vscode/
 
-# Cursor IDE
-.cursor/
+# Cursor IDE (commit shared rules; ignore local skills/worktrees)
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
 
 /results/
 /phpunit*.xml

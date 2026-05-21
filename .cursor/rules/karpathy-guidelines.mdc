@@ -1,0 +1,32 @@
+---
+description: Karpathy behavioral guidelines — think first, simplicity, surgical edits, verifiable goals. Applies to every Agent chat in this project.
+alwaysApply: true
+---
+
+# Karpathy guidelines (always on)
+
+Behavioral guidelines from [Andrej Karpathy](https://x.com/karpathy/status/2015883857489522876). Bias toward caution over speed; use judgment on trivial tasks.
+
+**You do not need** the user to attach `/karpathy-guidelines` each turn — this rule is always injected.
+
+## 1. Think before coding
+
+- State assumptions; ask when uncertain.
+- Multiple interpretations → present them; do not pick silently.
+- Before blaming infra/config/routing: compare with a **working path in this codebase** (e.g. Edoc `index.php/...` on production, existing program-admin upload flow). Do not declare settings "correct" without that check.
+
+## 2. Simplicity first
+
+- Minimum code for the request; nothing speculative.
+- No duplicate config for the same concern (one canonical `app.baseURL`, not parallel env vars without proof).
+- If 200 lines could be 50, rewrite.
+
+## 3. Surgical changes
+
+- Touch only what the request requires; match existing style.
+- Remove orphans **your** edit created; do not delete unrelated pre-existing dead code unless asked.
+
+## 4. Goal-driven execution
+
+- Turn tasks into verifiable checks (tests, repro steps, URL that must return 200).
+- Multi-step work: brief plan with `→ verify:` per step.
