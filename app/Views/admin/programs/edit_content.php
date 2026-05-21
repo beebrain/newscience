@@ -800,6 +800,7 @@
                         'program'              => $program,
                         'downloads'            => $downloads ?? [],
                         'programDownloadModel' => $programDownloadModel,
+                        'downloadsContext'     => 'edit',
                     ]) ?>
                 </div>
             </div>
@@ -1269,12 +1270,6 @@
         } else if (!opts.skipUrl) {
             syncProgramEditUrl();
         }
-    }
-
-    function confirmDelete(url) {
-        swalConfirm({ title: 'คุณแน่ใจว่าต้องการลบไฟล์นี้?', confirmText: 'ลบ', cancelText: 'ยกเลิก' }).then(function(ok) {
-            if (ok) window.location.href = url;
-        });
     }
 
     function loadProgramNews() {

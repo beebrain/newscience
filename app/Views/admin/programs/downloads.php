@@ -31,6 +31,7 @@
             'program'              => $program,
             'downloads'            => $downloads ?? [],
             'programDownloadModel' => $programDownloadModel,
+            'downloadsContext'     => 'standalone',
         ]) ?>
     </div>
 </div>

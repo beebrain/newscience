@@ -223,6 +223,17 @@
         </div>
     </section>
 
+    <section id="documents" class="py-28 bg-[#f8fafc] w-full border-t border-outline-variant/30 hidden">
+        <div class="max-w-[1280px] mx-auto px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-primary mb-6">เอกสารดาวน์โหลด</h2>
+                <div class="section-rule mx-auto mb-6"></div>
+                <p class="text-on-surface-variant max-w-2xl mx-auto">เอกสารและไฟล์แนบจากหลักสูตร — อัปโหลดผ่านระบบจัดการหลักสูตร</p>
+            </div>
+            <div id="documents-list" class="max-w-3xl mx-auto space-y-4"></div>
+        </div>
+    </section>
+
     <section id="learning-supports" class="bg-white py-32 w-full border-t border-outline-variant/30">
         <div class="max-w-[1280px] mx-auto px-8">
             <div class="text-center mb-20">
@@ -363,6 +374,9 @@
         d.textContent = v == null ? '' : String(v);
         return d.innerHTML;
     }
+    function escAttr(v) {
+        return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
     function text(v) { return v == null ? '' : String(v).trim(); }
     function firstText() { for (var i = 0; i < arguments.length; i++) { var v = text(arguments[i]); if (v) return v; } return ''; }
     function nonEmpty(a) { return (Array.isArray(a) ? a : []).map(text).filter(Boolean); }
@@ -428,6 +442,7 @@
             ['#alumni',               'ข้อความจากศิษย์เก่า'],
             ['#careers',              'อาชีพที่สามารถประกอบได้'],
             ['#admission-requirements','คุณสมบัติของผู้เข้าเรียน'],
+            ['#documents',            'เอกสารดาวน์โหลด'],
             ['#learning-supports',    'สิ่งสนับสนุนการเรียนการสอน'],
             ['#contact',              'การติดต่อ']
         ];
@@ -551,6 +566,7 @@
         add('#curriculum', 'โครงสร้างหลักสูตรและรายวิชา');
         addGhost('#plo-elo', 'มาตรฐาน & PLO');
         addGhost('#about', 'ปรัชญาและวัตถุประสงค์');
+        addGhost('#documents', 'เอกสารดาวน์โหลด');
         addGhost('#learning-supports', 'สิ่งสนับสนุนการเรียนการสอน');
         addGhost('#contact', 'การติดต่อ');
 
@@ -915,6 +931,35 @@
 
     }
 
+    function renderDocuments(d) {
+        var docs = Array.isArray(d.documents) ? d.documents : [];
+        if (!docs.length) {
+            showEl('documents', false);
+            return;
+        }
+        showEl('documents', true);
+        var list = document.getElementById('documents-list');
+        if (!list) return;
+        var html = '';
+        docs.forEach(function (doc) {
+            var url = text(doc.url);
+            var meta = [text(doc.type), text(doc.size)].filter(Boolean).join(' • ');
+            html += '<article class="flex flex-col sm:flex-row sm:items-center gap-4 p-6 border border-outline-variant/40 rounded-sm bg-surface shadow-elegant">' +
+                '<div class="flex items-start gap-4 flex-1 min-w-0">' +
+                '<span class="shrink-0 w-12 h-12 rounded-sm bg-primary/10 text-primary flex items-center justify-center">' +
+                '<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 13H8"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 17H8"/></svg></span>' +
+                '<div class="min-w-0"><h3 class="font-bold text-primary text-lg leading-snug">' + esc(doc.title || 'เอกสาร') + '</h3>' +
+                (meta ? '<p class="text-sm text-on-surface-variant mt-1">' + esc(meta) + '</p>' : '') +
+                '</div></div>';
+            if (url) {
+                html += '<a href="' + escAttr(url) + '" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white text-sm font-semibold rounded-sm hover:bg-primary-hover transition-colors shrink-0" target="_blank" rel="noopener noreferrer">' +
+                    '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 10l5 5m0 0l5-5m-5 5V3"/></svg>ดาวน์โหลด</a>';
+            }
+            html += '</article>';
+        });
+        list.innerHTML = html;
+    }
+
     function renderAdmissionRequirements(d) {
         var bodyEl = document.getElementById('admission-req-body');
         var emptyEl = document.getElementById('admission-req-empty');
@@ -1103,6 +1148,7 @@
         renderAlumni(d);
         renderCareers(d);
         renderAdmissionRequirements(d);
+        renderDocuments(d);
         renderSupports(d);
         updateHeroAnchors();
         bindTabs();

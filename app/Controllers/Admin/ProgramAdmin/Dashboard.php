@@ -886,26 +886,56 @@ class Dashboard extends BaseController
      */
     public function deleteDownload($downloadId)
     {
-        $download = $this->programDownloadModel->find($downloadId);
-        if (!$download) {
+        $download = $this->programDownloadModel->find((int) $downloadId);
+        if (! $download) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(404)->setJSON([
+                    'success' => false,
+                    'message' => 'ไม่พบข้อมูลไฟล์',
+                ]);
+            }
+
             return redirect()->back()->with('error', 'ไม่พบข้อมูลไฟล์');
         }
 
-        $programId = $download['program_id'];
+        $programId = (int) $download['program_id'];
 
-        // Check authorization
-        if (!$this->canManageProgram($programId)) {
+        if (! $this->canManageProgram($programId)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(403)->setJSON([
+                    'success' => false,
+                    'message' => 'คุณไม่มีสิทธิ์จัดการดาวน์โหลด',
+                ]);
+            }
+
             return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์จัดการดาวน์โหลด');
         }
 
         helper('program_upload');
-        $fullPath = upload_resolve_full_path($download['file_path']);
-        if (file_exists($fullPath)) {
+        $fullPath = upload_resolve_full_path((string) $download['file_path']);
+        if ($fullPath !== '' && is_file($fullPath)) {
             @unlink($fullPath);
         }
 
-        // Delete from database
-        $this->programDownloadModel->deleteDownload((int) $downloadId);
+        $deleted = $this->programDownloadModel->deleteDownload((int) $downloadId);
+        if (! $deleted) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(500)->setJSON([
+                    'success' => false,
+                    'message' => 'ลบข้อมูลไม่สำเร็จ',
+                ]);
+            }
+
+            return $this->redirectToDownloadsTab($programId)->with('error', 'ลบข้อมูลไม่สำเร็จ');
+        }
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success'    => true,
+                'message'    => 'ลบไฟล์เรียบร้อยแล้ว',
+                'program_id' => $programId,
+            ]);
+        }
 
         return $this->redirectToDownloadsTab($programId)->with('success', 'ลบไฟล์เรียบร้อยแล้ว');
     }
@@ -930,6 +960,11 @@ class Dashboard extends BaseController
      */
     private function redirectToDownloadsTab(int $programId)
     {
+        $fromTab = (string) ($this->request->getPost('from_tab') ?? '');
+        if ($fromTab === 'edit') {
+            return redirect()->to(base_url('program-admin/edit/' . $programId . '?tab=downloads'));
+        }
+
         $referer = (string) ($this->request->getServer('HTTP_REFERER') ?? '');
         if ($referer !== '' && str_contains($referer, 'program-admin/edit/' . $programId)) {
             return redirect()->to(base_url('program-admin/edit/' . $programId . '?tab=downloads'));
