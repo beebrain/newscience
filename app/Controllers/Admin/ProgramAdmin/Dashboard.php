@@ -768,36 +768,27 @@ class Dashboard extends BaseController
             return redirect()->back()->with('error', 'ไม่พบหลักสูตร');
         }
 
-        // Check if user is chair of this program
-        $userId = session()->get('admin_id');
-        $isChair = $program['chair_personnel_id'] == $userId;
-        if (!$isChair) {
-            $coordinatorId = $this->personnelProgramModel->getCoordinatorIdByProgramId($programId);
-            $isChair = $coordinatorId === $userId;
-        }
-
-        if (!$isChair) {
-            return redirect()->back()->with('error', 'คุณมีสิทธิ์เพียงการดาวน์โหลด');
+        if (! $this->canManageProgram((int) $programId)) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์อัปโหลดเอกสารหลักสูตรนี้');
         }
 
         $validationRules = [
-            'title' => 'required|max_length[255]',
-            'file' => 'uploaded_file|ext_in[pdf,doc,docx,xlsx,ppt,pptx,zip,rar,jpg,jpeg,png,gif,mp4,mp3,txt]',
+            'title'     => 'required|max_length[255]',
+            'file'      => 'uploaded[file]|max_size[file,10240]|ext_in[file,pdf,doc,docx,xlsx,ppt,pptx,zip,rar,jpg,jpeg,png,gif,mp4,mp3,txt]',
             'file_type' => 'required|max_length[50]',
         ];
 
-        if (!$this->validate($validationRules)) {
+        if (! $this->validate($validationRules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
         $file = $this->request->getFile('file');
-
-        if (!$file->isValid() || $file->hasMoved()) {
+        if ($file === null || ! $file->isValid() || $file->hasMoved()) {
             return redirect()->back()->with('error', 'ไฟล์ไม่ถูกต้องหรือส่งมาไม่สมบูรณ์');
         }
 
         // Validate file type
-        $allowedTypes = ['pdf', 'doc', 'docx', 'xlsx', 'pptx', 'ppt', 'zip', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'mp3', 'txt'];
+        $allowedTypes = ['pdf', 'doc', 'docx', 'xlsx', 'pptx', 'ppt', 'zip', 'rar', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'mp3', 'txt'];
         $fileType = strtolower($file->getExtension() ?: pathinfo($file->getClientName(), PATHINFO_EXTENSION));
 
         if (!in_array($fileType, $allowedTypes)) {
@@ -810,6 +801,8 @@ class Dashboard extends BaseController
         $fileName = $prefix . program_unique_filename($file, 'doc');
         $relativePath = program_upload_relative_path($programId, 'downloads', $fileName);
 
+        $fileSize = $file->getSize();
+
         try {
             $file->move($uploadPath, $fileName);
 
@@ -819,7 +812,7 @@ class Dashboard extends BaseController
                 'title' => $this->request->getPost('title'),
                 'file_path' => $relativePath,
                 'file_type' => $fileType,
-                'file_size' => $file->getSize(),
+                'file_size' => $fileSize > 0 ? $fileSize : (is_file($uploadPath . $fileName) ? filesize($uploadPath . $fileName) : 0),
                 'sort_order' => 0,
             ];
 

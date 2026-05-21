@@ -1,0 +1,15 @@
+[
+  {
+    "source": "ai_extraction",
+    "type": "journal",
+    "title_th": "บทความจาก array root",
+    "journalname": "Journal of Array",
+    "year_en": "2024",
+    "authors_th": ["สมชาย ใจดี", "สมหญิง รักเรียน"],
+    "authors_en": ["Somchai Jaidee", "Somying Rakrian"],
+    "volume": "12",
+    "issue": "3",
+    "pages": "45-52",
+    "doi": "10.1000/array.root"
+  }
+]

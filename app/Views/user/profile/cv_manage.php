@@ -1021,7 +1021,7 @@ $account_user = $account_user ?? null;
                 <div class="flex flex-wrap justify-end gap-2 mt-6">
                     <button type="button" onclick="closeCvAiModal()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50">ปิด</button>
                     <button type="button" id="cv-ai-run" onclick="runCvAiPreview()" class="px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700">วิเคราะห์และกรอกฟอร์ม</button>
-                    <button type="button" id="cv-ai-apply" class="hidden px-4 py-2 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-900 text-sm font-semibold hover:bg-emerald-100" onclick="applyCvAiToEntryForm()">เปิดฟอร์มอีกครั้ง</button>
+                    <button type="button" id="cv-ai-apply" class="hidden px-4 py-2 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-900 text-sm font-semibold hover:bg-emerald-100" onclick="applyCvAiToEntryForm()">นำข้อมูลไปใช้อีกครั้ง</button>
                 </div>
             </div>
         </div>
@@ -1441,7 +1441,12 @@ $account_user = $account_user ?? null;
             if (window.__cvAiUploaded && window.__cvAiUploaded.stored_name) {
                 p.append('stored_name', window.__cvAiUploaded.stored_name);
             } else if (urlIn && urlIn.value.trim()) {
-                p.append('url', urlIn.value.trim());
+                var ext = urlIn.value.trim();
+                if (/localhost|127\.0\.0\.1|::1/i.test(ext)) {
+                    st.textContent = 'ไม่สามารถใช้ URL localhost ได้ — กรุณาอัปโหลดไฟล์แทน';
+                    return;
+                }
+                p.append('url', ext);
             } else if (tx && tx.value.trim()) {
                 p.append('text', tx.value.trim());
             } else {
@@ -1467,7 +1472,8 @@ $account_user = $account_user ?? null;
             }
             if (ap) ap.classList.remove('hidden');
             applyCvAiToEntryForm();
-            st.textContent = 'กรอกข้อมูลในฟอร์มรายการให้แล้ว — ตรวจสอบแล้วกดบันทึก';
+            closeCvAiModal();
+            st.textContent = 'AI กรอกข้อมูลลงในฟอร์มรายการให้แล้ว — ตรวจสอบหรือแก้ไขได้ทันที แล้วกดบันทึก';
         } finally {
             if (btn) btn.disabled = false;
         }
@@ -1512,10 +1518,10 @@ $account_user = $account_user ?? null;
         var startEl = document.getElementById('cv-m-start');
         var endEl = document.getElementById('cv-m-end');
         if (startEl) {
-            startEl.value = pub.year ? String(pub.year) + '-01-01' : '';
+            startEl.value = pub.start_date || (pub.year ? String(pub.year) + '-01-01' : '');
         }
         if (endEl) {
-            endEl.value = pub.year ? String(pub.year) + '-12-31' : '';
+            endEl.value = pub.end_date || (pub.year ? String(pub.year) + '-12-31' : '');
         }
         var descEl = document.getElementById('cv-m-desc');
         if (descEl) descEl.value = pub.description || '';
@@ -1527,13 +1533,16 @@ $account_user = $account_user ?? null;
         if (msrc) msrc.value = 'ai_assistant';
         var urlEl = document.getElementById('cv-m-url');
         if (urlEl) {
-            if (pub.url) {
-                urlEl.value = pub.url;
+            var extUrl = document.getElementById('cv-ai-url');
+            var userUrl = extUrl && extUrl.value.trim() ? extUrl.value.trim() : '';
+            if (userUrl) {
+                urlEl.value = userUrl;
             } else if (window.__cvAiUploaded && window.__cvAiUploaded.download_url) {
                 urlEl.value = window.__cvAiUploaded.download_url;
+            } else if (pub.url) {
+                urlEl.value = pub.url;
             } else {
-                var extUrl = document.getElementById('cv-ai-url');
-                if (extUrl && extUrl.value.trim()) urlEl.value = extUrl.value.trim();
+                urlEl.value = '';
             }
         }
         var pubSel = document.getElementById('cv-m-pubtype');

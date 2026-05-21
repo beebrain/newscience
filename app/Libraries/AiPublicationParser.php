@@ -9,11 +9,26 @@ use Config\AiCv;
 /**
  * แปลงข้อความหรือ URL ไฟล์ (หลังอัปโหลด) เป็น JSON ผลงาน CV
  *
- * **n8n (AI_CV_N8N_URL):** POST JSON `{"url":"https://…/cv-ai/public/file/…"}` แบบ Research Record extract-article-v2
+ * **n8n (AI_CV_N8N_URL):** POST JSON `{"url":"https://…/index.php/cv-ai/file/…"}` แบบ Research Record extract-article-v2
  * หรือ `{"text":"…"}` สำหรับข้อความ/BibTeX
  */
 final class AiPublicationParser
 {
+    /**
+     * แปลง JSON ดิบจาก n8n เป็น publication เดียว (ลำดับ parse ตาม Research Record normalizeAIResponsePayload)
+     *
+     * @return array{success:bool,publication?:array<string,mixed>,message?:string,error?:string}
+     */
+    public static function parseN8nResponse(array $decoded): array
+    {
+        $pub = self::extractPublicationArrayFromN8nResponse($decoded);
+        if ($pub === null) {
+            return ['success' => false, 'error' => 'NO_PUBLICATION', 'message' => 'ไม่พบอ็อบเจ็กต์ผลงานใน JSON (คาดหวัง title / title_th / output)'];
+        }
+
+        return self::normalizePublicationFromRrLikeArray($pub);
+    }
+
     /**
      * @return array{success:bool,publication?:array<string,mixed>,message?:string,error?:string}
      */
@@ -32,33 +47,53 @@ final class AiPublicationParser
 
         $org = trim((string) ($pub['organization'] ?? ''));
         if ($org === '') {
-            $org = trim((string) ($pub['journal'] ?? $pub['journalname'] ?? $pub['journal_name'] ?? $pub['publisher'] ?? $pub['venue'] ?? $pub['source'] ?? $pub['conference_name_th'] ?? $pub['conference_name_en'] ?? ''));
+            $org = trim((string) (
+                $pub['journal'] ?? $pub['journalname'] ?? $pub['journal_name'] ?? ''
+                ?: $pub['conference_name_th'] ?? $pub['conference_name_en'] ?? ''
+                ?: $pub['publisher_th'] ?? $pub['publisher_en'] ?? $pub['publisher'] ?? ''
+                ?: $pub['book_title_th'] ?? $pub['book_title_en'] ?? ''
+                ?: $pub['venue'] ?? ''
+            ));
+        }
+        if ($org === '') {
+            $sourceRaw = trim((string) ($pub['source'] ?? ''));
+            if ($sourceRaw !== '' && $sourceRaw !== 'ai_extraction') {
+                $org = $sourceRaw;
+            }
         }
 
         $yearRaw = $pub['publication_year'] ?? $pub['year'] ?? $pub['year_en'] ?? $pub['year_th'] ?? null;
         $y       = is_numeric($yearRaw) ? (int) $yearRaw : null;
+        if ($y !== null && $y >= 2400) {
+            $y -= 543;
+        }
         if ($y !== null && ($y < 1900 || $y > 2100)) {
             $y = null;
         }
 
+        $month = self::resolvePublicationMonth($pub);
+
         $doiNorm = PublicationIdentity::normalizeDoi((string) ($pub['doi'] ?? ''));
-        $ptype   = trim((string) ($pub['publication_type'] ?? $pub['type'] ?? ''));
-        if ($ptype !== '' && ! RrPublicationType::isValidPublicationTypeCode($ptype)) {
-            $ptype = '';
-        }
+        $ptype   = self::normalizeAiPublicationType((string) ($pub['publication_type'] ?? $pub['type'] ?? ''));
 
         $loc = trim((string) ($pub['location'] ?? $pub['place'] ?? $pub['city'] ?? ''));
         if ($loc === '') {
-            $loc = trim((string) ($pub['conference_place'] ?? $pub['conference_location'] ?? $pub['country'] ?? ''));
+            $loc = trim((string) (
+                $pub['conference_location_th'] ?? $pub['conference_location_en'] ?? ''
+                ?: $pub['conference_place'] ?? $pub['conference_location'] ?? $pub['country'] ?? ''
+            ));
         }
 
-        $url = trim((string) ($pub['url'] ?? $pub['link'] ?? $pub['article_url'] ?? $pub['source_url'] ?? ''));
+        $url = trim((string) ($pub['url'] ?? $pub['link'] ?? $pub['article_url'] ?? $pub['source_url'] ?? $pub['file_link'] ?? ''));
         if ($url === '' && $doiNorm !== '') {
             $url = 'https://doi.org/' . $doiNorm;
         }
 
-        $rrIdRaw = $pub['rr_publication_id'] ?? $pub['publication_id'] ?? $pub['id'] ?? null;
-        $rrId    = is_numeric($rrIdRaw) && (int) $rrIdRaw > 0 ? (int) $rrIdRaw : null;
+        $rrIdRaw = $pub['rr_publication_id'] ?? $pub['publication_id'] ?? null;
+        if ($rrIdRaw === null && isset($pub['id']) && is_numeric($pub['id']) && (int) $pub['id'] > 0) {
+            $rrIdRaw = $pub['id'];
+        }
+        $rrId = is_numeric($rrIdRaw) && (int) $rrIdRaw > 0 ? (int) $rrIdRaw : null;
 
         $desc = trim((string) ($pub['description'] ?? $pub['abstract'] ?? $pub['abstract_th'] ?? $pub['abstract_en'] ?? $pub['notes'] ?? $pub['extra_info'] ?? ''));
         $authors = self::formatAuthorsLine($pub);
@@ -67,17 +102,23 @@ final class AiPublicationParser
         } elseif ($authors !== '') {
             $desc = $authors;
         }
+        $desc = self::appendBibliographicDetails($pub, $desc);
+
+        [$startDate, $endDate] = self::resolvePublicationDates($y, $month);
 
         $out = [
-            'title'            => mb_substr($title, 0, 500),
-            'organization'     => mb_substr($org, 0, 500) ?: null,
-            'location'         => mb_substr($loc, 0, 500) ?: null,
-            'year'             => $y,
-            'doi'              => $doiNorm !== '' ? $doiNorm : null,
-            'url'              => $url !== '' ? mb_substr($url, 0, 2048) : null,
-            'publication_type' => $ptype !== '' ? $ptype : null,
-            'rr_publication_id'=> $rrId,
-            'description'      => mb_substr($desc, 0, 20000) ?: null,
+            'title'             => mb_substr($title, 0, 500),
+            'organization'      => mb_substr($org, 0, 500) ?: null,
+            'location'          => mb_substr($loc, 0, 500) ?: null,
+            'year'              => $y,
+            'month'             => $month,
+            'start_date'        => $startDate,
+            'end_date'          => $endDate,
+            'doi'               => $doiNorm !== '' ? $doiNorm : null,
+            'url'               => $url !== '' ? mb_substr($url, 0, 2048) : null,
+            'publication_type'  => $ptype !== '' ? $ptype : null,
+            'rr_publication_id' => $rrId,
+            'description'       => mb_substr($desc, 0, 20000) ?: null,
         ];
 
         return ['success' => true, 'publication' => $out];
@@ -88,6 +129,28 @@ final class AiPublicationParser
      */
     private static function formatAuthorsLine(array $pub): string
     {
+        $authorsTh = $pub['authors_th'] ?? null;
+        $authorsEn = $pub['authors_en'] ?? null;
+        if (is_array($authorsTh) || is_array($authorsEn)) {
+            $thList = is_array($authorsTh) ? $authorsTh : [];
+            $enList = is_array($authorsEn) ? $authorsEn : [];
+            $max    = max(count($thList), count($enList));
+            $parts  = [];
+            for ($i = 0; $i < $max; $i++) {
+                $th = isset($thList[$i]) ? trim((string) $thList[$i]) : '';
+                $en = isset($enList[$i]) ? trim((string) $enList[$i]) : '';
+                if ($th !== '' && $en !== '') {
+                    $parts[] = $th . ' (' . $en . ')';
+                } elseif ($th !== '') {
+                    $parts[] = $th;
+                } elseif ($en !== '') {
+                    $parts[] = $en;
+                }
+            }
+
+            return $parts !== [] ? 'ผู้แต่ง: ' . mb_substr(implode('; ', $parts), 0, 2000) : '';
+        }
+
         $authors = $pub['authors'] ?? $pub['author'] ?? null;
         if (is_string($authors)) {
             $authors = trim($authors);
@@ -102,7 +165,7 @@ final class AiPublicationParser
             if (is_string($a) && trim($a) !== '') {
                 $parts[] = trim($a);
             } elseif (is_array($a)) {
-                $name = trim((string) ($a['name'] ?? $a['full_name'] ?? $a['display_name'] ?? ''));
+                $name = trim((string) ($a['name'] ?? $a['full_name'] ?? $a['display_name'] ?? $a['thai_name'] ?? $a['english_name'] ?? ''));
                 if ($name !== '') {
                     $parts[] = $name;
                 }
@@ -110,6 +173,148 @@ final class AiPublicationParser
         }
 
         return $parts !== [] ? 'ผู้แต่ง: ' . mb_substr(implode('; ', $parts), 0, 2000) : '';
+    }
+
+    /**
+     * @param array<string, mixed> $pub
+     */
+    private static function appendBibliographicDetails(array $pub, string $desc): string
+    {
+        $lines = [];
+        $volume = trim((string) ($pub['volume'] ?? ''));
+        if ($volume !== '') {
+            $lines[] = 'เล่ม (Volume): ' . $volume;
+        }
+        $issue = trim((string) ($pub['issue'] ?? ''));
+        if ($issue !== '') {
+            $lines[] = 'ฉบับ (Issue): ' . $issue;
+        }
+        $pages = trim((string) ($pub['pages'] ?? ''));
+        if ($pages !== '') {
+            $lines[] = 'หน้า: ' . $pages;
+        }
+        $isbn = trim((string) ($pub['isbn'] ?? ''));
+        if ($isbn !== '') {
+            $lines[] = 'ISBN: ' . $isbn;
+        }
+        $kwLine = self::formatKeywordsLine($pub);
+        if ($kwLine !== '') {
+            $lines[] = $kwLine;
+        }
+        if ($lines === []) {
+            return $desc;
+        }
+        $block = implode("\n", $lines);
+
+        return $desc !== '' ? $desc . "\n\n" . $block : $block;
+    }
+
+    /**
+     * @param array<string, mixed> $pub
+     */
+    private static function formatKeywordsLine(array $pub): string
+    {
+        $kw = $pub['keywords'] ?? $pub['keywords_th'] ?? $pub['keywords_en'] ?? null;
+        if (is_string($kw)) {
+            $kw = trim($kw);
+
+            return $kw !== '' ? 'คำสำคัญ: ' . mb_substr($kw, 0, 1000) : '';
+        }
+        if (! is_array($kw) || $kw === []) {
+            return '';
+        }
+        $parts = [];
+        foreach ($kw as $item) {
+            if (is_string($item) && trim($item) !== '') {
+                $parts[] = trim($item);
+            }
+        }
+
+        return $parts !== [] ? 'คำสำคัญ: ' . mb_substr(implode(', ', $parts), 0, 1000) : '';
+    }
+
+    /**
+     * @param array<string, mixed> $pub
+     */
+    private static function resolvePublicationMonth(array $pub): ?int
+    {
+        $candidates = [
+            $pub['month_en'] ?? null,
+            $pub['month_th'] ?? null,
+            $pub['month'] ?? null,
+            $pub['publication_month'] ?? null,
+        ];
+        foreach ($candidates as $candidate) {
+            if ($candidate === null || $candidate === '') {
+                continue;
+            }
+            $raw = trim((string) $candidate);
+            if ($raw === '') {
+                continue;
+            }
+            if (preg_match('/^\d{1,2}$/', $raw)) {
+                $m = (int) $raw;
+                if ($m >= 1 && $m <= 12) {
+                    return $m;
+                }
+            }
+            $mapped = self::mapMonthNameToNumber(mb_strtolower($raw));
+            if ($mapped !== null) {
+                return $mapped;
+            }
+        }
+
+        return null;
+    }
+
+    private static function mapMonthNameToNumber(string $lower): ?int
+    {
+        static $map = [
+            'january' => 1, 'jan' => 1, 'february' => 2, 'feb' => 2, 'march' => 3, 'mar' => 3,
+            'april' => 4, 'apr' => 4, 'may' => 5, 'june' => 6, 'jun' => 6, 'july' => 7, 'jul' => 7,
+            'august' => 8, 'aug' => 8, 'september' => 9, 'sep' => 9, 'october' => 10, 'oct' => 10,
+            'november' => 11, 'nov' => 11, 'december' => 12, 'dec' => 12,
+            'มกราคม' => 1, 'กุมภาพันธ์' => 2, 'ก.พ.' => 2, 'มีนาคม' => 3, 'มี.ค.' => 3,
+            'เมษายน' => 4, 'เม.ย.' => 4, 'พฤษภาคม' => 5, 'พ.ค.' => 5, 'มิถุนายน' => 6, 'มิ.ย.' => 6,
+            'กรกฎาคม' => 7, 'ก.ค.' => 7, 'สิงหาคม' => 8, 'ส.ค.' => 8, 'กันยายน' => 9, 'ก.ย.' => 9,
+            'ตุลาคม' => 10, 'ต.ค.' => 10, 'พฤศจิกายน' => 11, 'พ.ย.' => 11, 'ธันวาคม' => 12, 'ธ.ค.' => 12,
+        ];
+
+        return $map[$lower] ?? null;
+    }
+
+    /**
+     * @return array{0:?string,1:?string}
+     */
+    private static function resolvePublicationDates(?int $year, ?int $month): array
+    {
+        if ($year === null) {
+            return [null, null];
+        }
+        if ($month !== null && $month >= 1 && $month <= 12) {
+            $start = sprintf('%04d-%02d-01', $year, $month);
+            $end   = date('Y-m-t', strtotime($start));
+
+            return [$start, $end];
+        }
+
+        return [sprintf('%04d-01-01', $year), sprintf('%04d-12-31', $year)];
+    }
+
+    private static function normalizeAiPublicationType(string $ptype): string
+    {
+        $ptype = strtolower(trim($ptype));
+        if ($ptype === '') {
+            return '';
+        }
+        if ($ptype === 'proceedings') {
+            $ptype = 'conference';
+        }
+        if (! RrPublicationType::isValidPublicationTypeCode($ptype)) {
+            return '';
+        }
+
+        return $ptype;
     }
 
     /**
@@ -123,6 +328,10 @@ final class AiPublicationParser
         }
         if (! filter_var($url, FILTER_VALIDATE_URL)) {
             return ['success' => false, 'error' => 'BAD_URL', 'message' => 'URL ไม่ถูกต้อง'];
+        }
+        $blocked = self::validateUrlReachableByN8n($url);
+        if ($blocked !== null) {
+            return ['success' => false, 'error' => 'BAD_URL', 'message' => $blocked];
         }
 
         $cfg = config(AiCv::class);
@@ -211,21 +420,24 @@ final class AiPublicationParser
             return ['success' => false, 'error' => 'BAD_RESPONSE', 'message' => 'รูปแบบ JSON จาก n8n ไม่ถูกต้อง'];
         }
 
-        $pub = self::extractPublicationArrayFromN8nResponse($decoded);
-        if ($pub === null) {
-            return ['success' => false, 'error' => 'NO_PUBLICATION', 'message' => 'ไม่พบอ็อบเจ็กต์ผลงานใน JSON (คาดหวัง title / title_th / output)'];
-        }
-
-        return self::normalizePublicationFromRrLikeArray($pub);
+        return self::parseN8nResponse($decoded);
     }
 
     /**
+     * ลำดับเดียวกับ Research Record publication-ai.js normalizeAIResponsePayload
+     *
      * @param array<string,mixed> $decoded
      *
      * @return array<string,mixed>|null
      */
     private static function extractPublicationArrayFromN8nResponse(array $decoded): ?array
     {
+        if ($decoded !== [] && array_keys($decoded) === range(0, count($decoded) - 1)) {
+            $first = $decoded[0];
+
+            return is_array($first) ? $first : null;
+        }
+
         if (isset($decoded['output'])) {
             $out = $decoded['output'];
             if (is_array($out) && $out !== [] && array_keys($out) === range(0, count($out) - 1)) {
@@ -236,11 +448,6 @@ final class AiPublicationParser
             }
         }
 
-        if ($decoded !== [] && array_keys($decoded) === range(0, count($decoded) - 1)) {
-            $first = $decoded[0];
-
-            return is_array($first) ? $first : null;
-        }
         if (isset($decoded['publications']) && is_array($decoded['publications'])) {
             $list = $decoded['publications'];
             if ($list !== [] && isset($list[0]) && is_array($list[0])) {
@@ -264,13 +471,23 @@ final class AiPublicationParser
                 if ($d !== [] && array_keys($d) === range(0, count($d) - 1) && isset($d[0]) && is_array($d[0])) {
                     return $d[0];
                 }
-                if (isset($d['title']) || isset($d['title_th']) || isset($d['title_en'])) {
+                if (isset($d['title']) || isset($d['title_th']) || isset($d['title_en']) || ($d['source'] ?? '') === 'ai_extraction') {
                     return $d;
                 }
             }
         }
         if (isset($decoded['title']) || isset($decoded['title_th']) || isset($decoded['title_en']) || ($decoded['source'] ?? '') === 'ai_extraction') {
             return $decoded;
+        }
+
+        return null;
+    }
+
+    private static function validateUrlReachableByN8n(string $url): ?string
+    {
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        if ($host === 'localhost' || $host === '127.0.0.1' || $host === '::1') {
+            return 'ไม่สามารถใช้ URL localhost ได้ — AI ไม่เข้าถึงได้จากภายนอก กรุณาอัปโหลดไฟล์แทน';
         }
 
         return null;

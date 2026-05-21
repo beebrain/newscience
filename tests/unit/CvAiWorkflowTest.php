@@ -23,10 +23,11 @@ final class CvAiWorkflowTest extends CIUnitTestCase
         $decoded = json_decode((string) file_get_contents($path), true);
         $this->assertIsArray($decoded);
 
-        $r = AiPublicationParser::normalizePublicationFromRrLikeArray($decoded['output']);
+        $r = AiPublicationParser::parseN8nResponse($decoded);
         $this->assertTrue($r['success']);
         $this->assertSame('ตัวอย่างบทความทดสอบ workflow', $r['publication']['title']);
         $this->assertSame('10.1000/workflow.test', $r['publication']['doi']);
         $this->assertSame('journal', $r['publication']['publication_type']);
+        $this->assertSame('2024-01-01', $r['publication']['start_date']);
     }
 }
