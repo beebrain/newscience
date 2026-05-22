@@ -88,8 +88,24 @@ class CertEventRecipientModel extends Model
             ->join('cert_events', 'cert_events.id = cert_event_recipients.event_id')
             ->join('certificates', 'certificates.id = cert_event_recipients.certificate_id', 'left')
             ->where('cert_event_recipients.student_id', $studentId)
+            ->orderBy('cert_events.event_date', 'DESC')
+            ->orderBy('certificates.issued_date', 'DESC')
             ->orderBy('cert_event_recipients.created_at', 'DESC')
             ->findAll();
+    }
+
+    /**
+     * มีผู้รับที่ผูก student_id ในกิจกรรมนี้แล้วหรือไม่
+     */
+    public function existsForEventStudent(int $eventId, int $studentId): bool
+    {
+        if ($eventId <= 0 || $studentId <= 0) {
+            return false;
+        }
+
+        return $this->where('event_id', $eventId)
+            ->where('student_id', $studentId)
+            ->countAllResults() > 0;
     }
 
     /**

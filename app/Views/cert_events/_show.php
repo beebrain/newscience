@@ -5,6 +5,7 @@
  * @var array<string,mixed>      $event       cert_event row with details
  * @var array<int,array<mixed>>  $recipients  recipient rows (with cert join)
  * @var array<int,array<mixed>>  $students    active students list (for add-recipient)
+ * @var array<int,string>        $programs    program dropdown for bulk add
  * @var string                   $cert_base   absolute base URL e.g. /newScience/admin/cert-events
  */
 $cb = rtrim((string) ($cert_base ?? ''), '/');
@@ -107,7 +108,16 @@ $evColor  = $statusBadge[$evStatus][1] ?? '#6c757d';
 .csh-alert { padding:0.7rem 1rem; border-radius:8px; font-size:13px; margin-bottom:1rem; }
 .csh-alert-success { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
 .csh-alert-error   { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
-.csh-alert-info    { background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; }
+.csh-bulk-students { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:0.85rem 1rem; margin-bottom:1rem; }
+.csh-bulk-students summary { cursor:pointer; font-weight:600; color:#1d4ed8; font-size:14px; }
+.csh-bulk-filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:0.5rem; margin:0.75rem 0; align-items:end; }
+.csh-bulk-filters label { font-size:12px; font-weight:600; color:#374151; display:block; margin-bottom:0.2rem; }
+.csh-bulk-filters input, .csh-bulk-filters select { width:100%; padding:0.4rem 0.55rem; font-size:13px; border:1px solid #d1d5db; border-radius:5px; box-sizing:border-box; }
+.csh-bulk-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:0.5rem; }
+.csh-bulk-table th, .csh-bulk-table td { padding:0.45rem 0.5rem; border-bottom:1px solid #f1f5f9; text-align:left; }
+.csh-bulk-table th { background:#f8fafc; font-size:12px; color:#475569; }
+.csh-bulk-empty { font-size:13px; color:#64748b; padding:0.75rem 0; }
+.csh-bulk-actions-row { display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-top:0.75rem; }
 </style>
 
 <div class="csh-wrap">
@@ -228,6 +238,53 @@ $evColor  = $statusBadge[$evStatus][1] ?? '#6c757d';
                 </div>
                 <div>
                     <button type="submit" class="csh-btn csh-btn-primary" style="width:100%;">เพิ่ม</button>
+                </div>
+            </form>
+        </details>
+
+        <details class="csh-bulk-students">
+            <summary>+ เพิ่มจากรายชื่อนักศึกษาในคณะ (หลายคน)</summary>
+            <div class="csh-bulk-filters">
+                <div>
+                    <label for="cshBulkProgram">หลักสูตร</label>
+                    <select id="cshBulkProgram">
+                        <option value="">— ทุกหลักสูตร —</option>
+                        <?php foreach (($programs ?? []) as $pid => $pname): ?>
+                            <option value="<?= (int) $pid ?>"><?= esc((string) $pname) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label for="cshBulkQuery">ค้นหา (ชื่อ / รหัส / อีเมล)</label>
+                    <input type="search" id="cshBulkQuery" placeholder="พิมพ์เพื่อค้นหา…">
+                </div>
+                <div>
+                    <button type="button" class="csh-btn csh-btn-secondary" id="cshBulkSearchBtn" style="width:100%;">ค้นหา</button>
+                </div>
+            </div>
+
+            <form method="post" action="<?= esc($cb) ?>/<?= $eid ?>/add-students-bulk" id="cshBulkForm">
+                <?= csrf_field() ?>
+                <div style="overflow-x:auto; max-height:320px; overflow-y:auto;">
+                    <table class="csh-bulk-table">
+                        <thead>
+                            <tr>
+                                <th style="width:36px;"><input type="checkbox" id="cshBulkSelectAll" title="เลือกทั้งหมด"></th>
+                                <th>ชื่อ</th>
+                                <th>รหัส</th>
+                                <th>อีเมล</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cshBulkResults">
+                            <tr><td colspan="4" class="csh-bulk-empty">กด "ค้นหา" เพื่อแสดงรายชื่อนักศึกษา</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="csh-bulk-actions-row">
+                    <button type="submit" class="csh-btn csh-btn-primary" id="cshBulkSubmit" disabled>
+                        เพิ่มที่เลือก (0 คน)
+                    </button>
+                    <span id="cshBulkHint" style="font-size:12px; color:#64748b;">เลือกนักศึกษาที่เข้าร่วมกิจกรรมนี้</span>
                 </div>
             </form>
         </details>
@@ -368,3 +425,85 @@ $evColor  = $statusBadge[$evStatus][1] ?? '#6c757d';
         <?php endif; ?>
     </div>
 </div>
+
+<?php if ($evStatus !== 'closed' && $evStatus !== 'issued'): ?>
+<script>
+(function () {
+    var searchUrl = <?= json_encode($cb . '/students-search', JSON_UNESCAPED_UNICODE) ?>;
+    var tbody = document.getElementById('cshBulkResults');
+    var selectAll = document.getElementById('cshBulkSelectAll');
+    var submitBtn = document.getElementById('cshBulkSubmit');
+    var programEl = document.getElementById('cshBulkProgram');
+    var queryEl = document.getElementById('cshBulkQuery');
+    var searchBtn = document.getElementById('cshBulkSearchBtn');
+    if (!tbody || !submitBtn) { return; }
+
+    function escapeHtml(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function updateSubmitLabel() {
+        var checked = tbody.querySelectorAll('input[name="student_ids[]"]:checked').length;
+        submitBtn.disabled = checked === 0;
+        submitBtn.textContent = 'เพิ่มที่เลือก (' + checked + ' คน)';
+    }
+
+    function renderRows(students) {
+        if (!students.length) {
+            tbody.innerHTML = '<tr><td colspan="4" class="csh-bulk-empty">ไม่พบนักศึกษา — ลองเปลี่ยนคำค้นหาหรือหลักสูตร</td></tr>';
+            if (selectAll) { selectAll.checked = false; selectAll.disabled = true; }
+            updateSubmitLabel();
+            return;
+        }
+        var html = '';
+        students.forEach(function (s) {
+            html += '<tr>'
+                + '<td><input type="checkbox" name="student_ids[]" value="' + escapeHtml(s.id) + '"></td>'
+                + '<td>' + escapeHtml(s.name) + '</td>'
+                + '<td>' + escapeHtml(s.login_uid || '—') + '</td>'
+                + '<td style="font-size:12px;">' + escapeHtml(s.email || '—') + '</td>'
+                + '</tr>';
+        });
+        tbody.innerHTML = html;
+        if (selectAll) {
+            selectAll.disabled = false;
+            selectAll.checked = false;
+        }
+        tbody.querySelectorAll('input[name="student_ids[]"]').forEach(function (cb) {
+            cb.addEventListener('change', updateSubmitLabel);
+        });
+        updateSubmitLabel();
+    }
+
+    function runSearch() {
+        var params = new URLSearchParams();
+        var q = (queryEl && queryEl.value) ? queryEl.value.trim() : '';
+        var pid = programEl ? programEl.value : '';
+        if (q) { params.set('q', q); }
+        if (pid) { params.set('program_id', pid); }
+        tbody.innerHTML = '<tr><td colspan="4" class="csh-bulk-empty">กำลังค้นหา…</td></tr>';
+        fetch(searchUrl + '?' + params.toString(), { headers: { 'Accept': 'application/json' } })
+            .then(function (r) { return r.json(); })
+            .then(function (data) { renderRows(data.students || []); })
+            .catch(function () {
+                tbody.innerHTML = '<tr><td colspan="4" class="csh-bulk-empty" style="color:#b91c1c;">ค้นหาไม่สำเร็จ</td></tr>';
+            });
+    }
+
+    if (searchBtn) { searchBtn.addEventListener('click', runSearch); }
+    if (queryEl) {
+        queryEl.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter') { ev.preventDefault(); runSearch(); }
+        });
+    }
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            tbody.querySelectorAll('input[name="student_ids[]"]').forEach(function (cb) {
+                cb.checked = selectAll.checked;
+            });
+            updateSubmitLabel();
+        });
+    }
+})();
+</script>
+<?php endif; ?>

@@ -37,7 +37,7 @@ class Certificate extends BaseController
         $certificates = $this->recipientModel->getByStudent($studentId);
 
         return view('student/certificates/index', [
-            'page_title'   => 'ใบรับรองของฉัน',
+            'page_title'   => 'ประวัติการเข้าอบรม / ใบประกาศ',
             'certificates' => $certificates,
         ]);
     }

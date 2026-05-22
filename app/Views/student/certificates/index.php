@@ -4,8 +4,8 @@
 <div class="portal-card">
     <div class="portal-card-header">
         <div>
-            <h2>ใบรับรองของฉัน</h2>
-            <p class="text-muted">ใบรับรองที่ได้รับจากการเข้าร่วมกิจกรรมหรืออบรม</p>
+            <h2>ประวัติการเข้าอบรม / ใบประกาศ</h2>
+            <p class="text-muted">รายการกิจกรรมและใบรับรองที่คุณได้รับจากคณะ/หลักสูตร</p>
         </div>
     </div>
 
@@ -17,7 +17,7 @@
     <?php endif; ?>
 
     <div class="alert alert-info">
-        <strong>หมายเหตุ:</strong> ใบรับรองจะถูกออกโดยผู้ดูแลระบบเมื่อคุณเข้าร่วมกิจกรรมหรืออบรมที่จัดโดยคณะ/หลักสูตร
+        <strong>หมายเหตุ:</strong> ใบประกาศจะถูกออกโดยผู้จัดกิจกรรมเมื่อคุณเข้าร่วมอบรมหรือกิจกรรมที่จัดโดยคณะ/หลักสูตร และจะแสดงที่นี่เป็นการรวบรวมประวัติการเข้าอบรมของคุณ
     </div>
 
     <?php if (empty($certificates)): ?>
@@ -26,8 +26,8 @@
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                 <line x1="3" y1="9" x2="21" y2="9" />
             </svg>
-            <h3>ยังไม่มีใบรับรอง</h3>
-            <p>คุณจะได้รับใบรับรองเมื่อเข้าร่วมกิจกรรมหรืออบรม</p>
+            <h3>ยังไม่มีประวัติการเข้าอบรม</h3>
+            <p>เมื่อคุณได้รับใบประกาศจากกิจกรรม รายการจะแสดงที่นี่</p>
         </div>
     <?php else: ?>
         <div class="table-responsive">
@@ -35,7 +35,8 @@
                 <thead>
                     <tr>
                         <th>กิจกรรม/หัวข้อ</th>
-                        <th>วันที่</th>
+                        <th>วันที่กิจกรรม</th>
+                        <th>วันที่ออกใบ</th>
                         <th>สถานะ</th>
                         <th>เลขที่ Certificate</th>
                         <th></th>
@@ -48,6 +49,13 @@
                                 <strong><?= esc($cert['event_title']) ?></strong>
                             </td>
                             <td><?= $cert['event_date'] ? date('d/m/Y', strtotime($cert['event_date'])) : '-' ?></td>
+                            <td>
+                                <?php if (! empty($cert['issued_date'])): ?>
+                                    <?= date('d/m/Y', strtotime((string) $cert['issued_date'])) ?>
+                                <?php else: ?>
+                                    -
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <?php if ($cert['status'] === 'issued'): ?>
                                     <span class="badge badge-success">ออกแล้ว</span>
@@ -68,6 +76,9 @@
                                 <a href="<?= base_url('student/certificates/' . $cert['id']) ?>" class="btn btn-secondary btn-sm">รายละเอียด</a>
                                 <?php if ($cert['status'] === 'issued' && $cert['pdf_path']): ?>
                                     <a href="<?= base_url('student/certificates/' . $cert['id'] . '/download') ?>" class="btn btn-primary btn-sm">ดาวน์โหลด</a>
+                                <?php endif; ?>
+                                <?php if ($cert['status'] === 'issued' && ! empty($cert['verification_token'])): ?>
+                                    <a href="<?= base_url('verify/' . $cert['verification_token']) ?>" class="btn btn-secondary btn-sm" target="_blank" rel="noopener">ตรวจสอบ</a>
                                 <?php endif; ?>
                             </td>
                         </tr>

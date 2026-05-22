@@ -130,8 +130,8 @@
                 <path d="M8 16h8" />
             </svg>
         </div>
-        <span class="portal-hub-card-title">E-Certificate (ใบเกียรติบัตร)</span>
-        <span class="portal-hub-card-desc">ดูใบเกียรติบัตรของตนเอง</span>
+        <span class="portal-hub-card-title">E-Certificate (ใบประกาศ)</span>
+        <span class="portal-hub-card-desc">ประวัติการเข้าอบรมและใบประกาศ</span>
     </a>
     <a href="<?= base_url('student/events') ?>" class="portal-hub-card portal-hub-card--events">
         <div class="portal-hub-card-icon">

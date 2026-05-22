@@ -31,9 +31,13 @@ class CertificateEmailService
         }
 
         $emailConfig = config(EmailConfig::class);
-        $from        = $emailConfig->fromEmail ?: (string) env('email.fromEmail', '');
+        $from        = trim($emailConfig->fromEmail);
         if ($from === '') {
-            return ['ok' => false, 'error' => 'ยังไม่ได้ตั้งค่า email.fromEmail / Config\\Email::$fromEmail'];
+            return ['ok' => false, 'error' => 'ยังไม่ได้ตั้ง mail.fromEmail หรือ email.fromEmail ใน .env'];
+        }
+
+        if (trim($emailConfig->SMTPHost) === '') {
+            return ['ok' => false, 'error' => 'ยังไม่ได้ตั้ง mail.smtpHost หรือ email.SMTPHost ใน .env'];
         }
 
         $eventTitle = (string) ($event['title'] ?? 'กิจกรรม');

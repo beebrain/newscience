@@ -126,6 +126,7 @@ $routes->get('/go-research-record', 'Admin\Auth::goResearchRecord', ['filter' =>
 $routes->group('dashboard/cert-events', ['filter' => 'certorganizer'], static function ($routes) {
     $routes->get('/', 'User\CertEvents::index');
     $routes->get('issued-report', 'User\CertEvents::issuedReport');
+    $routes->get('students-search', 'User\CertEvents::studentsSearch');
     $routes->get('create', 'User\CertEvents::create');
     $routes->post('store', 'User\CertEvents::store');
     $routes->get('(:num)/background-preview', 'User\CertEvents::backgroundPreview/$1');
@@ -142,6 +143,7 @@ $routes->group('dashboard/cert-events', ['filter' => 'certorganizer'], static fu
     $routes->post('(:num)/import', 'User\CertEvents::processImport/$1');
     $routes->get('(:num)/export', 'User\CertEvents::exportRecipients/$1');
     $routes->get('(:num)/issue', 'User\CertEvents::issueCertificates/$1');
+    $routes->post('(:num)/add-students-bulk', 'User\CertEvents::addStudentsBulk/$1');
 });
 
 // Teaching evaluation (ประเมินผลการสอน) — lecture submit + admin ต้อง login; แบบฟอร์มผู้ประเมินเข้าจาก link
@@ -326,6 +328,7 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
 
     // Certificate Events (กิจกรรม/อบรมที่จะออก Certificate)
     $routes->get('cert-events/issued-report', 'Admin\CertEvents::issuedReport');
+    $routes->get('cert-events/students-search', 'Admin\CertEvents::studentsSearch');
     $routes->get('cert-events', 'Admin\CertEvents::index');
     $routes->get('cert-events/create', 'Admin\CertEvents::create');
     $routes->post('cert-events/store', 'Admin\CertEvents::store');
@@ -343,6 +346,7 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->post('cert-events/(:num)/import', 'Admin\CertEvents::processImport/$1');
     $routes->get('cert-events/(:num)/export', 'Admin\CertEvents::exportRecipients/$1');
     $routes->get('cert-events/(:num)/issue', 'Admin\CertEvents::issueCertificates/$1');
+    $routes->post('cert-events/(:num)/add-students-bulk', 'Admin\CertEvents::addStudentsBulk/$1');
 
     // Events (กิจกรรมที่จะมาถึง)
     $routes->get('events', 'Admin\Events::index');
@@ -616,4 +620,21 @@ $routes->group('admin/user-faculty', ['filter' => ['adminauth', 'adminsystemacce
     $routes->post('update-faculty', 'Admin\UserFacultyController::updateFaculty');
     $routes->post('bulk-update', 'Admin\UserFacultyController::bulkUpdate');
     $routes->get('get-user/(:num)', 'Admin\UserFacultyController::getUser/$1');
+});
+
+// ===== ระบบรับสมัครออนไลน์ งานสัปดาห์วิทยาศาสตร์ 2569 =====
+$routes->group('scienceweek', static function ($routes) {
+    // Public
+    $routes->get('/', 'ScienceWeek\Register::index');
+    $routes->get('register/(:segment)', 'ScienceWeek\Register::form/$1');
+    $routes->post('register/(:segment)', 'ScienceWeek\Register::save/$1', ['filter' => 'csrf']);
+    $routes->get('success/(:num)', 'ScienceWeek\Register::success/$1');
+    $routes->get('verify', 'ScienceWeek\Verify::index');
+
+    // Teacher-only (reuse newScience adminauth)
+    $routes->group('manage', ['filter' => 'adminauth'], static function ($routes) {
+        $routes->get('/', 'ScienceWeek\Manage::index');
+        $routes->get('(:num)', 'ScienceWeek\Manage::detail/$1');
+        $routes->post('(:num)/delete', 'ScienceWeek\Manage::delete/$1', ['filter' => 'csrf']);
+    });
 });

@@ -5,9 +5,11 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Libraries\CertOrganizerAccess;
 use App\Libraries\CertPdfGenerator;
+use App\Libraries\CertRecipientStudentResolver;
 use App\Models\CertEventModel;
 use App\Models\CertEventRecipientModel;
 use App\Models\CertificateModel;
+use App\Models\ProgramModel;
 use App\Models\StudentUserModel;
 use App\Models\UserModel;
 use App\Services\CertificateEmailService;
@@ -24,6 +26,7 @@ class CertEvents extends BaseController
     protected StudentUserModel $studentModel;
     protected UserModel $userModel;
     protected CertificateConfig $certConfig;
+    protected CertRecipientStudentResolver $studentResolver;
 
     /** @var string URL segment หลัง base_url เช่น admin/cert-events */
     protected string $routePrefix = 'admin/cert-events';
@@ -41,7 +44,8 @@ class CertEvents extends BaseController
         $this->certificateModel = new CertificateModel();
         $this->studentModel = new StudentUserModel();
         $this->userModel = new UserModel();
-        $this->certConfig = config(CertificateConfig::class);
+        $this->certConfig      = config(CertificateConfig::class);
+        $this->studentResolver = new CertRecipientStudentResolver();
 
         if (! CertOrganizerAccess::currentMayOrganize()) {
             $path = trim((string) uri_string(), '/');
@@ -253,13 +257,15 @@ class CertEvents extends BaseController
         }
 
         $recipients = $this->recipientModel->getByEvent($id);
-        $students = $this->studentModel->where('status', 'active')->findAll();
+        $students   = $this->studentModel->where('status', 'active')->findAll();
+        $programs   = (new ProgramModel())->getForDropdown();
 
         return $this->renderCert('show', [
             'page_title' => $event['title'],
             'event'      => $event,
             'recipients' => $recipients,
             'students'   => $students,
+            'programs'   => $programs,
         ]);
     }
 
@@ -432,14 +438,20 @@ class CertEvents extends BaseController
         }
 
         $studentId = $this->request->getPost('student_id');
-        $student = null;
+        $student   = null;
         if ($studentId) {
             $student = $this->studentModel->find($studentId);
         }
 
+        $resolvedStudentId = $this->studentResolver->resolve(
+            $studentId ? (int) $studentId : null,
+            (string) $this->request->getPost('recipient_email'),
+            (string) ($this->request->getPost('recipient_id_no') ?: ($student['login_uid'] ?? ''))
+        );
+
         $payload = [
             'event_id'        => $eventId,
-            'student_id'      => $studentId ?: null,
+            'student_id'      => $resolvedStudentId,
             'recipient_name'  => $this->request->getPost('recipient_name'),
             'recipient_email' => CertOrganizerAccess::normalizeEmail((string) $this->request->getPost('recipient_email'))
                 ?: CertOrganizerAccess::normalizeEmail((string) ($student['email'] ?? '')),
@@ -503,6 +515,9 @@ class CertEvents extends BaseController
         if (empty($recipients)) {
             return redirect()->back()->with('error', 'ไม่มีผู้รับที่รอการออก Certificate');
         }
+
+        $this->backfillStudentIdsForRecipients($recipients);
+        $recipients = $this->recipientModel->getPendingByEvent($eventId);
 
         foreach ($recipients as $recipient) {
             $em = CertOrganizerAccess::normalizeEmail((string) ($recipient['recipient_email'] ?? ''));
@@ -834,8 +849,6 @@ class CertEvents extends BaseController
             }
 
             // ค้นหา student จากรหัสนักศึกษาหรืออีเมล
-            $studentId = null;
-            $student   = null;
             $idNo = $data['student_id'] ?? $data['รหัสนักศึกษา'] ?? null;
             $emailRaw = $data['email'] ?? $data['อีเมล'] ?? null;
             $email    = is_string($emailRaw) ? CertOrganizerAccess::normalizeEmail($emailRaw) : null;
@@ -843,16 +856,7 @@ class CertEvents extends BaseController
                 $email = null;
             }
 
-            if ($idNo) {
-                $student = (new StudentUserModel())->where('login_uid', $idNo)->first();
-            } elseif ($email) {
-                $student = (new StudentUserModel())->where('email', $email)->first();
-            } else {
-                $student = null;
-            }
-            if ($student) {
-                $studentId = $student['id'];
-            }
+            $studentId = $this->studentResolver->resolve(null, $email ?? '', $idNo);
 
             $payload = [
                 'event_id'        => $eventId,
@@ -919,6 +923,142 @@ class CertEvents extends BaseController
 
         fclose($output);
         exit;
+    }
+
+    /**
+     * ค้นหานักศึกษาในคณะ (JSON) สำหรับ bulk picker
+     */
+    public function studentsSearch()
+    {
+        if (! CertOrganizerAccess::currentMayOrganize()) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Forbidden']);
+        }
+
+        $q = trim((string) $this->request->getGet('q'));
+        $programGet = $this->request->getGet('program_id');
+        $programId  = ($programGet !== null && $programGet !== '') ? (int) $programGet : null;
+        if ($programId !== null && $programId <= 0) {
+            $programId = null;
+        }
+
+        $builder = $this->studentModel->where('status', 'active');
+        if ($programId) {
+            $builder->where('program_id', $programId);
+        }
+        if ($q !== '') {
+            $builder->groupStart()
+                ->like('email', $q)
+                ->orLike('login_uid', $q)
+                ->orLike('tf_name', $q)
+                ->orLike('tl_name', $q)
+                ->orLike('gf_name', $q)
+                ->orLike('gl_name', $q)
+                ->groupEnd();
+        }
+
+        $rows = $builder->orderBy('tf_name', 'ASC')->limit(100)->findAll();
+        $students = [];
+        foreach ($rows as $student) {
+            $students[] = [
+                'id'        => (int) $student['id'],
+                'name'      => $this->studentModel->getFullName($student),
+                'email'     => (string) ($student['email'] ?? ''),
+                'login_uid' => (string) ($student['login_uid'] ?? ''),
+                'program_id'=> (int) ($student['program_id'] ?? 0),
+            ];
+        }
+
+        return $this->response->setJSON(['students' => $students]);
+    }
+
+    /**
+     * เพิ่มนักศึกษาหลายคนจากรายชื่อในคณะ
+     */
+    public function addStudentsBulk(int $eventId)
+    {
+        $event = $this->eventModel->find($eventId);
+        if (! $event) {
+            return redirect()->back()->with('error', 'ไม่พบกิจกรรม');
+        }
+        if (! CertOrganizerAccess::mayAccessEvent($event)) {
+            return redirect()->back()->with('error', 'ไม่มีสิทธิ์เข้าถึงกิจกรรมนี้');
+        }
+        if (in_array($event['status'] ?? '', ['closed', 'issued'], true)) {
+            return redirect()->back()->with('error', 'ไม่สามารถเพิ่มผู้รับเมื่อกิจกรรมปิดหรือออกใบครบแล้ว');
+        }
+
+        $rawIds = $this->request->getPost('student_ids');
+        if (! is_array($rawIds)) {
+            $rawIds = [];
+        }
+
+        $added   = 0;
+        $skipped = 0;
+
+        foreach ($rawIds as $rawId) {
+            $studentId = (int) $rawId;
+            if ($studentId <= 0) {
+                $skipped++;
+                continue;
+            }
+            if ($this->recipientModel->existsForEventStudent($eventId, $studentId)) {
+                $skipped++;
+                continue;
+            }
+
+            $student = $this->studentModel->find($studentId);
+            if (! $student) {
+                $skipped++;
+                continue;
+            }
+
+            $payload = $this->studentResolver->buildRecipientPayloadFromStudent($eventId, $student);
+            if ($payload === null) {
+                $skipped++;
+                continue;
+            }
+
+            if (($payload['recipient_email'] ?? '') === '') {
+                $skipped++;
+                continue;
+            }
+
+            $this->recipientModel->insert($payload);
+            $added++;
+        }
+
+        if ($added === 0 && $skipped === 0) {
+            return redirect()->to($this->certUrl((string) $eventId))
+                ->with('error', 'กรุณาเลือกนักศึกษาอย่างน้อย 1 คน');
+        }
+
+        $message = "เพิ่มนักศึกษา {$added} คน";
+        if ($skipped > 0) {
+            $message .= " (ข้าม {$skipped} คน — ซ้ำ/ไม่ active/ไม่มีอีเมล)";
+        }
+
+        return redirect()->to($this->certUrl((string) $eventId))
+            ->with('success', $message);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $recipients
+     */
+    protected function backfillStudentIdsForRecipients(array $recipients): void
+    {
+        foreach ($recipients as $recipient) {
+            if (! empty($recipient['student_id'])) {
+                continue;
+            }
+            $resolved = $this->studentResolver->resolve(
+                null,
+                (string) ($recipient['recipient_email'] ?? ''),
+                (string) ($recipient['recipient_id_no'] ?? '')
+            );
+            if ($resolved) {
+                $this->recipientModel->update((int) $recipient['id'], ['student_id' => $resolved]);
+            }
+        }
     }
 
     /**
