@@ -6,13 +6,13 @@
     ต้องมี: SSH user, host, path บน server (แก้ในตัวแปรด้านล่าง หรือส่งเป็น parameter)
 .EXAMPLE
     .\upload-secure-scripts-to-server.ps1
-    .\upload-secure-scripts-to-server.ps1 -ServerUser Administrator -RemotePath "C:\inetpub\sci_root\scripts"
+    .\upload-secure-scripts-to-server.ps1 -ServerUser Administrator -RemotePath "C:\inetpub\newscience\scripts"
 #>
 
 param(
     [string]$ServerHost = "49.231.30.18",
     [string]$ServerUser = "Administrator",
-    [string]$RemotePath = "C:\inetpub\sci_root\scripts"
+    [string]$RemotePath = "C:\inetpub\newscience\scripts"
 )
 
 $ScriptDir = $PSScriptRoot

@@ -1,0 +1,6 @@
+# newScience production deploy path
+
+- **IIS site `sci` (sci.uru.ac.th)** uses `C:\inetpub\newscience\public` — this is the only app deploy root.
+- **`C:\inetpub\sci_root` is not used** for the live site (legacy/FTP-SCI only). Do not `git pull`, sync, or deploy NS code there unless the user explicitly asks.
+- **Tailscale** server: `win-kc49a7sh1gd` → `100.74.66.65`, SSH `Administrator@100.74.66.65`.
+- After deploy: `cd C:\inetpub\newscience && git pull origin master && php spark cache:clear`

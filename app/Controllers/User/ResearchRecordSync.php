@@ -5,6 +5,7 @@ namespace App\Controllers\User;
 use App\Controllers\BaseController;
 use App\Libraries\CvBundleCanonical;
 use App\Libraries\CvProfile;
+use App\Libraries\PublicationSyncEngine;
 use App\Libraries\ResearchRecordCvPull;
 use App\Libraries\ResearchRecordCvSyncClient;
 use App\Libraries\ResearchRecordCvSyncMerge;
@@ -269,7 +270,17 @@ class ResearchRecordSync extends BaseController
         $bundle = CvBundleCanonical::buildFromNewScience($personnelId, $email);
         $rr     = ResearchRecordCvSyncClient::pushCvBundle($email, $bundle);
         if (!$rr['success']) {
-            return $this->response->setJSON(['success' => false, 'message' => $rr['message'] ?? 'ส่งไป กบศ ไม่สำเร็จ']);
+            return $this->response->setJSON(['success' => false, 'message' => $rr['message'] ?? 'ส่งประวัติไป กบศ ไม่สำเร็จ']);
+        }
+
+        $pubResult = PublicationSyncEngine::pushToResearchRecord($personnelId, $email, 'push_all_ui');
+        if (! ($pubResult['success'] ?? false)) {
+            return $this->response->setJSON([
+                'success'            => false,
+                'message'            => 'ส่งประวัติ (CV) ไป กบศ แล้ว แต่ส่งผลงานตีพิมพ์ไม่สำเร็จ: ' . ($pubResult['message'] ?? ''),
+                'cv_push_ok'         => true,
+                'publications_stats' => $pubResult['ns_to_rr'] ?? null,
+            ]);
         }
 
         $log = new CvSyncLogModel();
@@ -280,14 +291,35 @@ class ResearchRecordSync extends BaseController
                 'direction'       => 'push_all_ns_to_rr',
                 'ns_content_hash' => $bundle['content_hash'] ?? null,
                 'rr_content_hash' => $rrHash,
-                'decisions_json'  => null,
+                'decisions_json'  => json_encode([
+                    'publications' => $pubResult['ns_to_rr'] ?? [],
+                    'pub_skipped'  => ! empty($pubResult['skipped']),
+                ], JSON_UNESCAPED_UNICODE),
                 'created_at'      => date('Y-m-d H:i:s'),
             ]);
         }
 
+        $msg = 'ส่งประวัติ (CV) และผลงานตีพิมพ์ไป กบศ แล้ว';
+        if (! empty($pubResult['skipped'])) {
+            $msg = 'ส่งประวัติ (CV) ไป กบศ แล้ว — ยังไม่ส่งผลงาน (ระบบ catalog ยังไม่พร้อม รัน migrate)';
+        } else {
+            $stats = $pubResult['ns_to_rr'] ?? [];
+            $total = (int) ($stats['inserted'] ?? 0) + (int) ($stats['updated'] ?? 0) + (int) ($stats['skipped_unchanged'] ?? 0);
+            if ($total > 0) {
+                $msg .= sprintf(
+                    ' (ผลงาน: %d รายการ — เพิ่ม %d อัปเดต %d ข้าม %d)',
+                    $total,
+                    (int) ($stats['inserted'] ?? 0),
+                    (int) ($stats['updated'] ?? 0),
+                    (int) ($stats['skipped_unchanged'] ?? 0)
+                );
+            }
+        }
+
         return $this->response->setJSON([
-            'success' => true,
-            'message' => 'ส่ง CV จาก ฐานข้อมูลคณะ ไปแทนที่ใน กบศ แล้ว',
+            'success'            => true,
+            'message'            => $msg,
+            'publications_stats' => $pubResult['ns_to_rr'] ?? [],
         ]);
     }
 }

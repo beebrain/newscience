@@ -12,7 +12,7 @@ $email = $sync_email ?? '';
                 <div class="w-1 h-6 bg-emerald-600 rounded-full"></div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-800 text-balance">ซิงค์ CV จาก <span translate="no">กบศ</span></h1>
             </div>
-            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — <strong class="text-gray-700">แนวหลัก:</strong> ฐานข้อมูลคณะเป็นหลัก — ดึงจาก กบศ มาเสริมรายการที่ยังไม่มี และนำเข้าผลงานตีพิมพ์ ปุ่มเปรียบเทียบใช้เมื่อต้องการเลือกทีละแถว การส่งกลับไป กบศ เป็นทางเลือกเสริม</p>
+            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — <strong class="text-gray-700">แนวหลัก:</strong> ดึงจาก กบศ มาเสริมฐานข้อมูลคณะ — ปุ่ม <strong>ส่งประวัติและผลงานไป กบศ</strong> จะส่ง CV ทั้งชุดและผลงานตีพิมพ์จาก catalog ในครั้งเดียว</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="<?= base_url('dashboard/profile/cv') ?>"
@@ -45,14 +45,11 @@ $email = $sync_email ?? '';
             <button type="button" id="rrsync-btn-compare"
                     class="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 transition-colors"
                     <?= $apiOk ? '' : 'disabled' ?>>เปรียบเทียบแล้วเลือกรายแถว</button>
-        </div>
-
-        <div class="rounded-lg border border-dashed border-gray-200 bg-gray-50/60 px-4 py-3">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">ทางเลือกเสริม — ส่งจาก ฐานข้อมูลคณะ ไป <span translate="no">กบศ</span></p>
             <button type="button" id="rrsync-btn-push"
-                    class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-white disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 transition-colors"
-                    <?= $apiOk ? '' : 'disabled' ?>>ส่งทั้งหมดไป <span translate="no">กบศ</span></button>
+                    class="px-4 py-2.5 rounded-lg bg-slate-800 text-white text-sm font-semibold hover:bg-slate-900 disabled:opacity-50 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 transition-colors"
+                    <?= $apiOk ? '' : 'disabled' ?>>ส่งประวัติและผลงานไป <span translate="no">กบศ</span></button>
         </div>
+        <p class="text-xs text-gray-500">การส่งไป กบศ: แทนที่ CV ทั้งหมดบน กบศ ด้วยข้อมูลจาก ฐานข้อมูลคณะ และส่งผลงานตีพิมพ์จาก catalog (upsert — ไม่ลบผลงานที่กรอกใน กบศ โดยตรง)</p>
 
         <p id="rrsync-status" class="text-sm text-gray-600" role="status" aria-live="polite"></p>
 
@@ -210,9 +207,9 @@ $email = $sync_email ?? '';
     });
 
     document.getElementById('rrsync-btn-push') && document.getElementById('rrsync-btn-push').addEventListener('click', async function () {
-        if (!confirm('แทนที่ CV ทั้งหมดบน กบศ ด้วยข้อมูลจาก ฐานข้อมูลคณะ?')) return;
+        if (!confirm('ส่งประวัติ (CV) และผลงานตีพิมพ์จาก ฐานข้อมูลคณะ ไป กบศ?\n\nCV บน กบศ จะถูกแทนที่ทั้งชุด — ผลงานจะถูก upsert (ไม่ลบรายการที่กรอกใน กบศ โดยตรง)')) return;
         var btn = this;
-        setStatus('กำลังส่ง…');
+        setStatus('กำลังส่งประวัติและผลงาน…');
         btn.disabled = true;
         try {
             var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/push-all') ?>', {});

@@ -1,6 +1,7 @@
 <?php
 
 use App\Libraries\AiPublicationParser;
+use App\Libraries\PublicationResearchFields;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
@@ -87,6 +88,34 @@ final class AiPublicationParserTest extends CIUnitTestCase
         $this->assertStringNotContainsString('ผู้แต่ง:', $desc);
         $this->assertStringContainsString('เล่ม (Volume): 10', $desc);
         $this->assertStringContainsString('คำสำคัญ:', $desc);
+    }
+
+    public function testDedupeContributorsByEmailAndName(): void
+    {
+        $rows = PublicationResearchFields::dedupeContributors([
+            ['name' => 'พิศิษฐ นาคใจ', 'email' => 'pisit.nak@live.uru.ac.th', 'corresponding' => 0, 'order' => 1],
+            ['name' => 'Pisit Nakjai', 'email' => 'pisit.nak@live.uru.ac.th', 'corresponding' => 0, 'order' => 2],
+            ['name' => 'Tatpong Katanyukul', 'email' => null, 'corresponding' => 0, 'order' => 3],
+            ['name' => 'Tatpong Katanyukul', 'email' => null, 'corresponding' => 0, 'order' => 4],
+        ]);
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('pisit.nak@live.uru.ac.th', $rows[0]['email']);
+        $this->assertSame('Tatpong Katanyukul', $rows[1]['name']);
+    }
+
+    public function testNormalizeSkipsStringAuthorsWhenThEnPresent(): void
+    {
+        $r = AiPublicationParser::normalizePublicationFromRrLikeArray([
+            'title'      => 'Dup test',
+            'authors_th' => ['สมชาย ใจดี'],
+            'authors_en' => ['Somchai Jaidee'],
+            'authors'    => ['สมชาย ใจดี', 'Somchai Jaidee'],
+        ]);
+
+        $this->assertTrue($r['success']);
+        $this->assertCount(1, $r['publication']['authors']);
+        $this->assertSame('สมชาย ใจดี (Somchai Jaidee)', $r['publication']['authors'][0]['name']);
     }
 
     public function testNormalizeStructuredAuthorsWithEmail(): void

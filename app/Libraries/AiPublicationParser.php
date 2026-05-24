@@ -157,17 +157,23 @@ final class AiPublicationParser
             }
         }
 
-        $authors = $pub['authors'] ?? $pub['author'] ?? null;
+        $hasThEnRows = $rows !== [];
+        $authors     = $pub['authors'] ?? $pub['author'] ?? null;
         if (is_string($authors)) {
-            foreach (preg_split('/[;,]\s*/u', $authors) ?: [] as $name) {
-                $name = trim($name);
-                if ($name !== '') {
-                    $rows[] = ['name' => $name, 'order' => count($rows) + 1];
+            if (! $hasThEnRows) {
+                foreach (preg_split('/[;,]\s*/u', $authors) ?: [] as $name) {
+                    $name = trim($name);
+                    if ($name !== '') {
+                        $rows[] = ['name' => $name, 'order' => count($rows) + 1];
+                    }
                 }
             }
         } elseif (is_array($authors)) {
             foreach ($authors as $author) {
                 if (is_string($author)) {
+                    if ($hasThEnRows) {
+                        continue;
+                    }
                     $name = trim($author);
                     if ($name !== '') {
                         $rows[] = ['name' => $name, 'order' => count($rows) + 1];

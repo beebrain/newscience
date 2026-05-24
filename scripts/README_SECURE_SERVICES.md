@@ -55,13 +55,13 @@ cd C:\xampp\htdocs\newScience\scripts
 .\upload-secure-scripts-to-server.ps1
 ```
 
-จะใช้ค่าเริ่มต้น: Host `49.231.30.18`, User `Administrator`, Remote path `C:\inetpub\sci_root\scripts`  
+จะใช้ค่าเริ่มต้น: Host `49.231.30.18`, User `Administrator`, Remote path `C:\inetpub\newscience\scripts` (production ใช้ `newscience` ไม่ใช่ `sci_root`)  
 เมื่อรันจะถามรหัสผ่าน SSH ของบัญชีบน server
 
 ถ้า path บน server ไม่ตรง ให้ส่ง parameter:
 
 ```powershell
-.\upload-secure-scripts-to-server.ps1 -ServerUser Administrator -RemotePath "C:\inetpub\sci_root\scripts"
+.\upload-secure-scripts-to-server.ps1 -ServerUser Administrator -RemotePath "C:\inetpub\newscience\scripts"
 # หรือ Linux: -RemotePath "/home/xxx/newscience/scripts"
 ```
 

@@ -1267,11 +1267,58 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         return [{ name: CV_OWNER_NAME || '', email: CV_OWNER_EMAIL || '', affiliation: 'มหาวิทยาลัยราชภัฏอุตรดิตถ์', corresponding: 1, order: 1 }];
     }
 
+    function mergePublicationAuthor(a, b) {
+        var pick = function (x, y) {
+            x = (x || '').trim();
+            y = (y || '').trim();
+            if (!x) return y;
+            if (!y) return x;
+            return x.length >= y.length ? x : y;
+        };
+        return {
+            name: pick(a.name, b.name),
+            email: (a.email || b.email || '').trim().toLowerCase(),
+            affiliation: pick(a.affiliation, b.affiliation) || 'มหาวิทยาลัยราชภัฏอุตรดิตถ์',
+            corresponding: (a.corresponding || b.corresponding) ? 1 : 0,
+            order: a.order || b.order || 0
+        };
+    }
+
+    function dedupePublicationAuthors(authors) {
+        if (!Array.isArray(authors)) return [];
+        var byEmail = {};
+        var byName = {};
+        authors.forEach(function (a) {
+            if (!a) return;
+            var name = (a.name || '').trim();
+            var email = (a.email || '').trim().toLowerCase();
+            if (!name && !email) return;
+            var entry = {
+                name: name,
+                email: email,
+                affiliation: (a.affiliation || '').trim() || 'มหาวิทยาลัยราชภัฏอุตรดิตถ์',
+                corresponding: a.corresponding ? 1 : 0,
+                order: 0
+            };
+            if (email) {
+                byEmail[email] = byEmail[email] ? mergePublicationAuthor(byEmail[email], entry) : entry;
+                return;
+            }
+            var key = name.toLowerCase().replace(/\s+/g, ' ');
+            byName[key] = byName[key] ? mergePublicationAuthor(byName[key], entry) : entry;
+        });
+        var merged = [];
+        Object.keys(byEmail).forEach(function (k) { merged.push(byEmail[k]); });
+        Object.keys(byName).forEach(function (k) { merged.push(byName[k]); });
+        merged.forEach(function (a, i) { a.order = i + 1; });
+        return merged;
+    }
+
     function renderPublicationAuthors(authors) {
         var list = document.getElementById('cv-m-authors-list');
         if (!list) return;
         list.innerHTML = '';
-        var rows = Array.isArray(authors) && authors.length ? authors : defaultPublicationAuthors();
+        var rows = Array.isArray(authors) && authors.length ? dedupePublicationAuthors(authors) : defaultPublicationAuthors();
         rows.forEach(function (a, idx) {
             var row = document.createElement('div');
             row.className = 'rounded-lg border border-slate-200 bg-white p-2.5 space-y-2';
@@ -1318,6 +1365,10 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         var hidden = document.getElementById('cv-m-authors-json');
         if (hidden) hidden.value = JSON.stringify(collectPublicationAuthors());
     }
+
+    window.collectPublicationAuthors = collectPublicationAuthors;
+    window.dedupePublicationAuthors = dedupePublicationAuthors;
+    window.renderPublicationAuthors = renderPublicationAuthors;
 
     function resetPublicationResearchFields() {
         ['cv-m-year-be', 'cv-m-volume', 'cv-m-pages', 'cv-m-isbn', 'cv-m-abstract', 'cv-m-keywords', 'cv-m-notes', 'cv-m-ref-url'].forEach(function (id) {

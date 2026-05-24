@@ -66,8 +66,16 @@
     if (emailInput && item.email) emailInput.value = item.email;
     if (affInput && item.affiliation) affInput.value = item.affiliation;
     row.dataset.personnelId = item.personnel_id || '';
-    syncHidden();
     clearDropdown();
+    if (typeof window.renderPublicationAuthors === 'function' && typeof window.collectPublicationAuthors === 'function') {
+      var authors = window.collectPublicationAuthors();
+      if (typeof window.dedupePublicationAuthors === 'function') {
+        authors = window.dedupePublicationAuthors(authors);
+      }
+      window.renderPublicationAuthors(authors);
+      return;
+    }
+    syncHidden();
   }
 
   function showDropdown(input, results) {
@@ -124,8 +132,9 @@
 
   function resolveEmail(input) {
     var emailUrl = endpoints().email;
-    var value = input.value.trim();
+    var value = input.value.trim().toLowerCase();
     if (!emailUrl || value.length < config.minEmailLength) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return;
     var url = emailUrl + '?' + new URLSearchParams({ email: value }).toString();
     fetchJson(url).then(function (data) {
       if (data && data.success && data.found && data.result) {

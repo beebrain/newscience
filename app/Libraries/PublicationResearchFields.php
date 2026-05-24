@@ -192,7 +192,100 @@ final class PublicationResearchFields
             $order++;
         }
 
-        return $out;
+        return self::dedupeContributors($out);
+    }
+
+    /**
+     * Merge duplicate authors (same email, or same name when email empty).
+     *
+     * @param list<array<string,mixed>> $rows
+     *
+     * @return list<array<string,mixed>>
+     */
+    public static function dedupeContributors(array $rows): array
+    {
+        if ($rows === []) {
+            return [];
+        }
+
+        /** @var array<string, array<string,mixed>> $byEmail */
+        $byEmail = [];
+        /** @var array<string, array<string,mixed>> $byName */
+        $byName  = [];
+
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $email = CvProfile::normalizeEmail((string) ($row['email'] ?? ''));
+            if ($email !== '') {
+                $byEmail[$email] = isset($byEmail[$email])
+                    ? self::mergeContributorRows($byEmail[$email], $row)
+                    : $row;
+
+                continue;
+            }
+
+            $nameKey = self::contributorNameKey((string) ($row['name'] ?? ''));
+            if ($nameKey === '') {
+                continue;
+            }
+            $byName[$nameKey] = isset($byName[$nameKey])
+                ? self::mergeContributorRows($byName[$nameKey], $row)
+                : $row;
+        }
+
+        $merged = array_merge(array_values($byEmail), array_values($byName));
+        $order  = 1;
+        foreach ($merged as &$row) {
+            $row['order'] = $order++;
+        }
+        unset($row);
+
+        return $merged;
+    }
+
+    /**
+     * @param array<string,mixed> $a
+     * @param array<string,mixed> $b
+     *
+     * @return array<string,mixed>
+     */
+    private static function mergeContributorRows(array $a, array $b): array
+    {
+        $nameA = trim((string) ($a['name'] ?? ''));
+        $nameB = trim((string) ($b['name'] ?? ''));
+        $name  = $nameB;
+        if ($nameA !== '' && ($nameB === '' || mb_strlen($nameA) >= mb_strlen($nameB))) {
+            $name = $nameA;
+        }
+
+        $affA = trim((string) ($a['affiliation'] ?? ''));
+        $affB = trim((string) ($b['affiliation'] ?? ''));
+        $aff  = $affB !== '' ? $affB : $affA;
+        if ($affA !== '' && ($affB === '' || mb_strlen($affA) >= mb_strlen($affB))) {
+            $aff = $affA;
+        }
+
+        $email = CvProfile::normalizeEmail((string) ($a['email'] ?? ''));
+        if ($email === '') {
+            $email = CvProfile::normalizeEmail((string) ($b['email'] ?? ''));
+        }
+
+        return [
+            'name'          => $name !== '' ? mb_substr($name, 0, 255) : null,
+            'email'         => $email !== '' ? $email : null,
+            'affiliation'   => $aff !== '' ? $aff : null,
+            'corresponding' => (! empty($a['corresponding']) || ! empty($b['corresponding'])) ? 1 : 0,
+            'order'         => (int) ($a['order'] ?? $b['order'] ?? 0),
+        ];
+    }
+
+    private static function contributorNameKey(string $name): string
+    {
+        $name = mb_strtolower(trim($name));
+
+        return $name === '' ? '' : (string) preg_replace('/\s+/u', ' ', $name);
     }
 
     /**
