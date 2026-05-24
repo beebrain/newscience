@@ -70,7 +70,13 @@ class PublicationCatalog
                 }
             }
 
-            $stats['contributors_synced'] += self::syncContributors($publicationId, $personnelId, $pub['contributors'] ?? []);
+            $stats['contributors_synced'] += self::syncContributors(
+                $publicationId,
+                $personnelId,
+                $pub['contributors'] ?? [],
+                self::ORIGIN_RR,
+                false
+            );
             if (self::linkSectionPublication((int) $section['id'], $publicationId)) {
                 $stats['linked']++;
             }
@@ -111,26 +117,19 @@ class PublicationCatalog
             $meta['sync_external_key'] = $key;
         }
 
-        $year = null;
-        if (! empty($entry['start_date']) && preg_match('/^(\d{4})/', (string) $entry['start_date'], $m)) {
-            $year = (int) $m[1];
-        }
-
         $ownerEmail = self::emailForPersonnel($personnelId);
-        $pub = [
-            'external_key'       => $key,
-            'rr_publication_id'  => (int) ($meta['rr_publication_id'] ?? 0),
-            'title'              => (string) ($entry['title'] ?? ''),
-            'publication_year'   => $year,
-            'publication_type'   => $meta['rr_publication_type'] ?? null,
-            'source'             => $entry['organization'] ?? null,
-            'doi'                => $meta['doi'] ?? null,
-            'contributors'       => [[
+        $contributors = PublicationResearchFields::contributorsFromMetadataOrCatalog($meta);
+        if ($contributors === [] && $ownerEmail !== '') {
+            $contributors = [[
                 'email' => $ownerEmail,
                 'name'  => null,
                 'order' => 1,
-            ]],
-        ];
+            ]];
+        }
+
+        $pub = PublicationResearchFields::buildPublicationPayloadFromEntry($entry, $meta, $contributors);
+        $pub['external_key']      = $key;
+        $pub['rr_publication_id'] = (int) ($meta['rr_publication_id'] ?? 0);
         $hash = self::contentHash($pub);
 
         $existing = self::findPublication($pub, $key);
@@ -151,6 +150,7 @@ class PublicationCatalog
             }
         }
 
+        self::syncContributors($publicationId, $personnelId, $contributors, self::ORIGIN_NS, true);
         self::linkSectionPublication((int) $section['id'], $publicationId, (int) ($entry['sort_order'] ?? 0), (int) ($entry['visible_on_public'] ?? 1));
         self::upsertSyncState($key, $publicationId, (int) ($meta['rr_publication_id'] ?? 0), $hash, self::ORIGIN_NS, 'ns_local');
 
@@ -165,6 +165,45 @@ class PublicationCatalog
             && $db->tableExists('publication_contributors')
             && $db->tableExists('cv_section_publications')
             && $db->tableExists('publication_sync_state');
+    }
+
+    /**
+     * @param array<string,mixed> $meta
+     *
+     * @return list<array<string,mixed>>
+     */
+    public static function lookupContributorsForMetadata(array $meta): array
+    {
+        $authors = PublicationResearchFields::contributorsFromMetadataOrCatalog($meta);
+        if ($authors !== [] || ! self::isReady()) {
+            return $authors;
+        }
+
+        $key = PublicationIdentity::syncExternalKeyFromMetadata($meta);
+        if ($key === '') {
+            return [];
+        }
+
+        $row = (new PublicationModel())->where('sync_external_key', $key)->first();
+        if ($row === null) {
+            return [];
+        }
+
+        $db = \Config\Database::connect();
+        $rows = $db->table('publication_contributors')
+            ->where('publication_id', (int) $row['id'])
+            ->orderBy('author_order', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        return PublicationResearchFields::normalizeContributors(array_map(static fn (array $c): array => [
+            'name'          => $c['display_name'] ?? null,
+            'email'         => $c['contributor_email_norm'] ?? null,
+            'affiliation'   => $c['affiliation'] ?? null,
+            'corresponding' => (int) ($c['corresponding'] ?? 0),
+            'order'         => (int) ($c['author_order'] ?? 0),
+        ], $rows));
     }
 
     /**
@@ -199,7 +238,8 @@ class PublicationCatalog
                 ->get()
                 ->getResultArray();
 
-            $out[] = [
+            $biblio = PublicationResearchFields::decodeBibliographicFromPublicationRow($row);
+            $payload = [
                 'external_key'      => (string) ($row['sync_external_key'] ?? ''),
                 'ns_publication_id' => $publicationId,
                 'rr_publication_id' => isset($row['rr_publication_id']) ? (int) $row['rr_publication_id'] : null,
@@ -222,6 +262,8 @@ class PublicationCatalog
                     ];
                 }, $contributors),
             ];
+            PublicationResearchFields::applyBibliographicToSyncPayload($payload, $biblio);
+            $out[] = $payload;
         }
 
         return $out;
@@ -308,24 +350,33 @@ class PublicationCatalog
             'sync_origin'       => $origin,
             'last_synced_from'  => $origin,
             'content_hash'      => $hash,
-            'metadata'          => json_encode([
-                'rr_publication_id' => $rrId > 0 ? $rrId : null,
-                'source_payload'    => $origin,
-            ], JSON_UNESCAPED_UNICODE),
+            'metadata'          => json_encode(
+                PublicationResearchFields::encodeBibliographicMetadata(array_merge($pub, ['sync_origin' => $origin])),
+                JSON_UNESCAPED_UNICODE
+            ),
             'is_active'         => 1,
         ];
     }
 
-    private static function syncContributors(int $publicationId, int $ownerPersonnelId, mixed $contributors): int
-    {
+    private static function syncContributors(
+        int $publicationId,
+        int $ownerPersonnelId,
+        mixed $contributors,
+        string $source,
+        bool $replaceAll
+    ): int {
         if (! is_array($contributors)) {
             return 0;
         }
 
         $model = new PublicationContributorModel();
-        $model->where('publication_id', $publicationId)
-            ->where('source', self::ORIGIN_RR)
-            ->delete();
+        if ($replaceAll) {
+            $model->where('publication_id', $publicationId)->delete();
+        } else {
+            $model->where('publication_id', $publicationId)
+                ->where('source', $source)
+                ->delete();
+        }
 
         $count = 0;
         foreach ($contributors as $row) {
@@ -351,7 +402,7 @@ class PublicationCatalog
                 'author_order'           => (int) ($row['order'] ?? 0),
                 'corresponding'          => (int) ($row['corresponding'] ?? 0),
                 'affiliation'            => trim((string) ($row['affiliation'] ?? '')) ?: null,
-                'source'                 => self::ORIGIN_RR,
+                'source'                 => $source,
             ]);
             $count++;
         }
@@ -493,6 +544,7 @@ class PublicationCatalog
             'source'       => self::normalizeText((string) ($pub['source'] ?? '')),
             'doi'          => PublicationIdentity::normalizeDoi((string) ($pub['doi'] ?? '')),
             'contributors' => $pub['contributors'] ?? [],
+            'biblio'       => PublicationResearchFields::bibliographicForContentHash($pub),
         ], JSON_UNESCAPED_UNICODE));
     }
 

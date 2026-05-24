@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\CvProfile;
+use App\Libraries\PublicationDisplay;
 use App\Models\CvEntryModel;
 use App\Models\CvSectionModel;
 use App\Models\PersonnelModel;
@@ -70,11 +71,12 @@ class PersonnelCvController extends BaseController
                 }
                 unset($en);
 
-                $cvSections[] = [
+                $block = [
                     'title'   => $section['title'] ?? '',
                     'type'    => $section['type'] ?? '',
                     'entries' => $entries,
                 ];
+                $cvSections[] = PublicationDisplay::enrichSections($personnelId, [$block])[0];
             }
         }
 

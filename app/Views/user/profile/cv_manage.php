@@ -801,6 +801,10 @@ $account_user = $account_user ?? null;
                                         if ($ePubLbl !== '') {
                                             $metaBits[] = $ePubLbl;
                                         }
+                                        $contribDisplay = (string) ($entry['publication_contributors_display'] ?? '');
+                                        if ($contribDisplay !== '') {
+                                            $metaBits[] = 'ผู้แต่ง: ' . $contribDisplay;
+                                        }
                                         $srcRaw = (string) ($entry['metadata_array']['source'] ?? '');
                                         if ($srcRaw === 'research_record') {
                                             $metaBits[] = 'กบศ';
@@ -928,8 +932,8 @@ $account_user = $account_user ?? null;
                             </div>
                             <div class="cv-entry-modal__grid2">
                                 <div>
-                                    <label for="cv-m-org" class="cv-edit-modal-label">หน่วยงาน / องค์กร</label>
-                                    <input type="text" name="organization" maxlength="500" id="cv-m-org" class="cv-edit-modal-input" placeholder="องค์กร / สถาบัน">
+                                    <label for="cv-m-org" id="cv-m-org-label" class="cv-edit-modal-label">หน่วยงาน / องค์กร</label>
+                                    <input type="text" name="organization" maxlength="500" id="cv-m-org" class="cv-edit-modal-input" placeholder="องค์กร / สถาบัน / วารสาร">
                                 </div>
                                 <div>
                                     <label for="cv-m-loc" class="cv-edit-modal-label">สถานที่</label>
@@ -972,6 +976,63 @@ $account_user = $account_user ?? null;
                                     </div>
                                 </div>
                                 <p class="text-xs text-slate-600 leading-relaxed">ใส่ DOI หรือรหัสผลงานกบศเพื่อจับคู่กับข้อมูลที่ซิงค์จากกบศ — ลดรายการซ้ำ</p>
+                            </div>
+                            <div id="cv-m-pub-extra-wrap" class="hidden rounded-lg border border-slate-200 bg-slate-50/90 p-3 sm:p-4 space-y-4">
+                                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">ข้อมูลผลงาน (ตรงกับ กบศ)</p>
+                                <div class="cv-entry-modal__grid2">
+                                    <div>
+                                        <label for="cv-m-year-be" class="cv-edit-modal-label">ปีที่เผยแพร่ (พ.ศ.) <span class="text-red-600">*</span></label>
+                                        <input type="number" name="publication_year_be" id="cv-m-year-be" class="cv-edit-modal-input" min="2400" max="2700" placeholder="เช่น 2567">
+                                    </div>
+                                    <div>
+                                        <label for="cv-m-month" class="cv-edit-modal-label">เดือน</label>
+                                        <select name="publication_month" id="cv-m-month" class="cv-edit-modal-select">
+                                            <option value="">— ไม่ระบุ —</option>
+                                            <?php for ($m = 1; $m <= 12; $m++): ?>
+                                                <option value="<?= $m ?>"><?= $m ?></option>
+                                            <?php endfor; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="cv-entry-modal__grid2">
+                                    <div>
+                                        <label for="cv-m-volume" class="cv-edit-modal-label">เล่ม (Volume)</label>
+                                        <input type="text" name="volume" id="cv-m-volume" class="cv-edit-modal-input" maxlength="100">
+                                    </div>
+                                    <div>
+                                        <label for="cv-m-pages" class="cv-edit-modal-label">หน้า (Pages)</label>
+                                        <input type="text" name="pages" id="cv-m-pages" class="cv-edit-modal-input" maxlength="100">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="cv-m-isbn" class="cv-edit-modal-label">ISBN</label>
+                                    <input type="text" name="isbn" id="cv-m-isbn" class="cv-edit-modal-input" maxlength="100">
+                                </div>
+                                <div>
+                                    <label for="cv-m-abstract" class="cv-edit-modal-label">บทคัดย่อ (Abstract)</label>
+                                    <textarea name="abstract" rows="3" id="cv-m-abstract" class="cv-edit-modal-textarea" placeholder="บทคัดย่อผลงาน"></textarea>
+                                </div>
+                                <div>
+                                    <label for="cv-m-keywords" class="cv-edit-modal-label">คำสำคัญ (Keywords)</label>
+                                    <input type="text" name="keywords" id="cv-m-keywords" class="cv-edit-modal-input" maxlength="500" placeholder="คั่นด้วยจุลภาค">
+                                </div>
+                                <div>
+                                    <label for="cv-m-notes" class="cv-edit-modal-label">หมายเหตุ (Notes)</label>
+                                    <textarea name="notes" rows="2" id="cv-m-notes" class="cv-edit-modal-textarea"></textarea>
+                                </div>
+                                <div>
+                                    <label for="cv-m-ref-url" class="cv-edit-modal-label">ลิงก์อ้างอิง (ref_url)</label>
+                                    <input type="text" name="ref_url" id="cv-m-ref-url" class="cv-edit-modal-input" maxlength="2048" placeholder="https://doi.org/… หรือ URL ผลงาน">
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-between gap-2 mb-2">
+                                        <label class="cv-edit-modal-label mb-0">ผู้แต่ง / ผู้ร่วมวิจัย</label>
+                                        <button type="button" id="cv-m-add-author" class="text-xs px-2.5 py-1 rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50">+ เพิ่มผู้แต่ง</button>
+                                    </div>
+                                    <input type="hidden" name="publication_authors" id="cv-m-authors-json" value="">
+                                    <div id="cv-m-authors-list" class="space-y-2"></div>
+                                    <p class="text-xs text-slate-500 mt-2">* = ผู้รับผิดชอบการติดต่อ (corresponding author)</p>
+                                </div>
                             </div>
                             <div>
                                 <label for="cv-m-url" class="cv-edit-modal-label">ลิงก์ (URL)</label>
@@ -1162,6 +1223,90 @@ $account_user = $account_user ?? null;
     };
 
     var pubSelectInitialHtml = null;
+    var CV_OWNER_EMAIL = <?= json_encode((string) ($cv_owner_email ?? ''), JSON_UNESCAPED_UNICODE) ?>;
+    var CV_OWNER_NAME = <?= json_encode((string) ($cv_owner_name ?? ''), JSON_UNESCAPED_UNICODE) ?>;
+
+    function defaultPublicationAuthors() {
+        if (!CV_OWNER_EMAIL && !CV_OWNER_NAME) return [];
+        return [{ name: CV_OWNER_NAME || '', email: CV_OWNER_EMAIL || '', affiliation: 'มหาวิทยาลัยราชภัฏอุตรดิตถ์', corresponding: 1, order: 1 }];
+    }
+
+    function renderPublicationAuthors(authors) {
+        var list = document.getElementById('cv-m-authors-list');
+        if (!list) return;
+        list.innerHTML = '';
+        var rows = Array.isArray(authors) && authors.length ? authors : defaultPublicationAuthors();
+        rows.forEach(function (a, idx) {
+            var row = document.createElement('div');
+            row.className = 'rounded-lg border border-slate-200 bg-white p-2.5 space-y-2';
+            row.dataset.authorIndex = String(idx);
+            row.innerHTML =
+                '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">' +
+                '<input type="text" class="cv-edit-modal-input cv-author-name" placeholder="ชื่อ-นามสกุล" value="' + (a.name || '').replace(/"/g, '&quot;') + '">' +
+                '<input type="email" class="cv-edit-modal-input cv-author-email" placeholder="อีเมล" value="' + (a.email || '').replace(/"/g, '&quot;') + '">' +
+                '</div>' +
+                '<div class="flex flex-wrap items-center gap-2">' +
+                '<input type="text" class="cv-edit-modal-input flex-1 min-w-[10rem] cv-author-aff" placeholder="สังกัด" value="' + (a.affiliation || 'มหาวิทยาลัยราชภัฏอุตรดิตถ์').replace(/"/g, '&quot;') + '">' +
+                '<label class="inline-flex items-center gap-1.5 text-xs text-slate-600 shrink-0">' +
+                '<input type="checkbox" class="cv-author-corr rounded border-slate-300"' + (a.corresponding ? ' checked' : '') + '> ผู้ติดต่อ*' +
+                '</label>' +
+                '<button type="button" class="text-xs px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50 cv-author-remove">ลบ</button>' +
+                '</div>';
+            list.appendChild(row);
+        });
+        syncPublicationAuthorsHidden();
+    }
+
+    function collectPublicationAuthors() {
+        var list = document.getElementById('cv-m-authors-list');
+        if (!list) return [];
+        var out = [];
+        list.querySelectorAll('[data-author-index]').forEach(function (row, i) {
+            var name = (row.querySelector('.cv-author-name') || {}).value || '';
+            var email = (row.querySelector('.cv-author-email') || {}).value || '';
+            name = name.trim();
+            email = email.trim().toLowerCase();
+            if (!name && !email) return;
+            out.push({
+                name: name,
+                email: email,
+                affiliation: ((row.querySelector('.cv-author-aff') || {}).value || '').trim(),
+                corresponding: (row.querySelector('.cv-author-corr') || {}).checked ? 1 : 0,
+                order: i + 1
+            });
+        });
+        return out;
+    }
+
+    function syncPublicationAuthorsHidden() {
+        var hidden = document.getElementById('cv-m-authors-json');
+        if (hidden) hidden.value = JSON.stringify(collectPublicationAuthors());
+    }
+
+    function resetPublicationResearchFields() {
+        ['cv-m-year-be', 'cv-m-volume', 'cv-m-pages', 'cv-m-isbn', 'cv-m-abstract', 'cv-m-keywords', 'cv-m-notes', 'cv-m-ref-url'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        var monthEl = document.getElementById('cv-m-month');
+        if (monthEl) monthEl.value = '';
+        renderPublicationAuthors([]);
+    }
+
+    function fillPublicationResearchFieldsFromEntry(e) {
+        var meta = e.metadata_array || {};
+        var yearEl = document.getElementById('cv-m-year-be');
+        if (yearEl) yearEl.value = e.publication_year_be || meta.publication_year_be || '';
+        var monthEl = document.getElementById('cv-m-month');
+        if (monthEl) monthEl.value = e.publication_month || meta.publication_month || '';
+        var map = { abstract: 'cv-m-abstract', keywords: 'cv-m-keywords', notes: 'cv-m-notes', volume: 'cv-m-volume', pages: 'cv-m-pages', isbn: 'cv-m-isbn', ref_url: 'cv-m-ref-url' };
+        Object.keys(map).forEach(function (key) {
+            var el = document.getElementById(map[key]);
+            if (el) el.value = e[key] || meta[key] || '';
+        });
+        var authors = e.publication_authors || meta.publication_authors || [];
+        renderPublicationAuthors(Array.isArray(authors) ? authors : []);
+    }
 
     function cvSectionRow(sectionId) {
         return document.querySelector('.cv-section-item[data-section-id="' + sectionId + '"]');
@@ -1171,16 +1316,23 @@ $account_user = $account_user ?? null;
         var wrap = document.getElementById('cv-m-pubtype-wrap');
         var sel = document.getElementById('cv-m-pubtype');
         var ident = document.getElementById('cv-m-pub-ident-wrap');
+        var extra = document.getElementById('cv-m-pub-extra-wrap');
+        var orgLabel = document.getElementById('cv-m-org-label');
         if (!wrap || !sel) return;
         if (show) {
             wrap.classList.remove('hidden');
             sel.disabled = false;
             if (ident) ident.classList.remove('hidden');
+            if (extra) extra.classList.remove('hidden');
+            if (orgLabel) orgLabel.innerHTML = 'แหล่งเผยแพร่ (source) <span class="text-red-600 normal-case tracking-normal font-semibold">*</span>';
         } else {
             wrap.classList.add('hidden');
             sel.disabled = true;
             sel.value = '';
             if (ident) ident.classList.add('hidden');
+            if (extra) extra.classList.add('hidden');
+            if (orgLabel) orgLabel.textContent = 'หน่วยงาน / องค์กร';
+            resetPublicationResearchFields();
         }
     }
 
@@ -1207,6 +1359,7 @@ $account_user = $account_user ?? null;
         if (rridEl) rridEl.value = '';
         var msrc = document.getElementById('cv-m-meta-src');
         if (msrc) msrc.value = '';
+        resetPublicationResearchFields();
     }
 
     function openCvEntryModalShell(sectionId) {
@@ -1240,6 +1393,7 @@ $account_user = $account_user ?? null;
         resetCvEntryModalForm();
         document.getElementById('cv-entry-modal-title').textContent = 'เพิ่มรายการ';
         openCvEntryModalShell(sectionId);
+        renderPublicationAuthors(defaultPublicationAuthors());
         document.getElementById('cv-m-title').focus();
     };
 
@@ -1288,6 +1442,7 @@ $account_user = $account_user ?? null;
             }
             pubSel.value = pv;
         }
+        fillPublicationResearchFieldsFromEntry(e);
         document.getElementById('cv-m-title').focus();
     };
 
@@ -1550,6 +1705,13 @@ $account_user = $account_user ?? null;
         if (pubSel && pub.publication_type) {
             setCvPublicationTypeValue(pubSel, pub.publication_type);
         }
+        var yearEl = document.getElementById('cv-m-year-be');
+        if (yearEl && pub.year) yearEl.value = String(parseInt(pub.year, 10) + 543);
+        var monthEl = document.getElementById('cv-m-month');
+        if (monthEl && pub.month) monthEl.value = String(pub.month);
+        var absEl = document.getElementById('cv-m-abstract');
+        if (absEl && pub.abstract) absEl.value = pub.abstract;
+        if (absEl && !pub.abstract && pub.description) absEl.value = pub.description;
     }
 
     window.applyCvAiToEntryForm = function () {
@@ -1641,8 +1803,30 @@ $account_user = $account_user ?? null;
         });
 
         if (entryForm) {
+            var addAuthorBtn = document.getElementById('cv-m-add-author');
+            if (addAuthorBtn) {
+                addAuthorBtn.addEventListener('click', function () {
+                    var authors = collectPublicationAuthors();
+                    authors.push({ name: '', email: '', affiliation: 'มหาวิทยาลัยราชภัฏอุตรดิตถ์', corresponding: 0, order: authors.length + 1 });
+                    renderPublicationAuthors(authors);
+                });
+            }
+            var authorsList = document.getElementById('cv-m-authors-list');
+            if (authorsList) {
+                authorsList.addEventListener('click', function (ev) {
+                    var btn = ev.target.closest('.cv-author-remove');
+                    if (!btn) return;
+                    var row = btn.closest('[data-author-index]');
+                    if (row) row.remove();
+                    syncPublicationAuthorsHidden();
+                });
+                authorsList.addEventListener('input', syncPublicationAuthorsHidden);
+                authorsList.addEventListener('change', syncPublicationAuthorsHidden);
+            }
+
             entryForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
+                syncPublicationAuthorsHidden();
                 var fd = new FormData(entryForm);
                 var res = await fetch(entryForm.action, {
                     method: 'POST',

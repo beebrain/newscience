@@ -517,6 +517,7 @@ if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) 
                   <th>หัวข้อ</th>
                   <?php if ($showPubTypeCol): ?>
                     <th>ประเภทการเผยแพร่</th>
+                    <th>ผู้แต่ง</th>
                   <?php endif; ?>
                   <th>หน่วยงาน / สถานที่</th>
                   <th>ช่วงเวลา</th>
@@ -543,16 +544,39 @@ if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) 
                 $orgLoc = $org === '' ? $loc : ($loc === '' ? $org : $org . ' · ' . $loc);
                 $pubCode = (string) (($it['metadata_array'] ?? [])['rr_publication_type'] ?? '');
                 $pubLabel = $pubCode !== '' ? \App\Libraries\RrPublicationType::labelTh($pubCode) : '';
+                $contribDisplay = (string) ($it['publication_contributors_display'] ?? '');
+                $biblio = is_array($it['publication_biblio'] ?? null) ? $it['publication_biblio'] : [];
+                $descText = trim((string) ($it['description'] ?? ''));
+                $biblioBits = [];
+                if (! empty($biblio['volume']) || ! empty($biblio['pages'])) {
+                    $volPages = trim((string) ($biblio['volume'] ?? ''));
+                    if (! empty($biblio['pages'])) {
+                        $volPages = ($volPages !== '' ? $volPages . ', ' : '') . 'หน้า ' . $biblio['pages'];
+                    }
+                    if ($volPages !== '') {
+                        $biblioBits[] = $volPages;
+                    }
+                }
+                if (! empty($biblio['keywords'])) {
+                    $biblioBits[] = 'คำสำคัญ: ' . $biblio['keywords'];
+                }
+                if ($descText === '' && ! empty($biblio['abstract'])) {
+                    $descText = (string) $biblio['abstract'];
+                }
+                if ($biblioBits !== []) {
+                    $descText = trim($descText . ($descText !== '' ? "\n" : '') . implode("\n", $biblioBits));
+                }
                 ?>
                 <tr>
                   <td class="cv-num"><?= $ti ?></td>
                   <td class="cv-title-cell"><?= esc($it['title'] ?? '') ?></td>
                   <?php if ($showPubTypeCol): ?>
                     <td><?= $pubLabel !== '' ? esc($pubLabel) : '<span class="cv-dash">—</span>' ?></td>
+                    <td style="white-space: pre-line;"><?= $contribDisplay !== '' ? esc($contribDisplay) : '<span class="cv-dash">—</span>' ?></td>
                   <?php endif; ?>
                   <td><?= $orgLoc !== '' ? esc($orgLoc) : '<span class="cv-dash">—</span>' ?></td>
                   <td><?= $period !== '' ? esc($period) : '<span class="cv-dash">—</span>' ?></td>
-                  <td style="white-space: pre-line;"><?= !empty($it['description']) ? esc($it['description']) : '<span class="cv-dash">—</span>' ?></td>
+                  <td style="white-space: pre-line;"><?= $descText !== '' ? esc($descText) : '<span class="cv-dash">—</span>' ?></td>
                   <td style="word-break: break-all;">
                     <?php if ($link !== ''): ?>
                       <a href="<?= esc($link, 'attr') ?>" target="_blank" rel="noopener noreferrer">เปิด</a>

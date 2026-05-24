@@ -8,7 +8,9 @@ use App\Libraries\CvAiFileStorage;
 use App\Libraries\CvProfile;
 use App\Libraries\CvPublicationDedupe;
 use App\Libraries\PublicationCatalog;
+use App\Libraries\PublicationDisplay;
 use App\Libraries\PublicationIdentity;
+use App\Libraries\PublicationResearchFields;
 use App\Libraries\PublicationSyncEngine;
 use App\Libraries\RrPublicationType;
 use App\Libraries\OrcidPublicRecord;
@@ -108,7 +110,7 @@ class ProfileCv extends BaseController
         }
         unset($section);
 
-        return $sections;
+        return PublicationDisplay::enrichSections($personnelId, $sections);
     }
 
     public function index()
@@ -342,12 +344,16 @@ class ProfileCv extends BaseController
         $cvEditActiveTab = in_array($tabRaw, $cvEditTabs, true) ? $tabRaw : 'narrative';
 
         $aiCvCfg = config(AiCv::class);
+        $ownerEmail = ResearchRecordCvPull::canonicalEmailForPerson($person);
+        $ownerName = PersonnelModel::resolvePublicDisplayNameTh($person);
 
         return view('user/profile/cv_manage', [
             'page_title'                 => 'จัดการ CV',
             'person'                     => $person,
             'account_user'               => $accountUser,
             'cv_sections'                => $cvSections,
+            'cv_owner_email'             => $ownerEmail,
+            'cv_owner_name'              => $ownerName,
             'cv_photo_supported'         => $personnelModel->db->fieldExists('cv_profile_image', 'personnel'),
             'research_sync_configured'   => $researchSyncConfigured,
             'rr_sync_notice'             => $rrSyncNotice,
@@ -726,6 +732,14 @@ class ProfileCv extends BaseController
             return $this->ajaxOrRedirectError('กรุณากรอกชื่อรายการ');
         }
 
+        $secType = (string) ($section['type'] ?? '');
+        if (in_array($secType, ['research', 'articles'], true)) {
+            $validationError = PublicationResearchFields::validateResearchSave($this->request->getPost());
+            if ($validationError !== null) {
+                return $this->ajaxOrRedirectError($validationError);
+            }
+        }
+
         $cvEntryModel = new CvEntryModel();
         $existing     = null;
         if ($entryId > 0) {
@@ -765,6 +779,8 @@ class ProfileCv extends BaseController
 
         $secType = (string) ($section['type'] ?? '');
         if (in_array($secType, ['research', 'articles'], true)) {
+            $meta = PublicationResearchFields::mergeResearchMetadataFromPost($this->request->getPost(), $meta);
+
             $ptype = trim((string) $this->request->getPost('publication_type'));
             if ($ptype === '') {
                 unset($meta['rr_publication_type']);
@@ -801,6 +817,10 @@ class ProfileCv extends BaseController
         } else {
             unset($meta['rr_publication_type']);
             unset($meta['doi'], $meta['rr_publication_id'], $meta['sync_external_key']);
+            foreach (PublicationResearchFields::BIBLIO_KEYS as $bibKey) {
+                unset($meta[$bibKey]);
+            }
+            unset($meta['publication_year_be'], $meta['publication_month'], $meta['publication_authors']);
             if (($meta['source'] ?? '') === 'ai_assistant') {
                 unset($meta['source']);
             }
@@ -831,15 +851,38 @@ class ProfileCv extends BaseController
 
         $postSort = (int) ($this->request->getPost('entry_sort_order') ?? 0);
 
+        $startDate = $this->request->getPost('start_date') ?: null;
+        $description = trim((string) $this->request->getPost('entry_description')) ?: null;
+        if (in_array($secType, ['research', 'articles'], true)) {
+            $yearBeRaw = trim((string) $this->request->getPost('publication_year_be'));
+            if ($yearBeRaw !== '' && ctype_digit($yearBeRaw)) {
+                $yearCe = PublicationResearchFields::normalizeYearToCe((int) $yearBeRaw);
+                if ($yearCe !== null) {
+                    $month = (int) ($meta['publication_month'] ?? 0);
+                    $month = ($month >= 1 && $month <= 12) ? $month : 1;
+                    $startDate = sprintf('%04d-%02d-01', $yearCe, $month);
+                }
+            }
+            $abstract = trim((string) ($meta['abstract'] ?? ''));
+            if ($description === null && $abstract !== '') {
+                $description = $abstract;
+            }
+            $refUrl = trim((string) ($meta['ref_url'] ?? ''));
+            if ($refUrl !== '' && empty($meta['url'])) {
+                $meta['url'] = mb_substr($refUrl, 0, 2048);
+                $metadataJson = json_encode($meta, JSON_UNESCAPED_UNICODE);
+            }
+        }
+
         $entryData = [
             'section_id'        => $sectionId,
             'title'             => $title,
             'organization'      => trim((string) $this->request->getPost('organization')) ?: null,
             'location'          => trim((string) $this->request->getPost('location')) ?: null,
-            'start_date'        => $this->request->getPost('start_date') ?: null,
+            'start_date'        => $startDate,
             'end_date'          => $this->request->getPost('end_date') ?: null,
             'is_current'        => $this->request->getPost('is_current') ? 1 : 0,
-            'description'       => trim((string) $this->request->getPost('entry_description')) ?: null,
+            'description'       => $description,
             'metadata'          => $metadataJson,
             'visible_on_public' => $this->request->getPost('visible_on_public') ? 1 : 0,
         ];
@@ -935,6 +978,37 @@ class ProfileCv extends BaseController
         $entry['entry_doi']        = (string) ($entry['metadata_array']['doi'] ?? '');
         $rrPid                     = (int) ($entry['metadata_array']['rr_publication_id'] ?? 0);
         $entry['publication_rr_id'] = $rrPid > 0 ? (string) $rrPid : '';
+        $yearBe = (int) ($entry['metadata_array']['publication_year_be'] ?? 0);
+        if ($yearBe <= 0 && ! empty($entry['start_date']) && preg_match('/^(\d{4})/', (string) $entry['start_date'], $ym)) {
+            $yearBe = (int) PublicationResearchFields::yearBeFromCe((int) $ym[1]);
+        }
+        $entry['publication_year_be'] = $yearBe > 0 ? (string) $yearBe : '';
+        $entry['publication_month'] = (string) ($entry['metadata_array']['publication_month'] ?? '');
+        foreach (PublicationResearchFields::BIBLIO_KEYS as $bibKey) {
+            $entry[$bibKey] = (string) ($entry['metadata_array'][$bibKey] ?? '');
+        }
+        if (PublicationCatalog::isReady()) {
+            $syncKey = PublicationIdentity::syncExternalKeyFromMetadata($entry['metadata_array']);
+            if ($syncKey !== '') {
+                $catalogRow = (new \App\Models\PublicationModel())->where('sync_external_key', $syncKey)->first();
+                if (is_array($catalogRow)) {
+                    $biblio = PublicationResearchFields::decodeBibliographicFromPublicationRow($catalogRow);
+                    foreach (PublicationResearchFields::BIBLIO_KEYS as $bibKey) {
+                        if ($entry[$bibKey] === '' && ! empty($biblio[$bibKey])) {
+                            $entry[$bibKey] = (string) $biblio[$bibKey];
+                        }
+                    }
+                    if ($entry['publication_month'] === '' && ! empty($biblio['publication_month'])) {
+                        $entry['publication_month'] = (string) $biblio['publication_month'];
+                    }
+                    if ($entry['publication_year_be'] === '' && ! empty($catalogRow['publication_year'])) {
+                        $entry['publication_year_be'] = (string) PublicationResearchFields::yearBeFromCe((int) $catalogRow['publication_year']);
+                    }
+                }
+            }
+        }
+        $authors = PublicationCatalog::lookupContributorsForMetadata($entry['metadata_array']);
+        $entry['publication_authors'] = $authors;
         foreach (['start_date', 'end_date'] as $df) {
             if (!empty($entry[$df]) && strlen((string) $entry[$df]) > 10) {
                 $entry[$df] = substr((string) $entry[$df], 0, 10);

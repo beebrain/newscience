@@ -30,8 +30,8 @@ class SyncPublicationsWithRr extends BaseCommand
             return;
         }
 
-        $limit = max(1, (int) (CLI::getOption('limit') ?? 50));
-        $emailOpt = CvProfile::normalizeEmail((string) (CLI::getOption('email') ?? ''));
+        $limit = max(1, (int) ($this->optionValue('limit', $params) ?? 50));
+        $emailOpt = CvProfile::normalizeEmail((string) ($this->optionValue('email', $params) ?? ''));
 
         $model = new PersonnelModel();
         $db = $model->db;
@@ -73,5 +73,27 @@ class SyncPublicationsWithRr extends BaseCommand
                 CLI::error(($res['error'] ?? 'ERROR') . ': ' . ($res['message'] ?? 'failed'));
             }
         }
+    }
+
+    private function optionValue(string $name, array $params): ?string
+    {
+        $value = CLI::getOption($name);
+        if ($value !== null && $value !== false) {
+            return (string) $value;
+        }
+
+        $needle = '--' . $name;
+        $argv = array_merge($params, array_slice($_SERVER['argv'] ?? [], 2));
+        foreach ($argv as $idx => $param) {
+            $param = (string) $param;
+            if (str_starts_with($param, $needle . '=')) {
+                return substr($param, strlen($needle) + 1);
+            }
+            if ($param === $needle && isset($argv[$idx + 1])) {
+                return (string) $argv[$idx + 1];
+            }
+        }
+
+        return null;
     }
 }
