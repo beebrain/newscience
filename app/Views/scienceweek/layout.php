@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($pageTitle ?? 'ระบบรับสมัครออนไลน์') ?> — งานสัปดาห์วิทยาศาสตร์ 2569</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <?php helper('site'); ?>
+    <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
+    <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>?v=<?= (defined('FCPATH') && is_file(FCPATH . 'assets/css/fonts.css')) ? filemtime(FCPATH . 'assets/css/fonts.css') : '1' ?>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <style>
         :root {
@@ -25,7 +26,7 @@
         *, *::before, *::after { box-sizing: border-box; }
 
         body {
-            font-family: 'Sarabun', 'Inter', Tahoma, sans-serif;
+            font-family: 'Sarabun', 'Noto Sans Thai', Tahoma, sans-serif;
             background: var(--sw-bg);
             color: var(--sw-text);
             font-size: 15px;
@@ -70,6 +71,20 @@
             margin-bottom: .6rem;
         }
         .sw-header-badge::before { content: '●'; font-size: .5rem; color: var(--sw-teal-l); }
+        .sw-header-brand {
+            display: flex;
+            align-items: flex-start;
+            gap: .85rem;
+        }
+        .sw-header-logo {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            flex-shrink: 0;
+            background: rgba(255,255,255,.95);
+            border-radius: 10px;
+            padding: 4px;
+        }
         .sw-header h1 {
             font-size: 1.35rem;
             font-weight: 700;
@@ -304,8 +319,11 @@
 <header class="sw-header">
     <div class="container sw-header-inner">
         <div class="sw-header-badge">Science Week 2026 · มรภ.อุตรดิตถ์</div>
-        <a href="<?= base_url('scienceweek') ?>" class="text-white text-decoration-none">
-            <h1>🔬 งานสัปดาห์วิทยาศาสตร์แห่งชาติ ส่วนภูมิภาค ประจำปี 2569</h1>
+        <a href="<?= base_url('scienceweek') ?>" class="sw-header-brand text-white text-decoration-none">
+            <img src="<?= esc(favicon_url()) ?>" alt="โลโก้คณะวิทยาศาสตร์และเทคโนโลยี" class="sw-header-logo" width="48" height="48">
+            <div>
+                <h1>งานสัปดาห์วิทยาศาสตร์แห่งชาติ ส่วนภูมิภาค ประจำปี 2569</h1>
+            </div>
         </a>
         <div class="subtitle">คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์ · 18–20 สิงหาคม 2569</div>
         <nav class="nav-links">

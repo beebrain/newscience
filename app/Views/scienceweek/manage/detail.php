@@ -11,8 +11,11 @@ $extra      = is_array($reg['extra']) ? $reg['extra'] : ($reg['extra'] ? json_de
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>รายละเอียดการสมัคร #<?= $reg['id'] ?></title>
+    <?php helper('site'); ?>
+    <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
+    <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>?v=<?= (defined('FCPATH') && is_file(FCPATH . 'assets/css/fonts.css')) ? filemtime(FCPATH . 'assets/css/fonts.css') : '1' ?>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <style>body { font-family: 'Sarabun', Tahoma, sans-serif; }</style>
+    <style>body { font-family: 'Sarabun', 'Noto Sans Thai', Tahoma, sans-serif; }</style>
 </head>
 <body class="bg-light">
 <div class="container py-4" style="max-width:860px;">

@@ -18,8 +18,9 @@ if ($activeComp) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($pageTitle) ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <?php helper('site'); ?>
+    <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
+    <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>?v=<?= (defined('FCPATH') && is_file(FCPATH . 'assets/css/fonts.css')) ? filemtime(FCPATH . 'assets/css/fonts.css') : '1' ?>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <style>
         :root {
@@ -42,7 +43,7 @@ if ($activeComp) {
         html, body { height: 100%; margin: 0; }
 
         body {
-            font-family: 'Sarabun', 'Inter', Tahoma, sans-serif;
+            font-family: 'Sarabun', 'Noto Sans Thai', Tahoma, sans-serif;
             background: var(--bg);
             color: var(--text);
             font-size: 14px;
@@ -188,7 +189,7 @@ if ($activeComp) {
             gap: .35rem;
         }
         .stat-card .stat-label { font-size: .75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-        .stat-card .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1; color: var(--text); font-family: 'Inter', sans-serif; }
+        .stat-card .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1; color: var(--text); font-family: 'Sarabun', 'Noto Sans Thai', sans-serif; }
         .stat-card .stat-sub { font-size: .75rem; color: var(--muted); }
         .stat-card.accent-teal .stat-value { color: var(--acc-teal); }
         .stat-card.accent-blue .stat-value { color: var(--acc-blue); }
