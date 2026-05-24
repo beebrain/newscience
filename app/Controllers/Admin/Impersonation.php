@@ -203,7 +203,7 @@ class Impersonation extends BaseController
                 ->where('user.status', 'active')
                 ->orWhere('user.active', 1)
             ->groupEnd()
-            ->where("EXISTS (SELECT 1 FROM personnel WHERE personnel.status = 'active' AND (personnel.user_uid = user.uid OR LOWER(TRIM(personnel.user_email)) = {$emailExpr} OR LOWER(TRIM(personnel.email)) = {$emailExpr}))", null, false);
+            ->where('EXISTS (SELECT 1 FROM personnel WHERE personnel.status = \'active\' AND ' . $this->personnelMatchesUserSql($emailExpr) . ')', null, false);
 
         if ($search !== '') {
             $builder->groupStart()
@@ -221,12 +221,43 @@ class Impersonation extends BaseController
 
     private function isActivePersonnel(int $uid, string $email): bool
     {
-        $row = db_connect()->query(
-            'SELECT id FROM personnel WHERE status = ? AND (user_uid = ? OR LOWER(TRIM(user_email)) = ? OR LOWER(TRIM(email)) = ?) LIMIT 1',
-            ['active', $uid, $email, $email]
-        )->getRowArray();
+        $db = db_connect();
+        $parts  = [];
+        $params = ['active'];
+
+        if ($db->fieldExists('user_uid', 'personnel')) {
+            $parts[]  = 'user_uid = ?';
+            $params[] = $uid;
+        }
+
+        $parts[]  = 'LOWER(TRIM(user_email)) = ?';
+        $params[] = $email;
+        $parts[]  = 'LOWER(TRIM(email)) = ?';
+        $params[] = $email;
+
+        $sql = 'SELECT id FROM personnel WHERE status = ? AND (' . implode(' OR ', $parts) . ') LIMIT 1';
+        $row = $db->query($sql, $params)->getRowArray();
 
         return $row !== null;
+    }
+
+    /**
+     * เงื่อนไขจับคู่ personnel ↔ user (อีเมลเป็นหลัก; user_uid ถ้า DB ยังมีคอลัมน์)
+     *
+     * @param string $userEmailExpr SQL expression เช่น LOWER(TRIM(user.email))
+     */
+    private function personnelMatchesUserSql(string $userEmailExpr): string
+    {
+        $parts = [
+            "LOWER(TRIM(personnel.user_email)) = {$userEmailExpr}",
+            "LOWER(TRIM(personnel.email)) = {$userEmailExpr}",
+        ];
+
+        if (db_connect()->fieldExists('user_uid', 'personnel')) {
+            array_unshift($parts, 'personnel.user_uid = user.uid');
+        }
+
+        return '(' . implode(' OR ', $parts) . ')';
     }
 
     private function recordStartAttempt(): void
