@@ -488,18 +488,21 @@ $account_user = $account_user ?? null;
                             <?php endif; ?>
                         </div>
                         <?php if ($research_sync_configured): ?>
-                            <div class="flex flex-wrap items-stretch gap-2 shrink-0">
-                                <form method="post" action="<?= base_url('dashboard/profile/cv/sync-from-rr') ?>" class="inline-flex"
-                                      onsubmit="if (!confirm('ซิงค์จาก กบศ แบบเสริม (รักษาข้อมูลที่กรอกใน ฐานข้อมูลคณะ) ตอนนี้?')) return false; var b=this.querySelector('button[type=submit]'); if (b.dataset.busy==='1') return false; b.dataset.busy='1'; b.disabled=true; return true;">
+                            <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-2 shrink-0 max-w-md">
+                                <p class="w-full text-xs text-slate-500 leading-relaxed sm:order-first">
+                                    ผลงานตีพิมพ์ซิงค์อัตโนมัติเมื่อบันทึก — ใช้ปุ่มด้านล่างเมื่อต้องการดึง CV ทั้งชุดจาก <span translate="no">กบศ</span>
+                                </p>
+                                <form method="post" action="<?= base_url('dashboard/profile/cv/sync-from-rr') ?>" class="inline-flex sm:order-2"
+                                      onsubmit="if (!confirm('ซิงค์จาก กบศ แบบเสริม (รักษาข้อมูลที่กรอกใน ฐานข้อมูลคณะ) ตอนนี้?')) return false; var b=this.querySelector('button[type=submit]'); if (b.dataset.busy==='1') return false; b.dataset.busy='1'; b.disabled=true; b.setAttribute('aria-busy','true'); return true;">
                                     <?= csrf_field() ?>
                                     <button type="submit"
-                                            class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-[6px] bg-emerald-600 text-white font-semibold shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors">
+                                            class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-[6px] border border-emerald-600 bg-white text-emerald-800 font-semibold hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors">
                                         <svg class="w-4 h-4 shrink-0 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                        ดึงจาก กบศ ตอนนี้
+                                        ดึงจาก <span translate="no">กบศ</span> ตอนนี้
                                     </button>
                                 </form>
                                 <a href="<?= base_url('dashboard/profile/research-record-sync') ?>"
-                                   class="inline-flex items-center justify-center text-sm px-3 py-2.5 rounded-[6px] border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors">เปรียบเทียบ / ดึงแบบละเอียด</a>
+                                   class="inline-flex items-center justify-center text-sm px-3 py-2.5 rounded-[6px] border border-slate-200 bg-slate-50 text-slate-700 font-medium hover:bg-white hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 transition-colors sm:order-3">เปรียบเทียบแบบละเอียด…</a>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -1094,11 +1097,44 @@ $account_user = $account_user ?? null;
 
 <style>
 .sortable-ghost { opacity: 0.45; background: #fef9c3; }
+.cv-author-search-dropdown {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+    max-height: 14rem;
+    overflow-y: auto;
+}
+.cv-author-search-item {
+    display: block;
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    text-align: left;
+}
+.cv-author-search-item:hover { background: #f8fafc; }
+.cv-author-search-name {
+    display: block;
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+.cv-author-search-email {
+    display: block;
+    color: #64748b;
+    font-size: 0.75rem;
+}
 </style>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+window.CV_AUTHOR_SEARCH_ENDPOINTS = {
+    name: <?= json_encode(base_url('dashboard/profile/cv/search-personnel-names'), JSON_UNESCAPED_SLASHES) ?>,
+    email: <?= json_encode(base_url('dashboard/profile/cv/search-personnel-email'), JSON_UNESCAPED_SLASHES) ?>
+};
+</script>
+<script src="<?= base_url('assets/js/cv-publication-author-search.js') ?>"></script>
 <?php if (!empty($cv_photo_supported)): ?>
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js" crossorigin="anonymous"></script>
 <script>
@@ -1712,6 +1748,11 @@ $account_user = $account_user ?? null;
         var absEl = document.getElementById('cv-m-abstract');
         if (absEl && pub.abstract) absEl.value = pub.abstract;
         if (absEl && !pub.abstract && pub.description) absEl.value = pub.description;
+        if (Array.isArray(pub.authors) && pub.authors.length) {
+            renderPublicationAuthors(pub.authors);
+        } else {
+            renderPublicationAuthors(defaultPublicationAuthors());
+        }
     }
 
     window.applyCvAiToEntryForm = function () {

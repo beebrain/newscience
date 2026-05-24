@@ -80,6 +80,7 @@ class PublicationCatalog
             if (self::linkSectionPublication((int) $section['id'], $publicationId)) {
                 $stats['linked']++;
             }
+            self::propagateToLinkedCoAuthors($personnelId, $pub, $publicationId);
             self::upsertSyncState($key, $publicationId, (int) ($pub['rr_publication_id'] ?? 0), $hash, self::ORIGIN_RR, 'rr_to_ns');
         }
 
@@ -152,6 +153,7 @@ class PublicationCatalog
 
         self::syncContributors($publicationId, $personnelId, $contributors, self::ORIGIN_NS, true);
         self::linkSectionPublication((int) $section['id'], $publicationId, (int) ($entry['sort_order'] ?? 0), (int) ($entry['visible_on_public'] ?? 1));
+        self::propagateToLinkedCoAuthors($personnelId, $pub, $publicationId);
         self::upsertSyncState($key, $publicationId, (int) ($meta['rr_publication_id'] ?? 0), $hash, self::ORIGIN_NS, 'ns_local');
 
         return ['publication_id' => $publicationId, 'inserted' => $inserted, 'updated' => $updated];
@@ -165,6 +167,18 @@ class PublicationCatalog
             && $db->tableExists('publication_contributors')
             && $db->tableExists('cv_section_publications')
             && $db->tableExists('publication_sync_state');
+    }
+
+    /**
+     * @return list<array<string,mixed>>
+     */
+    public static function publicationRowsForPersonnel(int $personnelId): array
+    {
+        if (! self::isReady()) {
+            return [];
+        }
+
+        return self::publicationRowsVisibleToPersonnel(\Config\Database::connect(), $personnelId);
     }
 
     /**
@@ -216,17 +230,7 @@ class PublicationCatalog
         }
 
         $db = \Config\Database::connect();
-        $rows = $db->table('publications p')
-            ->select('p.*')
-            ->join('cv_section_publications csp', 'csp.publication_id = p.id', 'inner')
-            ->join('cv_sections cs', 'cs.id = csp.section_id', 'inner')
-            ->where('cs.personnel_id', $personnelId)
-            ->where('p.is_active', 1)
-            ->groupBy('p.id')
-            ->orderBy('p.publication_year', 'DESC')
-            ->orderBy('p.id', 'DESC')
-            ->get()
-            ->getResultArray();
+        $rows = self::publicationRowsVisibleToPersonnel($db, $personnelId);
 
         $out = [];
         foreach ($rows as $row) {
@@ -267,6 +271,57 @@ class PublicationCatalog
         }
 
         return $out;
+    }
+
+    /**
+     * Publications linked to this person's CV section or where they are a catalog contributor.
+     *
+     * @return list<array<string,mixed>>
+     */
+    private static function publicationRowsVisibleToPersonnel($db, int $personnelId): array
+    {
+        $rows = $db->table('publications p')
+            ->select('p.*')
+            ->join('cv_section_publications csp', 'csp.publication_id = p.id', 'inner')
+            ->join('cv_sections cs', 'cs.id = csp.section_id', 'inner')
+            ->where('cs.personnel_id', $personnelId)
+            ->where('p.is_active', 1)
+            ->groupBy('p.id')
+            ->get()
+            ->getResultArray();
+
+        $email = self::emailForPersonnel($personnelId);
+        if ($email !== '') {
+            $byContributor = $db->table('publications p')
+                ->select('p.*')
+                ->join('publication_contributors pc', 'pc.publication_id = p.id', 'inner')
+                ->where('pc.contributor_email_norm', $email)
+                ->where('p.is_active', 1)
+                ->groupBy('p.id')
+                ->get()
+                ->getResultArray();
+            $rows = array_merge($rows, $byContributor);
+        }
+
+        $byId = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            if ($id > 0) {
+                $byId[$id] = $row;
+            }
+        }
+
+        usort($byId, static function (array $a, array $b): int {
+            $ya = (int) ($a['publication_year'] ?? 0);
+            $yb = (int) ($b['publication_year'] ?? 0);
+            if ($ya !== $yb) {
+                return $yb <=> $ya;
+            }
+
+            return ((int) ($b['id'] ?? 0)) <=> ((int) ($a['id'] ?? 0));
+        });
+
+        return array_values($byId);
     }
 
     private static function ensureResearchSection(int $personnelId): ?array
@@ -478,6 +533,46 @@ class PublicationCatalog
             ->getRowArray();
 
         return CvProfile::normalizeEmail((string) ($row['email'] ?? ''));
+    }
+
+    /**
+     * When one author syncs from RR, mirror the publication onto other NS personnel
+     * listed as co-authors (catalog link + cv_entry) so their public CV shows it too.
+     *
+     * @param array<string,mixed> $pub RR-shaped publication payload
+     */
+    private static function propagateToLinkedCoAuthors(int $syncingPersonnelId, array $pub, int $publicationId): void
+    {
+        $contributors = $pub['contributors'] ?? [];
+        if (! is_array($contributors) || $contributors === []) {
+            return;
+        }
+
+        $seen = [$syncingPersonnelId => true];
+        foreach ($contributors as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $email = CvProfile::normalizeEmail((string) ($row['email'] ?? ''));
+            if ($email === '') {
+                continue;
+            }
+
+            $resolved = self::resolveContributor($email, $syncingPersonnelId);
+            $coPersonnelId = $resolved['personnel_id'];
+            if ($coPersonnelId === null || isset($seen[$coPersonnelId])) {
+                continue;
+            }
+            $seen[$coPersonnelId] = true;
+
+            $section = self::ensureResearchSection($coPersonnelId);
+            if ($section === null) {
+                continue;
+            }
+
+            self::linkSectionPublication((int) $section['id'], $publicationId);
+            ResearchRecordCvSyncMerge::applyPublicationsToCvEntries($coPersonnelId, [$pub], []);
+        }
     }
 
     private static function linkSectionPublication(int $sectionId, int $publicationId, int $sortOrder = 0, int $visible = 1): bool

@@ -8,6 +8,7 @@ use App\Libraries\CvAiFileStorage;
 use App\Libraries\CvProfile;
 use App\Libraries\CvPublicationDedupe;
 use App\Libraries\PublicationCatalog;
+use App\Libraries\PublicationAuthorSearch;
 use App\Libraries\PublicationDisplay;
 use App\Libraries\PublicationIdentity;
 use App\Libraries\PublicationResearchFields;
@@ -139,6 +140,7 @@ class ProfileCv extends BaseController
 
         $uid = (int) session()->get('admin_id');
         $accountUser = $uid > 0 ? (new UserModel())->find($uid) : null;
+        $researchSyncConfigured = config(\Config\ResearchApi::class)->syncConfigured();
 
         return view('user/profile/index', [
             'page_title'    => 'โปรไฟล์และประวัติ',
@@ -146,6 +148,7 @@ class ProfileCv extends BaseController
             'public_cv_url' => $publicCvUrl,
             'session_email' => $email,
             'account_user'  => $accountUser,
+            'research_sync_configured' => $researchSyncConfigured,
         ]);
     }
 
@@ -361,6 +364,50 @@ class ProfileCv extends BaseController
             'rr_auto_pull_max_age_days'  => $researchSyncConfigured ? $syncCfg->autoPullMaxAgeDays : null,
             'cv_edit_active_tab'         => $cvEditActiveTab,
             'ai_cv_publication_enabled'  => $aiCvCfg->isReady(),
+        ]);
+    }
+
+    public function searchPersonnelNames()
+    {
+        if ($this->sessionEmail() === '') {
+            return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'กรุณาเข้าสู่ระบบ']);
+        }
+        if ($this->resolveOwnedPersonnel() === null) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'ไม่พบข้อมูลบุคลากร']);
+        }
+
+        $name = trim((string) $this->request->getGet('name'));
+        $limit = (int) ($this->request->getGet('limit') ?? 10);
+        if (mb_strlen($name) < 2) {
+            return $this->response->setJSON(['success' => true, 'results' => []]);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'results' => PublicationAuthorSearch::searchByName($name, $limit),
+        ]);
+    }
+
+    public function searchPersonnelEmail()
+    {
+        if ($this->sessionEmail() === '') {
+            return $this->response->setStatusCode(401)->setJSON(['success' => false, 'message' => 'กรุณาเข้าสู่ระบบ']);
+        }
+        if ($this->resolveOwnedPersonnel() === null) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'ไม่พบข้อมูลบุคลากร']);
+        }
+
+        $email = trim((string) $this->request->getGet('email'));
+        if (mb_strlen($email) < 3) {
+            return $this->response->setJSON(['success' => true, 'found' => false]);
+        }
+
+        $result = PublicationAuthorSearch::resolveByEmail($email);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'found'   => $result !== null,
+            'result'  => $result,
         ]);
     }
 

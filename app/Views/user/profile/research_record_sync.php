@@ -10,13 +10,15 @@ $email = $sync_email ?? '';
         <div>
             <div class="flex items-center gap-2 mb-1">
                 <div class="w-1 h-6 bg-emerald-600 rounded-full"></div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-800">ดึงจาก กบศ → ฐานข้อมูลคณะ</h1>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-800 text-balance">ซิงค์ CV จาก <span translate="no">กบศ</span></h1>
             </div>
             <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — <strong class="text-gray-700">แนวหลัก:</strong> ฐานข้อมูลคณะเป็นหลัก — ดึงจาก กบศ มาเสริมรายการที่ยังไม่มี และนำเข้าผลงานตีพิมพ์ ปุ่มเปรียบเทียบใช้เมื่อต้องการเลือกทีละแถว การส่งกลับไป กบศ เป็นทางเลือกเสริม</p>
         </div>
         <div class="flex flex-wrap gap-2">
-            <a href="<?= base_url('dashboard/profile') ?>" class="text-sm px-3 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">โปรไฟล์</a>
-            <a href="<?= base_url('dashboard/profile/cv') ?>" class="text-sm px-3 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">จัดการ CV</a>
+            <a href="<?= base_url('dashboard/profile/cv') ?>"
+               class="text-sm px-3 py-2 rounded-lg bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2 transition-colors">จัดการ CV</a>
+            <a href="<?= base_url('dashboard/profile') ?>"
+               class="text-sm px-3 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 transition-colors">โปรไฟล์</a>
         </div>
     </div>
 
@@ -37,16 +39,22 @@ $email = $sync_email ?? '';
         <?php endif; ?>
 
         <div class="flex flex-wrap items-center gap-2">
-            <button type="button" id="rrsync-btn-pull" class="px-4 py-2.5 rounded-lg bg-emerald-700 text-white text-sm font-semibold hover:bg-emerald-800 disabled:opacity-50 shadow-sm" <?= $apiOk ? '' : 'disabled' ?>>ดึงทั้งหมดจาก กบศ → ฐานข้อมูลคณะ</button>
-            <button type="button" id="rrsync-btn-compare" class="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50" <?= $apiOk ? '' : 'disabled' ?>>เปรียบเทียบแล้วเลือกรายแถว</button>
+            <button type="button" id="rrsync-btn-pull"
+                    class="px-4 py-2.5 rounded-lg bg-emerald-700 text-white text-sm font-semibold hover:bg-emerald-800 disabled:opacity-50 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors"
+                    <?= $apiOk ? '' : 'disabled' ?>>ดึงทั้งหมดจาก <span translate="no">กบศ</span></button>
+            <button type="button" id="rrsync-btn-compare"
+                    class="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 transition-colors"
+                    <?= $apiOk ? '' : 'disabled' ?>>เปรียบเทียบแล้วเลือกรายแถว</button>
         </div>
 
         <div class="rounded-lg border border-dashed border-gray-200 bg-gray-50/60 px-4 py-3">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">ทางเลือกเสริม — ส่งจาก ฐานข้อมูลคณะ ไป กบศ</p>
-            <button type="button" id="rrsync-btn-push" class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-white disabled:opacity-50" <?= $apiOk ? '' : 'disabled' ?>>ส่งทั้งหมด ฐานข้อมูลคณะ → กบศ</button>
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">ทางเลือกเสริม — ส่งจาก ฐานข้อมูลคณะ ไป <span translate="no">กบศ</span></p>
+            <button type="button" id="rrsync-btn-push"
+                    class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-white disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 transition-colors"
+                    <?= $apiOk ? '' : 'disabled' ?>>ส่งทั้งหมดไป <span translate="no">กบศ</span></button>
         </div>
 
-        <p id="rrsync-status" class="text-sm text-gray-600"></p>
+        <p id="rrsync-status" class="text-sm text-gray-600" role="status" aria-live="polite"></p>
 
         <div id="rrsync-orcid-row" class="hidden border-t border-gray-100 pt-4">
             <p class="text-xs font-semibold text-gray-500 uppercase mb-2">ORCID iD หลังรวม</p>
@@ -74,7 +82,8 @@ $email = $sync_email ?? '';
             <div id="rrsync-pub-list" class="max-h-48 overflow-y-auto text-sm space-y-1"></div>
         </div>
 
-        <button type="button" id="rrsync-btn-apply" class="hidden px-5 py-2.5 rounded-lg bg-amber-500 text-gray-900 font-semibold hover:bg-amber-600">บันทึกการเลือกลง ฐานข้อมูลคณะ (รวมผลงานจาก กบศ ที่ติ๊ก)</button>
+        <button type="button" id="rrsync-btn-apply"
+                class="hidden px-5 py-2.5 rounded-lg bg-amber-500 text-gray-900 font-semibold hover:bg-amber-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 transition-colors">บันทึกการเลือกลง ฐานข้อมูลคณะ</button>
     </div>
 </div>
 <?= $this->endSection() ?>

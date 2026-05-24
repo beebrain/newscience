@@ -115,6 +115,8 @@ $routes->post('/dashboard/profile/cv/orcid/import', 'User\ProfileCv::importOrcid
 $routes->post('/dashboard/profile/cv/orcid/save', 'User\ProfileCv::saveOrcidId', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/ai-publication-upload', 'User\ProfileCv::aiPublicationUpload', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/ai-publication-preview', 'User\ProfileCv::aiPublicationPreview', ['filter' => 'loggedin']);
+$routes->get('/dashboard/profile/cv/search-personnel-names', 'User\ProfileCv::searchPersonnelNames', ['filter' => 'loggedin']);
+$routes->get('/dashboard/profile/cv/search-personnel-email', 'User\ProfileCv::searchPersonnelEmail', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/research-record-sync', 'User\ResearchRecordSync::index', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/research-record-sync/compare', 'User\ResearchRecordSync::compare', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/research-record-sync/apply', 'User\ResearchRecordSync::apply', ['filter' => 'loggedin']);

@@ -96,11 +96,14 @@ final class AiPublicationParser
         $rrId = is_numeric($rrIdRaw) && (int) $rrIdRaw > 0 ? (int) $rrIdRaw : null;
 
         $desc = trim((string) ($pub['description'] ?? $pub['abstract'] ?? $pub['abstract_th'] ?? $pub['abstract_en'] ?? $pub['notes'] ?? $pub['extra_info'] ?? ''));
-        $authors = self::formatAuthorsLine($pub);
-        if ($authors !== '' && $desc !== '') {
-            $desc = $authors . "\n\n" . $desc;
-        } elseif ($authors !== '') {
-            $desc = $authors;
+        $authors = self::extractStructuredContributors($pub);
+        if ($authors === []) {
+            $authorsLine = self::formatAuthorsLine($pub);
+            if ($authorsLine !== '' && $desc !== '') {
+                $desc = $authorsLine . "\n\n" . $desc;
+            } elseif ($authorsLine !== '') {
+                $desc = $authorsLine;
+            }
         }
         $desc = self::appendBibliographicDetails($pub, $desc);
 
@@ -119,9 +122,79 @@ final class AiPublicationParser
             'publication_type'  => $ptype !== '' ? $ptype : null,
             'rr_publication_id' => $rrId,
             'description'       => mb_substr($desc, 0, 20000) ?: null,
+            'authors'           => $authors,
         ];
 
         return ['success' => true, 'publication' => $out];
+    }
+
+    /**
+     * @param array<string, mixed> $pub
+     *
+     * @return list<array<string,mixed>>
+     */
+    private static function extractStructuredContributors(array $pub): array
+    {
+        $rows = [];
+
+        $authorsTh = $pub['authors_th'] ?? null;
+        $authorsEn = $pub['authors_en'] ?? null;
+        if (is_array($authorsTh) || is_array($authorsEn)) {
+            $thList = is_array($authorsTh) ? $authorsTh : [];
+            $enList = is_array($authorsEn) ? $authorsEn : [];
+            $max    = max(count($thList), count($enList));
+            for ($i = 0; $i < $max; $i++) {
+                $th = isset($thList[$i]) ? trim((string) $thList[$i]) : '';
+                $en = isset($enList[$i]) ? trim((string) $enList[$i]) : '';
+                $name = $th !== '' ? $th : $en;
+                if ($name === '') {
+                    continue;
+                }
+                if ($th !== '' && $en !== '') {
+                    $name = $th . ' (' . $en . ')';
+                }
+                $rows[] = ['name' => $name, 'order' => count($rows) + 1];
+            }
+        }
+
+        $authors = $pub['authors'] ?? $pub['author'] ?? null;
+        if (is_string($authors)) {
+            foreach (preg_split('/[;,]\s*/u', $authors) ?: [] as $name) {
+                $name = trim($name);
+                if ($name !== '') {
+                    $rows[] = ['name' => $name, 'order' => count($rows) + 1];
+                }
+            }
+        } elseif (is_array($authors)) {
+            foreach ($authors as $author) {
+                if (is_string($author)) {
+                    $name = trim($author);
+                    if ($name !== '') {
+                        $rows[] = ['name' => $name, 'order' => count($rows) + 1];
+                    }
+                    continue;
+                }
+                if (! is_array($author)) {
+                    continue;
+                }
+
+                $name = trim((string) ($author['name'] ?? $author['full_name'] ?? $author['display_name'] ?? $author['thai_name'] ?? $author['english_name'] ?? ''));
+                $email = trim((string) ($author['email'] ?? $author['author_email'] ?? $author['mail'] ?? ''));
+                $affiliation = trim((string) ($author['affiliation'] ?? $author['organization'] ?? $author['department'] ?? ''));
+                if ($name === '' && $email === '') {
+                    continue;
+                }
+                $rows[] = [
+                    'name'          => $name,
+                    'email'         => $email,
+                    'affiliation'   => $affiliation,
+                    'corresponding' => (int) ($author['corresponding'] ?? $author['is_corresponding'] ?? 0),
+                    'order'         => (int) ($author['order'] ?? count($rows) + 1),
+                ];
+            }
+        }
+
+        return PublicationResearchFields::normalizeContributors($rows);
     }
 
     /**

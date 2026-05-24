@@ -58,7 +58,11 @@ final class AiPublicationParserTest extends CIUnitTestCase
         ]);
         $this->assertTrue($r['success']);
         $this->assertSame('Bangkok', $r['publication']['location']);
-        $this->assertStringContainsString('ผู้แต่ง:', $r['publication']['description']);
+        $this->assertSame([
+            ['name' => 'A. One', 'email' => null, 'affiliation' => null, 'corresponding' => 0, 'order' => 1],
+            ['name' => 'B. Two', 'email' => null, 'affiliation' => null, 'corresponding' => 0, 'order' => 2],
+        ], $r['publication']['authors']);
+        $this->assertNull($r['publication']['description']);
     }
 
     public function testNormalizeAuthorsThEnAndBibliographicDetails(): void
@@ -78,10 +82,28 @@ final class AiPublicationParserTest extends CIUnitTestCase
         $this->assertTrue($r['success']);
         $this->assertSame('2024-06-01', $r['publication']['start_date']);
         $this->assertSame('2024-06-30', $r['publication']['end_date']);
+        $this->assertSame('ไทย หนึ่ง (English One)', $r['publication']['authors'][0]['name']);
         $desc = (string) $r['publication']['description'];
-        $this->assertStringContainsString('ผู้แต่ง:', $desc);
+        $this->assertStringNotContainsString('ผู้แต่ง:', $desc);
         $this->assertStringContainsString('เล่ม (Volume): 10', $desc);
         $this->assertStringContainsString('คำสำคัญ:', $desc);
+    }
+
+    public function testNormalizeStructuredAuthorsWithEmail(): void
+    {
+        $r = AiPublicationParser::normalizePublicationFromRrLikeArray([
+            'title'   => 'Author Email Paper',
+            'authors' => [[
+                'name'        => 'Teacher One',
+                'email'       => ' Teacher.One@Live.URU.ac.th ',
+                'affiliation' => 'URU',
+            ]],
+            'abstract' => 'Abstract only',
+        ]);
+
+        $this->assertTrue($r['success']);
+        $this->assertSame('teacher.one@live.uru.ac.th', $r['publication']['authors'][0]['email']);
+        $this->assertSame('Abstract only', $r['publication']['description']);
     }
 
     public function testParseN8nRootLevelArray(): void

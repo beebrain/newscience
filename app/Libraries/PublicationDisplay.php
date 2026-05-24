@@ -80,19 +80,8 @@ final class PublicationDisplay
      */
     private static function loadCatalogByExternalKey(int $personnelId): array
     {
-        $db = \Config\Database::connect();
-        $rows = $db->table('publications p')
-            ->select('p.*')
-            ->join('cv_section_publications csp', 'csp.publication_id = p.id', 'inner')
-            ->join('cv_sections cs', 'cs.id = csp.section_id', 'inner')
-            ->where('cs.personnel_id', $personnelId)
-            ->where('p.is_active', 1)
-            ->groupBy('p.id')
-            ->get()
-            ->getResultArray();
-
         $out = [];
-        foreach ($rows as $row) {
+        foreach (PublicationCatalog::publicationRowsForPersonnel($personnelId) as $row) {
             $key = trim((string) ($row['sync_external_key'] ?? ''));
             if ($key !== '') {
                 $out[$key] = $row;

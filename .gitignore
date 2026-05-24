@@ -176,6 +176,7 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+playwright/.auth/
 
 #-------------------------
 # Python Backup Tool (local only — not versioned)

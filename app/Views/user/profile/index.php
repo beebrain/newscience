@@ -5,13 +5,15 @@
 $person = $person ?? null;
 $publicCvUrl = $public_cv_url ?? null;
 $accountUser = $account_user ?? null;
+$researchSyncConfigured = !empty($research_sync_configured);
+$linkFocus = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2';
 ?>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
 
     <div class="flex items-center gap-2 mb-2">
         <div class="w-1 h-6 bg-yellow-400 rounded-full"></div>
-        <h1 class="text-xl sm:text-2xl font-bold text-gray-800">โปรไฟล์และประวัติ</h1>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-800 text-balance">โปรไฟล์และประวัติ</h1>
     </div>
 
     <?php if ($accountUser !== null): ?>
@@ -72,23 +74,26 @@ $accountUser = $account_user ?? null;
                 <?php endif; ?>
             </div>
 
-            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm flex flex-col">
-                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">การดำเนินการ</h2>
-                <a href="<?= base_url('dashboard/profile/research-record-sync') ?>"
-                   class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-800 font-semibold hover:bg-gray-50 transition-colors mb-3">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    ดึง CV จาก กบศ → ฐานข้อมูลคณะ
-                </a>
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm flex flex-col min-w-0">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">การดำเนินการ</h2>
+                <p class="text-sm text-gray-600 mb-4 leading-relaxed">แก้ไข CV และผลงานตีพิมพ์ในหน้าจัดการ CV — ซิงค์จาก <span translate="no">กบศ</span> อยู่ในหน้านั้นเมื่อต้องการ</p>
                 <a href="<?= base_url('dashboard/profile/cv') ?>"
-                   class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold transition-colors mb-3">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    จัดการประวัติ / CV (รายวิชา ผลงาน ฯลฯ)
+                   class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold transition-colors mb-3 <?= esc($linkFocus, 'attr') ?>">
+                    <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    จัดการ CV
                 </a>
                 <?php if ($publicCvUrl): ?>
                     <a href="<?= esc($publicCvUrl, 'attr') ?>" target="_blank" rel="noopener noreferrer"
-                       class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-secondary text-secondary-dark font-semibold hover:bg-green-50 transition-colors">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        ดูหน้าประวัติสาธารณะ (เปิดแท็บใหม่)
+                       class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-secondary text-secondary-dark font-semibold hover:bg-green-50 transition-colors mb-3 <?= esc($linkFocus, 'attr') ?>">
+                        <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        ดู CV สาธารณะ
+                    </a>
+                <?php endif; ?>
+                <?php if ($researchSyncConfigured): ?>
+                    <a href="<?= base_url('dashboard/profile/research-record-sync') ?>"
+                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors <?= esc($linkFocus, 'attr') ?>">
+                        <svg class="w-4 h-4 shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        ซิงค์จาก <span translate="no">กบศ</span> แบบละเอียด…
                     </a>
                 <?php endif; ?>
             </div>
