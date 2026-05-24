@@ -19,8 +19,8 @@ use App\Models\PersonnelModel;
 class ResearchRecordCvSyncMerge
 {
     /**
-     * รวมหัวข้อ research/articles ที่ซ้ำเป็นหัวข้อเดียว แล้วลบ cv_entries ที่เป็นผลงานเดียวกันซ้ำ
-     * (กันหน้า CV สาธารณะแสดงบล็อกซ้ำ — มักเกิดจาก bundle กบศ มีหลาย section ประเภทเดียวกัน หรือการกดดึงซ้อน)
+     * รวมหัวข้อผลงานที่ซ้ำจริง (type + title เดียวกัน) แล้วลบ cv_entries ที่เป็นผลงานเดียวกันซ้ำ
+     * กันหน้า CV สาธารณะแสดงบล็อกซ้ำ โดยไม่ยุบหัวข้อ research/articles ที่ชื่อคนละหัวข้อ
      */
     public static function normalizePublicationSectionsForPerson(int $personnelId): void
     {
@@ -40,23 +40,30 @@ class ResearchRecordCvSyncMerge
             return;
         }
 
-        $primaryId = (int) ($sections[0]['id'] ?? 0);
-        if ($primaryId <= 0) {
-            return;
+        $groups = [];
+        foreach ($sections as $section) {
+            $groups[self::publicationSectionGroupKey($section)][] = $section;
         }
 
         $db->transStart();
         try {
-            for ($i = 1, $n = count($sections); $i < $n; $i++) {
-                $dupId = (int) ($sections[$i]['id'] ?? 0);
-                if ($dupId <= 0) {
+            foreach ($groups as $groupSections) {
+                $primaryId = (int) ($groupSections[0]['id'] ?? 0);
+                if ($primaryId <= 0) {
                     continue;
                 }
-                $db->table('cv_entries')->where('section_id', $dupId)->update(['section_id' => $primaryId]);
-                $cvSectionModel->delete($dupId, true);
-            }
 
-            self::dedupePublicationEntriesInSection($primaryId);
+                for ($i = 1, $n = count($groupSections); $i < $n; $i++) {
+                    $dupId = (int) ($groupSections[$i]['id'] ?? 0);
+                    if ($dupId <= 0) {
+                        continue;
+                    }
+                    $db->table('cv_entries')->where('section_id', $dupId)->update(['section_id' => $primaryId]);
+                    $cvSectionModel->delete($dupId, true);
+                }
+
+                self::dedupePublicationEntriesInSection($primaryId);
+            }
             $db->transComplete();
             if ($db->transStatus() === false) {
                 log_message('error', 'normalizePublicationSectionsForPerson: transaction failed for personnel ' . $personnelId);
@@ -233,7 +240,10 @@ class ResearchRecordCvSyncMerge
 
                 $entriesOut[] = [
                     'external_key'      => $ek,
-                    'title'             => (string) ($pick['title'] ?? ''),
+                    'title'             => self::titleWithFallback(
+                        $pick,
+                        $ec === 'rr' ? ($nsEnt[$ek] ?? null) : ($rrEnt[$ek] ?? null)
+                    ),
                     'organization'      => $pick['organization'] ?? null,
                     'location'          => $pick['location'] ?? null,
                     'start_date'        => $pick['start_date'] ?? null,
@@ -249,7 +259,7 @@ class ResearchRecordCvSyncMerge
             $outSections[] = [
                 'external_key'      => $sk,
                 'type'              => (string) ($base['type'] ?? 'custom'),
-                'title'             => (string) ($base['title'] ?? ''),
+                'title'             => self::titleWithFallback($base, $choice === 'rr' ? $nsSec : $rrSec),
                 'description'       => $base['description'] ?? null,
                 'sort_order'        => $sort,
                 'visible_on_public' => (int) ($base['visible_on_public'] ?? 1),
@@ -628,6 +638,31 @@ class ResearchRecordCvSyncMerge
         $base = trim(($e['title'] ?? '') . ' | ' . ($e['organization'] ?? '') . ' | ' . (string) ($e['start_date'] ?? ''));
 
         return $pt !== '' ? $base . ' | ประเภท: ' . $pt : $base;
+    }
+
+    /**
+     * @param array<string,mixed>|null $primary
+     * @param array<string,mixed>|null $fallback
+     */
+    private static function titleWithFallback(?array $primary, ?array $fallback): string
+    {
+        $title = (string) ($primary['title'] ?? '');
+        if (trim($title) !== '') {
+            return $title;
+        }
+
+        return (string) ($fallback['title'] ?? '');
+    }
+
+    /**
+     * @param array<string,mixed> $section
+     */
+    private static function publicationSectionGroupKey(array $section): string
+    {
+        $type  = strtolower(trim((string) ($section['type'] ?? '')));
+        $title = strtolower(trim((string) preg_replace('/\s+/', ' ', (string) ($section['title'] ?? ''))));
+
+        return $type . '|' . $title;
     }
 
     /**
