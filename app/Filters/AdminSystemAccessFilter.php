@@ -40,6 +40,7 @@ class AdminSystemAccessFilter implements FilterInterface
         'downloads'      => 'admin_downloads',     // จัดการไฟล์ดาวน์โหลดคณะ (หรือ admin_core)
         'academic-services' => 'academic_service',  // ข้อมูลการบริการวิชาการ (หรือ admin_core)
         'users'          => 'user_management',
+        'impersonation'  => 'user_management',
         'settings'       => 'site_settings',
         'cert-events'    => 'ecert',
         'calendar'       => 'calendar',   // ปฏิทินนัดหมายกิจกรรมผู้บริหาร

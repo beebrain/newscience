@@ -197,6 +197,26 @@ $superAdminMemberPortal = ($userRole === 'super_admin') && session()->get(\App\C
         </div>
     </header>
 
+    <?php if (session()->get(\App\Libraries\AdminImpersonation::SESSION_ACTIVE)): ?>
+        <div class="bg-red-50 border-b border-red-200" role="status" aria-live="polite">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="text-sm text-red-800">
+                    <strong>กำลัง Login As:</strong>
+                    <?= esc(session()->get(\App\Libraries\AdminImpersonation::SESSION_TARGET_NAME) ?: session()->get('admin_name')) ?>
+                    <span class="text-red-700">
+                        โดย <?= esc(session()->get(\App\Libraries\AdminImpersonation::SESSION_ACTOR_NAME) ?: 'Super Admin') ?>
+                    </span>
+                </div>
+                <form method="post" action="<?= base_url('admin/impersonation/stop') ?>" class="m-0">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-semibold text-white bg-red-600 border border-red-700 rounded-lg hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+                        หยุดใช้งานแทน
+                    </button>
+                </form>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <!-- Flash Messages -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 mt-4">
         <?php if (session()->getFlashdata('success')): ?>

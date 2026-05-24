@@ -369,8 +369,12 @@ if ($activeComp) {
                 <span>🏠 หน้าสมัคร</span>
             </a>
             <div class="nav-divider"></div>
-            <a href="<?= base_url('admin') ?>" class="nav-item">
-                <span>← กลับ Admin</span>
+            <?php
+            $swRole = session('admin_role') ?? 'user';
+            $swIsAdminRole = in_array($swRole, ['admin', 'editor', 'super_admin', 'faculty_admin'], true);
+            ?>
+            <a href="<?= base_url($swIsAdminRole ? 'admin' : 'dashboard') ?>" class="nav-item">
+                <span><?= $swIsAdminRole ? '← กลับ Admin' : '← กลับ Dashboard' ?></span>
             </a>
         </div>
     </nav>

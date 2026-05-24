@@ -65,6 +65,7 @@ use App\Libraries\AccessControl; ?>
                 $hasVisitReports = $sidebarAdminId && AccessControl::hasAccess($sid, 'visit_reports');
                 $showContentMenu = $hasAdminCore || $hasAdminNews || $hasAdminDownloads || $hasAdminUrgentPopup;
                 $canManageEvaluate = $sidebarAdminId && in_array($sidebarRole, ['super_admin', 'faculty_admin'], true);
+                $isSidebarSuperAdmin = $sidebarAdminId && AccessControl::isSuperAdmin($sid);
                 ?>
                 <a href="<?= base_url('dashboard') ?>" class="<?= (uri_string() == 'dashboard') ? 'active' : '' ?>">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -445,6 +446,16 @@ use App\Libraries\AccessControl; ?>
                                     </svg>
                                     จัดการผู้ใช้
                                 </a>
+                                <?php if ($isSidebarSuperAdmin): ?>
+                                    <a href="<?= base_url('admin/impersonation') ?>" class="<?= (uri_string() == 'admin/impersonation' || strpos(uri_string(), 'admin/impersonation') === 0) ? 'active' : '' ?>">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                            <circle cx="9" cy="7" r="4" />
+                                            <path d="M22 11l-3-3m0 0l-3 3m3-3v12" />
+                                        </svg>
+                                        Login As บุคลากร
+                                    </a>
+                                <?php endif; ?>
                                 <a href="<?= base_url('admin/club-representatives') ?>" class="<?= (uri_string() == 'admin/club-representatives' || strpos(uri_string(), 'admin/club-representatives') === 0) ? 'active' : '' ?>">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
@@ -579,6 +590,22 @@ use App\Libraries\AccessControl; ?>
             </header>
 
             <div class="content">
+                <?php if (session()->get(\App\Libraries\AdminImpersonation::SESSION_ACTIVE)): ?>
+                    <div class="alert alert-error" role="status" aria-live="polite" style="align-items: center; justify-content: space-between; gap: 1rem;">
+                        <div>
+                            <strong>กำลัง Login As:</strong>
+                            <?= esc(session()->get(\App\Libraries\AdminImpersonation::SESSION_TARGET_NAME) ?: session()->get('admin_name')) ?>
+                            <span style="color: var(--color-gray-600);">
+                                โดย <?= esc(session()->get(\App\Libraries\AdminImpersonation::SESSION_ACTOR_NAME) ?: 'Super Admin') ?>
+                            </span>
+                        </div>
+                        <form method="post" action="<?= base_url('admin/impersonation/stop') ?>" style="margin: 0;">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-sm btn-danger">หยุดใช้งานแทน</button>
+                        </form>
+                    </div>
+                <?php endif; ?>
+
                 <?php if (session()->getFlashdata('success')): ?>
                     <div class="alert alert-success" role="status" aria-live="polite">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

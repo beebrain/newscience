@@ -92,6 +92,16 @@ $quickSystemsGridClass = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid
             </a>
             <?php endif; ?>
 
+            <!-- สัปดาห์วิทยาศาสตร์ — จัดการผู้สมัคร -->
+            <a href="<?= base_url('scienceweek/manage') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-indigo-200 hover:-translate-y-1 transition-all duration-200">
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 3h6l1 2h4a1 1 0 011 1v3H3V6a1 1 0 011-1h4l1-2z"/><path d="M5 10h14v11a1 1 0 01-1 1H6a1 1 0 01-1-1V10z"/><path d="M10 14h4"/></svg>
+                </div>
+                <div class="font-semibold text-gray-800 group-hover:text-indigo-600 transition-colors">สัปดาห์วิทยาศาสตร์</div>
+                <div class="text-sm text-gray-500 mt-1">จัดการผู้สมัครแข่งขัน 2569</div>
+                <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+
             <!-- ตารางคุมสอบ -->
             <a href="<?= base_url('exam') ?>" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-orange-200 hover:-translate-y-1 transition-all duration-200">
                 <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">

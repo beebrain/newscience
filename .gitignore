@@ -159,6 +159,8 @@ _modules/*
 #-------------------------
 scraped_data/
 scripts/scraped_data/
+# ไฟล์ต้นฉบับจากผู้จัด (ใช้ PDF ใน public/scienceweek/docs/ บนเว็บ)
+Sci_week/
 # public/ is tracked; exclude generated/user content below
 public/newsimages/
 public/thumbnails/
@@ -176,7 +178,7 @@ blob-report/
 playwright/.cache/
 
 #-------------------------
-# Python Backup Tool
+# Python Backup Tool (local only — not versioned)
 #-------------------------
-newscience-backup/writable/cv_ai_uploads/
+newscience-backup/
 writable/cv_ai_uploads/

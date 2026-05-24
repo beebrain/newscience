@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\AdminImpersonation;
 use App\Models\UserModel;
 use Config\EdocSso;
 use Config\ResearchRecordSso;
@@ -58,6 +59,7 @@ class Auth extends BaseController
         $adminId = $session->get('admin_id');
         $loginVia = $session->get('admin_login_via');
         log_message('info', self::LOG_PREFIX . 'logout admin_id=' . ($adminId ?? '') . ' login_via=' . ($loginVia ?? 'form'));
+        AdminImpersonation::endIfActive('logout');
 
         $session->remove([
             'admin_logged_in',
@@ -67,6 +69,7 @@ class Auth extends BaseController
             'admin_role',
             'redirect_url',
             'admin_access_token',
+            'admin_refresh_token',
             'admin_token_expires',
             'admin_login_via',
         ]);
@@ -140,6 +143,7 @@ class Auth extends BaseController
         $session = session();
         $adminId = $session->get('admin_id');
         log_message('info', self::LOG_PREFIX . 'clearSession admin_id=' . ($adminId ?? ''));
+        AdminImpersonation::endIfActive('clear_session');
         $session->remove([
             'admin_logged_in',
             'admin_id',
@@ -148,6 +152,7 @@ class Auth extends BaseController
             'admin_role',
             'redirect_url',
             'admin_access_token',
+            'admin_refresh_token',
             'admin_token_expires',
             'admin_login_via',
         ]);
@@ -425,6 +430,11 @@ class Auth extends BaseController
      */
     public function goResearchRecord()
     {
+        if (AdminImpersonation::isActive()) {
+            return redirect()->to(base_url('dashboard'))
+                ->with('error', 'ไม่สามารถไปยังระบบภายนอกระหว่าง Login As ได้ กรุณาหยุดใช้งานแทนก่อน');
+        }
+
         // Redirect ไป Sci OAuth แทนการไป Research Record
         return redirect()->to(base_url('oauth/login'));
     }

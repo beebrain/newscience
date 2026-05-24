@@ -121,6 +121,7 @@ $routes->post('/dashboard/profile/research-record-sync/apply', 'User\ResearchRec
 $routes->post('/dashboard/profile/research-record-sync/pull-all', 'User\ResearchRecordSync::pullAll', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/research-record-sync/push-all', 'User\ResearchRecordSync::pushAll', ['filter' => 'loggedin']);
 $routes->get('/go-research-record', 'Admin\Auth::goResearchRecord', ['filter' => 'loggedin']);
+$routes->post('/admin/impersonation/stop', 'Admin\Impersonation::stop', ['filter' => ['loggedin', 'csrf']]);
 
 // E-Certificate กิจกรรม (อาจารย์/บุคลากร — Dashboard)
 $routes->group('dashboard/cert-events', ['filter' => 'certorganizer'], static function ($routes) {
@@ -253,6 +254,10 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
 
     // จัดการผู้ใช้ (Super_admin และ Faculty_admin)
     $routes->get('users', 'Admin\UserManagement::index');
+
+    // Super Admin Login As (production impersonation with audit)
+    $routes->get('impersonation', 'Admin\Impersonation::index');
+    $routes->post('impersonation/start/(:num)', 'Admin\Impersonation::start/$1', ['filter' => 'csrf']);
 
     // ตัวแทนนักศึกษาสโมสร (faculty_admin / admin ในหลักสูตร)
     $routes->get('club-representatives', 'Admin\ClubRepresentatives::index');
@@ -631,8 +636,8 @@ $routes->group('scienceweek', static function ($routes) {
     $routes->get('success/(:num)', 'ScienceWeek\Register::success/$1');
     $routes->get('verify', 'ScienceWeek\Verify::index');
 
-    // Teacher-only (reuse newScience adminauth)
-    $routes->group('manage', ['filter' => 'adminauth'], static function ($routes) {
+    // อาจารย์/บุคลากรที่ login แล้ว (ทุก role รวม user)
+    $routes->group('manage', ['filter' => 'loggedin'], static function ($routes) {
         $routes->get('/', 'ScienceWeek\Manage::index');
         $routes->get('(:num)', 'ScienceWeek\Manage::detail/$1');
         $routes->post('(:num)/delete', 'ScienceWeek\Manage::delete/$1', ['filter' => 'csrf']);

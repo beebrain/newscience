@@ -8,7 +8,7 @@ use App\Models\SwParticipantModel;
 use Config\SciWeek;
 
 /**
- * อาจารย์ login (adminauth filter) ดู/ลบรายชื่อผู้สมัคร
+ * อาจารย์/บุคลากรที่ login (loggedin filter) ดู/ลบรายชื่อผู้สมัคร
  */
 class Manage extends BaseController
 {

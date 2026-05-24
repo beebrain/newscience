@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Libraries\AdminImpersonation;
 use App\Libraries\UruPortalOAuthService;
 use App\Models\UserModel;
 use App\Models\StudentUserModel;
@@ -313,6 +314,7 @@ class OAuthController extends BaseController
             'student_id' => $studentId ?? '',
             'email'      => $email,
         ]);
+        AdminImpersonation::endIfActive('oauth_logout');
 
         // ล้าง session ทั้งหมด
         $session->remove([
