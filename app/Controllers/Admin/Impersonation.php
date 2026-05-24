@@ -168,10 +168,15 @@ class Impersonation extends BaseController
     private function eligibleTargets(string $search, int $limit, int $offset): array
     {
         $builder = $this->baseEligibleBuilder($search)
-            ->select('user.uid, user.email, user.login_uid, user.title, user.tf_name, user.tl_name, user.gf_name, user.gl_name, user.role, user.active, user.status, user.program_id')
-            ->orderBy('user.tf_name', 'ASC')
-            ->orderBy('user.tl_name', 'ASC')
-            ->limit($limit, $offset);
+            ->select($this->eligibleUserSelectColumns());
+        $db = db_connect();
+        if ($db->fieldExists('tf_name', 'user')) {
+            $builder->orderBy('user.tf_name', 'ASC');
+        }
+        if ($db->fieldExists('tl_name', 'user')) {
+            $builder->orderBy('user.tl_name', 'ASC');
+        }
+        $builder->limit($limit, $offset);
 
         $rows = $builder->get()->getResultArray();
         foreach ($rows as &$row) {
@@ -198,25 +203,44 @@ class Impersonation extends BaseController
     {
         $emailExpr = 'LOWER(TRIM(user.email))';
         $builder = db_connect()->table('user')
-            ->where('user.role !=', 'super_admin')
-            ->groupStart()
-                ->where('user.status', 'active')
-                ->orWhere('user.active', 1)
-            ->groupEnd()
-            ->where('EXISTS (SELECT 1 FROM personnel WHERE personnel.status = \'active\' AND ' . $this->personnelMatchesUserSql($emailExpr) . ')', null, false);
+            ->where('user.role !=', 'super_admin');
+
+        $this->applyEligibleUserActiveFilter($builder);
+        $builder->where('EXISTS (SELECT 1 FROM personnel WHERE personnel.status = \'active\' AND ' . $this->personnelMatchesUserSql($emailExpr) . ')', null, false);
 
         if ($search !== '') {
-            $builder->groupStart()
-                ->like('user.email', $search)
-                ->orLike('user.login_uid', $search)
-                ->orLike('user.tf_name', $search)
-                ->orLike('user.tl_name', $search)
-                ->orLike('user.gf_name', $search)
-                ->orLike('user.gl_name', $search)
-                ->groupEnd();
+            $this->applyEligibleUserSearch($builder, $search);
         }
 
         return $builder;
+    }
+
+    private function applyEligibleUserActiveFilter($builder): void
+    {
+        $db = db_connect();
+        if ($db->fieldExists('status', 'user')) {
+            $builder->where('user.status', 'active');
+
+            return;
+        }
+        if ($db->fieldExists('active', 'user')) {
+            $builder->where('user.active', 1);
+        }
+    }
+
+    private function applyEligibleUserSearch($builder, string $search): void
+    {
+        $db = db_connect();
+        $builder->groupStart();
+        if ($db->fieldExists('email', 'user')) {
+            $builder->like('user.email', $search);
+        }
+        foreach (['login_uid', 'tf_name', 'tl_name', 'gf_name', 'gl_name'] as $field) {
+            if ($db->fieldExists($field, 'user')) {
+                $builder->orLike('user.' . $field, $search);
+            }
+        }
+        $builder->groupEnd();
     }
 
     private function isActivePersonnel(int $uid, string $email): bool
@@ -239,6 +263,21 @@ class Impersonation extends BaseController
         $row = $db->query($sql, $params)->getRowArray();
 
         return $row !== null;
+    }
+
+    /** SELECT คอลัมน์ user ที่มีจริงใน DB (production อาจไม่มี program_id ฯลฯ) */
+    private function eligibleUserSelectColumns(): string
+    {
+        $db   = db_connect();
+        $cols = ['user.uid', 'user.email', 'user.role'];
+
+        foreach (['login_uid', 'title', 'tf_name', 'tl_name', 'gf_name', 'gl_name', 'active', 'status', 'program_id'] as $field) {
+            if ($db->fieldExists($field, 'user')) {
+                $cols[] = 'user.' . $field;
+            }
+        }
+
+        return implode(', ', $cols);
     }
 
     /**
