@@ -98,7 +98,7 @@ $levelLabels = [
                 <?php endif; ?>
 
                 <?php foreach ($comp['docs'] ?? [] as $doc): ?>
-                    <a href="<?= base_url('scienceweek/docs/'.rawurlencode($doc)) ?>"
+                    <a href="<?= base_url(config('SciWeek')->docsPublicPath.'/'.rawurlencode($doc)) ?>"
                        target="_blank"
                        class="btn-doc" onclick="event.stopPropagation()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">

@@ -38,7 +38,7 @@ function swOld(string $field, array $old): string {
             <?php if (!empty($comp['docs'])): ?>
                 <div class="d-flex gap-2 flex-wrap mt-1">
                     <?php foreach ($comp['docs'] as $doc): ?>
-                        <a href="<?= base_url('scienceweek/docs/'.rawurlencode($doc)) ?>"
+                        <a href="<?= base_url(config('SciWeek')->docsPublicPath.'/'.rawurlencode($doc)) ?>"
                            target="_blank"
                            class="btn-doc" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">

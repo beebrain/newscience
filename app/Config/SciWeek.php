@@ -16,6 +16,12 @@ class SciWeek extends BaseConfig
     public string $routePrefix = 'scienceweek';
 
     /**
+     * Path สำหรับไฟล์ PDF สาธารณะ (ใต้ public/)
+     * ต้องไม่ใช้ชื่อ scienceweek/ — IIS จะมองเป็นโฟลเดอร์จริงแทน CI route
+     */
+    public string $docsPublicPath = 'scienceweek-files/docs';
+
+    /**
      * รายการแข่งขันทั้ง 5 รายการ
      * ชุดข้อมูลแต่ละรายการ:
      *   name_th       ชื่อภาษาไทย

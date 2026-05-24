@@ -159,7 +159,7 @@ _modules/*
 #-------------------------
 scraped_data/
 scripts/scraped_data/
-# ไฟล์ต้นฉบับจากผู้จัด (ใช้ PDF ใน public/scienceweek/docs/ บนเว็บ)
+# ไฟล์ต้นฉบับจากผู้จัด (PDF บนเว็บอยู่ที่ public/scienceweek-files/docs/)
 Sci_week/
 # public/ is tracked; exclude generated/user content below
 public/newsimages/
