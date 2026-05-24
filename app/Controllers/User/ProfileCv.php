@@ -347,6 +347,16 @@ class ProfileCv extends BaseController
         $cvEditActiveTab = in_array($tabRaw, $cvEditTabs, true) ? $tabRaw : 'narrative';
 
         $aiCvCfg = config(AiCv::class);
+        $cvAiPublicationSectionId = 0;
+        foreach ($cvSections as $sec) {
+            if (! is_array($sec) || ! ResearchRecordCvSyncMerge::isPublicationCvSection($sec)) {
+                continue;
+            }
+            $cvAiPublicationSectionId = (int) ($sec['id'] ?? 0);
+            if ($cvAiPublicationSectionId > 0) {
+                break;
+            }
+        }
         $ownerEmail = ResearchRecordCvPull::canonicalEmailForPerson($person);
         $ownerName = PersonnelModel::resolvePublicDisplayNameTh($person);
 
@@ -363,7 +373,8 @@ class ProfileCv extends BaseController
             'rr_last_pull_at'            => $rrLastPullFormatted,
             'rr_auto_pull_max_age_days'  => $researchSyncConfigured ? $syncCfg->autoPullMaxAgeDays : null,
             'cv_edit_active_tab'         => $cvEditActiveTab,
-            'ai_cv_publication_enabled'  => $aiCvCfg->isReady(),
+            'ai_cv_publication_enabled'     => $aiCvCfg->isReady(),
+            'cv_ai_publication_section_id'  => $cvAiPublicationSectionId,
         ]);
     }
 
@@ -688,10 +699,10 @@ class ProfileCv extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบหัวข้อ']);
         }
 
-        if (ResearchRecordCvSyncMerge::isProtectedEducationSection($section)) {
+        if (ResearchRecordCvSyncMerge::isProtectedDefaultCvSection($section)) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'ไม่สามารถลบหัวข้อการศึกษาได้ — เพิ่มหรือแก้ไขรายการในหัวข้อนี้แทน',
+                'message' => ResearchRecordCvSyncMerge::protectedSectionDeleteMessage($section),
             ]);
         }
 

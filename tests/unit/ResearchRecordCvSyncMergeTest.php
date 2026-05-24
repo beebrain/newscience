@@ -8,6 +8,13 @@ use CodeIgniter\Test\CIUnitTestCase;
  */
 final class ResearchRecordCvSyncMergeTest extends CIUnitTestCase
 {
+    public function testProtectedDefaultCvSectionIncludesEducationAndResearch(): void
+    {
+        $this->assertTrue(ResearchRecordCvSyncMerge::isProtectedDefaultCvSection(['type' => 'education']));
+        $this->assertTrue(ResearchRecordCvSyncMerge::isProtectedDefaultCvSection(['type' => 'research']));
+        $this->assertFalse(ResearchRecordCvSyncMerge::isProtectedDefaultCvSection(['type' => 'work']));
+    }
+
     public function testMergedBundleFillsBlankNewScienceTitlesFromResearchRecord(): void
     {
         $nsBundle = [
@@ -191,5 +198,14 @@ final class ResearchRecordCvSyncMergeTest extends CIUnitTestCase
         $this->assertNotNull($edu);
         $this->assertSame('การศึกษา', $edu['title']);
         $this->assertSame([], $edu['entries']);
+    }
+
+    public function testIsPublicationCvSectionRecognizesResearchAndPublicationHeadings(): void
+    {
+        $this->assertTrue(ResearchRecordCvSyncMerge::isPublicationCvSection(['type' => 'research', 'title' => 'งานวิจัยที่ตีพิมพ์']));
+        $this->assertTrue(ResearchRecordCvSyncMerge::isPublicationCvSection(['type' => 'articles', 'title' => 'บทความ']));
+        $this->assertTrue(ResearchRecordCvSyncMerge::isPublicationCvSection(['type' => 'custom', 'title' => 'ผลงานตีพิมพ์']));
+        $this->assertFalse(ResearchRecordCvSyncMerge::isPublicationCvSection(['type' => 'custom', 'title' => 'รางวัล']));
+        $this->assertFalse(ResearchRecordCvSyncMerge::isPublicationCvSection(['type' => 'work', 'title' => 'ประสบการณ์']));
     }
 }

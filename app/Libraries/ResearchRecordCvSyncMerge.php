@@ -300,6 +300,7 @@ class ResearchRecordCvSyncMerge
         self::dedupeCvSectionsByTypeForPerson($personnelId);
         self::normalizePublicationSectionsForPerson($personnelId);
         self::ensureEducationSectionForPerson($personnelId);
+        self::ensurePublicationSectionForPerson($personnelId);
         self::applyCanonicalSectionTitlesForPerson($personnelId);
     }
 
@@ -376,6 +377,75 @@ class ResearchRecordCvSyncMerge
     }
 
     /**
+     * สร้างหัวข้อผลงานตีพิมพ์ให้ทุกคนที่ยังไม่มี (ว่างได้จนกว่าจะมีรายการจาก catalog/กรอกเอง)
+     */
+    public static function ensurePublicationSectionForPerson(int $personnelId): void
+    {
+        if ($personnelId <= 0) {
+            return;
+        }
+
+        $cvSectionModel = new CvSectionModel();
+        if (! $cvSectionModel->db->tableExists('cv_sections')) {
+            return;
+        }
+
+        $section = $cvSectionModel->where('personnel_id', $personnelId)
+            ->groupStart()
+            ->where('type', 'research')
+            ->orWhere('type', 'articles')
+            ->groupEnd()
+            ->orderBy('sort_order', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->first();
+
+        if ($section === null) {
+            $cvSectionModel->insert([
+                'personnel_id'      => $personnelId,
+                'type'              => 'research',
+                'title'             => self::canonicalPublicationSectionTitle(),
+                'description'       => null,
+                'sort_order'        => self::defaultPublicationSortOrder(),
+                'is_default'        => 0,
+                'visible_on_public' => 1,
+            ]);
+            $section = $cvSectionModel->find((int) $cvSectionModel->getInsertID());
+        } elseif (self::shouldNormalizeSectionTitleToCanonical('research', (string) ($section['title'] ?? ''))) {
+            $cvSectionModel->update((int) $section['id'], [
+                'title' => mb_substr(self::canonicalPublicationSectionTitle(), 0, 255),
+                'type'  => 'research',
+            ]);
+        }
+
+        if ($section !== null) {
+            self::normalizePublicationSectionsForPerson($personnelId);
+        }
+    }
+
+    /**
+     * สร้างหัวข้อผลงานตีพิมพ์ให้บุคลากรทุกคน (migration / บำรุงรักษา)
+     */
+    public static function ensurePublicationSectionForAllPersonnel(): int
+    {
+        $personnelModel = new PersonnelModel();
+        if (! $personnelModel->db->tableExists('personnel')) {
+            return 0;
+        }
+
+        $count = 0;
+        foreach ($personnelModel->select('id')->findAll() as $row) {
+            $pid = (int) ($row['id'] ?? 0);
+            if ($pid <= 0) {
+                continue;
+            }
+            self::ensurePublicationSectionForPerson($pid);
+            $count++;
+        }
+
+        return $count;
+    }
+
+    /**
      * @param array<string,mixed> $section
      */
     public static function isProtectedEducationSection(array $section): bool
@@ -383,11 +453,71 @@ class ResearchRecordCvSyncMerge
         return self::sectionTypeGroupKey((string) ($section['type'] ?? '')) === 'education';
     }
 
+    /**
+     * @param array<string,mixed> $section
+     */
+    public static function isProtectedPublicationSection(array $section): bool
+    {
+        return self::sectionTypeGroupKey((string) ($section['type'] ?? '')) === 'research';
+    }
+
+    /**
+     * หัวข้อที่รองรับฟอร์มผลงาน + ปุ่มช่วยเติมด้วย AI (type research/articles หรือ custom ที่ชื่อเป็นหัวข้อผลงาน)
+     *
+     * @param array<string,mixed> $section
+     */
+    public static function isPublicationCvSection(array $section): bool
+    {
+        if (self::isProtectedPublicationSection($section)) {
+            return true;
+        }
+
+        $type = strtolower(trim((string) ($section['type'] ?? '')));
+
+        return $type === 'custom' && self::isPublicationSectionHeading((string) ($section['title'] ?? ''));
+    }
+
+    /**
+     * หัวข้อหลักที่ลบไม่ได้ (การศึกษา + ผลงานตีพิมพ์)
+     *
+     * @param array<string,mixed> $section
+     */
+    public static function isProtectedDefaultCvSection(array $section): bool
+    {
+        $group = self::sectionTypeGroupKey((string) ($section['type'] ?? ''));
+
+        return $group === 'education' || $group === 'research';
+    }
+
+    /**
+     * @param array<string,mixed> $section
+     */
+    public static function protectedSectionDeleteMessage(array $section): string
+    {
+        if (self::isProtectedPublicationSection($section)) {
+            return 'ไม่สามารถลบหัวข้อผลงานตีพิมพ์ได้ — เพิ่มหรือแก้ไขรายการในหัวข้อนี้แทน';
+        }
+
+        return 'ไม่สามารถลบหัวข้อการศึกษาได้ — เพิ่มหรือแก้ไขรายการในหัวข้อนี้แทน';
+    }
+
+    public static function defaultEducationSortOrderForBundle(): int
+    {
+        return self::defaultEducationSortOrder();
+    }
+
     private static function defaultEducationSortOrder(): int
     {
         $map = CvProfile::defaultSortOrderByKey();
 
         return (int) (($map[CvProfile::SECTION_EDUCATION] ?? 1) + 1);
+    }
+
+    private static function defaultPublicationSortOrder(): int
+    {
+        $map = CvProfile::defaultSortOrderByKey();
+
+        return (int) (($map[CvProfile::SECTION_RESEARCH] ?? 2) + 1);
     }
 
     /**

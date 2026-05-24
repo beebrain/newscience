@@ -326,29 +326,19 @@ class PublicationCatalog
 
     private static function ensureResearchSection(int $personnelId): ?array
     {
-        $model = new CvSectionModel();
+        ResearchRecordCvSyncMerge::ensurePublicationSectionForPerson($personnelId);
+
+        $model   = new CvSectionModel();
         $section = $model->where('personnel_id', $personnelId)
             ->groupStart()
             ->where('type', 'research')
             ->orWhere('type', 'articles')
             ->groupEnd()
             ->orderBy('sort_order', 'ASC')
+            ->orderBy('id', 'ASC')
             ->first();
-        if ($section !== null) {
-            return $section;
-        }
 
-        $model->insert([
-            'personnel_id'      => $personnelId,
-            'type'              => 'research',
-            'title'             => ResearchRecordCvSyncMerge::canonicalPublicationSectionTitle(),
-            'description'       => null,
-            'sort_order'        => $model->nextSortOrder($personnelId),
-            'is_default'        => 0,
-            'visible_on_public' => 1,
-        ]);
-
-        return $model->find((int) $model->getInsertID());
+        return $section !== null ? $section : null;
     }
 
     private static function externalKeyFromPayload(array $pub): string

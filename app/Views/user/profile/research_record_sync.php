@@ -12,7 +12,7 @@ $email = $sync_email ?? '';
                 <div class="w-1 h-6 bg-emerald-600 rounded-full"></div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-800 text-balance">ซิงค์ CV จาก <span translate="no">กบศ</span></h1>
             </div>
-            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — <strong class="text-gray-700">แนวหลัก:</strong> ดึงจาก กบศ มาเสริมฐานข้อมูลคณะ — ปุ่ม <strong>ส่งประวัติและผลงานไป กบศ</strong> จะส่ง CV ทั้งชุดและผลงานตีพิมพ์จาก catalog ในครั้งเดียว</p>
+            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — <strong class="text-gray-700">แนวหลัก:</strong> ดึงจาก กบศ มาเสริมฐานข้อมูลคณะ — ปุ่ม <strong>ส่งประวัติการศึกษาและผลงานไป กบศ</strong> ส่งเฉพาะหัวข้อการศึกษา + ผลงานตีพิมพ์ (หัวข้อ CV อื่นบน กบศ คงเดิม)</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="<?= base_url('dashboard/profile/cv') ?>"
@@ -47,9 +47,9 @@ $email = $sync_email ?? '';
                     <?= $apiOk ? '' : 'disabled' ?>>เปรียบเทียบแล้วเลือกรายแถว</button>
             <button type="button" id="rrsync-btn-push"
                     class="px-4 py-2.5 rounded-lg bg-slate-800 text-white text-sm font-semibold hover:bg-slate-900 disabled:opacity-50 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 transition-colors"
-                    <?= $apiOk ? '' : 'disabled' ?>>ส่งประวัติและผลงานไป <span translate="no">กบศ</span></button>
+                    <?= $apiOk ? '' : 'disabled' ?>>ส่งประวัติการศึกษาและผลงานไป <span translate="no">กบศ</span></button>
         </div>
-        <p class="text-xs text-gray-500">การส่งไป กบศ: แทนที่ CV ทั้งหมดบน กบศ ด้วยข้อมูลจาก ฐานข้อมูลคณะ และส่งผลงานตีพิมพ์จาก catalog (upsert — ไม่ลบผลงานที่กรอกใน กบศ โดยตรง)</p>
+        <p class="text-xs text-gray-500">การส่งไป กบศ: อัปเดตหัวข้อ <strong>ประวัติการศึกษา</strong> จาก ฐานข้อมูลคณะ (แม้ยังไม่มีรายการในหัวข้อ — จะส่งหัวข้อว่าง) หัวข้อ CV อื่นบน กบศ ไม่เปลี่ยน · upsert <strong>ผลงานตีพิมพ์</strong> จาก catalog</p>
 
         <p id="rrsync-status" class="text-sm text-gray-600" role="status" aria-live="polite"></p>
 
@@ -207,9 +207,9 @@ $email = $sync_email ?? '';
     });
 
     document.getElementById('rrsync-btn-push') && document.getElementById('rrsync-btn-push').addEventListener('click', async function () {
-        if (!confirm('ส่งประวัติ (CV) และผลงานตีพิมพ์จาก ฐานข้อมูลคณะ ไป กบศ?\n\nCV บน กบศ จะถูกแทนที่ทั้งชุด — ผลงานจะถูก upsert (ไม่ลบรายการที่กรอกใน กบศ โดยตรง)')) return;
+        if (!confirm('ส่งประวัติการศึกษาและผลงานตีพิมพ์จาก ฐานข้อมูลคณะ ไป กบศ?\n\nเฉพาะหัวข้อการศึกษาบน กบศ จะถูกอัปเดต — หัวข้อ CV อื่นบน กบศ คงเดิม — ผลงาน upsert ไม่ลบรายการที่กรอกใน กบศ โดยตรง')) return;
         var btn = this;
-        setStatus('กำลังส่งประวัติและผลงาน…');
+        setStatus('กำลังส่งประวัติการศึกษาและผลงาน…');
         btn.disabled = true;
         try {
             var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/push-all') ?>', {});

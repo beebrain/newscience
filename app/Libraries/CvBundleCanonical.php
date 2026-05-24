@@ -155,6 +155,104 @@ class CvBundleCanonical
         return $bundle;
     }
 
+    public static function isEducationSectionType(string $type): bool
+    {
+        return in_array(strtolower(trim($type)), ['education', 'education_structured'], true);
+    }
+
+    /**
+     * @param list<array<string,mixed>> $sections
+     *
+     * @return list<array<string,mixed>>
+     */
+    public static function filterEducationSections(array $sections): array
+    {
+        $out = [];
+        foreach ($sections as $sec) {
+            if (is_array($sec) && self::isEducationSectionType((string) ($sec['type'] ?? ''))) {
+                $out[] = $sec;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Build bundle for RR push: replace only education sections from NS; keep other RR CV sections.
+     *
+     * @return array{success:bool,bundle?:array<string,mixed>,education_section_count?:int,skipped?:bool,message?:string,error?:string}
+     */
+    public static function buildBundleForEducationPushPreservingRrCv(int $personnelId, string $canonicalEmail): array
+    {
+        $email = CvProfile::normalizeEmail($canonicalEmail);
+        if ($email === '') {
+            return ['success' => false, 'error' => 'EMAIL_REQUIRED', 'message' => 'missing email'];
+        }
+
+        ResearchRecordCvSyncMerge::ensureEducationSectionForPerson($personnelId);
+
+        $nsBundle    = self::buildFromNewScience($personnelId, $email);
+        $nsEducation = self::filterEducationSections(is_array($nsBundle['sections'] ?? null) ? $nsBundle['sections'] : []);
+
+        if ($nsEducation === []) {
+            $nsEducation = [[
+                'external_key'      => self::sectionExternalKey([
+                    'type'       => 'education',
+                    'title'      => ResearchRecordCvSyncMerge::canonicalEducationSectionTitle(),
+                    'sort_order' => ResearchRecordCvSyncMerge::defaultEducationSortOrderForBundle(),
+                ]),
+                'type'              => 'education',
+                'title'             => ResearchRecordCvSyncMerge::canonicalEducationSectionTitle(),
+                'description'       => null,
+                'sort_order'        => ResearchRecordCvSyncMerge::defaultEducationSortOrderForBundle(),
+                'visible_on_public' => 1,
+                'entries'           => [],
+            ]];
+        }
+
+        $educationEntryCount = 0;
+        foreach ($nsEducation as $sec) {
+            if (! is_array($sec)) {
+                continue;
+            }
+            $educationEntryCount += count(is_array($sec['entries'] ?? null) ? $sec['entries'] : []);
+        }
+
+        $rr = ResearchRecordCvSyncClient::fetchCvBundle($email);
+        if (! ($rr['success'] ?? false) || ! is_array($rr['bundle'] ?? null)) {
+            return [
+                'success' => false,
+                'error'   => $rr['error'] ?? 'FETCH_FAILED',
+                'message' => $rr['message'] ?? 'ดึง CV จาก กบศ ไม่สำเร็จ — จึงไม่ส่งประวัติการศึกษา',
+            ];
+        }
+
+        $rrBundle = self::ensureBundleSectionEntryKeys($rr['bundle']);
+        $kept     = [];
+        foreach (is_array($rrBundle['sections'] ?? null) ? $rrBundle['sections'] : [] as $sec) {
+            if (is_array($sec) && ! self::isEducationSectionType((string) ($sec['type'] ?? ''))) {
+                $kept[] = $sec;
+            }
+        }
+
+        $merged             = $rrBundle;
+        $merged['sections'] = array_merge($kept, $nsEducation);
+        $merged['email']    = $email;
+        $merged['source']   = 'newscience_education_push';
+        if (! empty($nsBundle['orcid_id']) && empty($merged['orcid_id'])) {
+            $merged['orcid_id'] = $nsBundle['orcid_id'];
+        }
+        $merged['content_hash'] = self::hashBundle($merged);
+
+        return [
+            'success'                 => true,
+            'bundle'                  => $merged,
+            'education_section_count' => count($nsEducation),
+            'education_entry_count'   => $educationEntryCount,
+            'education_empty'         => $educationEntryCount === 0,
+        ];
+    }
+
     /**
      * เติม external_key ให้ section/entry ใน bundle จากกบศที่ไม่มีคีย์ — ให้ merge (NS + RR) ไม่ทิ้งรายการ
      *
