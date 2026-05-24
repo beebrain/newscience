@@ -73,6 +73,49 @@ class ResearchRecordCvSyncClient
     }
 
     /**
+     * @param list<array<string,mixed>> $publications
+     *
+     * @return array{success:bool,publications?:list<array>,content_hash?:string,stats?:array,error?:string,message?:string}
+     */
+    public static function pushPublicationsSyncBundle(string $canonicalEmail, array $publications): array
+    {
+        $researchApi = config(ResearchApi::class);
+        if ($researchApi->baseUrl === '' || $researchApi->apiKey === '') {
+            return ['success' => false, 'error' => 'NOT_CONFIGURED', 'message' => 'ตั้ง RESEARCH_API_BASE_URL และ RESEARCH_API_KEY ใน .env'];
+        }
+
+        $url = self::buildUrl('publications-sync-bundle-by-email', $canonicalEmail);
+
+        try {
+            $response = HttpTransport::post($url, ['timeout' => 60], [
+                'headers' => [
+                    'X-API-KEY'    => $researchApi->apiKey,
+                    'Accept'       => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode(['publications' => $publications], JSON_UNESCAPED_UNICODE),
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'ResearchRecordCvSyncClient::pushPublicationsSyncBundle ' . $e->getMessage());
+
+            return ['success' => false, 'error' => 'REQUEST_FAILED', 'message' => $e->getMessage()];
+        }
+
+        $decoded = self::decodeResponse($response);
+        if (! $decoded['success']) {
+            return $decoded;
+        }
+        $data = $decoded['data'] ?? [];
+
+        return [
+            'success'      => true,
+            'publications' => $data['publications'] ?? [],
+            'content_hash' => $data['content_hash'] ?? '',
+            'stats'        => $data['stats'] ?? [],
+        ];
+    }
+
+    /**
      * @return array{success:bool,data?:array,bundle?:array,error?:string,message?:string}
      */
     private static function getJson(string $path, string $canonicalEmail): array

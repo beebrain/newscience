@@ -7,7 +7,9 @@ use App\Libraries\AiPublicationParser;
 use App\Libraries\CvAiFileStorage;
 use App\Libraries\CvProfile;
 use App\Libraries\CvPublicationDedupe;
+use App\Libraries\PublicationCatalog;
 use App\Libraries\PublicationIdentity;
+use App\Libraries\PublicationSyncEngine;
 use App\Libraries\RrPublicationType;
 use App\Libraries\OrcidPublicRecord;
 use App\Libraries\OrcidCvImport;
@@ -307,6 +309,12 @@ class ProfileCv extends BaseController
                 $canonical = ResearchRecordCvPull::canonicalEmailForPerson($person);
                 $pullRes     = ResearchRecordCvPull::run($personnelId, $canonical, $trigger);
                 if ($pullRes['success']) {
+                    if (PublicationCatalog::isReady()) {
+                        $pubSync = PublicationSyncEngine::reconcileForPersonnel($personnelId, $canonical, $trigger);
+                        if (! ($pubSync['success'] ?? false)) {
+                            log_message('warning', 'Publication auto sync failed: ' . ($pubSync['message'] ?? 'unknown'));
+                        }
+                    }
                     $rrLastPullFormatted = (new \DateTimeImmutable())->format('d/m/Y H:i');
                     $rrSyncNotice        = [
                         'type' => 'success',
@@ -847,6 +855,26 @@ class ProfileCv extends BaseController
             $entryData['sort_order'] = $postSort > 0 ? $postSort : $cvEntryModel->nextSortOrder($sectionId);
             $cvEntryModel->insert($entryData);
             $savedId = (int) $cvEntryModel->getInsertID();
+        }
+
+        if (in_array($secType, ['research', 'articles'], true) && PublicationCatalog::isReady()) {
+            $savedEntry = $cvEntryModel->find($savedId);
+            if (is_array($savedEntry)) {
+                PublicationCatalog::syncFromCvEntry($personnelId, $section, $savedEntry);
+                if (config(ResearchApi::class)->syncConfigured()) {
+                    $personForSync = (new PersonnelModel())->find($personnelId);
+                    if (is_array($personForSync)) {
+                        $syncRes = PublicationSyncEngine::reconcileForPersonnel(
+                            $personnelId,
+                            ResearchRecordCvPull::canonicalEmailForPerson($personForSync),
+                            'save_cv_entry'
+                        );
+                        if (! ($syncRes['success'] ?? false)) {
+                            log_message('warning', 'Publication sync after save failed: ' . ($syncRes['message'] ?? 'unknown'));
+                        }
+                    }
+                }
+            }
         }
 
         if ($this->request->isAJAX()) {

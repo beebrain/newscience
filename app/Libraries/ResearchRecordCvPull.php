@@ -187,6 +187,13 @@ class ResearchRecordCvPull
                     $pubRes['publications'],
                     []
                 );
+                if (PublicationCatalog::isReady()) {
+                    $pubStats['catalog'] = PublicationCatalog::syncFromRrPayload(
+                        $personnelId,
+                        $canonicalEmail,
+                        $pubRes['publications']
+                    );
+                }
             }
 
             ResearchRecordCvSyncMerge::finalizeCvSectionsForPerson($personnelId);
