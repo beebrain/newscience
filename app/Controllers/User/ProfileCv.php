@@ -10,7 +10,9 @@ use App\Libraries\CvPublicationDedupe;
 use App\Libraries\PublicationIdentity;
 use App\Libraries\RrPublicationType;
 use App\Libraries\OrcidPublicRecord;
+use App\Libraries\OrcidCvImport;
 use App\Libraries\ResearchRecordCvPull;
+use App\Libraries\ResearchRecordCvSyncMerge;
 use App\Libraries\StaffImageUpload;
 use App\Models\CvEntryModel;
 use App\Models\CvSectionModel;
@@ -84,6 +86,8 @@ class ProfileCv extends BaseController
         if (! CvEntryModel::isTablePresent($cvSectionModel->db)) {
             return [];
         }
+
+        ResearchRecordCvSyncMerge::finalizeCvSectionsForPerson($personnelId);
 
         $sections = $cvSectionModel->where('personnel_id', $personnelId)
             ->orderBy('sort_order', 'ASC')
@@ -1021,59 +1025,16 @@ class ProfileCv extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'รูปแบบ ORCID iD ไม่ถูกต้อง (เช่น 0000-0002-1825-0097)']);
         }
 
-        $scopes = $this->parseOrcidImportScopes((string) $this->request->getPost('scopes'));
+        $scopes = OrcidCvImport::normalizeScopes(
+            $this->parseOrcidImportScopes((string) $this->request->getPost('scopes'))
+        );
         if ($scopes === []) {
             return $this->response->setJSON(['success' => false, 'message' => 'เลือกอย่างน้อยหนึ่งประเภทการนำเข้า']);
         }
 
-        $orcidId = OrcidPublicRecord::normalizeId($orcidRaw);
+        $result = OrcidCvImport::import($personnelId, $orcidRaw, $scopes);
 
-        $personnelModel = new PersonnelModel();
-        if ($personnelModel->db->fieldExists('orcid_id', 'personnel')) {
-            $personnelModel->update($personnelId, ['orcid_id' => $orcidId]);
-        }
-
-        $fetched = OrcidPublicRecord::fetchRecord($orcidId);
-        if (empty($fetched['success']) || empty($fetched['data']) || !is_array($fetched['data'])) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => $fetched['message'] ?? 'ดึงข้อมูล ORCID ไม่สำเร็จ',
-            ]);
-        }
-
-        $record = $fetched['data'];
-
-        $aff = ['education' => [], 'employment' => []];
-        if (in_array('education', $scopes, true) || in_array('employment', $scopes, true)) {
-            $aff = OrcidPublicRecord::extractEducationAndEmployment($record);
-        }
-        $education  = in_array('education', $scopes, true) ? ($aff['education'] ?? []) : [];
-        $employment = in_array('employment', $scopes, true) ? ($aff['employment'] ?? []) : [];
-        $works      = in_array('works', $scopes, true) ? OrcidPublicRecord::extractWorks($record) : [];
-
-        $educationSection   = $this->ensureCvSectionForOrcid($cvSectionModel, $personnelId, 'education', 'ประวัติการศึกษา', $education !== []);
-        $employmentSection  = $this->ensureCvSectionForOrcid($cvSectionModel, $personnelId, 'work', 'ประสบการณ์การทำงาน', $employment !== []);
-        $worksSection       = $this->ensureCvSectionForOrcidWorks($cvSectionModel, $personnelId, $works !== []);
-
-        $cvEntryModel = new CvEntryModel();
-        $eduCount     = $this->upsertOrcidEntries($cvEntryModel, $educationSection, $education);
-        $empCount     = $this->upsertOrcidEntries($cvEntryModel, $employmentSection, $employment);
-        $worksCount   = $this->upsertOrcidEntries($cvEntryModel, $worksSection, $works);
-
-        $hasAnyData = $education !== [] || $employment !== [] || $works !== [];
-        $msg        = $hasAnyData
-            ? 'นำเข้าจาก ORCID เรียบร้อยแล้ว'
-            : 'ไม่พบรายการที่เปิดเผยใน ORCID สำหรับประเภทที่เลือก';
-
-        return $this->response->setJSON([
-            'success'            => true,
-            'message'            => $msg,
-            'education_count'    => $eduCount,
-            'employment_count'   => $empCount,
-            'works_count'        => $worksCount,
-            'orcid_id'           => $orcidId,
-            'scopes'             => $scopes,
-        ]);
+        return $this->response->setJSON($result);
     }
 
     /**
@@ -1091,202 +1052,6 @@ class ProfileCv extends BaseController
         $out   = array_values(array_intersect($allowed, $parts));
 
         return $out;
-    }
-
-    /**
-     * @param list<array<string,mixed>> $items
-     */
-    private function upsertOrcidEntries(CvEntryModel $cvEntryModel, ?array $section, array $items): int
-    {
-        if ($section === null || $items === []) {
-            return 0;
-        }
-
-        $sectionId = (int) ($section['id'] ?? 0);
-        if ($sectionId <= 0) {
-            return 0;
-        }
-
-        $count = 0;
-        foreach ($items as $item) {
-            $putCode = $item['put_code'] ?? null;
-            $existing = null;
-            if ($putCode !== null && $putCode !== '') {
-                $existing = $this->findCvEntryByOrcidPutCode($cvEntryModel, $sectionId, (string) $putCode);
-            }
-            if ($existing === null) {
-                $extraMeta = isset($item['orcid_meta']) && is_array($item['orcid_meta']) ? $item['orcid_meta'] : [];
-                $dedupe    = isset($extraMeta['orcid_dedupe_key']) ? (string) $extraMeta['orcid_dedupe_key'] : '';
-                if ($dedupe !== '') {
-                    $existing = $this->findCvEntryByOrcidDedupeKey($cvEntryModel, $sectionId, $dedupe);
-                }
-            }
-
-            $start = $item['start_date'] ?? null;
-            $end   = $item['end_date'] ?? null;
-            $isCurrent = array_key_exists('is_current', $item)
-                ? ((int) (bool) $item['is_current'])
-                : (($end === null || $end === '') ? 1 : 0);
-
-            $prev = $existing !== null ? CvEntryModel::decodeMetadata($existing['metadata'] ?? null) : [];
-            $base = [
-                'orcid_put_code' => $putCode,
-                'source'         => 'orcid',
-                'synced_at'      => date('Y-m-d H:i:s'),
-            ];
-            $extra = isset($item['orcid_meta']) && is_array($item['orcid_meta']) ? $item['orcid_meta'] : [];
-            $meta  = array_merge($prev, $base, $extra);
-            $meta  = array_filter($meta, static fn ($v) => $v !== null && $v !== '');
-            $metadataJson = json_encode($meta, JSON_UNESCAPED_UNICODE);
-
-            $title = trim((string) ($item['title'] ?? ''));
-            if ($title === '') {
-                $title = 'รายการจาก ORCID';
-            }
-
-            $desc = $item['description'] ?? $item['department'] ?? '';
-
-            $entryData = [
-                'section_id'        => $sectionId,
-                'title'             => mb_substr($title, 0, 500),
-                'organization'      => $this->nullableString((string) ($item['organization'] ?? '')),
-                'location'          => $this->nullableString((string) ($item['location'] ?? '')),
-                'start_date'        => $start ?: null,
-                'end_date'          => $end ?: null,
-                'is_current'        => $isCurrent,
-                'description'       => $this->nullableString((string) $desc),
-                'metadata'          => $metadataJson,
-                'visible_on_public' => 1,
-            ];
-
-            if ($existing !== null) {
-                $entryData['sort_order'] = (int) ($existing['sort_order'] ?? $cvEntryModel->nextSortOrder($sectionId));
-                $cvEntryModel->update((int) $existing['id'], $entryData);
-            } else {
-                $entryData['sort_order'] = $cvEntryModel->nextSortOrder($sectionId);
-                $cvEntryModel->insert($entryData);
-            }
-            $count++;
-        }
-
-        return $count;
-    }
-
-    private function nullableString(string $s): ?string
-    {
-        $s = trim($s);
-
-        return $s === '' ? null : $s;
-    }
-
-    private function findCvEntryByOrcidPutCode(CvEntryModel $cvEntryModel, int $sectionId, string $putCode): ?array
-    {
-        $rows = $cvEntryModel->where('section_id', $sectionId)->findAll();
-        foreach ($rows as $row) {
-            $meta = CvEntryModel::decodeMetadata($row['metadata'] ?? null);
-            if (isset($meta['orcid_put_code']) && (string) $meta['orcid_put_code'] === (string) $putCode) {
-                return $row;
-            }
-        }
-
-        return null;
-    }
-
-    private function findCvEntryByOrcidDedupeKey(CvEntryModel $cvEntryModel, int $sectionId, string $dedupeKey): ?array
-    {
-        $rows = $cvEntryModel->where('section_id', $sectionId)->findAll();
-        foreach ($rows as $row) {
-            $meta = CvEntryModel::decodeMetadata($row['metadata'] ?? null);
-            if (isset($meta['orcid_dedupe_key']) && (string) $meta['orcid_dedupe_key'] === $dedupeKey) {
-                return $row;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * หัวข้อผลงานตีพิมพ์: ใช้ research หรือ articles ที่มีอยู่ก่อน ถ้าไม่มีสร้าง research
-     *
-     * @return array<string,mixed>|null
-     */
-    private function ensureCvSectionForOrcidWorks(CvSectionModel $cvSectionModel, int $personnelId, bool $needed): ?array
-    {
-        if (!$needed) {
-            return null;
-        }
-
-        $section = $cvSectionModel->where('personnel_id', $personnelId)
-            ->groupStart()
-            ->where('type', 'research')
-            ->orWhere('type', 'articles')
-            ->groupEnd()
-            ->orderBy('sort_order', 'ASC')
-            ->orderBy('id', 'ASC')
-            ->first();
-
-        if ($section !== null) {
-            return $section;
-        }
-
-        $cvSectionModel->insert([
-            'personnel_id'      => $personnelId,
-            'type'              => 'research',
-            'title'             => 'ผลงานตีพิมพ์',
-            'description'       => null,
-            'sort_order'        => $cvSectionModel->nextSortOrder($personnelId),
-            'is_default'        => 0,
-            'visible_on_public' => 1,
-        ]);
-
-        $newId = (int) $cvSectionModel->getInsertID();
-
-        return $cvSectionModel->find($newId);
-    }
-
-    /**
-     * @return array<string,mixed>|null
-     */
-    private function ensureCvSectionForOrcid(CvSectionModel $cvSectionModel, int $personnelId, string $type, string $defaultTitle, bool $needed): ?array
-    {
-        if (!$needed) {
-            return null;
-        }
-
-        if ($type === 'work') {
-            $section = $cvSectionModel->where('personnel_id', $personnelId)
-                ->groupStart()
-                ->where('type', 'work')
-                ->orWhere('type', 'experience')
-                ->groupEnd()
-                ->orderBy('sort_order', 'ASC')
-                ->orderBy('id', 'ASC')
-                ->first();
-        } else {
-            $section = $cvSectionModel->where('personnel_id', $personnelId)
-                ->where('type', $type)
-                ->orderBy('sort_order', 'ASC')
-                ->orderBy('id', 'ASC')
-                ->first();
-        }
-
-        if ($section !== null) {
-            return $section;
-        }
-
-        $cvSectionModel->insert([
-            'personnel_id'      => $personnelId,
-            'type'              => $type === 'work' ? 'work' : $type,
-            'title'             => $defaultTitle,
-            'description'       => null,
-            'sort_order'        => $cvSectionModel->nextSortOrder($personnelId),
-            'is_default'        => 0,
-            'visible_on_public' => 1,
-        ]);
-
-        $newId = (int) $cvSectionModel->getInsertID();
-
-        return $cvSectionModel->find($newId);
     }
 
     /**

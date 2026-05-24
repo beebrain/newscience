@@ -285,9 +285,229 @@ class ResearchRecordCvSyncMerge
             'sections' => $outSections,
             'source'   => 'merged',
         ];
+        $bundle = self::normalizeSectionsInBundle($bundle);
         $bundle['content_hash'] = CvBundleCanonical::hashBundle($bundle);
 
         return $bundle;
+    }
+
+    /**
+     * จัดรูป bundle / DB หลังดึงจากหลายแหล่ง (กบศ, ORCID, กรอกเอง) — หัวข้อต้องเป็นหัวข้อ ไม่ใช่ชื่อผลงาน
+     */
+    public static function finalizeCvSectionsForPerson(int $personnelId): void
+    {
+        self::repairMisplacedPublicationSectionsForPerson($personnelId);
+        self::dedupeCvSectionsByTypeForPerson($personnelId);
+        self::normalizePublicationSectionsForPerson($personnelId);
+        self::applyCanonicalSectionTitlesForPerson($personnelId);
+    }
+
+    /**
+     * @param array<string,mixed> $bundle
+     *
+     * @return array<string,mixed>
+     */
+    public static function normalizeSectionsInBundle(array $bundle): array
+    {
+        $bundle = self::normalizePublicationSectionsInBundle($bundle);
+        $bundle = self::mergeSectionsByTypeGroupInBundle($bundle);
+        $bundle = self::applyCanonicalTitlesInBundle($bundle);
+
+        return $bundle;
+    }
+
+    /**
+     * ย้ายชื่อผลงานที่ กบศ ส่งมาเป็นหัวข้อ (ไม่มีรายการย่อย) ไปเป็นรายการใต้หัวข้อ "งานวิจัยที่ตีพิมพ์"
+     *
+     * @param array<string,mixed> $bundle
+     *
+     * @return array<string,mixed>
+     */
+    public static function normalizePublicationSectionsInBundle(array $bundle): array
+    {
+        $sections = $bundle['sections'] ?? [];
+        if (! is_array($sections) || $sections === []) {
+            return $bundle;
+        }
+
+        $promoted = [];
+        $kept     = [];
+        foreach ($sections as $sec) {
+            if (! is_array($sec)) {
+                continue;
+            }
+            if (self::shouldPromoteSectionTitleToEntry($sec)) {
+                $promoted[] = self::entryFromMisplacedSection($sec);
+
+                continue;
+            }
+            $kept[] = $sec;
+        }
+
+        if ($promoted === []) {
+            return $bundle;
+        }
+
+        $canonical   = self::canonicalPublicationSectionTitle();
+        $researchIdx = null;
+        foreach ($kept as $i => $sec) {
+            $type = strtolower(trim((string) ($sec['type'] ?? '')));
+            if (! in_array($type, ['research', 'articles'], true)) {
+                continue;
+            }
+            if (self::isPublicationSectionHeading((string) ($sec['title'] ?? ''))) {
+                $researchIdx = $i;
+
+                break;
+            }
+        }
+
+        if ($researchIdx === null) {
+            $sort = 0;
+            foreach ($kept as $sec) {
+                $sort = max($sort, (int) ($sec['sort_order'] ?? 0));
+            }
+            $kept[] = [
+                'external_key'      => CvBundleCanonical::sectionExternalKey([
+                    'type'       => 'research',
+                    'title'      => $canonical,
+                    'sort_order' => $sort + 1,
+                ]),
+                'type'              => 'research',
+                'title'             => $canonical,
+                'description'       => null,
+                'sort_order'        => $sort + 1,
+                'visible_on_public' => 1,
+                'entries'           => $promoted,
+            ];
+        } else {
+            $existing = $kept[$researchIdx]['entries'] ?? [];
+            if (! is_array($existing)) {
+                $existing = [];
+            }
+            $kept[$researchIdx]['type']    = 'research';
+            $kept[$researchIdx]['entries'] = array_merge($existing, $promoted);
+            if (trim((string) ($kept[$researchIdx]['title'] ?? '')) === '') {
+                $kept[$researchIdx]['title'] = $canonical;
+            }
+        }
+
+        $bundle['sections'] = $kept;
+
+        return $bundle;
+    }
+
+    /**
+     * แก้ข้อมูลใน DB ที่ชื่อผลงานไปอยู่เป็นชื่อหัวข้อ (มักเกิดจาก bundle กบศ)
+     */
+    public static function repairMisplacedPublicationSectionsForPerson(int $personnelId): void
+    {
+        $cvSectionModel = new CvSectionModel();
+        if (! $cvSectionModel->db->tableExists('cv_sections') || ! CvEntryModel::isTablePresent($cvSectionModel->db)) {
+            return;
+        }
+
+        $cvEntryModel = new CvEntryModel();
+        $sections     = $cvSectionModel->where('personnel_id', $personnelId)
+            ->orderBy('sort_order', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+
+        $misplaced = [];
+        $primary   = null;
+        foreach ($sections as $sec) {
+            $sid = (int) ($sec['id'] ?? 0);
+            if ($sid <= 0) {
+                continue;
+            }
+            $entryCount = $cvEntryModel->where('section_id', $sid)->countAllResults();
+            $shape      = [
+                'type'    => $sec['type'] ?? '',
+                'title'   => $sec['title'] ?? '',
+                'entries' => $entryCount > 0 ? [1] : [],
+            ];
+            if (self::shouldPromoteSectionTitleToEntry($shape)) {
+                $misplaced[] = $sec;
+
+                continue;
+            }
+            if (
+                $primary === null
+                && in_array(strtolower(trim((string) ($sec['type'] ?? ''))), ['research', 'articles'], true)
+                && self::isPublicationSectionHeading((string) ($sec['title'] ?? ''))
+            ) {
+                $primary = $sec;
+            }
+        }
+
+        if ($misplaced === []) {
+            return;
+        }
+
+        $canonical = self::canonicalPublicationSectionTitle();
+        if ($primary === null && count($misplaced) === 1) {
+            $only = $misplaced[0];
+            $onlyId = (int) ($only['id'] ?? 0);
+            if ($onlyId > 0) {
+                $title = mb_substr(trim((string) ($only['title'] ?? '')), 0, 500);
+                $cvSectionModel->update($onlyId, [
+                    'type'  => 'research',
+                    'title' => $canonical,
+                ]);
+                if ($title !== '') {
+                    $cvEntryModel->insert([
+                        'section_id'        => $onlyId,
+                        'title'             => $title,
+                        'organization'      => $only['description'] ?? null,
+                        'visible_on_public' => (int) ($only['visible_on_public'] ?? 1),
+                        'sort_order'        => 1,
+                    ]);
+                }
+            }
+
+            return;
+        }
+
+        if ($primary === null) {
+            $cvSectionModel->insert([
+                'personnel_id'      => $personnelId,
+                'type'              => 'research',
+                'title'             => $canonical,
+                'sort_order'        => $cvSectionModel->nextSortOrder($personnelId),
+                'is_default'        => 0,
+                'visible_on_public' => 1,
+            ]);
+            $primary = $cvSectionModel->find((int) $cvSectionModel->getInsertID());
+        }
+
+        $primaryId = (int) ($primary['id'] ?? 0);
+        if ($primaryId <= 0) {
+            return;
+        }
+
+        foreach ($misplaced as $sec) {
+            $sid = (int) ($sec['id'] ?? 0);
+            if ($sid <= 0) {
+                continue;
+            }
+            $entryTitle = mb_substr(trim((string) ($sec['title'] ?? '')), 0, 500);
+            if ($entryTitle === '') {
+                continue;
+            }
+            if ($sid === $primaryId) {
+                $cvSectionModel->update($sid, ['type' => 'research', 'title' => $canonical]);
+            }
+            $cvEntryModel->insert([
+                'section_id'        => $primaryId,
+                'title'             => $entryTitle,
+                'organization'      => $sec['description'] ?? null,
+                'visible_on_public' => (int) ($sec['visible_on_public'] ?? 1),
+                'sort_order'        => $cvEntryModel->nextSortOrder($primaryId),
+            ]);
+            if ($sid !== $primaryId) {
+                $cvSectionModel->delete($sid, true);
+            }
+        }
     }
 
     /**
@@ -337,7 +557,7 @@ class ResearchRecordCvSyncMerge
             $cvSectionModel->insert([
                 'personnel_id'      => $personnelId,
                 'type'              => 'research',
-                'title'             => 'ผลงานตีพิมพ์ (จาก กบศ)',
+                'title'             => self::canonicalPublicationSectionTitle(),
                 'description'       => null,
                 'sort_order'        => $cvSectionModel->nextSortOrder($personnelId),
                 'is_default'        => 0,
@@ -480,7 +700,7 @@ class ResearchRecordCvSyncMerge
             }
         }
 
-        self::normalizePublicationSectionsForPerson($personnelId);
+        self::finalizeCvSectionsForPerson($personnelId);
 
         return $stats;
     }
@@ -562,6 +782,8 @@ class ResearchRecordCvSyncMerge
         if ($db->transStatus() === false) {
             throw new \RuntimeException('replaceNewScienceCvFromBundle transaction failed');
         }
+
+        self::finalizeCvSectionsForPerson($personnelId);
     }
 
     /**
@@ -644,6 +866,394 @@ class ResearchRecordCvSyncMerge
      * @param array<string,mixed>|null $primary
      * @param array<string,mixed>|null $fallback
      */
+    public static function canonicalPublicationSectionTitle(): string
+    {
+        return CvProfile::sectionLabelsTh()[CvProfile::SECTION_RESEARCH] ?? 'งานวิจัยที่ตีพิมพ์';
+    }
+
+    public static function canonicalSectionTitleForType(string $type): ?string
+    {
+        $group = self::sectionTypeGroupKey($type);
+        if ($group === null) {
+            return null;
+        }
+
+        return match ($group) {
+            'education' => 'ประวัติการศึกษา',
+            'work'      => 'ประสบการณ์การทำงาน',
+            'research'  => self::canonicalPublicationSectionTitle(),
+            default     => null,
+        };
+    }
+
+    public static function shouldNormalizeSectionTitleToCanonical(string $type, string $title): bool
+    {
+        if (self::sectionTypeGroupKey($type) === null) {
+            return false;
+        }
+        if (self::shouldPromoteSectionTitleToEntry(['type' => $type, 'title' => $title, 'entries' => []])) {
+            return false;
+        }
+
+        $title = trim($title);
+        if ($title === '') {
+            return true;
+        }
+
+        $canonical = self::canonicalSectionTitleForType($type);
+        if ($canonical === null) {
+            return false;
+        }
+
+        $norm = strtolower(preg_replace('/\s+/', ' ', $title));
+        if ($norm === strtolower($canonical)) {
+            return true;
+        }
+
+        $aliases = self::sectionTitleAliasesForType($type);
+        if (in_array($norm, $aliases, true)) {
+            return true;
+        }
+
+        $group = self::sectionTypeGroupKey($type);
+
+        return $group === 'research' && self::isPublicationSectionHeading($title);
+    }
+
+    /**
+     * @param array<string,mixed> $bundle
+     *
+     * @return array<string,mixed>
+     */
+    private static function mergeSectionsByTypeGroupInBundle(array $bundle): array
+    {
+        $sections = $bundle['sections'] ?? [];
+        if (! is_array($sections) || $sections === []) {
+            return $bundle;
+        }
+
+        $groups = [];
+        $kept   = [];
+        foreach ($sections as $sec) {
+            if (! is_array($sec)) {
+                continue;
+            }
+            $gk = self::sectionTypeGroupKey((string) ($sec['type'] ?? ''));
+            if ($gk === null) {
+                $kept[] = $sec;
+
+                continue;
+            }
+            $groups[$gk][] = $sec;
+        }
+
+        foreach ($groups as $group) {
+            usort($group, static fn ($a, $b) => ((int) ($a['sort_order'] ?? 0)) <=> ((int) ($b['sort_order'] ?? 0)));
+            $primary = $group[0];
+            $entries = is_array($primary['entries'] ?? null) ? $primary['entries'] : [];
+            for ($i = 1, $n = count($group); $i < $n; $i++) {
+                $extra = $group[$i]['entries'] ?? [];
+                if (is_array($extra)) {
+                    $entries = array_merge($entries, $extra);
+                }
+            }
+            $primary['entries'] = self::dedupeBundleEntries($entries);
+            if (self::sectionTypeGroupKey((string) ($primary['type'] ?? '')) === 'research') {
+                $primary['type'] = 'research';
+            }
+            $kept[] = self::applyCanonicalTitleToSection($primary);
+        }
+
+        usort($kept, static fn ($a, $b) => ((int) ($a['sort_order'] ?? 0)) <=> ((int) ($b['sort_order'] ?? 0)));
+        $bundle['sections'] = $kept;
+
+        return $bundle;
+    }
+
+    /**
+     * @param array<string,mixed> $bundle
+     *
+     * @return array<string,mixed>
+     */
+    private static function applyCanonicalTitlesInBundle(array $bundle): array
+    {
+        $sections = $bundle['sections'] ?? [];
+        if (! is_array($sections)) {
+            return $bundle;
+        }
+
+        foreach ($sections as $i => $sec) {
+            if (is_array($sec)) {
+                $sections[$i] = self::applyCanonicalTitleToSection($sec);
+            }
+        }
+        $bundle['sections'] = $sections;
+
+        return $bundle;
+    }
+
+    /**
+     * @param array<string,mixed> $sec
+     *
+     * @return array<string,mixed>
+     */
+    private static function applyCanonicalTitleToSection(array $sec): array
+    {
+        $type = (string) ($sec['type'] ?? '');
+        if (self::shouldNormalizeSectionTitleToCanonical($type, (string) ($sec['title'] ?? ''))) {
+            $canonical = self::canonicalSectionTitleForType($type);
+            if ($canonical !== null) {
+                $sec['title'] = $canonical;
+            }
+        }
+
+        return $sec;
+    }
+
+    /**
+     * @param list<array<string,mixed>> $entries
+     *
+     * @return list<array<string,mixed>>
+     */
+    private static function dedupeBundleEntries(array $entries): array
+    {
+        $seen = [];
+        $out  = [];
+        foreach ($entries as $e) {
+            if (! is_array($e)) {
+                continue;
+            }
+            $meta = is_array($e['metadata'] ?? null) ? $e['metadata'] : [];
+            $k    = (string) ($e['external_key'] ?? '');
+            if ($k === '') {
+                $k = CvBundleCanonical::entryExternalKeyFromMetadata(
+                    $meta,
+                    (string) ($e['title'] ?? ''),
+                    (string) ($e['organization'] ?? ''),
+                    isset($e['start_date']) ? (string) $e['start_date'] : null
+                );
+            }
+            if (isset($seen[$k])) {
+                continue;
+            }
+            $seen[$k] = true;
+            $out[]    = $e;
+        }
+
+        return $out;
+    }
+
+    public static function dedupeCvSectionsByTypeForPerson(int $personnelId): void
+    {
+        $cvSectionModel = new CvSectionModel();
+        if (! $cvSectionModel->db->tableExists('cv_sections') || ! CvEntryModel::isTablePresent($cvSectionModel->db)) {
+            return;
+        }
+
+        $sections = $cvSectionModel->where('personnel_id', $personnelId)
+            ->orderBy('sort_order', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+
+        $groups = [];
+        foreach ($sections as $sec) {
+            $gk = self::sectionTypeGroupKey((string) ($sec['type'] ?? ''));
+            if ($gk === null) {
+                continue;
+            }
+            $groups[$gk][] = $sec;
+        }
+
+        $db = \Config\Database::connect();
+        $db->transStart();
+        try {
+            $cvEntryModel = new CvEntryModel();
+            foreach ($groups as $groupSections) {
+                if (count($groupSections) < 2) {
+                    continue;
+                }
+                $primaryId = (int) ($groupSections[0]['id'] ?? 0);
+                if ($primaryId <= 0) {
+                    continue;
+                }
+                for ($i = 1, $n = count($groupSections); $i < $n; $i++) {
+                    $dupId = (int) ($groupSections[$i]['id'] ?? 0);
+                    if ($dupId <= 0) {
+                        continue;
+                    }
+                    $db->table('cv_entries')->where('section_id', $dupId)->update(['section_id' => $primaryId]);
+                    $cvSectionModel->delete($dupId, true);
+                }
+                if (self::sectionTypeGroupKey((string) ($groupSections[0]['type'] ?? '')) === 'research') {
+                    $cvSectionModel->update($primaryId, ['type' => 'research']);
+                }
+                self::dedupePublicationEntriesInSection($primaryId);
+            }
+            $db->transComplete();
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'dedupeCvSectionsByTypeForPerson: ' . $e->getMessage());
+        }
+    }
+
+    public static function applyCanonicalSectionTitlesForPerson(int $personnelId): void
+    {
+        $cvSectionModel = new CvSectionModel();
+        if (! $cvSectionModel->db->tableExists('cv_sections')) {
+            return;
+        }
+
+        $sections = $cvSectionModel->where('personnel_id', $personnelId)->findAll();
+        foreach ($sections as $sec) {
+            $sid = (int) ($sec['id'] ?? 0);
+            if ($sid <= 0) {
+                continue;
+            }
+            $type  = (string) ($sec['type'] ?? '');
+            $title = (string) ($sec['title'] ?? '');
+            if (! self::shouldNormalizeSectionTitleToCanonical($type, $title)) {
+                continue;
+            }
+            $canonical = self::canonicalSectionTitleForType($type);
+            if ($canonical === null) {
+                continue;
+            }
+            $cvSectionModel->update($sid, ['title' => mb_substr($canonical, 0, 255)]);
+        }
+    }
+
+    private static function sectionTypeGroupKey(string $type): ?string
+    {
+        $type = strtolower(trim($type));
+
+        return match (true) {
+            in_array($type, ['education', 'education_structured'], true) => 'education',
+            in_array($type, ['work', 'experience'], true)             => 'work',
+            in_array($type, ['research', 'articles'], true)             => 'research',
+            default                                                     => null,
+        };
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function sectionTitleAliasesForType(string $type): array
+    {
+        $group = self::sectionTypeGroupKey($type);
+        if ($group === null) {
+            return [];
+        }
+
+        $aliases = match ($group) {
+            'education' => [
+                'education',
+                'การศึกษา',
+                'ประวัติการศึกษา',
+                'ประวัติการศึกษา (รายการ)',
+                'education (structured)',
+            ],
+            'work' => [
+                'work',
+                'work experience',
+                'employment',
+                'ประสบการณ์การทำงาน',
+                'ประสบการณ์ทำงาน',
+            ],
+            'research' => [
+                'research',
+                'articles',
+                'ผลงานตีพิมพ์',
+                'ผลงานตีพิมพ์ (จาก กบศ)',
+                'publications',
+            ],
+            default => [],
+        };
+
+        foreach ($aliases as $i => $label) {
+            $aliases[$i] = strtolower(preg_replace('/\s+/', ' ', trim($label)));
+        }
+
+        return array_values(array_unique($aliases));
+    }
+
+    /**
+     * @param array<string,mixed> $section
+     */
+    public static function shouldPromoteSectionTitleToEntry(array $section): bool
+    {
+        $entries = $section['entries'] ?? [];
+        if (is_array($entries) && $entries !== []) {
+            return false;
+        }
+        $title = trim((string) ($section['title'] ?? ''));
+        if ($title === '' || self::isPublicationSectionHeading($title)) {
+            return false;
+        }
+        $type = strtolower(trim((string) ($section['type'] ?? '')));
+        if (in_array($type, ['research', 'articles'], true)) {
+            return true;
+        }
+        if ($type === '' || $type === 'custom') {
+            return mb_strlen($title) >= 50;
+        }
+
+        return false;
+    }
+
+    public static function isPublicationSectionHeading(string $title): bool
+    {
+        $norm = strtolower(trim(preg_replace('/\s+/', ' ', $title)));
+        if ($norm === '') {
+            return false;
+        }
+        $known = [
+            strtolower(self::canonicalPublicationSectionTitle()),
+            'งานวิจัย',
+            'งานวิจัยที่ตีพิมพ์',
+            'บทความวิชาการ',
+            'ผลงานตีพิมพ์',
+            'ผลงานตีพิมพ์ (จาก กบศ)',
+        ];
+        foreach (CvProfile::sectionLabelsTh() as $label) {
+            $known[] = strtolower(trim($label));
+        }
+
+        return in_array($norm, array_unique($known), true);
+    }
+
+    /**
+     * @param array<string,mixed> $section
+     *
+     * @return array<string,mixed>
+     */
+    private static function entryFromMisplacedSection(array $section): array
+    {
+        $title = mb_substr(trim((string) ($section['title'] ?? '')), 0, 500);
+        $meta  = $section['metadata'] ?? [];
+        if (! is_array($meta)) {
+            $meta = [];
+        }
+
+        return [
+            'external_key'      => (string) ($section['external_key'] ?? CvBundleCanonical::entryExternalKeyFromMetadata(
+                $meta,
+                $title,
+                (string) ($section['organization'] ?? ''),
+                isset($section['start_date']) ? (string) $section['start_date'] : null
+            )),
+            'title'             => $title,
+            'organization'      => $section['organization'] ?? null,
+            'location'          => $section['location'] ?? null,
+            'start_date'        => $section['start_date'] ?? null,
+            'end_date'          => $section['end_date'] ?? null,
+            'is_current'        => (int) ($section['is_current'] ?? 0),
+            'description'       => $section['description'] ?? null,
+            'visible_on_public' => (int) ($section['visible_on_public'] ?? 1),
+            'metadata'          => $meta,
+            'sort_order'        => (int) ($section['sort_order'] ?? 0),
+        ];
+    }
+
     private static function titleWithFallback(?array $primary, ?array $fallback): string
     {
         $title = (string) ($primary['title'] ?? '');

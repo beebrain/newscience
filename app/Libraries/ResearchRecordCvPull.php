@@ -187,9 +187,9 @@ class ResearchRecordCvPull
                     $pubRes['publications'],
                     []
                 );
-            } else {
-                ResearchRecordCvSyncMerge::normalizePublicationSectionsForPerson($personnelId);
             }
+
+            ResearchRecordCvSyncMerge::finalizeCvSectionsForPerson($personnelId);
 
             $log = new CvSyncLogModel();
             if ($log->db->tableExists('cv_sync_log')) {

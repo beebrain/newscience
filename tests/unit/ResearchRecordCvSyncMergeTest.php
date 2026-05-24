@@ -45,7 +45,7 @@ final class ResearchRecordCvSyncMergeTest extends CIUnitTestCase
 
         $merged = ResearchRecordCvSyncMerge::mergedCvBundle([], $nsBundle, $rrBundle, 'teacher@example.com');
 
-        $this->assertSame('การศึกษา', $merged['sections'][0]['title']);
+        $this->assertSame('ประวัติการศึกษา', $merged['sections'][0]['title']);
         $this->assertSame('ปริญญาเอก วิทยาศาสตร์', $merged['sections'][0]['entries'][0]['title']);
         $this->assertSame('NS description', $merged['sections'][0]['description']);
         $this->assertSame('NS University', $merged['sections'][0]['entries'][0]['organization']);
@@ -97,5 +97,72 @@ final class ResearchRecordCvSyncMergeTest extends CIUnitTestCase
         $this->assertNotSame($researchKey, $articlesKey);
         $this->assertNotSame($researchKey, $otherResearchKey);
         $this->assertSame($researchKey, $duplicateResearchKey);
+    }
+
+    public function testNormalizePublicationSectionsInBundlePromotesMisplacedTitleToEntry(): void
+    {
+        $longTitle = 'จุฬารัตน์ รวมจิต ศรัญยู เรือนจันทร์. (2564). ผลการใช้โปรแกรมการสอนทางกายภาพบำบัด';
+        $bundle    = [
+            'sections' => [[
+                'external_key' => 's:pub1',
+                'type'         => 'custom',
+                'title'        => $longTitle,
+                'entries'      => [],
+            ]],
+        ];
+
+        $out = ResearchRecordCvSyncMerge::normalizePublicationSectionsInBundle($bundle);
+
+        $this->assertCount(1, $out['sections']);
+        $this->assertSame('research', $out['sections'][0]['type']);
+        $this->assertSame(
+            ResearchRecordCvSyncMerge::canonicalPublicationSectionTitle(),
+            $out['sections'][0]['title']
+        );
+        $this->assertCount(1, $out['sections'][0]['entries']);
+        $this->assertSame($longTitle, $out['sections'][0]['entries'][0]['title']);
+    }
+
+    public function testShouldPromoteSectionTitleToEntryForEmptyResearchSection(): void
+    {
+        $this->assertTrue(ResearchRecordCvSyncMerge::shouldPromoteSectionTitleToEntry([
+            'type'    => 'research',
+            'title'   => 'ชื่อผลงานวิจัยที่ยาวมาก',
+            'entries' => [],
+        ]));
+        $this->assertFalse(ResearchRecordCvSyncMerge::shouldPromoteSectionTitleToEntry([
+            'type'    => 'research',
+            'title'   => ResearchRecordCvSyncMerge::canonicalPublicationSectionTitle(),
+            'entries' => [],
+        ]));
+    }
+
+    public function testNormalizeSectionsInBundleMergesDuplicateEducationSections(): void
+    {
+        $bundle = [
+            'sections' => [
+                [
+                    'external_key' => 's:edu1',
+                    'type'         => 'education',
+                    'title'        => 'Education',
+                    'sort_order'   => 1,
+                    'entries'      => [['external_key' => 'e:1', 'title' => 'ปริญญาเอก', 'metadata' => []]],
+                ],
+                [
+                    'external_key' => 's:edu2',
+                    'type'         => 'education',
+                    'title'        => 'ประวัติการศึกษา',
+                    'sort_order'   => 2,
+                    'entries'      => [['external_key' => 'e:2', 'title' => 'ปริญญาโท', 'metadata' => []]],
+                ],
+            ],
+        ];
+
+        $out = ResearchRecordCvSyncMerge::normalizeSectionsInBundle($bundle);
+
+        $this->assertCount(1, $out['sections']);
+        $this->assertSame('education', $out['sections'][0]['type']);
+        $this->assertSame('ประวัติการศึกษา', $out['sections'][0]['title']);
+        $this->assertCount(2, $out['sections'][0]['entries']);
     }
 }
