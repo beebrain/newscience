@@ -64,7 +64,7 @@ class OrcidCvImport
         $employment = in_array('employment', $scopes, true) ? ($aff['employment'] ?? []) : [];
         $works      = in_array('works', $scopes, true) ? OrcidPublicRecord::extractWorks($record) : [];
 
-        $educationSection  = self::ensureCvSection($cvSectionModel, $personnelId, 'education', 'ประวัติการศึกษา', $education !== []);
+        $educationSection  = self::ensureCvSection($cvSectionModel, $personnelId, 'education', ResearchRecordCvSyncMerge::canonicalEducationSectionTitle(), $education !== []);
         $employmentSection = self::ensureCvSection($cvSectionModel, $personnelId, 'work', 'ประสบการณ์การทำงาน', $employment !== []);
         $worksSection      = self::ensureCvSectionForWorks($cvSectionModel, $personnelId, $works !== []);
 

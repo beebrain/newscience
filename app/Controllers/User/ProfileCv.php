@@ -351,7 +351,7 @@ class ProfileCv extends BaseController
     }
 
     /**
-     * POST — บันทึกข้อความแนะนำ / การศึกษา (สรุป) / ความเชี่ยวชาญ (personnel) สำหรับหน้า CV สาธารณะ
+     * POST — บันทึกข้อความแนะนำ / ความเชี่ยวชาญ (personnel) สำหรับหน้า CV สาธารณะ
      */
     public function saveCvNarrative()
     {
@@ -366,7 +366,6 @@ class ProfileCv extends BaseController
 
         $rules = [
             'bio'       => 'permit_empty|string|max_length[20000]',
-            'education' => 'permit_empty|string|max_length[20000]',
             'expertise' => 'permit_empty|string|max_length[5000]',
         ];
 
@@ -377,7 +376,6 @@ class ProfileCv extends BaseController
         $personnelModel = new PersonnelModel();
         $personnelModel->update($personnelId, [
             'bio'       => (string) $this->request->getPost('bio'),
-            'education' => (string) $this->request->getPost('education'),
             'expertise' => (string) $this->request->getPost('expertise'),
         ]);
 
@@ -627,6 +625,13 @@ class ProfileCv extends BaseController
         $section        = $cvSectionModel->find($sectionId);
         if (!$section || (int) $section['personnel_id'] !== $personnelId) {
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบหัวข้อ']);
+        }
+
+        if (ResearchRecordCvSyncMerge::isProtectedEducationSection($section)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'ไม่สามารถลบหัวข้อการศึกษาได้ — เพิ่มหรือแก้ไขรายการในหัวข้อนี้แทน',
+            ]);
         }
 
         if (CvEntryModel::isTablePresent($cvSectionModel->db)) {

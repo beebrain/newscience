@@ -299,7 +299,151 @@ class ResearchRecordCvSyncMerge
         self::repairMisplacedPublicationSectionsForPerson($personnelId);
         self::dedupeCvSectionsByTypeForPerson($personnelId);
         self::normalizePublicationSectionsForPerson($personnelId);
+        self::ensureEducationSectionForPerson($personnelId);
         self::applyCanonicalSectionTitlesForPerson($personnelId);
+    }
+
+    /**
+     * สร้างหัวข้อการศึกษาให้ทุกคนที่ยังไม่มี (ว่างได้จนกว่าจะมีรายการจาก ORCID/กรอกเอง)
+     */
+    public static function ensureEducationSectionForPerson(int $personnelId): void
+    {
+        if ($personnelId <= 0) {
+            return;
+        }
+
+        $cvSectionModel = new CvSectionModel();
+        if (! $cvSectionModel->db->tableExists('cv_sections')) {
+            return;
+        }
+
+        $section = $cvSectionModel->where('personnel_id', $personnelId)
+            ->groupStart()
+            ->where('type', 'education')
+            ->orWhere('type', 'education_structured')
+            ->groupEnd()
+            ->orderBy('sort_order', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->first();
+
+        if ($section === null) {
+            $cvSectionModel->insert([
+                'personnel_id'      => $personnelId,
+                'type'              => 'education',
+                'title'             => self::canonicalEducationSectionTitle(),
+                'description'       => null,
+                'sort_order'        => self::defaultEducationSortOrder(),
+                'is_default'        => 0,
+                'visible_on_public' => 1,
+            ]);
+            $section = $cvSectionModel->find((int) $cvSectionModel->getInsertID());
+        } elseif (self::shouldNormalizeSectionTitleToCanonical('education', (string) ($section['title'] ?? ''))) {
+            $cvSectionModel->update((int) $section['id'], [
+                'title' => mb_substr(self::canonicalEducationSectionTitle(), 0, 255),
+                'type'  => 'education',
+            ]);
+        }
+
+        self::migratePersonnelEducationSummaryToEntries($personnelId, $section);
+    }
+
+    /**
+     * สร้างหัวข้อการศึกษาให้บุคลากรทุกคน (ใช้ใน migration / บำรุงรักษา)
+     */
+    public static function ensureEducationSectionForAllPersonnel(): int
+    {
+        $personnelModel = new PersonnelModel();
+        if (! $personnelModel->db->tableExists('personnel')) {
+            return 0;
+        }
+
+        $count = 0;
+        foreach ($personnelModel->select('id')->findAll() as $row) {
+            $pid = (int) ($row['id'] ?? 0);
+            if ($pid <= 0) {
+                continue;
+            }
+            self::ensureEducationSectionForPerson($pid);
+            $count++;
+        }
+
+        return $count;
+    }
+
+    public static function canonicalEducationSectionTitle(): string
+    {
+        return 'การศึกษา';
+    }
+
+    /**
+     * @param array<string,mixed> $section
+     */
+    public static function isProtectedEducationSection(array $section): bool
+    {
+        return self::sectionTypeGroupKey((string) ($section['type'] ?? '')) === 'education';
+    }
+
+    private static function defaultEducationSortOrder(): int
+    {
+        $map = CvProfile::defaultSortOrderByKey();
+
+        return (int) (($map[CvProfile::SECTION_EDUCATION] ?? 1) + 1);
+    }
+
+    /**
+     * ย้ายข้อความสรุป personnel.education (เก่า) เป็นรายการใต้หัวข้อการศึกษา แล้วล้างฟิลด์สรุป
+     *
+     * @param array<string,mixed>|null $section
+     */
+    private static function migratePersonnelEducationSummaryToEntries(int $personnelId, ?array $section): void
+    {
+        if ($section === null || ! CvEntryModel::isTablePresent((new CvSectionModel())->db)) {
+            return;
+        }
+
+        $sectionId = (int) ($section['id'] ?? 0);
+        if ($sectionId <= 0) {
+            return;
+        }
+
+        $cvEntryModel = new CvEntryModel();
+        if ($cvEntryModel->where('section_id', $sectionId)->countAllResults() > 0) {
+            return;
+        }
+
+        $personnelModel = new PersonnelModel();
+        if (! $personnelModel->db->fieldExists('education', 'personnel')) {
+            return;
+        }
+
+        $person = $personnelModel->find($personnelId);
+        if ($person === null) {
+            return;
+        }
+
+        $text = trim((string) ($person['education'] ?? ''));
+        if ($text === '') {
+            return;
+        }
+
+        $lines = preg_split('/\R+/u', $text) ?: [];
+        $sort  = 0;
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            $sort++;
+            $cvEntryModel->insert([
+                'section_id'        => $sectionId,
+                'title'             => mb_substr($line, 0, 500),
+                'visible_on_public' => 1,
+                'sort_order'        => $sort,
+                'metadata'          => json_encode(['source' => 'personnel_education_summary'], JSON_UNESCAPED_UNICODE),
+            ]);
+        }
+
+        $personnelModel->update($personnelId, ['education' => '']);
     }
 
     /**
@@ -312,6 +456,48 @@ class ResearchRecordCvSyncMerge
         $bundle = self::normalizePublicationSectionsInBundle($bundle);
         $bundle = self::mergeSectionsByTypeGroupInBundle($bundle);
         $bundle = self::applyCanonicalTitlesInBundle($bundle);
+        $bundle = self::ensureEducationSectionInBundle($bundle);
+
+        return $bundle;
+    }
+
+    /**
+     * @param array<string,mixed> $bundle
+     *
+     * @return array<string,mixed>
+     */
+    private static function ensureEducationSectionInBundle(array $bundle): array
+    {
+        $sections = $bundle['sections'] ?? [];
+        if (! is_array($sections)) {
+            $sections = [];
+        }
+
+        foreach ($sections as $sec) {
+            if (! is_array($sec)) {
+                continue;
+            }
+            if (self::sectionTypeGroupKey((string) ($sec['type'] ?? '')) === 'education') {
+                return $bundle;
+            }
+        }
+
+        $sections[] = [
+            'external_key'      => CvBundleCanonical::sectionExternalKey([
+                'type'       => 'education',
+                'title'      => self::canonicalEducationSectionTitle(),
+                'sort_order' => self::defaultEducationSortOrder(),
+            ]),
+            'type'              => 'education',
+            'title'             => self::canonicalEducationSectionTitle(),
+            'description'       => null,
+            'sort_order'        => self::defaultEducationSortOrder(),
+            'visible_on_public' => 1,
+            'entries'           => [],
+        ];
+
+        usort($sections, static fn ($a, $b) => ((int) ($a['sort_order'] ?? 0)) <=> ((int) ($b['sort_order'] ?? 0)));
+        $bundle['sections'] = $sections;
 
         return $bundle;
     }
@@ -879,7 +1065,7 @@ class ResearchRecordCvSyncMerge
         }
 
         return match ($group) {
-            'education' => 'ประวัติการศึกษา',
+            'education' => self::canonicalEducationSectionTitle(),
             'work'      => 'ประสบการณ์การทำงาน',
             'research'  => self::canonicalPublicationSectionTitle(),
             default     => null,

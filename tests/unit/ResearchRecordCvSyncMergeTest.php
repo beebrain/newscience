@@ -45,7 +45,7 @@ final class ResearchRecordCvSyncMergeTest extends CIUnitTestCase
 
         $merged = ResearchRecordCvSyncMerge::mergedCvBundle([], $nsBundle, $rrBundle, 'teacher@example.com');
 
-        $this->assertSame('ประวัติการศึกษา', $merged['sections'][0]['title']);
+        $this->assertSame('การศึกษา', $merged['sections'][0]['title']);
         $this->assertSame('ปริญญาเอก วิทยาศาสตร์', $merged['sections'][0]['entries'][0]['title']);
         $this->assertSame('NS description', $merged['sections'][0]['description']);
         $this->assertSame('NS University', $merged['sections'][0]['entries'][0]['organization']);
@@ -151,7 +151,7 @@ final class ResearchRecordCvSyncMergeTest extends CIUnitTestCase
                 [
                     'external_key' => 's:edu2',
                     'type'         => 'education',
-                    'title'        => 'ประวัติการศึกษา',
+                    'title'        => 'การศึกษา',
                     'sort_order'   => 2,
                     'entries'      => [['external_key' => 'e:2', 'title' => 'ปริญญาโท', 'metadata' => []]],
                 ],
@@ -162,7 +162,34 @@ final class ResearchRecordCvSyncMergeTest extends CIUnitTestCase
 
         $this->assertCount(1, $out['sections']);
         $this->assertSame('education', $out['sections'][0]['type']);
-        $this->assertSame('ประวัติการศึกษา', $out['sections'][0]['title']);
+        $this->assertSame('การศึกษา', $out['sections'][0]['title']);
         $this->assertCount(2, $out['sections'][0]['entries']);
+    }
+
+    public function testNormalizeSectionsInBundleAddsEducationSectionWhenMissing(): void
+    {
+        $bundle = [
+            'sections' => [[
+                'external_key' => 's:work',
+                'type'         => 'work',
+                'title'        => 'ประสบการณ์การทำงาน',
+                'sort_order'   => 5,
+                'entries'      => [],
+            ]],
+        ];
+
+        $out = ResearchRecordCvSyncMerge::normalizeSectionsInBundle($bundle);
+
+        $types = array_map(static fn ($s) => $s['type'] ?? '', $out['sections']);
+        $this->assertContains('education', $types);
+        $edu = null;
+        foreach ($out['sections'] as $sec) {
+            if (($sec['type'] ?? '') === 'education') {
+                $edu = $sec;
+            }
+        }
+        $this->assertNotNull($edu);
+        $this->assertSame('การศึกษา', $edu['title']);
+        $this->assertSame([], $edu['entries']);
     }
 }

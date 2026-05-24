@@ -33,7 +33,6 @@ $position = trim($p['position'] ?? '');
 $posDetail = trim($p['position_detail'] ?? '');
 $posLabel = $position !== '' ? $position . ($posDetail !== '' ? ' ' . $posDetail : '') : 'อาจารย์';
 $bio = trim($p['bio'] ?? '');
-$education = trim($p['education'] ?? '');
 $expertise = trim($p['expertise'] ?? '');
 $orcidRaw = trim((string) ($p['orcid_id'] ?? ''));
 $orcidDisplay = '';
@@ -493,13 +492,6 @@ if ($orcidRaw !== '' && \App\Libraries\OrcidPublicRecord::isValidId($orcidRaw)) 
           </p>
         <?php endif; ?>
       </header>
-
-      <?php if ($education): ?>
-        <section class="cv-block">
-          <h2>การศึกษา</h2>
-          <div class="cv-block-body"><?= esc($education) ?></div>
-        </section>
-      <?php endif; ?>
 
       <?php if ($bio): ?>
         <section class="cv-block">

@@ -363,7 +363,6 @@ $account_user = $account_user ?? null;
     <?php
     $pNarr = $person ?? [];
     $vBio = old('bio', $pNarr['bio'] ?? '');
-    $vEdu = old('education', $pNarr['education'] ?? '');
     $vExp = old('expertise', $pNarr['expertise'] ?? '');
     $narrCvEmail = '';
     if (! empty($pNarr['user_email'])) {
@@ -534,7 +533,8 @@ $account_user = $account_user ?? null;
                             <?php else: ?>
                                 <span class="font-medium text-slate-800">หน้า CV สาธารณะ</span>
                             <?php endif; ?>
-                            คู่กับรูปและหัวข้อ CV ด้านล่าง
+                            คู่กับรูปและหัวข้อ CV
+                            — <strong class="text-slate-800">การศึกษา</strong> จัดการที่แท็บ <a href="<?= esc(base_url('dashboard/profile/cv?tab=sections'), 'attr') ?>" class="text-secondary-dark underline font-medium">หัวข้อและรายการ</a> เท่านั้น (ไม่ใช่ข้อความสรุป)
                         </p>
                     </div>
                     <form method="post" action="<?= base_url('dashboard/profile/cv/narrative') ?>" class="space-y-6">
@@ -547,14 +547,6 @@ $account_user = $account_user ?? null;
                             </p>
                             <textarea id="cv-narrative-bio" name="bio" rows="5" maxlength="20000"
                                       class="mt-2 w-full text-sm border border-slate-200 rounded-[6px] px-3 py-2 focus:ring-2 focus:ring-primary/35 focus:border-secondary"><?= esc($vBio) ?></textarea>
-                        </div>
-                        <div>
-                            <label for="cv-narrative-education" class="block text-sm font-semibold text-slate-900">การศึกษา (ข้อความสรุป)</label>
-                            <p class="mt-1 text-xs text-slate-600 leading-relaxed max-w-4xl">
-                                สำหรับสรุปวุฒิหรือสถาบันแบบย่อ <strong class="text-slate-800">ทีละบรรทัดหรือย่อหน้า</strong>ได้ — ใช้คู่กับตารางหัวข้อ &ldquo;การศึกษา&rdquo; ใน CV ถ้าท่านมีรายการแบบมีโครงสร้างในแท็บด้านล่าง
-                            </p>
-                            <textarea id="cv-narrative-education" name="education" rows="4" maxlength="20000"
-                                      class="mt-2 w-full text-sm border border-slate-200 rounded-[6px] px-3 py-2 focus:ring-2 focus:ring-primary/35 focus:border-secondary"><?= esc($vEdu) ?></textarea>
                         </div>
                         <div>
                             <label for="cv-narrative-expertise" class="block text-sm font-semibold text-slate-900">ความเชี่ยวชาญส่วนบุคคล</label>
@@ -679,6 +671,9 @@ $account_user = $account_user ?? null;
                     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
                         <div>
                             <p class="cv-edit-stitch-kicker mb-1">สรุป</p>
+                            <p class="text-sm text-slate-600 mt-1 max-w-3xl">
+                                หัวข้อ <strong class="text-slate-800">การศึกษา</strong> มีให้ทุกคน — เพิ่มวุฒิ/สถาบันเป็น<strong class="text-slate-800">รายการในตาราง</strong>ใต้หัวข้อนั้น หรือนำเข้าจาก ORCID
+                            </p>
                             <div class="flex gap-6 mt-1 text-sm text-slate-700">
                                 <span><strong class="text-slate-900"><?= count($cvSections) ?></strong> หัวข้อ</span>
                                 <?php
@@ -733,6 +728,7 @@ $account_user = $account_user ?? null;
                 $canReorderEntries = count($entries) > 1;
                 $visPub = !empty($section['visible_on_public']);
                 $sectionType = (string) ($section['type'] ?? '');
+                $isEducationSection = in_array($sectionType, ['education', 'education_structured'], true);
                 $showPublicationType = in_array($sectionType, ['research', 'articles'], true);
             ?>
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden cv-section-item"
@@ -748,6 +744,9 @@ $account_user = $account_user ?? null;
                             <?php endif; ?>
                             <div class="min-w-0">
                                 <span class="font-semibold text-gray-900 text-lg"><?= esc($section['title'] ?? '') ?></span>
+                                <?php if ($isEducationSection): ?>
+                                    <span class="ml-2 text-xs text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">หัวข้อหลัก</span>
+                                <?php endif; ?>
                                 <span class="text-sm text-gray-500 ml-2">(<?= count($entries) ?> รายการ)</span>
                                 <?php if (!$visPub): ?>
                                     <span class="ml-2 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">ซ่อนจากหน้าสาธารณะ</span>
@@ -765,8 +764,10 @@ $account_user = $account_user ?? null;
                                     <span class="pointer-events-none absolute top-[3px] left-[3px] h-[1.125rem] w-[1.125rem] rounded-full bg-white shadow transition-transform duration-200 ease-out <?= $visPub ? 'translate-x-[1.35rem]' : 'translate-x-0' ?>"></span>
                                 </button>
                             </div>
+                            <?php if (! $isEducationSection): ?>
                             <button type="button" onclick="deleteCvSection(<?= $sid ?>, '<?= esc($section['title'] ?? '', 'js') ?>')"
                                     class="text-red-500 hover:text-red-700 text-sm px-2 py-1 rounded-lg hover:bg-red-50">ลบหัวข้อ</button>
+                            <?php endif; ?>
                             <span class="text-gray-400 text-lg transition-transform duration-200" id="cv-toggle-<?= $sid ?>">▼</span>
                         </div>
                     </div>
