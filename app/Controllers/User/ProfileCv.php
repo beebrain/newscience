@@ -268,6 +268,9 @@ class ProfileCv extends BaseController
 
     public function cv()
     {
+        $this->response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $this->response->setHeader('Pragma', 'no-cache');
+
         $email = $this->sessionEmail();
         if ($email === '') {
             return redirect()->to(base_url('admin/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
@@ -375,6 +378,7 @@ class ProfileCv extends BaseController
             'cv_edit_active_tab'         => $cvEditActiveTab,
             'ai_cv_publication_enabled'     => $aiCvCfg->isReady(),
             'cv_ai_publication_section_id'  => $cvAiPublicationSectionId,
+            'cv_ui_build'                   => 'split-modals-v2',
         ]);
     }
 

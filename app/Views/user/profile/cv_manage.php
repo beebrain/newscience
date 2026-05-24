@@ -367,6 +367,9 @@ $account_user = $account_user ?? null;
 ?>
 
 <div class="cv-manage-page px-3 sm:px-5 md:px-8 lg:px-10 xl:px-12 py-4 sm:py-6 space-y-4 sm:space-y-6 min-h-[calc(100dvh-11rem)] w-full">
+    <?php if (ENVIRONMENT === 'development'): ?>
+    <p class="text-xs text-slate-500 mb-2">CV UI: <?= esc($cv_ui_build ?? 'unknown') ?> — ผลงานใช้ modal แยก (เพิ่มผลงานเผยแพร่ + AI)</p>
+    <?php endif; ?>
 
     <?php if (is_array($rr_sync_notice) && ! empty($rr_sync_notice['text'])): ?>
         <div class="rounded-xl px-4 py-3 text-sm border <?= ($rr_sync_notice['type'] ?? '') === 'success' ? 'bg-emerald-50 text-emerald-900 border-emerald-200' : 'bg-amber-50 text-amber-900 border-amber-200' ?>">
@@ -698,6 +701,10 @@ $account_user = $account_user ?? null;
                 </section>
 
                 <div id="cv-edit-sections" class="<?= $cvEditActiveTab !== 'sections' ? 'hidden' : '' ?>">
+                <p class="text-xs text-slate-500 border-b border-slate-100 pb-3 mb-3" role="status">
+                    ผลงานเผยแพร่: ใช้ปุ่ม <strong class="text-slate-700">+ เพิ่มผลงาน</strong> และแถบสีม่วง <strong class="text-slate-700">ช่วยเติมด้วย AI</strong> ในโมดัล «เพิ่มผลงานเผยแพร่»
+                    — ถ้ายังเห็นแค่ «เพิ่มรายการ» ให้กด <kbd class="px-1 rounded bg-slate-100 text-[10px]">Ctrl+Shift+R</kbd> หรือให้เซิร์ฟเวอร์ pull โค้ดล่าสุด
+                </p>
                 <?php if ($cv_ai_publication_section_id > 0): ?>
                 <section class="cv-edit-stitch-panel mb-4 border-violet-200 bg-gradient-to-r from-violet-50/90 to-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -947,9 +954,9 @@ $account_user = $account_user ?? null;
         </div>
     </div>
 
-    <?php if (($cv_sections ?? []) !== []): ?>
     <?= view('user/profile/partials/cv_entry_modals', ['ai_cv_publication_enabled' => $ai_cv_publication_enabled]) ?>
 
+    <?php if (($cv_sections ?? []) !== []): ?>
     <div id="cv-ai-modal" class="fixed inset-0 z-[6100] hidden flex flex-col items-stretch justify-start sm:justify-center overflow-y-auto bg-slate-900/50 backdrop-blur-[2px] p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="cv-ai-modal-title" onclick="if(event.target===this)closeCvAiModal()">
         <div class="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-auto my-4 sm:my-8 overflow-hidden" onclick="event.stopPropagation()">
             <button type="button" class="absolute top-3 right-3 z-10 h-10 w-10 rounded-full bg-white text-slate-600 shadow ring-1 ring-slate-200 hover:bg-slate-50" onclick="closeCvAiModal()" aria-label="ปิด">&times;</button>
@@ -1209,6 +1216,16 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         return document.getElementById('cv-' + prefix + '-' + name);
     }
 
+    function cvSet(prefix, name, value) {
+        var el = cvEl(prefix, name);
+        if (el) el.value = value;
+    }
+
+    function cvCheck(prefix, name, checked) {
+        var el = cvEl(prefix, name);
+        if (el) el.checked = checked;
+    }
+
     function cvSectionIsPublication(sectionId) {
         var row = cvSectionRow(sectionId);
         return !!(row && row.dataset.showPub === '1');
@@ -1338,38 +1355,46 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     }
 
     function resetCvGeneralEntryForm() {
-        cvEl('g', 'entry-id').value = '';
-        cvEl('g', 'entry-sort').value = '0';
-        cvEl('g', 'title').value = '';
-        cvEl('g', 'org').value = '';
-        cvEl('g', 'loc').value = '';
-        cvEl('g', 'start').value = '';
-        cvEl('g', 'end').value = '';
-        cvEl('g', 'url').value = '';
-        cvEl('g', 'desc').value = '';
-        cvEl('g', 'current').value = '0';
-        cvEl('g', 'vis').checked = true;
-        cvEl('g', 'meta-src').value = '';
+        cvSet('g', 'entry-id', '');
+        cvSet('g', 'entry-sort', '0');
+        cvSet('g', 'title', '');
+        cvSet('g', 'org', '');
+        cvSet('g', 'loc', '');
+        cvSet('g', 'start', '');
+        cvSet('g', 'end', '');
+        cvSet('g', 'url', '');
+        cvSet('g', 'desc', '');
+        cvSet('g', 'current', '0');
+        cvCheck('g', 'vis', true);
+        cvSet('g', 'meta-src', '');
     }
 
     function resetCvPubEntryForm() {
-        cvEl('p', 'entry-id').value = '';
-        cvEl('p', 'entry-sort').value = '0';
-        cvEl('p', 'title').value = '';
-        cvEl('p', 'org').value = '';
-        cvEl('p', 'loc').value = '';
-        cvEl('p', 'start').value = '';
-        cvEl('p', 'end').value = '';
-        cvEl('p', 'url').value = '';
-        cvEl('p', 'desc').value = '';
-        cvEl('p', 'current').value = '0';
-        cvEl('p', 'vis').checked = true;
-        cvEl('p', 'doi').value = '';
-        cvEl('p', 'rrid').value = '';
-        cvEl('p', 'meta-src').value = '';
+        cvSet('p', 'entry-id', '');
+        cvSet('p', 'entry-sort', '0');
+        cvSet('p', 'title', '');
+        cvSet('p', 'org', '');
+        cvSet('p', 'loc', '');
+        cvSet('p', 'start', '');
+        cvSet('p', 'end', '');
+        cvSet('p', 'url', '');
+        cvSet('p', 'desc', '');
+        cvSet('p', 'current', '0');
+        cvCheck('p', 'vis', true);
+        cvSet('p', 'doi', '');
+        cvSet('p', 'rrid', '');
+        cvSet('p', 'meta-src', '');
         var pubSel = cvEl('p', 'pubtype');
         if (pubSel) pubSel.value = '';
         resetPublicationResearchFields();
+    }
+
+    function ensureCvPubModalDom() {
+        if (document.getElementById('cv-pub-entry-modal')) return true;
+        var msg = 'โหลดหน้า CV ไม่ครบ (ไม่พบฟอร์มผลงานเผยแพร่) — กด Ctrl+Shift+R รีเฟรช หรือตรวจว่าเซิร์ฟเวอร์ pull โค้ดล่าสุดแล้ว';
+        if (typeof swalAlert === 'function') swalAlert(msg, 'warning');
+        else alert(msg);
+        return false;
     }
 
     function showEntryModal(modalId) {
@@ -1380,14 +1405,15 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     }
 
     function openCvGeneralEntryModalShell(sectionId) {
-        cvEl('g', 'section-id').value = String(sectionId);
+        cvSet('g', 'section-id', String(sectionId));
         var sub = document.getElementById('cv-g-entry-modal-sub');
         if (sub) sub.textContent = cvSectionSubtitle(sectionId);
         showEntryModal('cv-entry-modal');
     }
 
     function openCvPubEntryModalShell(sectionId) {
-        cvEl('p', 'section-id').value = String(sectionId);
+        if (!ensureCvPubModalDom()) return;
+        cvSet('p', 'section-id', String(sectionId));
         var sub = document.getElementById('cv-p-entry-modal-sub');
         if (sub) sub.textContent = cvSectionSubtitle(sectionId);
         showEntryModal('cv-pub-entry-modal');
@@ -1409,12 +1435,15 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     };
 
     window.openCvPubEntryModal = function (sectionId) {
+        if (!ensureCvPubModalDom()) return;
         resetPublicationSelectOptions();
         resetCvPubEntryForm();
-        document.getElementById('cv-pub-entry-modal-title').textContent = 'เพิ่มผลงานเผยแพร่';
+        var titleEl = document.getElementById('cv-pub-entry-modal-title');
+        if (titleEl) titleEl.textContent = 'เพิ่มผลงานเผยแพร่';
         openCvPubEntryModalShell(sectionId);
         renderPublicationAuthors(defaultPublicationAuthors());
-        cvEl('p', 'title').focus();
+        var focusEl = cvEl('p', 'title');
+        if (focusEl) focusEl.focus();
     };
 
     window.openCvEntryModal = function (sectionId) {
@@ -1740,6 +1769,9 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     };
 
     document.addEventListener('DOMContentLoaded', function () {
+        if (!document.getElementById('cv-ui-build-marker')) {
+            console.warn('CV UI: missing split-modals-v2 marker — hard refresh (Ctrl+Shift+R)');
+        }
         var aiSectionId = <?= (int) $cv_ai_publication_section_id ?>;
         if (aiSectionId > 0) {
             var qs = new URLSearchParams(window.location.search);

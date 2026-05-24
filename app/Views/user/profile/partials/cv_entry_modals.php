@@ -8,6 +8,8 @@
  */
 $saveUrl = base_url('dashboard/profile/cv/entry/save');
 ?>
+    <!-- NS-CV-UI: split-modals-v2 -->
+    <span id="cv-ui-build-marker" class="hidden" data-cv-ui="split-modals-v2" aria-hidden="true"></span>
     <!-- Modal รายการทั่วไป (การศึกษา งาน ฯลฯ — ไม่มี AI) -->
     <div id="cv-entry-modal" class="fixed inset-0 z-[6000] hidden flex flex-col items-stretch justify-start sm:justify-center overflow-y-auto bg-slate-900/50 backdrop-blur-[2px] p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="cv-entry-modal-title">
         <div class="cv-entry-modal__panel relative bg-white overflow-hidden flex flex-col min-h-0 w-full max-w-[56rem] mx-auto shrink-0" onclick="event.stopPropagation()">
