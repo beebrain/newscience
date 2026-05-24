@@ -25,14 +25,16 @@ $ai_cv_ready_js = $ai_cv_publication_enabled ? 'true' : 'false';
     opacity: 0.55;
     cursor: wait;
 }
-/* Modal รายการ CV — ฟอนต์/ขนาดเดียวกับหน้าแก้ไข + จัดกึ่งกลาง */
-#cv-entry-modal {
+/* Modal รายการ CV — ทั่วไป + เผยแพร่ผลงาน (แยกกัน) */
+#cv-entry-modal,
+#cv-pub-entry-modal {
     font-family: 'Sarabun', 'Noto Sans Thai', sans-serif;
     font-size: 1rem;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
 }
-#cv-entry-modal .cv-entry-modal__panel {
+#cv-entry-modal .cv-entry-modal__panel,
+#cv-pub-entry-modal .cv-entry-modal__panel {
     max-height: min(92vh, 880px);
     display: flex;
     flex-direction: column;
@@ -43,41 +45,49 @@ $ai_cv_ready_js = $ai_cv_publication_enabled ? 'true' : 'false';
     border: 1px solid var(--color-gray-300, #e5e7eb);
     box-shadow: var(--shadow-lg, 0 10px 15px rgba(0, 0, 0, 0.1));
 }
-#cv-entry-modal .cv-entry-modal__body {
+#cv-entry-modal .cv-entry-modal__body,
+#cv-pub-entry-modal .cv-entry-modal__body {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
-#cv-entry-modal .cv-entry-modal__meta {
+#cv-entry-modal .cv-entry-modal__meta,
+#cv-pub-entry-modal .cv-entry-modal__meta {
     padding-right: 2.75rem;
 }
 @media (min-width: 640px) {
-    #cv-entry-modal .cv-entry-modal__meta {
+    #cv-entry-modal .cv-entry-modal__meta,
+    #cv-pub-entry-modal .cv-entry-modal__meta {
         padding-right: 3rem;
     }
 }
-#cv-entry-modal .cv-entry-modal__display-row {
+#cv-entry-modal .cv-entry-modal__display-row,
+#cv-pub-entry-modal .cv-entry-modal__display-row {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
 }
 @media (min-width: 640px) {
-    #cv-entry-modal .cv-entry-modal__display-row {
+    #cv-entry-modal .cv-entry-modal__display-row,
+    #cv-pub-entry-modal .cv-entry-modal__display-row {
         flex-direction: row;
         flex-wrap: wrap;
         align-items: center;
         gap: 1rem 1.5rem;
     }
 }
-#cv-entry-modal .cv-entry-modal__vis-toggle {
+#cv-entry-modal .cv-entry-modal__vis-toggle,
+#cv-pub-entry-modal .cv-entry-modal__vis-toggle {
     border: 1px solid var(--color-gray-300, #e5e7eb);
     border-radius: 8px;
     background: var(--color-white, #fff);
     padding: 0.5rem 0.75rem;
 }
-#cv-entry-modal .cv-entry-modal__vis-toggle:hover {
+#cv-entry-modal .cv-entry-modal__vis-toggle:hover,
+#cv-pub-entry-modal .cv-entry-modal__vis-toggle:hover {
     background: var(--color-gray-100, #f9fafb);
 }
-#cv-entry-modal .cv-edit-modal-label {
+#cv-entry-modal .cv-edit-modal-label,
+#cv-pub-entry-modal .cv-edit-modal-label {
     display: block;
     font-size: 0.75rem;
     font-weight: 700;
@@ -87,8 +97,11 @@ $ai_cv_ready_js = $ai_cv_publication_enabled ? 'true' : 'false';
     margin-bottom: 0.4rem;
 }
 #cv-entry-modal .cv-edit-modal-input,
+#cv-pub-entry-modal .cv-edit-modal-input,
 #cv-entry-modal .cv-edit-modal-textarea,
-#cv-entry-modal .cv-edit-modal-select {
+#cv-pub-entry-modal .cv-edit-modal-textarea,
+#cv-entry-modal .cv-edit-modal-select,
+#cv-pub-entry-modal .cv-edit-modal-select {
     width: 100%;
     border: 1px solid var(--color-gray-300, #e5e7eb);
     border-radius: 6px;
@@ -98,46 +111,57 @@ $ai_cv_ready_js = $ai_cv_publication_enabled ? 'true' : 'false';
     color: var(--color-gray-800, #374151);
     background: var(--color-white, #fff);
 }
-#cv-entry-modal .cv-edit-modal-textarea {
+#cv-entry-modal .cv-edit-modal-textarea,
+#cv-pub-entry-modal .cv-edit-modal-textarea {
     min-height: 6.5rem;
 }
 #cv-entry-modal .cv-edit-modal-input:focus,
+#cv-pub-entry-modal .cv-edit-modal-input:focus,
 #cv-entry-modal .cv-edit-modal-textarea:focus,
-#cv-entry-modal .cv-edit-modal-select:focus {
+#cv-pub-entry-modal .cv-edit-modal-textarea:focus,
+#cv-entry-modal .cv-edit-modal-select:focus,
+#cv-pub-entry-modal .cv-edit-modal-select:focus {
     outline: none;
     border-color: var(--secondary, #2d7d46);
     box-shadow: 0 0 0 2px rgba(45, 125, 70, 0.2);
 }
-#cv-entry-modal .cv-entry-modal__footer {
+#cv-entry-modal .cv-entry-modal__footer,
+#cv-pub-entry-modal .cv-entry-modal__footer {
     padding: 1rem 1.25rem;
     border-top: 1px solid var(--color-gray-300, #e5e7eb);
     background: linear-gradient(180deg, var(--color-gray-100, #f9fafb) 0%, var(--color-gray-200, #f3f4f6) 100%);
 }
 @media (min-width: 640px) {
-    #cv-entry-modal .cv-entry-modal__footer {
+    #cv-entry-modal .cv-entry-modal__footer,
+    #cv-pub-entry-modal .cv-entry-modal__footer {
         padding: 1rem 1.5rem;
     }
 }
-#cv-entry-modal .cv-entry-modal__headstrip {
+#cv-entry-modal .cv-entry-modal__headstrip,
+#cv-pub-entry-modal .cv-entry-modal__headstrip {
     border-bottom: 2px solid var(--secondary, #2d7d46);
     padding-bottom: 0.75rem;
     margin-bottom: 1.25rem;
 }
-#cv-entry-modal .cv-entry-modal__headstrip p.cv-edit-stitch-kicker {
+#cv-entry-modal .cv-entry-modal__headstrip p.cv-edit-stitch-kicker,
+#cv-pub-entry-modal .cv-entry-modal__headstrip p.cv-edit-stitch-kicker {
     margin-bottom: 0.25rem;
 }
-#cv-entry-modal .cv-entry-modal__formstack {
+#cv-entry-modal .cv-entry-modal__formstack,
+#cv-pub-entry-modal .cv-entry-modal__formstack {
     display: flex;
     flex-direction: column;
     gap: 1.1rem;
 }
-#cv-entry-modal .cv-entry-modal__grid2 {
+#cv-entry-modal .cv-entry-modal__grid2,
+#cv-pub-entry-modal .cv-entry-modal__grid2 {
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem 1.25rem;
 }
 @media (min-width: 640px) {
-    #cv-entry-modal .cv-entry-modal__grid2 {
+    #cv-entry-modal .cv-entry-modal__grid2,
+    #cv-pub-entry-modal .cv-entry-modal__grid2 {
         grid-template-columns: 1fr 1fr;
     }
 }
@@ -897,11 +921,19 @@ $account_user = $account_user ?? null;
                                     <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
                                 </button>
                                 <?php endif; ?>
+                                <?php if ($showPublicationType): ?>
                                 <button type="button"
-                                        onclick="openCvEntryModal(<?= $sid ?>)"
+                                        onclick="openCvPubEntryModal(<?= $sid ?>)"
+                                        class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold shadow-sm transition-colors">
+                                    <span aria-hidden="true">+</span> เพิ่มผลงาน
+                                </button>
+                                <?php else: ?>
+                                <button type="button"
+                                        onclick="openCvGeneralEntryModal(<?= $sid ?>)"
                                         class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold shadow-sm transition-colors">
                                     <span aria-hidden="true">+</span> เพิ่มรายการ
                                 </button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -916,185 +948,7 @@ $account_user = $account_user ?? null;
     </div>
 
     <?php if (($cv_sections ?? []) !== []): ?>
-    <div id="cv-entry-modal" class="fixed inset-0 z-[6000] hidden flex flex-col items-stretch justify-start sm:justify-center overflow-y-auto bg-slate-900/50 backdrop-blur-[2px] p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="cv-entry-modal-title">
-        <div class="cv-entry-modal__panel relative bg-white overflow-hidden flex flex-col min-h-0 w-full max-w-[56rem] mx-auto shrink-0" onclick="event.stopPropagation()">
-            <button type="button" id="cv-entry-modal-close" class="absolute top-3 right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-600 text-xl leading-none shadow-md ring-1 ring-slate-200/90 hover:bg-slate-50 hover:text-slate-900 transition-colors" aria-label="ปิด">&times;</button>
-
-            <form id="cv-entry-modal-form" class="flex flex-col flex-1 min-h-0 font-sarabun" action="<?= base_url('dashboard/profile/cv/entry/save') ?>" method="post" novalidate>
-                <?= csrf_field() ?>
-                <input type="hidden" name="section_id" id="cv-m-section-id" value="">
-                <input type="hidden" name="entry_id" id="cv-m-entry-id" value="">
-                <input type="hidden" name="entry_sort_order" id="cv-m-entry-sort" value="0">
-                <input type="hidden" name="extra_info" value="">
-                <input type="hidden" name="funding_amount" value="">
-                <input type="hidden" name="is_current" id="cv-m-current" value="0">
-                <input type="hidden" name="entry_metadata_source" id="cv-m-meta-src" value="">
-
-                <div class="flex flex-col flex-1 min-h-0">
-                    <div class="cv-entry-modal__body flex-1 min-w-0 bg-white px-5 py-6 pt-12 sm:px-8 sm:py-8 sm:pt-12">
-                        <div class="cv-entry-modal__meta mb-6 pb-6 border-b border-slate-200">
-                            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">รายการบน CV สาธารณะ</p>
-                            <h2 id="cv-entry-modal-title" class="mt-1.5 text-lg sm:text-xl font-bold text-slate-900 leading-snug tracking-tight">รายการ CV</h2>
-                            <p id="cv-entry-modal-sub" class="mt-2 text-sm text-slate-600 leading-relaxed"></p>
-                            <div id="cv-entry-ai-strip" class="hidden mt-4 rounded-xl border border-violet-200 bg-violet-50/80 p-3 sm:p-4">
-                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                    <p class="text-sm text-violet-950 leading-relaxed">
-                                        <strong>ช่วยเติมด้วย AI</strong> — อัปโหลด PDF/รูป หรือ DOI แล้วให้ระบบกรอกฟอร์มนี้ให้ (แบบ กบศ)
-                                    </p>
-                                    <button type="button"
-                                            id="cv-entry-ai-btn"
-                                            onclick="launchCvAiFromEntryModal()"
-                                            class="inline-flex shrink-0 items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg border border-violet-400 bg-violet-600 text-white font-semibold hover:bg-violet-700 shadow-sm transition-colors">
-                                        <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
-                                    </button>
-                                </div>
-                                <?php if (! $ai_cv_publication_enabled): ?>
-                                <p id="cv-entry-ai-hint" class="text-xs text-amber-800 mt-2">ยังไม่เปิดใช้บนเซิร์ฟเวอร์ — ตั้ง <code class="text-[11px] bg-amber-100 px-1 rounded">AI_CV_N8N_URL</code> ใน .env</p>
-                                <?php endif; ?>
-                            </div>
-                            <p class="mt-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">การแสดงผล</p>
-                            <div class="cv-entry-modal__display-row mt-2">
-                                <label class="cv-entry-modal__vis-toggle flex flex-1 min-w-0 items-center justify-between gap-3 cursor-pointer select-none sm:max-w-md">
-                                    <span class="text-sm text-slate-700">แสดงในหน้าสาธารณะ</span>
-                                    <input type="checkbox" name="visible_on_public" value="1" checked id="cv-m-vis" class="peer sr-only">
-                                    <span class="relative inline-block h-6 w-11 shrink-0 rounded-full bg-slate-300 transition-colors peer-checked:bg-emerald-500 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-400 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-white after:absolute after:left-[3px] after:top-[3px] after:h-[18px] after:w-[18px] after:rounded-full after:bg-white after:shadow after:transition-transform after:duration-200 after:content-[''] peer-checked:after:translate-x-[1.25rem]" aria-hidden="true"></span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="cv-entry-modal__headstrip">
-                            <p class="cv-edit-stitch-kicker">รายละเอียดในตาราง CV</p>
-                            <p class="text-sm text-slate-600 leading-relaxed">จัดเรียงเหมือนหน้า <strong class="text-slate-800 font-semibold">ดู CV</strong> — หัวข้อ, หน่วยงาน/สถานที่, ช่วงเวลา, รายละเอียด และลิงก์</p>
-                        </div>
-
-                        <div class="cv-entry-modal__formstack">
-                            <div>
-                                <label for="cv-m-title" class="cv-edit-modal-label">หัวข้อรายการ <span class="text-red-600 normal-case tracking-normal font-semibold">*</span></label>
-                                <input type="text" name="entry_title" required maxlength="500" id="cv-m-title" class="cv-edit-modal-input" placeholder="ชื่อรายการที่แสดงในคอลัมน์หัวข้อ">
-                            </div>
-                            <div class="cv-entry-modal__grid2">
-                                <div>
-                                    <label for="cv-m-org" id="cv-m-org-label" class="cv-edit-modal-label">หน่วยงาน / องค์กร</label>
-                                    <input type="text" name="organization" maxlength="500" id="cv-m-org" class="cv-edit-modal-input" placeholder="องค์กร / สถาบัน / วารสาร">
-                                </div>
-                                <div>
-                                    <label for="cv-m-loc" class="cv-edit-modal-label">สถานที่</label>
-                                    <input type="text" name="location" maxlength="500" id="cv-m-loc" class="cv-edit-modal-input" placeholder="เมือง ประเทศ ฯลฯ">
-                                </div>
-                            </div>
-                            <div class="cv-entry-modal__grid2">
-                                <div>
-                                    <label for="cv-m-start" class="cv-edit-modal-label">วันเริ่ม</label>
-                                    <input type="date" name="start_date" id="cv-m-start" class="cv-edit-modal-input">
-                                </div>
-                                <div>
-                                    <label for="cv-m-end" class="cv-edit-modal-label">วันสิ้นสุด</label>
-                                    <input type="date" name="end_date" id="cv-m-end" class="cv-edit-modal-input">
-                                </div>
-                            </div>
-                            <div id="cv-m-pubtype-wrap" class="hidden rounded-lg border border-slate-200 bg-slate-50 p-3 sm:p-4">
-                                <label for="cv-m-pubtype" class="cv-edit-modal-label">ประเภทผลงานเผยแพร่</label>
-                                <p class="text-xs text-slate-600 mb-2 leading-relaxed">สำหรับหัวข้อ <strong class="text-slate-800">งานวิจัย / บทความ</strong> — รหัสเดียวกับ กบศ (<code class="text-[11px] bg-white px-1.5 py-0.5 rounded border border-slate-200 font-mono">publication_type</code>)</p>
-                                <select name="publication_type" id="cv-m-pubtype" disabled class="cv-edit-modal-select disabled:bg-slate-100 disabled:text-slate-500">
-                                    <option value="">— ไม่ระบุ —</option>
-                                    <?php foreach (\App\Libraries\RrPublicationType::selectOptionGroups() as $groupLabel => $groupOpts): ?>
-                                        <optgroup label="<?= esc($groupLabel) ?>">
-                                            <?php foreach ($groupOpts as $pubOpt): ?>
-                                                <option value="<?= esc($pubOpt['value']) ?>"><?= esc($pubOpt['label']) ?></option>
-                                            <?php endforeach; ?>
-                                        </optgroup>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div id="cv-m-pub-ident-wrap" class="hidden rounded-lg border border-slate-200 bg-slate-50/90 p-3 sm:p-4 space-y-3">
-                                <div class="cv-entry-modal__grid2">
-                                    <div>
-                                        <label for="cv-m-doi" class="cv-edit-modal-label">DOI</label>
-                                        <input type="text" name="entry_doi" id="cv-m-doi" class="cv-edit-modal-input" maxlength="255" placeholder="เช่น 10.1234/example หรือลิงก์ https://doi.org/…" autocomplete="off">
-                                    </div>
-                                    <div>
-                                        <label for="cv-m-rrid" class="cv-edit-modal-label">รหัสผลงานใน กบศ</label>
-                                        <input type="text" name="publication_rr_id" id="cv-m-rrid" class="cv-edit-modal-input" maxlength="12" inputmode="numeric" pattern="[0-9]*" placeholder="ถ้าทราบ (ตัวเลข)" autocomplete="off">
-                                    </div>
-                                </div>
-                                <p class="text-xs text-slate-600 leading-relaxed">ใส่ DOI หรือรหัสผลงานกบศเพื่อจับคู่กับข้อมูลที่ซิงค์จากกบศ — ลดรายการซ้ำ</p>
-                            </div>
-                            <div id="cv-m-pub-extra-wrap" class="hidden rounded-lg border border-slate-200 bg-slate-50/90 p-3 sm:p-4 space-y-4">
-                                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">ข้อมูลผลงาน (ตรงกับ กบศ)</p>
-                                <div class="cv-entry-modal__grid2">
-                                    <div>
-                                        <label for="cv-m-year-be" class="cv-edit-modal-label">ปีที่เผยแพร่ (พ.ศ.) <span class="text-red-600">*</span></label>
-                                        <input type="number" name="publication_year_be" id="cv-m-year-be" class="cv-edit-modal-input" min="2400" max="2700" placeholder="เช่น 2567">
-                                    </div>
-                                    <div>
-                                        <label for="cv-m-month" class="cv-edit-modal-label">เดือน</label>
-                                        <select name="publication_month" id="cv-m-month" class="cv-edit-modal-select">
-                                            <option value="">— ไม่ระบุ —</option>
-                                            <?php for ($m = 1; $m <= 12; $m++): ?>
-                                                <option value="<?= $m ?>"><?= $m ?></option>
-                                            <?php endfor; ?>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="cv-entry-modal__grid2">
-                                    <div>
-                                        <label for="cv-m-volume" class="cv-edit-modal-label">เล่ม (Volume)</label>
-                                        <input type="text" name="volume" id="cv-m-volume" class="cv-edit-modal-input" maxlength="100">
-                                    </div>
-                                    <div>
-                                        <label for="cv-m-pages" class="cv-edit-modal-label">หน้า (Pages)</label>
-                                        <input type="text" name="pages" id="cv-m-pages" class="cv-edit-modal-input" maxlength="100">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label for="cv-m-isbn" class="cv-edit-modal-label">ISBN</label>
-                                    <input type="text" name="isbn" id="cv-m-isbn" class="cv-edit-modal-input" maxlength="100">
-                                </div>
-                                <div>
-                                    <label for="cv-m-abstract" class="cv-edit-modal-label">บทคัดย่อ (Abstract)</label>
-                                    <textarea name="abstract" rows="3" id="cv-m-abstract" class="cv-edit-modal-textarea" placeholder="บทคัดย่อผลงาน"></textarea>
-                                </div>
-                                <div>
-                                    <label for="cv-m-keywords" class="cv-edit-modal-label">คำสำคัญ (Keywords)</label>
-                                    <input type="text" name="keywords" id="cv-m-keywords" class="cv-edit-modal-input" maxlength="500" placeholder="คั่นด้วยจุลภาค">
-                                </div>
-                                <div>
-                                    <label for="cv-m-notes" class="cv-edit-modal-label">หมายเหตุ (Notes)</label>
-                                    <textarea name="notes" rows="2" id="cv-m-notes" class="cv-edit-modal-textarea"></textarea>
-                                </div>
-                                <div>
-                                    <label for="cv-m-ref-url" class="cv-edit-modal-label">ลิงก์อ้างอิง (ref_url)</label>
-                                    <input type="text" name="ref_url" id="cv-m-ref-url" class="cv-edit-modal-input" maxlength="2048" placeholder="https://doi.org/… หรือ URL ผลงาน">
-                                </div>
-                                <div>
-                                    <div class="flex items-center justify-between gap-2 mb-2">
-                                        <label class="cv-edit-modal-label mb-0">ผู้แต่ง / ผู้ร่วมวิจัย</label>
-                                        <button type="button" id="cv-m-add-author" class="text-xs px-2.5 py-1 rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50">+ เพิ่มผู้แต่ง</button>
-                                    </div>
-                                    <input type="hidden" name="publication_authors" id="cv-m-authors-json" value="">
-                                    <div id="cv-m-authors-list" class="space-y-2"></div>
-                                    <p class="text-xs text-slate-500 mt-2">* = ผู้รับผิดชอบการติดต่อ (corresponding author)</p>
-                                </div>
-                            </div>
-                            <div>
-                                <label for="cv-m-url" class="cv-edit-modal-label">ลิงก์ (URL)</label>
-                                <input type="text" name="entry_url" maxlength="2048" id="cv-m-url" class="cv-edit-modal-input" placeholder="https://...">
-                            </div>
-                            <div>
-                                <label for="cv-m-desc" class="cv-edit-modal-label">รายละเอียด</label>
-                                <textarea name="entry_description" rows="4" id="cv-m-desc" class="cv-edit-modal-textarea" placeholder="ข้อความในคอลัมน์รายละเอียดบนหน้า CV"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cv-entry-modal__footer flex flex-wrap items-center justify-end gap-2 sm:gap-3 shrink-0">
-                    <button type="button" id="cv-entry-modal-cancel" class="text-sm px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium hover:bg-slate-50 transition-colors min-w-[5.5rem]">ยกเลิก</button>
-                    <button type="submit" class="text-sm px-5 py-2.5 rounded-lg bg-secondary hover:bg-secondary-dark text-white font-semibold shadow-sm transition-colors min-w-[6.5rem]">บันทึก</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <?= view('user/profile/partials/cv_entry_modals', ['ai_cv_publication_enabled' => $ai_cv_publication_enabled]) ?>
 
     <div id="cv-ai-modal" class="fixed inset-0 z-[6100] hidden flex flex-col items-stretch justify-start sm:justify-center overflow-y-auto bg-slate-900/50 backdrop-blur-[2px] p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="cv-ai-modal-title" onclick="if(event.target===this)closeCvAiModal()">
         <div class="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-auto my-4 sm:my-8 overflow-hidden" onclick="event.stopPropagation()">
@@ -1351,8 +1205,25 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         return merged;
     }
 
+    function cvEl(prefix, name) {
+        return document.getElementById('cv-' + prefix + '-' + name);
+    }
+
+    function cvSectionIsPublication(sectionId) {
+        var row = cvSectionRow(sectionId);
+        return !!(row && row.dataset.showPub === '1');
+    }
+
+    function cvSectionSubtitle(sectionId) {
+        var row = cvSectionRow(sectionId);
+        var st = row ? (row.dataset.sectionType || '') : '';
+        var stitle = row ? (row.dataset.sectionTitle || '') : '';
+        var typeLabel = CV_SECTION_TYPE_LABELS[st] || st || '';
+        return (stitle ? 'หัวข้อ: ' + stitle : '') + (typeLabel ? ' · ประเภท: ' + typeLabel : '');
+    }
+
     function renderPublicationAuthors(authors) {
-        var list = document.getElementById('cv-m-authors-list');
+        var list = document.getElementById('cv-p-authors-list');
         if (!list) return;
         list.innerHTML = '';
         var rows = Array.isArray(authors) && authors.length ? dedupePublicationAuthors(authors) : defaultPublicationAuthors();
@@ -1378,7 +1249,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     }
 
     function collectPublicationAuthors() {
-        var list = document.getElementById('cv-m-authors-list');
+        var list = document.getElementById('cv-p-authors-list');
         if (!list) return [];
         var out = [];
         list.querySelectorAll('[data-author-index]').forEach(function (row, i) {
@@ -1399,7 +1270,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     }
 
     function syncPublicationAuthorsHidden() {
-        var hidden = document.getElementById('cv-m-authors-json');
+        var hidden = document.getElementById('cv-p-authors-json');
         if (hidden) hidden.value = JSON.stringify(collectPublicationAuthors());
     }
 
@@ -1408,24 +1279,24 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     window.renderPublicationAuthors = renderPublicationAuthors;
 
     function resetPublicationResearchFields() {
-        ['cv-m-year-be', 'cv-m-volume', 'cv-m-pages', 'cv-m-isbn', 'cv-m-abstract', 'cv-m-keywords', 'cv-m-notes', 'cv-m-ref-url'].forEach(function (id) {
-            var el = document.getElementById(id);
+        ['year-be', 'volume', 'pages', 'isbn', 'abstract', 'keywords', 'notes', 'ref-url'].forEach(function (name) {
+            var el = cvEl('p', name);
             if (el) el.value = '';
         });
-        var monthEl = document.getElementById('cv-m-month');
+        var monthEl = cvEl('p', 'month');
         if (monthEl) monthEl.value = '';
         renderPublicationAuthors([]);
     }
 
     function fillPublicationResearchFieldsFromEntry(e) {
         var meta = e.metadata_array || {};
-        var yearEl = document.getElementById('cv-m-year-be');
+        var yearEl = cvEl('p', 'year-be');
         if (yearEl) yearEl.value = e.publication_year_be || meta.publication_year_be || '';
-        var monthEl = document.getElementById('cv-m-month');
+        var monthEl = cvEl('p', 'month');
         if (monthEl) monthEl.value = e.publication_month || meta.publication_month || '';
-        var map = { abstract: 'cv-m-abstract', keywords: 'cv-m-keywords', notes: 'cv-m-notes', volume: 'cv-m-volume', pages: 'cv-m-pages', isbn: 'cv-m-isbn', ref_url: 'cv-m-ref-url' };
+        var map = { abstract: 'abstract', keywords: 'keywords', notes: 'notes', volume: 'volume', pages: 'pages', isbn: 'isbn', ref_url: 'ref-url' };
         Object.keys(map).forEach(function (key) {
-            var el = document.getElementById(map[key]);
+            var el = cvEl('p', map[key]);
             if (el) el.value = e[key] || meta[key] || '';
         });
         var authors = e.publication_authors || meta.publication_authors || [];
@@ -1434,33 +1305,6 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
 
     function cvSectionRow(sectionId) {
         return document.querySelector('.cv-section-item[data-section-id="' + sectionId + '"]');
-    }
-
-    function setPublicationFieldVisible(show) {
-        var wrap = document.getElementById('cv-m-pubtype-wrap');
-        var sel = document.getElementById('cv-m-pubtype');
-        var ident = document.getElementById('cv-m-pub-ident-wrap');
-        var extra = document.getElementById('cv-m-pub-extra-wrap');
-        var orgLabel = document.getElementById('cv-m-org-label');
-        var aiStrip = document.getElementById('cv-entry-ai-strip');
-        if (!wrap || !sel) return;
-        if (show) {
-            wrap.classList.remove('hidden');
-            sel.disabled = false;
-            if (ident) ident.classList.remove('hidden');
-            if (extra) extra.classList.remove('hidden');
-            if (orgLabel) orgLabel.innerHTML = 'แหล่งเผยแพร่ (source) <span class="text-red-600 normal-case tracking-normal font-semibold">*</span>';
-            if (aiStrip) aiStrip.classList.remove('hidden');
-        } else {
-            wrap.classList.add('hidden');
-            sel.disabled = true;
-            sel.value = '';
-            if (ident) ident.classList.add('hidden');
-            if (extra) extra.classList.add('hidden');
-            if (orgLabel) orgLabel.textContent = 'หน่วยงาน / องค์กร';
-            if (aiStrip) aiStrip.classList.add('hidden');
-            resetPublicationResearchFields();
-        }
     }
 
     window.__cvAiReady = <?= $ai_cv_ready_js ?>;
@@ -1476,8 +1320,8 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         openCvAiModal(sid);
     };
 
-    window.launchCvAiFromEntryModal = function () {
-        var sidEl = document.getElementById('cv-m-section-id');
+    window.launchCvAiFromPubEntryModal = function () {
+        var sidEl = cvEl('p', 'section-id');
         var sid = sidEl ? parseInt(sidEl.value, 10) : 0;
         if (!sid) return;
         if (!window.__cvAiReady) {
@@ -1489,65 +1333,112 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     };
 
     function resetPublicationSelectOptions() {
-        var sel = document.getElementById('cv-m-pubtype');
+        var sel = cvEl('p', 'pubtype');
         if (sel && pubSelectInitialHtml !== null) sel.innerHTML = pubSelectInitialHtml;
     }
 
-    function resetCvEntryModalForm() {
-        document.getElementById('cv-m-entry-id').value = '';
-        document.getElementById('cv-m-entry-sort').value = '0';
-        document.getElementById('cv-m-title').value = '';
-        document.getElementById('cv-m-org').value = '';
-        document.getElementById('cv-m-loc').value = '';
-        document.getElementById('cv-m-start').value = '';
-        document.getElementById('cv-m-end').value = '';
-        document.getElementById('cv-m-url').value = '';
-        document.getElementById('cv-m-desc').value = '';
-        document.getElementById('cv-m-current').value = '0';
-        document.getElementById('cv-m-vis').checked = true;
-        var doiEl = document.getElementById('cv-m-doi');
-        if (doiEl) doiEl.value = '';
-        var rridEl = document.getElementById('cv-m-rrid');
-        if (rridEl) rridEl.value = '';
-        var msrc = document.getElementById('cv-m-meta-src');
-        if (msrc) msrc.value = '';
+    function resetCvGeneralEntryForm() {
+        cvEl('g', 'entry-id').value = '';
+        cvEl('g', 'entry-sort').value = '0';
+        cvEl('g', 'title').value = '';
+        cvEl('g', 'org').value = '';
+        cvEl('g', 'loc').value = '';
+        cvEl('g', 'start').value = '';
+        cvEl('g', 'end').value = '';
+        cvEl('g', 'url').value = '';
+        cvEl('g', 'desc').value = '';
+        cvEl('g', 'current').value = '0';
+        cvEl('g', 'vis').checked = true;
+        cvEl('g', 'meta-src').value = '';
+    }
+
+    function resetCvPubEntryForm() {
+        cvEl('p', 'entry-id').value = '';
+        cvEl('p', 'entry-sort').value = '0';
+        cvEl('p', 'title').value = '';
+        cvEl('p', 'org').value = '';
+        cvEl('p', 'loc').value = '';
+        cvEl('p', 'start').value = '';
+        cvEl('p', 'end').value = '';
+        cvEl('p', 'url').value = '';
+        cvEl('p', 'desc').value = '';
+        cvEl('p', 'current').value = '0';
+        cvEl('p', 'vis').checked = true;
+        cvEl('p', 'doi').value = '';
+        cvEl('p', 'rrid').value = '';
+        cvEl('p', 'meta-src').value = '';
+        var pubSel = cvEl('p', 'pubtype');
+        if (pubSel) pubSel.value = '';
         resetPublicationResearchFields();
     }
 
-    function openCvEntryModalShell(sectionId) {
-        var row = cvSectionRow(sectionId);
-        var showPub = row && row.dataset.showPub === '1';
-        var st = row ? (row.dataset.sectionType || '') : '';
-        var stitle = row ? (row.dataset.sectionTitle || '') : '';
-        var typeLabel = CV_SECTION_TYPE_LABELS[st] || st || '';
-        document.getElementById('cv-m-section-id').value = String(sectionId);
-        setPublicationFieldVisible(showPub);
-        var sub = document.getElementById('cv-entry-modal-sub');
-        if (sub) {
-            sub.textContent = (stitle ? 'หัวข้อ: ' + stitle : '') + (typeLabel ? ' · ประเภท: ' + typeLabel : '');
-        }
-        var m = document.getElementById('cv-entry-modal');
-        if (m) {
-            m.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-        }
+    function showEntryModal(modalId) {
+        var m = document.getElementById(modalId);
+        if (!m) return;
+        m.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function openCvGeneralEntryModalShell(sectionId) {
+        cvEl('g', 'section-id').value = String(sectionId);
+        var sub = document.getElementById('cv-g-entry-modal-sub');
+        if (sub) sub.textContent = cvSectionSubtitle(sectionId);
+        showEntryModal('cv-entry-modal');
+    }
+
+    function openCvPubEntryModalShell(sectionId) {
+        cvEl('p', 'section-id').value = String(sectionId);
+        var sub = document.getElementById('cv-p-entry-modal-sub');
+        if (sub) sub.textContent = cvSectionSubtitle(sectionId);
+        showEntryModal('cv-pub-entry-modal');
     }
 
     window.closeCvEntryModal = function () {
-        var m = document.getElementById('cv-entry-modal');
-        if (!m) return;
-        m.classList.add('hidden');
+        ['cv-entry-modal', 'cv-pub-entry-modal'].forEach(function (id) {
+            var m = document.getElementById(id);
+            if (m) m.classList.add('hidden');
+        });
         document.body.classList.remove('overflow-hidden');
     };
 
-    window.openCvEntryModal = function (sectionId) {
-        resetPublicationSelectOptions();
-        resetCvEntryModalForm();
+    window.openCvGeneralEntryModal = function (sectionId) {
+        resetCvGeneralEntryForm();
         document.getElementById('cv-entry-modal-title').textContent = 'เพิ่มรายการ';
-        openCvEntryModalShell(sectionId);
-        renderPublicationAuthors(defaultPublicationAuthors());
-        document.getElementById('cv-m-title').focus();
+        openCvGeneralEntryModalShell(sectionId);
+        cvEl('g', 'title').focus();
     };
+
+    window.openCvPubEntryModal = function (sectionId) {
+        resetPublicationSelectOptions();
+        resetCvPubEntryForm();
+        document.getElementById('cv-pub-entry-modal-title').textContent = 'เพิ่มผลงานเผยแพร่';
+        openCvPubEntryModalShell(sectionId);
+        renderPublicationAuthors(defaultPublicationAuthors());
+        cvEl('p', 'title').focus();
+    };
+
+    window.openCvEntryModal = function (sectionId) {
+        if (cvSectionIsPublication(sectionId)) {
+            openCvPubEntryModal(sectionId);
+        } else {
+            openCvGeneralEntryModal(sectionId);
+        }
+    };
+
+    function fillEntryFormFromData(e, prefix) {
+        cvEl(prefix, 'entry-id').value = e.id;
+        cvEl(prefix, 'entry-sort').value = e.sort_order || 0;
+        cvEl(prefix, 'title').value = e.title || '';
+        cvEl(prefix, 'org').value = e.organization || '';
+        cvEl(prefix, 'loc').value = e.location || '';
+        cvEl(prefix, 'start').value = (e.start_date || '').substring(0, 10);
+        cvEl(prefix, 'end').value = (e.end_date || '').substring(0, 10);
+        cvEl(prefix, 'url').value = e.entry_url || (e.metadata_array && e.metadata_array.url) || (e.metadata_array && e.metadata_array.legacy_url) || '';
+        cvEl(prefix, 'desc').value = e.description || '';
+        cvEl(prefix, 'current').value = String(e.is_current) === '1' ? '1' : '0';
+        cvEl(prefix, 'vis').checked = String(e.visible_on_public) !== '0';
+        cvEl(prefix, 'meta-src').value = '';
+    }
 
     window.editCvEntry = async function (sectionId, entryId) {
         var url = '<?= base_url('dashboard/profile/cv/entry') ?>/' + entryId;
@@ -1557,45 +1448,37 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
             if (typeof swalAlert === 'function') swalAlert(data.message || 'โหลดไม่สำเร็จ', 'error');
             return;
         }
-        resetPublicationSelectOptions();
-        resetCvEntryModalForm();
-        document.getElementById('cv-entry-modal-title').textContent = 'แก้ไขรายการ';
-        openCvEntryModalShell(sectionId);
         var e = data.entry;
-        document.getElementById('cv-m-entry-id').value = e.id;
-        document.getElementById('cv-m-entry-sort').value = e.sort_order || 0;
-        document.getElementById('cv-m-title').value = e.title || '';
-        document.getElementById('cv-m-org').value = e.organization || '';
-        document.getElementById('cv-m-loc').value = e.location || '';
-        document.getElementById('cv-m-start').value = (e.start_date || '').substring(0, 10);
-        document.getElementById('cv-m-end').value = (e.end_date || '').substring(0, 10);
-        document.getElementById('cv-m-url').value = e.entry_url || (e.metadata_array && e.metadata_array.url) || (e.metadata_array && e.metadata_array.legacy_url) || '';
-        document.getElementById('cv-m-desc').value = e.description || '';
-        document.getElementById('cv-m-current').value = String(e.is_current) === '1' ? '1' : '0';
-        document.getElementById('cv-m-vis').checked = String(e.visible_on_public) !== '0';
-        var doiEl = document.getElementById('cv-m-doi');
-        if (doiEl) doiEl.value = e.entry_doi || '';
-        var rridEl = document.getElementById('cv-m-rrid');
-        if (rridEl) rridEl.value = e.publication_rr_id || '';
-        var msrc = document.getElementById('cv-m-meta-src');
-        if (msrc) msrc.value = '';
-        var pubSel = document.getElementById('cv-m-pubtype');
-        var row = cvSectionRow(sectionId);
-        var showPub = row && row.dataset.showPub === '1';
-        setPublicationFieldVisible(showPub);
-        if (pubSel && showPub) {
-            var pv = (e.publication_type || (e.metadata_array && e.metadata_array.rr_publication_type) || '').toString();
-            if (pv && !Array.from(pubSel.options).some(function (o) { return o.value === pv; })) {
-                var opt = document.createElement('option');
-                opt.value = pv;
-                opt.textContent = 'จาก กบศ / ระบบ: ' + pv;
-                opt.setAttribute('data-temp-option', '1');
-                pubSel.appendChild(opt);
+        var isPub = cvSectionIsPublication(sectionId);
+        if (isPub) {
+            resetPublicationSelectOptions();
+            resetCvPubEntryForm();
+            document.getElementById('cv-pub-entry-modal-title').textContent = 'แก้ไขผลงานเผยแพร่';
+            openCvPubEntryModalShell(sectionId);
+            fillEntryFormFromData(e, 'p');
+            cvEl('p', 'doi').value = e.entry_doi || '';
+            cvEl('p', 'rrid').value = e.publication_rr_id || '';
+            var pubSel = cvEl('p', 'pubtype');
+            if (pubSel) {
+                var pv = (e.publication_type || (e.metadata_array && e.metadata_array.rr_publication_type) || '').toString();
+                if (pv && !Array.from(pubSel.options).some(function (o) { return o.value === pv; })) {
+                    var opt = document.createElement('option');
+                    opt.value = pv;
+                    opt.textContent = 'จาก กบศ / ระบบ: ' + pv;
+                    opt.setAttribute('data-temp-option', '1');
+                    pubSel.appendChild(opt);
+                }
+                pubSel.value = pv;
             }
-            pubSel.value = pv;
+            fillPublicationResearchFieldsFromEntry(e);
+            cvEl('p', 'title').focus();
+        } else {
+            resetCvGeneralEntryForm();
+            document.getElementById('cv-entry-modal-title').textContent = 'แก้ไขรายการ';
+            openCvGeneralEntryModalShell(sectionId);
+            fillEntryFormFromData(e, 'g');
+            cvEl('g', 'title').focus();
         }
-        fillPublicationResearchFieldsFromEntry(e);
-        document.getElementById('cv-m-title').focus();
     };
 
     window.deleteCvEntry = async function (entryId, title) {
@@ -1814,61 +1697,34 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         pubSel.value = pv;
     }
 
-    /** กรอกฟอร์มรายการ CV จากผล AI (แบบ Research Record auto-fill) */
+    /** กรอกฟอร์มผลงานเผยแพร่จากผล AI */
     function fillCvEntryFormFromPublication(pub) {
         if (!pub) return;
-        var titleEl = document.getElementById('cv-m-title');
-        if (titleEl) titleEl.value = pub.title || '';
-        var orgEl = document.getElementById('cv-m-org');
-        if (orgEl) orgEl.value = pub.organization || '';
-        var locEl = document.getElementById('cv-m-loc');
-        if (locEl) locEl.value = pub.location || '';
-        var startEl = document.getElementById('cv-m-start');
-        var endEl = document.getElementById('cv-m-end');
-        if (startEl) {
-            startEl.value = pub.start_date || (pub.year ? String(pub.year) + '-01-01' : '');
-        }
-        if (endEl) {
-            endEl.value = pub.end_date || (pub.year ? String(pub.year) + '-12-31' : '');
-        }
-        var descEl = document.getElementById('cv-m-desc');
-        if (descEl) descEl.value = pub.description || '';
-        var doiEl = document.getElementById('cv-m-doi');
-        if (doiEl) doiEl.value = pub.doi || '';
-        var rridEl = document.getElementById('cv-m-rrid');
-        if (rridEl) rridEl.value = pub.rr_publication_id ? String(pub.rr_publication_id) : '';
-        var msrc = document.getElementById('cv-m-meta-src');
-        if (msrc) msrc.value = 'ai_assistant';
-        var urlEl = document.getElementById('cv-m-url');
-        if (urlEl) {
-            var extUrl = document.getElementById('cv-ai-url');
-            var userUrl = extUrl && extUrl.value.trim() ? extUrl.value.trim() : '';
-            if (userUrl) {
-                urlEl.value = userUrl;
-            } else if (window.__cvAiUploaded && window.__cvAiUploaded.download_url) {
-                urlEl.value = window.__cvAiUploaded.download_url;
-            } else if (pub.url) {
-                urlEl.value = pub.url;
-            } else {
-                urlEl.value = '';
-            }
-        }
-        var pubSel = document.getElementById('cv-m-pubtype');
-        if (pubSel && pub.publication_type) {
-            setCvPublicationTypeValue(pubSel, pub.publication_type);
-        }
-        var yearEl = document.getElementById('cv-m-year-be');
-        if (yearEl && pub.year) yearEl.value = String(parseInt(pub.year, 10) + 543);
-        var monthEl = document.getElementById('cv-m-month');
-        if (monthEl && pub.month) monthEl.value = String(pub.month);
-        var absEl = document.getElementById('cv-m-abstract');
-        if (absEl && pub.abstract) absEl.value = pub.abstract;
-        if (absEl && !pub.abstract && pub.description) absEl.value = pub.description;
-        if (Array.isArray(pub.authors) && pub.authors.length) {
-            renderPublicationAuthors(pub.authors);
+        cvEl('p', 'title').value = pub.title || '';
+        cvEl('p', 'org').value = pub.organization || '';
+        cvEl('p', 'loc').value = pub.location || '';
+        cvEl('p', 'start').value = pub.start_date || (pub.year ? String(pub.year) + '-01-01' : '');
+        cvEl('p', 'end').value = pub.end_date || (pub.year ? String(pub.year) + '-12-31' : '');
+        cvEl('p', 'desc').value = pub.description || '';
+        cvEl('p', 'doi').value = pub.doi || '';
+        cvEl('p', 'rrid').value = pub.rr_publication_id ? String(pub.rr_publication_id) : '';
+        cvEl('p', 'meta-src').value = 'ai_assistant';
+        var extUrl = document.getElementById('cv-ai-url');
+        var userUrl = extUrl && extUrl.value.trim() ? extUrl.value.trim() : '';
+        if (userUrl) {
+            cvEl('p', 'url').value = userUrl;
+        } else if (window.__cvAiUploaded && window.__cvAiUploaded.download_url) {
+            cvEl('p', 'url').value = window.__cvAiUploaded.download_url;
         } else {
-            renderPublicationAuthors(defaultPublicationAuthors());
+            cvEl('p', 'url').value = pub.url || '';
         }
+        var pubSel = cvEl('p', 'pubtype');
+        if (pubSel && pub.publication_type) setCvPublicationTypeValue(pubSel, pub.publication_type);
+        if (pub.year) cvEl('p', 'year-be').value = String(parseInt(pub.year, 10) + 543);
+        if (pub.month) cvEl('p', 'month').value = String(pub.month);
+        var absEl = cvEl('p', 'abstract');
+        if (absEl) absEl.value = pub.abstract || (pub.description || '');
+        renderPublicationAuthors(Array.isArray(pub.authors) && pub.authors.length ? pub.authors : defaultPublicationAuthors());
     }
 
     window.applyCvAiToEntryForm = function () {
@@ -1878,10 +1734,9 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         var sid = sidEl ? parseInt(sidEl.value, 10) : 0;
         if (!sid) return;
         closeCvAiModal();
-        openCvEntryModal(sid);
+        openCvPubEntryModal(sid);
         fillCvEntryFormFromPublication(pub);
-        var titleEl = document.getElementById('cv-m-title');
-        if (titleEl) titleEl.focus();
+        cvEl('p', 'title').focus();
     };
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -1946,53 +1801,51 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
             });
         });
 
-        var pubSelInit = document.getElementById('cv-m-pubtype');
+        var pubSelInit = cvEl('p', 'pubtype');
         if (pubSelInit) pubSelectInitialHtml = pubSelInit.innerHTML;
 
-        var entryModal = document.getElementById('cv-entry-modal');
-        var entryForm = document.getElementById('cv-entry-modal-form');
-        if (entryModal) {
-            entryModal.addEventListener('click', function (ev) {
-                if (ev.target === entryModal) closeCvEntryModal();
+        function bindCvEntryForm(modalId, formId, closeBtnIds, cancelBtnId, isPublication) {
+            var modal = document.getElementById(modalId);
+            var form = document.getElementById(formId);
+            if (modal) {
+                modal.addEventListener('click', function (ev) {
+                    if (ev.target === modal) closeCvEntryModal();
+                });
+            }
+            closeBtnIds.forEach(function (id) {
+                var btn = document.getElementById(id);
+                if (btn) btn.addEventListener('click', closeCvEntryModal);
             });
-        }
-        var btnClose = document.getElementById('cv-entry-modal-close');
-        var btnCancel = document.getElementById('cv-entry-modal-cancel');
-        if (btnClose) btnClose.addEventListener('click', closeCvEntryModal);
-        if (btnCancel) btnCancel.addEventListener('click', closeCvEntryModal);
-        document.addEventListener('keydown', function (ev) {
-            if (ev.key !== 'Escape') return;
-            var m = document.getElementById('cv-entry-modal');
-            if (m && !m.classList.contains('hidden')) closeCvEntryModal();
-        });
-
-        if (entryForm) {
-            var addAuthorBtn = document.getElementById('cv-m-add-author');
-            if (addAuthorBtn) {
-                addAuthorBtn.addEventListener('click', function () {
-                    var authors = collectPublicationAuthors();
-                    authors.push({ name: '', email: '', affiliation: 'มหาวิทยาลัยราชภัฏอุตรดิตถ์', corresponding: 0, order: authors.length + 1 });
-                    renderPublicationAuthors(authors);
-                });
+            var cancelBtn = document.getElementById(cancelBtnId);
+            if (cancelBtn) cancelBtn.addEventListener('click', closeCvEntryModal);
+            if (!form) return;
+            if (isPublication) {
+                var addAuthorBtn = document.getElementById('cv-p-add-author');
+                if (addAuthorBtn) {
+                    addAuthorBtn.addEventListener('click', function () {
+                        var authors = collectPublicationAuthors();
+                        authors.push({ name: '', email: '', affiliation: 'มหาวิทยาลัยราชภัฏอุตรดิตถ์', corresponding: 0, order: authors.length + 1 });
+                        renderPublicationAuthors(authors);
+                    });
+                }
+                var authorsList = document.getElementById('cv-p-authors-list');
+                if (authorsList) {
+                    authorsList.addEventListener('click', function (ev) {
+                        var btn = ev.target.closest('.cv-author-remove');
+                        if (!btn) return;
+                        var row = btn.closest('[data-author-index]');
+                        if (row) row.remove();
+                        syncPublicationAuthorsHidden();
+                    });
+                    authorsList.addEventListener('input', syncPublicationAuthorsHidden);
+                    authorsList.addEventListener('change', syncPublicationAuthorsHidden);
+                }
             }
-            var authorsList = document.getElementById('cv-m-authors-list');
-            if (authorsList) {
-                authorsList.addEventListener('click', function (ev) {
-                    var btn = ev.target.closest('.cv-author-remove');
-                    if (!btn) return;
-                    var row = btn.closest('[data-author-index]');
-                    if (row) row.remove();
-                    syncPublicationAuthorsHidden();
-                });
-                authorsList.addEventListener('input', syncPublicationAuthorsHidden);
-                authorsList.addEventListener('change', syncPublicationAuthorsHidden);
-            }
-
-            entryForm.addEventListener('submit', async function (e) {
+            form.addEventListener('submit', async function (e) {
                 e.preventDefault();
-                syncPublicationAuthorsHidden();
-                var fd = new FormData(entryForm);
-                var res = await fetch(entryForm.action, {
+                if (isPublication) syncPublicationAuthorsHidden();
+                var fd = new FormData(form);
+                var res = await fetch(form.action, {
                     method: 'POST',
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     body: fd
@@ -2003,7 +1856,18 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
                 else alert(data.message || 'บันทึกไม่สำเร็จ');
             });
         }
-    });
+
+        bindCvEntryForm('cv-entry-modal', 'cv-entry-modal-form', ['cv-entry-modal-close'], 'cv-entry-modal-cancel', false);
+        bindCvEntryForm('cv-pub-entry-modal', 'cv-pub-entry-modal-form', ['cv-pub-entry-modal-close'], 'cv-pub-entry-modal-cancel', true);
+
+        document.addEventListener('keydown', function (ev) {
+            if (ev.key !== 'Escape') return;
+            var g = document.getElementById('cv-entry-modal');
+            var p = document.getElementById('cv-pub-entry-modal');
+            if ((g && !g.classList.contains('hidden')) || (p && !p.classList.contains('hidden'))) {
+                closeCvEntryModal();
+            }
+        });
 
     window.importOrcidCv = async function () {
         var inp = document.getElementById('cv-orcid-input');
