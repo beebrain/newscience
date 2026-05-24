@@ -4,6 +4,7 @@ use App\Libraries\ResearchRecordCvSyncMerge;
 
 $ai_cv_publication_enabled = ! empty($ai_cv_publication_enabled);
 $cv_ai_publication_section_id = (int) ($cv_ai_publication_section_id ?? 0);
+$ai_cv_ready_js = $ai_cv_publication_enabled ? 'true' : 'false';
 ?>
 <?= $this->extend('layouts/user_layout') ?>
 
@@ -445,7 +446,7 @@ $account_user = $account_user ?? null;
                     <a href="<?= esc(base_url('dashboard/profile/cv?tab=orcid'), 'attr') ?>"
                        class="cv-edit-tab-nav <?= $cvEditActiveTab === 'orcid' ? 'cv-edit-tab-nav--active' : '' ?>">ORCID</a>
                     <a href="<?= esc(base_url('dashboard/profile/cv?tab=sections'), 'attr') ?>"
-                       class="cv-edit-tab-nav <?= $cvEditActiveTab === 'sections' ? 'cv-edit-tab-nav--active' : '' ?>">หัวข้อและรายการ<?php if ($ai_cv_publication_enabled): ?> <span class="text-[10px] font-bold text-violet-300 align-middle">✦ AI</span><?php endif; ?></a>
+                       class="cv-edit-tab-nav <?= $cvEditActiveTab === 'sections' ? 'cv-edit-tab-nav--active' : '' ?>">หัวข้อและรายการ<?php if ($cv_ai_publication_section_id > 0): ?> <span class="text-[10px] font-bold text-violet-300 align-middle">✦ AI</span><?php endif; ?></a>
                 </nav>
 
                 <div class="mt-auto pt-8 border-t border-white/10 space-y-2">
@@ -673,16 +674,19 @@ $account_user = $account_user ?? null;
                 </section>
 
                 <div id="cv-edit-sections" class="<?= $cvEditActiveTab !== 'sections' ? 'hidden' : '' ?>">
-                <?php if ($ai_cv_publication_enabled && $cv_ai_publication_section_id > 0): ?>
+                <?php if ($cv_ai_publication_section_id > 0): ?>
                 <section class="cv-edit-stitch-panel mb-4 border-violet-200 bg-gradient-to-r from-violet-50/90 to-white">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
                             <p class="text-sm font-semibold text-violet-950">เพิ่มผลงานตีพิมพ์ด้วย AI</p>
                             <p class="text-sm text-slate-600 mt-1">อัปโหลด PDF/รูป หรือใส่ DOI — ระบบวิเคราะห์แล้วกรอกฟอร์มให้ (แบบ กบศ)</p>
+                            <?php if (! $ai_cv_publication_enabled): ?>
+                            <p class="text-xs text-amber-800 mt-2">ยังไม่เปิดใช้บนเซิร์ฟเวอร์ — ตั้ง <code class="text-[11px] bg-amber-100 px-1 rounded">AI_CV_N8N_URL</code> ใน .env</p>
+                            <?php endif; ?>
                         </div>
                         <button type="button"
-                                onclick="openCvAiModal(<?= $cv_ai_publication_section_id ?>)"
-                                class="inline-flex items-center justify-center gap-1.5 shrink-0 text-sm px-5 py-2.5 rounded-lg border border-violet-400 bg-violet-600 text-white font-semibold hover:bg-violet-700 shadow-sm transition-colors">
+                                onclick="launchCvAiAssist(<?= $cv_ai_publication_section_id ?>)"
+                                class="inline-flex items-center justify-center gap-1.5 shrink-0 text-sm px-5 py-2.5 rounded-lg border font-semibold shadow-sm transition-colors <?= $ai_cv_publication_enabled ? 'border-violet-400 bg-violet-600 text-white hover:bg-violet-700' : 'border-amber-300 bg-amber-50 text-amber-950 hover:bg-amber-100' ?>">
                             <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
                         </button>
                     </div>
@@ -886,10 +890,10 @@ $account_user = $account_user ?? null;
                         <div class="cv-section-foot py-4 sm:py-5 border-t border-gray-100 bg-gray-50/80 flex flex-wrap items-center justify-between gap-3">
                             <p class="text-sm text-gray-600">เพิ่มหรือแก้ไขรายการในหัวข้อนี้</p>
                             <div class="flex flex-wrap items-center gap-2">
-                                <?php if ($ai_cv_publication_enabled && $showPublicationType): ?>
+                                <?php if ($showPublicationType): ?>
                                 <button type="button"
-                                        onclick="openCvAiModal(<?= $sid ?>)"
-                                        class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg border border-violet-300 bg-violet-50 text-violet-900 font-semibold hover:bg-violet-100 transition-colors">
+                                        onclick="launchCvAiAssist(<?= $sid ?>)"
+                                        class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg border font-semibold transition-colors <?= $ai_cv_publication_enabled ? 'border-violet-300 bg-violet-50 text-violet-900 hover:bg-violet-100' : 'border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100' ?>">
                                     <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
                                 </button>
                                 <?php endif; ?>
@@ -932,6 +936,22 @@ $account_user = $account_user ?? null;
                             <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">รายการบน CV สาธารณะ</p>
                             <h2 id="cv-entry-modal-title" class="mt-1.5 text-lg sm:text-xl font-bold text-slate-900 leading-snug tracking-tight">รายการ CV</h2>
                             <p id="cv-entry-modal-sub" class="mt-2 text-sm text-slate-600 leading-relaxed"></p>
+                            <div id="cv-entry-ai-strip" class="hidden mt-4 rounded-xl border border-violet-200 bg-violet-50/80 p-3 sm:p-4">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                    <p class="text-sm text-violet-950 leading-relaxed">
+                                        <strong>ช่วยเติมด้วย AI</strong> — อัปโหลด PDF/รูป หรือ DOI แล้วให้ระบบกรอกฟอร์มนี้ให้ (แบบ กบศ)
+                                    </p>
+                                    <button type="button"
+                                            id="cv-entry-ai-btn"
+                                            onclick="launchCvAiFromEntryModal()"
+                                            class="inline-flex shrink-0 items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg border border-violet-400 bg-violet-600 text-white font-semibold hover:bg-violet-700 shadow-sm transition-colors">
+                                        <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
+                                    </button>
+                                </div>
+                                <?php if (! $ai_cv_publication_enabled): ?>
+                                <p id="cv-entry-ai-hint" class="text-xs text-amber-800 mt-2">ยังไม่เปิดใช้บนเซิร์ฟเวอร์ — ตั้ง <code class="text-[11px] bg-amber-100 px-1 rounded">AI_CV_N8N_URL</code> ใน .env</p>
+                                <?php endif; ?>
+                            </div>
                             <p class="mt-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">การแสดงผล</p>
                             <div class="cv-entry-modal__display-row mt-2">
                                 <label class="cv-entry-modal__vis-toggle flex flex-1 min-w-0 items-center justify-between gap-3 cursor-pointer select-none sm:max-w-md">
@@ -1069,11 +1089,6 @@ $account_user = $account_user ?? null;
                 </div>
 
                 <div class="cv-entry-modal__footer flex flex-wrap items-center justify-end gap-2 sm:gap-3 shrink-0">
-                    <?php if ($ai_cv_publication_enabled): ?>
-                    <button type="button" id="cv-entry-ai-btn" class="hidden mr-auto sm:mr-0 inline-flex items-center gap-1.5 text-sm px-4 py-2.5 rounded-lg border border-violet-300 bg-violet-50 text-violet-900 font-semibold hover:bg-violet-100 transition-colors" onclick="launchCvAiFromEntryModal()">
-                        <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
-                    </button>
-                    <?php endif; ?>
                     <button type="button" id="cv-entry-modal-cancel" class="text-sm px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium hover:bg-slate-50 transition-colors min-w-[5.5rem]">ยกเลิก</button>
                     <button type="submit" class="text-sm px-5 py-2.5 rounded-lg bg-secondary hover:bg-secondary-dark text-white font-semibold shadow-sm transition-colors min-w-[6.5rem]">บันทึก</button>
                 </div>
@@ -1081,7 +1096,6 @@ $account_user = $account_user ?? null;
         </div>
     </div>
 
-    <?php if ($ai_cv_publication_enabled): ?>
     <div id="cv-ai-modal" class="fixed inset-0 z-[6100] hidden flex flex-col items-stretch justify-start sm:justify-center overflow-y-auto bg-slate-900/50 backdrop-blur-[2px] p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="cv-ai-modal-title" onclick="if(event.target===this)closeCvAiModal()">
         <div class="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-auto my-4 sm:my-8 overflow-hidden" onclick="event.stopPropagation()">
             <button type="button" class="absolute top-3 right-3 z-10 h-10 w-10 rounded-full bg-white text-slate-600 shadow ring-1 ring-slate-200 hover:bg-slate-50" onclick="closeCvAiModal()" aria-label="ปิด">&times;</button>
@@ -1115,7 +1129,6 @@ $account_user = $account_user ?? null;
             </div>
         </div>
     </div>
-    <?php endif; ?>
     <?php endif; ?>
 </div>
 
@@ -1429,7 +1442,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         var ident = document.getElementById('cv-m-pub-ident-wrap');
         var extra = document.getElementById('cv-m-pub-extra-wrap');
         var orgLabel = document.getElementById('cv-m-org-label');
-        var aiBtn = document.getElementById('cv-entry-ai-btn');
+        var aiStrip = document.getElementById('cv-entry-ai-strip');
         if (!wrap || !sel) return;
         if (show) {
             wrap.classList.remove('hidden');
@@ -1437,7 +1450,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
             if (ident) ident.classList.remove('hidden');
             if (extra) extra.classList.remove('hidden');
             if (orgLabel) orgLabel.innerHTML = 'แหล่งเผยแพร่ (source) <span class="text-red-600 normal-case tracking-normal font-semibold">*</span>';
-            if (aiBtn) aiBtn.classList.remove('hidden');
+            if (aiStrip) aiStrip.classList.remove('hidden');
         } else {
             wrap.classList.add('hidden');
             sel.disabled = true;
@@ -1445,15 +1458,32 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
             if (ident) ident.classList.add('hidden');
             if (extra) extra.classList.add('hidden');
             if (orgLabel) orgLabel.textContent = 'หน่วยงาน / องค์กร';
-            if (aiBtn) aiBtn.classList.add('hidden');
+            if (aiStrip) aiStrip.classList.add('hidden');
             resetPublicationResearchFields();
         }
     }
+
+    window.__cvAiReady = <?= $ai_cv_ready_js ?>;
+    window.launchCvAiAssist = function (sectionId) {
+        var sid = parseInt(sectionId, 10) || 0;
+        if (!sid) return;
+        if (!window.__cvAiReady) {
+            var msg = 'ยังไม่ได้ตั้งค่า AI บนเซิร์ฟเวอร์ — ตั้ง AI_CV_N8N_URL ใน .env (หรือ AI_CV_API_URL + AI_CV_API_KEY)';
+            if (typeof swalAlert === 'function') swalAlert(msg, 'warning');
+            else alert(msg);
+            return;
+        }
+        openCvAiModal(sid);
+    };
 
     window.launchCvAiFromEntryModal = function () {
         var sidEl = document.getElementById('cv-m-section-id');
         var sid = sidEl ? parseInt(sidEl.value, 10) : 0;
         if (!sid) return;
+        if (!window.__cvAiReady) {
+            launchCvAiAssist(sid);
+            return;
+        }
         closeCvEntryModal();
         openCvAiModal(sid);
     };
@@ -1858,8 +1888,8 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         var aiSectionId = <?= (int) $cv_ai_publication_section_id ?>;
         if (aiSectionId > 0) {
             var qs = new URLSearchParams(window.location.search);
-            if (qs.get('tab') === 'sections' && qs.get('ai') === '1' && typeof window.openCvAiModal === 'function') {
-                window.openCvAiModal(aiSectionId);
+            if (qs.get('tab') === 'sections' && qs.get('ai') === '1' && typeof window.launchCvAiAssist === 'function') {
+                window.launchCvAiAssist(aiSectionId);
             }
         }
         var cvAiFile = document.getElementById('cv-ai-file');
