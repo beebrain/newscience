@@ -163,15 +163,15 @@ final class PublicationAuthorSearch
             $builder->where('personnel.status', 'active');
         }
         if ($hasUser && $db->fieldExists('faculty', 'user')) {
+            // รวม: ไม่มี user / ยังไม่ระบุคณะ / คณะวิทยาศาสตร์ (สะกดต่างกันได้)
             $builder->groupStart();
-            foreach (array_values(array_unique(self::SCIENCE_FACULTY_LABELS, SORT_STRING)) as $i => $faculty) {
-                if ($i === 0) {
-                    $builder->where('user.faculty', $faculty);
-                } else {
-                    $builder->orWhere('user.faculty', $faculty);
-                }
-            }
+            $builder->where('user.uid IS NULL', null, false);
             $builder->orWhere('user.email IS NULL', null, false);
+            $builder->orWhere('TRIM(COALESCE(user.faculty, \'\')) = \'\'', null, false);
+            $builder->orLike('user.faculty', 'วิทยาศาสตร์', 'both');
+            foreach (array_values(array_unique(self::SCIENCE_FACULTY_LABELS, SORT_STRING)) as $faculty) {
+                $builder->orWhere('user.faculty', $faculty);
+            }
             $builder->groupEnd();
         }
 

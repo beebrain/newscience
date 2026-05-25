@@ -111,6 +111,9 @@ if (is_array($entry) && ! empty($entry['publication_authors']) && is_array($entr
     color: #64748b;
     font-size: 0.75rem;
 }
+.cv-author-search-empty {
+    padding: 0.55rem 0.75rem;
+}
 </style>
 <?= $this->endSection() ?>
 
@@ -335,6 +338,7 @@ window.CV_PUB_PAGE = {
     endpoints: {
         upload: <?= json_encode(base_url('dashboard/profile/cv/ai-publication-upload'), JSON_UNESCAPED_SLASHES) ?>,
         preview: <?= json_encode(base_url('dashboard/profile/cv/ai-publication-preview'), JSON_UNESCAPED_SLASHES) ?>,
+        name: <?= json_encode(base_url('dashboard/profile/cv/search-personnel-names'), JSON_UNESCAPED_SLASHES) ?>,
         names: <?= json_encode(base_url('dashboard/profile/cv/search-personnel-names'), JSON_UNESCAPED_SLASHES) ?>,
         email: <?= json_encode(base_url('dashboard/profile/cv/search-personnel-email'), JSON_UNESCAPED_SLASHES) ?>
     },
@@ -344,6 +348,6 @@ window.CV_PUB_PAGE = {
 };
 window.CV_AUTHOR_SEARCH_ENDPOINTS = window.CV_PUB_PAGE.endpoints;
 </script>
-<script src="<?= base_url('assets/js/cv-publication-entry-page.js') ?>"></script>
 <script src="<?= base_url('assets/js/cv-publication-author-search.js') ?>"></script>
+<script src="<?= base_url('assets/js/cv-publication-entry-page.js') ?>"></script>
 <?= $this->endSection() ?>

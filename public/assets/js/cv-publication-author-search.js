@@ -9,14 +9,21 @@
   };
   var timers = new WeakMap();
   var activeDropdown = null;
+  var activeInput = null;
   var globalBound = false;
 
   function endpoints() {
-    return window.CV_AUTHOR_SEARCH_ENDPOINTS || {};
+    var ep = window.CV_AUTHOR_SEARCH_ENDPOINTS || window.CV_PUB_PAGE && window.CV_PUB_PAGE.endpoints || {};
+    return ep;
   }
 
-  function authorLists() {
-    return document.querySelectorAll('#cv-p-authors-list, #cv-m-authors-list');
+  function nameSearchUrl() {
+    var ep = endpoints();
+    return ep.names || ep.name || '';
+  }
+
+  function authorListSelector() {
+    return '#cv-p-authors-list, #cv-m-authors-list';
   }
 
   function escapeHtml(value) {
@@ -34,6 +41,7 @@
       activeDropdown.parentNode.removeChild(activeDropdown);
     }
     activeDropdown = null;
+    activeInput = null;
   }
 
   function syncHidden() {
@@ -64,9 +72,9 @@
     syncHidden();
   }
 
-  function showDropdown(input, results) {
+  function showDropdown(input, results, emptyHint) {
     clearDropdown();
-    if (!results || !results.length) return;
+    activeInput = input;
 
     var rect = input.getBoundingClientRect();
     var dropdown = document.createElement('div');
@@ -75,8 +83,18 @@
     dropdown.style.position = 'fixed';
     dropdown.style.left = rect.left + 'px';
     dropdown.style.top = rect.bottom + 4 + 'px';
-    dropdown.style.width = Math.max(rect.width, 260) + 'px';
+    dropdown.style.width = Math.max(rect.width, 280) + 'px';
     dropdown.style.zIndex = '10050';
+
+    if (!results || !results.length) {
+      dropdown.innerHTML = '<div class="cv-author-search-empty px-3 py-2 text-sm text-slate-500">' +
+        escapeHtml(emptyHint || 'ไม่พบรายชื่อ — พิมพ์ชื่อหรืออีเมลอย่างน้อย 2 ตัวอักษร') +
+        '</div>';
+      document.body.appendChild(dropdown);
+      activeDropdown = dropdown;
+      return;
+    }
+
     dropdown.innerHTML = results.map(function (item, idx) {
       return '<button type="button" class="cv-author-search-item" data-index="' + idx + '">' +
         '<span class="cv-author-search-name">' + escapeHtml(item.name || item.email) + '</span>' +
@@ -95,8 +113,16 @@
 
   function fetchJson(url) {
     return fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
-      .then(function (res) { return res.ok ? res.json() : null; })
-      .catch(function () { return null; });
+      .then(function (res) {
+        return res.json().then(function (data) {
+          return { ok: res.ok, status: res.status, data: data };
+        }).catch(function () {
+          return { ok: false, status: res.status, data: null };
+        });
+      })
+      .catch(function () {
+        return { ok: false, status: 0, data: null };
+      });
   }
 
   function schedule(input, delay, fn) {
@@ -105,15 +131,24 @@
   }
 
   function searchName(input) {
-    var nameUrl = endpoints().names || endpoints().name;
+    var nameUrl = nameSearchUrl();
     var value = input.value.trim();
-    if (!nameUrl || value.length < config.minNameLength) {
+    if (!nameUrl) {
+      showDropdown(input, [], 'ยังไม่ได้ตั้ง URL ค้นหาบุคลากร');
+      return;
+    }
+    if (value.length < config.minNameLength) {
       clearDropdown();
       return;
     }
-    var url = nameUrl + '?' + new URLSearchParams({ name: value, limit: '10' }).toString();
-    fetchJson(url).then(function (data) {
-      showDropdown(input, data && data.success ? data.results || [] : []);
+    var url = nameUrl + (nameUrl.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams({ name: value, limit: '10' }).toString();
+    fetchJson(url).then(function (res) {
+      if (!res.ok || !res.data) {
+        showDropdown(input, [], res.status === 401 ? 'กรุณาเข้าสู่ระบบใหม่' : 'ค้นหาไม่สำเร็จ (HTTP ' + res.status + ')');
+        return;
+      }
+      var data = res.data;
+      showDropdown(input, data.success ? data.results || [] : [], data.message || 'ไม่พบรายชื่อ');
     });
   }
 
@@ -122,9 +157,11 @@
     var value = input.value.trim().toLowerCase();
     if (!emailUrl || value.length < config.minEmailLength) return;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return;
-    var url = emailUrl + '?' + new URLSearchParams({ email: value }).toString();
-    fetchJson(url).then(function (data) {
-      if (data && data.success && data.found && data.result) {
+    var url = emailUrl + (emailUrl.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams({ email: value }).toString();
+    fetchJson(url).then(function (res) {
+      if (!res.ok || !res.data) return;
+      var data = res.data;
+      if (data.success && data.found && data.result) {
         applyResult(input, data.result);
       }
     });
@@ -132,6 +169,7 @@
 
   function handleInput(event) {
     var input = event.target;
+    if (!input.closest(authorListSelector())) return;
     if (input.classList.contains('cv-author-name')) {
       schedule(input, config.nameDelay, function () { searchName(input); });
     } else if (input.classList.contains('cv-author-email')) {
@@ -139,37 +177,41 @@
     }
   }
 
-  function bindList(list) {
-    if (!list || list.dataset.authorSearchBound === '1') return;
-    list.dataset.authorSearchBound = '1';
-    list.addEventListener('input', handleInput);
-    list.addEventListener('focusin', function (event) {
-      if (event.target.classList && event.target.classList.contains('cv-author-name')) {
-        searchName(event.target);
-      }
-    });
+  function handleFocusIn(event) {
+    var input = event.target;
+    if (!input.closest(authorListSelector())) return;
+    if (input.classList.contains('cv-author-name')) {
+      searchName(input);
+    }
   }
 
   function bindGlobal() {
     if (globalBound) return;
     globalBound = true;
+    document.addEventListener('input', handleInput, true);
+    document.addEventListener('focusin', handleFocusIn, true);
     document.addEventListener('mousedown', function (event) {
       if (activeDropdown && !activeDropdown.contains(event.target)) {
-        clearDropdown();
+        var inList = event.target.closest && event.target.closest(authorListSelector());
+        if (!inList || !event.target.classList.contains('cv-author-name')) {
+          clearDropdown();
+        }
       }
     });
-    window.addEventListener('scroll', clearDropdown, true);
+    window.addEventListener('scroll', function () {
+      if (activeDropdown && activeInput) {
+        var rect = activeInput.getBoundingClientRect();
+        activeDropdown.style.left = rect.left + 'px';
+        activeDropdown.style.top = rect.bottom + 4 + 'px';
+      }
+    }, true);
+    window.addEventListener('resize', clearDropdown);
   }
 
   function init() {
-    authorLists().forEach(bindList);
     bindGlobal();
   }
 
   window.CvPublicationAuthorSearch = { init: init, refresh: init };
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  init();
 })();
