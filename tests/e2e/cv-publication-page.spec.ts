@@ -96,6 +96,40 @@ test.describe('CV publication page — local (dev login)', () => {
     }
   });
 
+  test('L3b: autocomplete ผู้แต่ง — พิมพ์ชื่อแล้วเห็นรายชื่อ', async ({ page }) => {
+    await gotoCvSectionsTab(page);
+    await openPublicationPage(page, { fromSectionsTab: true });
+
+    const nameInput = page.locator(
+      '#cv-p-authors-list .cv-author-name',
+    ).first();
+    await expect(nameInput).toBeVisible({ timeout: 10_000 });
+
+    const apiCheck = await page.evaluate(async () => {
+      const ep = (window as Window & { CV_AUTHOR_SEARCH_ENDPOINTS?: { names?: string; name?: string } })
+        .CV_AUTHOR_SEARCH_ENDPOINTS;
+      const base = ep?.names || ep?.name || '';
+      const res = await fetch(
+        `${base}?name=${encodeURIComponent('พิ')}&limit=10`,
+        { credentials: 'same-origin', headers: { Accept: 'application/json' } },
+      );
+      return res.json() as Promise<{ success?: boolean; results?: { name?: string }[] }>;
+    });
+    expect(apiCheck.success).toBe(true);
+    expect((apiCheck.results ?? []).length).toBeGreaterThan(0);
+
+    await nameInput.clear();
+    await nameInput.fill('พิ');
+    await page.waitForTimeout(450);
+
+    const dropdown = page.locator('.cv-author-search-dropdown');
+    await expect(dropdown).toBeVisible({ timeout: 10_000 });
+    await expect(
+      dropdown.locator('.cv-author-search-item').first(),
+    ).toBeVisible();
+    await expect(dropdown).toContainText(/พิศิษฐ์|นาคใจ|พิชิต/);
+  });
+
   test('L4a: ส่งฟอร์มไม่ครบ → แสดง validation ไม่ออกจากหน้า', async ({ page }) => {
     await gotoCvSectionsTab(page);
     await openPublicationPage(page, { fromSectionsTab: true });

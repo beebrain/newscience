@@ -348,6 +348,12 @@ window.CV_PUB_PAGE = {
 };
 window.CV_AUTHOR_SEARCH_ENDPOINTS = window.CV_PUB_PAGE.endpoints;
 </script>
-<script src="<?= base_url('assets/js/cv-publication-author-search.js') ?>"></script>
-<script src="<?= base_url('assets/js/cv-publication-entry-page.js') ?>"></script>
+<?php
+$cvPubAuthorJs = FCPATH . 'assets/js/cv-publication-author-search.js';
+$cvPubEntryJs  = FCPATH . 'assets/js/cv-publication-entry-page.js';
+$cvPubAuthorVer = is_file($cvPubAuthorJs) ? (string) filemtime($cvPubAuthorJs) : '1';
+$cvPubEntryVer  = is_file($cvPubEntryJs) ? (string) filemtime($cvPubEntryJs) : '1';
+?>
+<script src="<?= base_url('assets/js/cv-publication-author-search.js') ?>?v=<?= esc($cvPubAuthorVer, 'attr') ?>"></script>
+<script src="<?= base_url('assets/js/cv-publication-entry-page.js') ?>?v=<?= esc($cvPubEntryVer, 'attr') ?>"></script>
 <?= $this->endSection() ?>

@@ -138,10 +138,12 @@
       return;
     }
     if (value.length < config.minNameLength) {
+      delete input.dataset.lastSearch;
       clearDropdown();
       return;
     }
-    var url = nameUrl + (nameUrl.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams({ name: value, limit: '10' }).toString();
+    var url = nameUrl + (nameUrl.indexOf('?') >= 0 ? '&' : '?')
+      + 'name=' + encodeURIComponent(value) + '&limit=10';
     fetchJson(url).then(function (res) {
       if (!res.ok || !res.data) {
         showDropdown(input, [], res.status === 401 ? 'กรุณาเข้าสู่ระบบใหม่' : 'ค้นหาไม่สำเร็จ (HTTP ' + res.status + ')');
@@ -157,7 +159,8 @@
     var value = input.value.trim().toLowerCase();
     if (!emailUrl || value.length < config.minEmailLength) return;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return;
-    var url = emailUrl + (emailUrl.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams({ email: value }).toString();
+    var url = emailUrl + (emailUrl.indexOf('?') >= 0 ? '&' : '?')
+      + 'email=' + encodeURIComponent(value);
     fetchJson(url).then(function (res) {
       if (!res.ok || !res.data) return;
       var data = res.data;
