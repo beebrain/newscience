@@ -27,6 +27,30 @@ class BarcodeEvents extends BaseController
     }
 
     /**
+     * @return array{join_code: ?string, error?: string}
+     */
+    private function parseJoinCodeFromPost(?int $excludeEventId = null): array
+    {
+        $raw = trim((string) ($this->request->getPost('join_code') ?? ''));
+        if ($raw === '') {
+            return ['join_code' => null];
+        }
+        $code = BarcodeEventModel::normalizeJoinCode($raw);
+        if ($code === '' || strlen($code) < 4) {
+            return ['join_code' => null, 'error' => 'รหัสเข้าร่วมต้องมีอย่างน้อย 4 ตัวอักษร (A–Z, 0–9, ขีด)'];
+        }
+        $builder = $this->barcodeEventModel->where('join_code', $code);
+        if ($excludeEventId !== null && $excludeEventId > 0) {
+            $builder->where('id !=', $excludeEventId);
+        }
+        if ($builder->first() !== null) {
+            return ['join_code' => null, 'error' => 'รหัสเข้าร่วมนี้ถูกใช้ในกิจกรรมอื่นแล้ว'];
+        }
+
+        return ['join_code' => $code];
+    }
+
+    /**
      * Resolve creator IDs for new/update: admin → user_uid, club → student_user_id
      */
     private function getCreatorIds(): array
@@ -292,12 +316,21 @@ class BarcodeEvents extends BaseController
             }
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
+        $joinParsed = $this->parseJoinCodeFromPost();
+        if (isset($joinParsed['error'])) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'error' => $joinParsed['error']]);
+            }
+
+            return redirect()->back()->withInput()->with('error', $joinParsed['error']);
+        }
         $ids = $this->getCreatorIds();
         $data = [
             'title' => $this->request->getPost('title'),
             'description' => $this->request->getPost('description'),
             'event_date' => $this->request->getPost('event_date'),
             'status' => $this->request->getPost('status'),
+            'join_code' => $joinParsed['join_code'],
             'created_by_student_user_id' => $ids['created_by_student_user_id'] ?: null,
             'created_by_user_uid' => $ids['created_by_user_uid'] ?: null,
         ];
@@ -363,11 +396,20 @@ class BarcodeEvents extends BaseController
             }
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
+        $joinParsed = $this->parseJoinCodeFromPost((int) $id);
+        if (isset($joinParsed['error'])) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'error' => $joinParsed['error']]);
+            }
+
+            return redirect()->back()->withInput()->with('error', $joinParsed['error']);
+        }
         $this->barcodeEventModel->update($id, [
             'title' => $this->request->getPost('title'),
             'description' => $this->request->getPost('description'),
             'event_date' => $this->request->getPost('event_date'),
             'status' => $this->request->getPost('status'),
+            'join_code' => $joinParsed['join_code'],
         ]);
         if ($this->request->isAJAX()) {
             return $this->response->setJSON(['success' => true, 'message' => 'บันทึกแล้ว']);

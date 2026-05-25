@@ -10,7 +10,11 @@
         </div>
     </div>
     <div class="card-body">
-        <p><strong>วันที่:</strong> <?= esc($event['event_date']) ?> &nbsp; <strong>สถานะ:</strong> <?= esc($event['status']) ?></p>
+        <p><strong>วันที่:</strong> <?= esc($event['event_date']) ?> &nbsp; <strong>สถานะ:</strong> <?= esc($event['status']) ?>
+            <?php if (! empty($event['join_code'])): ?>
+                &nbsp; <strong>รหัสเข้าร่วม:</strong> <code><?= esc($event['join_code']) ?></code>
+            <?php endif; ?>
+        </p>
         <?php if (!empty($event['description'])): ?>
             <p><?= nl2br(esc($event['description'])) ?></p>
         <?php endif; ?>

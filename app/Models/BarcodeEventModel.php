@@ -16,6 +16,7 @@ class BarcodeEventModel extends Model
         'description',
         'event_date',
         'status',
+        'join_code',
         'created_by_student_user_id',
         'created_by_user_uid',
     ];
@@ -27,6 +28,30 @@ class BarcodeEventModel extends Model
         'title' => 'required|min_length[1]|max_length[500]',
         'event_date' => 'required|valid_date',
     ];
+
+    /**
+     * รหัสเข้าร่วม: ตัวพิมพ์ใหญ่ A–Z 0–9 และขีด ไม่มีช่องว่าง
+     */
+    public static function normalizeJoinCode(string $raw): string
+    {
+        $code = strtoupper(trim($raw));
+        $code = preg_replace('/\s+/', '', $code) ?? '';
+
+        return preg_replace('/[^A-Z0-9\-]/', '', $code) ?? '';
+    }
+
+    /**
+     * ค้นหากิจกรรมจากรหัสเข้าร่วม (เฉพาะที่ตั้งค่าไว้)
+     */
+    public function findByJoinCode(string $raw): ?array
+    {
+        $code = self::normalizeJoinCode($raw);
+        if ($code === '') {
+            return null;
+        }
+
+        return $this->where('join_code', $code)->first();
+    }
 
     /**
      * Get all events ordered by event_date desc

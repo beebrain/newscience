@@ -118,8 +118,8 @@
                 <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
             </svg>
         </div>
-        <span class="portal-hub-card-title">E-Barcode (บาร์โค้ด)</span>
-        <span class="portal-hub-card-desc">ดูบาร์โค้ดของตัวเอง</span>
+        <span class="portal-hub-card-title">กิจกรรม / รับรหัส</span>
+        <span class="portal-hub-card-desc">กรอกรหัสเข้าร่วมและรับบาร์โค้ด</span>
     </a>
     <a href="<?= base_url('student/certificates') ?>" class="portal-hub-card" style="border-color:#c7d2fe;">
         <div class="portal-hub-card-icon" style="background:#e0e7ff; color:#3730a3;">

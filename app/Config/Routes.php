@@ -210,6 +210,7 @@ $routes->get('/student/logout', 'Student\Auth::logout');
 $routes->get('/student', 'Student\Dashboard::index', ['filter' => 'studentauth']);
 $routes->get('/student/dashboard', 'Student\Dashboard::index', ['filter' => 'studentauth']);
 $routes->get('/student/barcodes', 'Student\Dashboard::barcodes', ['filter' => 'studentauth']);
+$routes->post('/student/barcodes/join', 'Student\Dashboard::redeemJoinCode', ['filter' => 'studentauth']);
 $routes->get('/student/barcodes/event/(:num)', 'Student\Dashboard::barcodeEvent/$1', ['filter' => 'studentauth']);
 $routes->post('/student/barcodes/claim/(:num)', 'Student\Dashboard::claimBarcode/$1', ['filter' => 'studentauth']);
 $routes->post('/student/barcodes/claim-from-event/(:num)', 'Student\Dashboard::claimFromEvent/$1', ['filter' => 'studentauth']);

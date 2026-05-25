@@ -71,7 +71,22 @@ class Dashboard extends BaseController
     }
 
     /**
-     * บาร์โค้ดของฉัน — แสดงกิจกรรมทั้งหมดที่เปิดเผยได้ + สถานะสิทธิ์ของตนเอง (เข้าแต่ละกิจกรรมเพื่อเปิดคูปองรับสิทธิ์)
+     * กลุ่มสถานะสำหรับกรองรายการกิจกรรม
+     */
+    private function activityFilterGroup(string $state): string
+    {
+        if (in_array($state, ['ready_claim', 'confirm_receipt', 'wait_pool'], true)) {
+            return 'action';
+        }
+        if ($state === 'opened') {
+            return 'done';
+        }
+
+        return 'other';
+    }
+
+    /**
+     * กิจกรรมของฉัน — รายการ + กรอกรหัสเข้าร่วม
      */
     public function barcodes()
     {
@@ -85,19 +100,73 @@ class Dashboard extends BaseController
         $eligibleModel = new BarcodeEventEligibleModel();
 
         $portalEvents = [];
+        $counts       = ['all' => 0, 'action' => 0, 'done' => 0, 'other' => 0];
         foreach ($eventModel->getVisibleForStudentPortal() as $ev) {
+            $state = $this->computeStudentBarcodeEventPortalState($studentId, $ev, $barcodeModel, $eligibleModel);
+            $group = $this->activityFilterGroup($state['state'] ?? 'locked');
+            $counts['all']++;
+            $counts[$group]++;
             $portalEvents[] = [
-                'event' => $ev,
-                'state' => $this->computeStudentBarcodeEventPortalState($studentId, $ev, $barcodeModel, $eligibleModel),
+                'event'  => $ev,
+                'state'  => $state,
+                'filter' => $group,
             ];
         }
 
+        $filter = (string) ($this->request->getGet('filter') ?? 'all');
+        if (! in_array($filter, ['all', 'action', 'done', 'other'], true)) {
+            $filter = 'all';
+        }
+
         $data = [
-            'page_title'    => 'บาร์โค้ดของฉัน',
+            'page_title'    => 'กิจกรรมของฉัน',
             'portal_events' => $portalEvents,
+            'filter'        => $filter,
+            'counts'        => $counts,
         ];
 
         return view('student/dashboard/barcodes', $data);
+    }
+
+    /**
+     * กรอกรหัสเข้าร่วมกิจกรรม → เพิ่มสิทธิ์แล้วไปหน้ารับรหัส
+     */
+    public function redeemJoinCode()
+    {
+        $studentId = (int) session()->get('student_id');
+        if (! $studentId) {
+            return redirect()->to(base_url('student/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
+        }
+
+        $code = BarcodeEventModel::normalizeJoinCode((string) ($this->request->getPost('join_code') ?? ''));
+        if ($code === '') {
+            return redirect()->to(base_url('student/barcodes'))->with('error', 'กรุณากรอกรหัสเข้าร่วมกิจกรรม');
+        }
+
+        $eventModel    = new BarcodeEventModel();
+        $eligibleModel = new BarcodeEventEligibleModel();
+        $barcodeModel  = new BarcodeModel();
+        $event         = $eventModel->findByJoinCode($code);
+        if (! $event) {
+            return redirect()->to(base_url('student/barcodes'))->with('error', 'ไม่พบรหัสนี้ — ตรวจสอบตัวพิมพ์ใหญ่/เลข แล้วลองอีกครั้ง');
+        }
+
+        $eid    = (int) ($event['id'] ?? 0);
+        $status = (string) ($event['status'] ?? 'draft');
+        if ($status === 'draft') {
+            return redirect()->to(base_url('student/barcodes'))->with('error', 'กิจกรรมนี้ยังไม่เปิดรับผู้เข้าร่วม');
+        }
+
+        if ($barcodeModel->where('barcode_event_id', $eid)->countAllResults() === 0) {
+            return redirect()->to(base_url('student/barcodes'))->with('error', 'กิจกรรมยังไม่พร้อม — ผู้จัดยังไม่ได้เพิ่มรหัสในระบบ');
+        }
+
+        if (! $eligibleModel->isEligible($eid, $studentId)) {
+            $eligibleModel->addEligible($eid, $studentId);
+        }
+
+        return redirect()->to(base_url('student/barcodes/event/' . $eid))
+            ->with('success', 'เข้าร่วมกิจกรรมแล้ว — กดรับรหัสของคุณด้านล่าง');
     }
 
     /**
@@ -121,7 +190,7 @@ class Dashboard extends BaseController
         $state         = $this->computeStudentBarcodeEventPortalState($studentId, $event, $barcodeModel, $eligibleModel);
 
         $data = [
-            'page_title' => 'กิจกรรม: ' . ($event['title'] ?? ''),
+            'page_title' => ($event['title'] ?? 'กิจกรรม'),
             'event'      => $event,
             'state'      => $state,
         ];

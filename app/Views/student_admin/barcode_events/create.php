@@ -22,6 +22,11 @@
                 <input type="date" id="event_date" name="event_date" class="form-control" value="<?= old('event_date') ?>" required>
             </div>
             <div class="form-group">
+                <label for="join_code" class="form-label">รหัสเข้าร่วมกิจกรรม</label>
+                <input type="text" id="join_code" name="join_code" class="form-control" value="<?= esc(old('join_code')) ?>" maxlength="32" placeholder="เช่น SCI-DAY-2026…" autocomplete="off" spellcheck="false" autocapitalize="characters" style="font-family: ui-monospace, monospace; letter-spacing: 0.05em;">
+                <p class="form-text" style="margin-top: 0.35rem; color: var(--color-gray-600); font-size: 0.875rem;">นักศึกษากรอกรหัสนี้ในหน้า Portal เพื่อขอสิทธิ์ — ปล่อยว่างถ้าใช้เฉพาะรายชื่อ</p>
+            </div>
+            <div class="form-group">
                 <label for="status" class="form-label">สถานะ *</label>
                 <select id="status" name="status" class="form-control" required>
                     <option value="draft" <?= old('status') === 'draft' ? 'selected' : '' ?>>Draft</option>

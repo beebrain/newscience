@@ -58,6 +58,11 @@
             font-size: 0.9375rem;
         }
         .portal-nav a:hover { background: var(--color-gray-100); color: var(--color-gray-800); }
+        .portal-nav a:focus-visible {
+            outline: 3px solid #0d9488;
+            outline-offset: 2px;
+        }
+        .portal-flash { margin-bottom: 1rem; }
         .portal-nav .portal-user {
             color: var(--color-gray-500);
             font-size: 0.875rem;
@@ -83,13 +88,15 @@
             <a href="<?= base_url('student/logout') ?>">ออกจากระบบ</a>
         </nav>
     </header>
-    <main class="portal-main">
+    <main class="portal-main" id="portal-main">
+        <div class="portal-flash" aria-live="polite" aria-atomic="true">
         <?php if (session()->getFlashdata('success')): ?>
             <div class="alert alert-success" role="status"><?= esc(session()->getFlashdata('success')) ?></div>
         <?php endif; ?>
         <?php if (session()->getFlashdata('error')): ?>
-            <div class="alert alert-error" role="status"><?= esc(session()->getFlashdata('error')) ?></div>
+            <div class="alert alert-error" role="alert"><?= esc(session()->getFlashdata('error')) ?></div>
         <?php endif; ?>
+        </div>
         <?= $this->renderSection('content') ?>
     </main>
 </div>

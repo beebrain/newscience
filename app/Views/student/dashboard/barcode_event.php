@@ -2,232 +2,291 @@
 
 <?= $this->section('content') ?>
 <?php
-$st = $state['state'] ?? 'locked';
-$eid = (int) ($event['id'] ?? 0);
-$firstUnclaimed = (int) ($state['first_unclaimed_id'] ?? 0);
+include __DIR__ . '/../partials/activity_ui.php';
+$st              = $state['state'] ?? 'locked';
+$eid             = (int) ($event['id'] ?? 0);
+$firstUnclaimed  = (int) ($state['first_unclaimed_id'] ?? 0);
+$meta            = student_activity_state_meta()[$st] ?? ['label' => $st, 'hint' => '', 'tone' => 'muted'];
+$dateStr         = student_activity_format_date($event['event_date'] ?? null);
+$statusLabel     = ['active' => 'เปิดรับ', 'closed' => 'ปิดแล้ว', 'draft' => 'ฉบับร่าง'][$event['status'] ?? ''] ?? ($event['status'] ?? '');
 ?>
-<div class="card barcode-event-page">
-    <div class="card-header">
-        <h2 style="margin: 0;">กิจกรรมบาร์โค้ด</h2>
-        <a href="<?= base_url('student/barcodes') ?>" class="btn btn-secondary">← รายการกิจกรรม</a>
-    </div>
-    <div class="card-body">
-        <p class="be-meta"><strong><?= esc($event['title'] ?? '') ?></strong>
-            <?php if (!empty($event['event_date'])): ?>
-                <span class="be-date"> · <?= esc($event['event_date']) ?></span>
-            <?php endif; ?>
-            <span class="be-status badge-mini"><?= esc($event['status'] ?? '') ?></span>
-        </p>
-        <?php if (!empty($event['description'])): ?>
-            <div class="be-desc"><?= nl2br(esc((string) $event['description'])) ?></div>
-        <?php endif; ?>
+<div class="stu-act-detail">
+    <nav class="stu-act-detail__crumb" aria-label="เส้นทาง">
+        <a href="<?= base_url('student/barcodes') ?>">กิจกรรมของฉัน</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page"><?= esc($event['title'] ?? 'กิจกรรม') ?></span>
+    </nav>
 
-        <div class="coupon-area">
-            <?php if ($st === 'locked'): ?>
-                <div class="coupon-static coupon-static--muted">
-                    <div class="coupon-static-icon" aria-hidden="true">🔒</div>
-                    <h3 class="coupon-static-title">คูปองนี้ไม่ใช่ของคุณ</h3>
-                    <p class="coupon-static-text">คุณไม่อยู่ในรายชื่อผู้มีสิทธิ์รับบาร์โค้ดจากกิจกรรมนี้ หากควรมีสิทธิ์ กรุณาติดต่อผู้จัดกิจกรรม</p>
-                </div>
-
-            <?php elseif ($st === 'opened'): ?>
-                <div class="coupon-static coupon-static--success">
-                    <div class="coupon-static-icon" aria-hidden="true">✓</div>
-                    <h3 class="coupon-static-title">รับสิทธิ์แล้ว</h3>
-                    <p class="coupon-static-text">การจับคู่บาร์โค้ดกับบัญชีของคุณสำเร็จ — รหัสของคุณมีดังนี้</p>
-                    <ul class="be-code-list">
-                        <?php foreach ($state['my_barcodes'] as $b): ?>
-                            <li>
-                                <code class="be-code"><?= esc($b['code'] ?? '') ?></code>
-                                <?php if (!empty($b['claimed_at'])): ?>
-                                    <span class="be-code-note">ยืนยันเมื่อ <?= esc($b['claimed_at']) ?></span>
-                                <?php endif; ?>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-
-            <?php else: ?>
-                <p class="coupon-intro">แตะที่คูปองด้านล่างเพื่อพลิกเปิด — จากนั้นดำเนินการยืนยันตามขั้นตอน</p>
-                <div class="coupon-flip" id="couponFlipRoot">
-                    <div class="coupon-flip-inner" id="couponFlipInner">
-                        <button type="button" class="coupon-face coupon-front" id="couponFlipFront" aria-label="พลิกเปิดคูปอง">
-                            <span class="coupon-ribbon">สิทธิ์พิเศษ</span>
-                            <span class="coupon-dots"></span>
-                            <span class="coupon-front-title"><?= esc($event['title'] ?? 'กิจกรรม') ?></span>
-                            <span class="coupon-front-hint">แตะเพื่อเปิดคูปอง</span>
-                        </button>
-                        <div class="coupon-face coupon-back">
-                            <?php if ($st === 'ready_claim'): ?>
-                                <h3 class="coupon-back-title">ยืนยันการรับสิทธิ์</h3>
-                                <p class="coupon-back-text">เมื่อกดปุ่มด้านล่าง ระบบจะจับคู่รหัสจากกองให้คุณหนึ่งรายการ และบันทึกว่าคุณยืนยันรับสิทธิ์แล้ว (เปิดคูปอง)</p>
-                                <form method="post" action="<?= base_url('student/barcodes/claim-from-event/' . $eid) ?>" class="coupon-form">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="btn btn-primary btn-coupon-submit">ยืนยัน — เปิดคูปองรับรหัส</button>
-                                </form>
-
-                            <?php elseif ($st === 'confirm_receipt' && $firstUnclaimed > 0): ?>
-                                <h3 class="coupon-back-title">ยืนยันการรับสิทธิ์</h3>
-                                <p class="coupon-back-text">คุณได้รับการจับคู่บาร์โค้ดแล้ว — กดยืนยันเพื่อดูรหัสและบันทึกว่ารับทราบ</p>
-                                <form method="post" action="<?= base_url('student/barcodes/claim/' . $firstUnclaimed) ?>" class="coupon-form">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="btn btn-primary btn-coupon-submit">ยืนยัน — เปิดคูปองดูรหัส</button>
-                                </form>
-
-                            <?php elseif ($st === 'wait_pool'): ?>
-                                <h3 class="coupon-back-title">รอรหัสว่าง</h3>
-                                <p class="coupon-back-text">คุณมีสิทธิ์ในกิจกรรมนี้แล้ว แต่ขณะนี้ยังไม่มีรหัสว่างในกอง — กรุณาลองกลับมาใหม่เมื่อผู้จัดเพิ่มรหัส หรือเมื่อมีผู้คืนรหัส</p>
-
-                            <?php elseif ($st === 'event_closed'): ?>
-                                <h3 class="coupon-back-title">กิจกรรมปิดแล้ว</h3>
-                                <p class="coupon-back-text">ไม่สามารถรับรหัสเพิ่มจากกิจกรรมนี้ได้อีก หากคุณควรได้รับสิทธิ์แต่ไม่ทันรับรหัส กรุณาติดต่อผู้จัด</p>
-
-                            <?php else: ?>
-                                <p class="coupon-back-text">สถานะไม่ทราบ</p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            <?php endif; ?>
+    <header class="stu-act-detail__head">
+        <div>
+            <h1 class="stu-act-detail__title"><?= esc($event['title'] ?? 'กิจกรรม') ?></h1>
+            <p class="stu-act-detail__meta">
+                <?php if ($dateStr !== ''): ?>
+                    <time datetime="<?= esc($event['event_date'] ?? '') ?>"><?= esc($dateStr) ?></time>
+                    <span aria-hidden="true"> · </span>
+                <?php endif; ?>
+                <span class="stu-act-detail__status"><?= esc($statusLabel) ?></span>
+            </p>
         </div>
-    </div>
+        <span class="stu-act__badge stu-act__badge--<?= esc($meta['tone']) ?>"><?= esc($meta['label']) ?></span>
+    </header>
+
+    <?php if (! empty($event['description'])): ?>
+        <div class="stu-act-detail__desc"><?= nl2br(esc((string) $event['description'])) ?></div>
+    <?php endif; ?>
+
+    <section class="stu-act-detail__panel" aria-labelledby="act-panel-heading">
+        <h2 id="act-panel-heading" class="visually-hidden">สถานะการรับรหัส</h2>
+
+        <?php if ($st === 'locked'): ?>
+            <div class="stu-act-detail__notice stu-act-detail__notice--muted" role="status">
+                <p class="stu-act-detail__notice-title">คุณยังไม่มีสิทธิ์ในกิจกรรมนี้</p>
+                <p>ถ้าผู้จัดให้รหัสเข้าร่วม ให้กลับไปที่ <a href="<?= base_url('student/barcodes') ?>">รายการกิจกรรม</a> แล้วกรอกรหัสในช่อง “รหัสเข้าร่วม”</p>
+            </div>
+
+        <?php elseif ($st === 'opened'): ?>
+            <div class="stu-act-detail__notice stu-act-detail__notice--success" role="status">
+                <p class="stu-act-detail__notice-title">รหัสของคุณ</p>
+                <p class="stu-act-detail__notice-sub">เก็บรหัสนี้ไว้ใช้ตามที่ผู้จัดกำหนด (เช่น แสดงที่จุดลงทะเบียน)</p>
+            </div>
+            <ul class="stu-act-detail__codes" role="list">
+                <?php foreach ($state['my_barcodes'] as $b):
+                    $code = (string) ($b['code'] ?? '');
+                    ?>
+                    <li class="stu-act-detail__code-row">
+                        <code class="stu-act-detail__code" id="barcode-code-<?= (int) ($b['id'] ?? 0) ?>"><?= esc($code) ?></code>
+                        <button
+                            type="button"
+                            class="btn btn-secondary btn-sm stu-act-detail__copy"
+                            data-copy-target="barcode-code-<?= (int) ($b['id'] ?? 0) ?>"
+                            aria-label="คัดลอกรหัส <?= esc($code) ?>"
+                        >คัดลอก</button>
+                        <?php if (! empty($b['claimed_at'])): ?>
+                            <span class="stu-act-detail__code-time">รับเมื่อ <?= esc($b['claimed_at']) ?></span>
+                        <?php endif; ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+
+        <?php elseif ($st === 'ready_claim'): ?>
+            <div class="stu-act-detail__notice stu-act-detail__notice--action">
+                <p class="stu-act-detail__notice-title">พร้อมรับรหัส</p>
+                <p>ระบบจะจับคู่รหัสจากกองให้คุณหนึ่งรายการทันทีเมื่อกดปุ่มด้านล่าง</p>
+            </div>
+            <form method="post" action="<?= base_url('student/barcodes/claim-from-event/' . $eid) ?>" class="stu-act-detail__form">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-primary stu-act-detail__submit">รับรหัสของฉัน</button>
+            </form>
+
+        <?php elseif ($st === 'confirm_receipt' && $firstUnclaimed > 0): ?>
+            <div class="stu-act-detail__notice stu-act-detail__notice--action">
+                <p class="stu-act-detail__notice-title">รอยืนยันการรับรหัส</p>
+                <p>กดยืนยันเพื่อดูรหัสที่ระบบจับคู่ไว้ให้คุณ</p>
+            </div>
+            <form method="post" action="<?= base_url('student/barcodes/claim/' . $firstUnclaimed) ?>" class="stu-act-detail__form">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-primary stu-act-detail__submit">ยืนยันและดูรหัส</button>
+            </form>
+
+        <?php elseif ($st === 'wait_pool'): ?>
+            <div class="stu-act-detail__notice stu-act-detail__notice--warn" role="status">
+                <p class="stu-act-detail__notice-title">รอรหัสว่าง</p>
+                <p>คุณมีสิทธิ์แล้ว แต่ขณะนี้รหัสในกองหมด — ลองกลับมาใหม่ภายหลัง หรือแจ้งผู้จัดกิจกรรม</p>
+            </div>
+
+        <?php elseif ($st === 'event_closed'): ?>
+            <div class="stu-act-detail__notice stu-act-detail__notice--muted" role="status">
+                <p class="stu-act-detail__notice-title">กิจกรรมปิดรับแล้ว</p>
+                <p>ไม่สามารถรับรหัสเพิ่มได้ หากควรได้รับสิทธิ์ กรุณาติดต่อผู้จัด</p>
+            </div>
+
+        <?php else: ?>
+            <div class="stu-act-detail__notice stu-act-detail__notice--muted" role="status">
+                <p>ไม่สามารถแสดงสถานะได้ — กลับไปที่ <a href="<?= base_url('student/barcodes') ?>">รายการกิจกรรม</a></p>
+            </div>
+        <?php endif; ?>
+    </section>
 </div>
+
 <style>
-.barcode-event-page .be-meta { margin: 0 0 0.75rem 0; font-size: 1rem; }
-.barcode-event-page .be-date { color: var(--color-gray-500); font-weight: 400; }
-.barcode-event-page .be-status {
-    display: inline-block;
-    margin-left: 0.35rem;
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+.stu-act__badge {
     font-size: 0.7rem;
-    text-transform: uppercase;
-    padding: 0.15rem 0.45rem;
-    border-radius: 4px;
-    background: var(--color-gray-100);
-    color: var(--color-gray-600);
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
 }
-.barcode-event-page .be-desc {
-    color: var(--color-gray-700);
-    font-size: 0.9375rem;
-    line-height: 1.5;
-    margin-bottom: 1.5rem;
-}
-.coupon-area { margin-top: 0.5rem; max-width: 420px; margin-left: auto; margin-right: auto; }
-.coupon-intro {
-    text-align: center;
+.stu-act__badge--action { background: #ccfbf1; color: #115e59; }
+.stu-act__badge--success { background: #dcfce7; color: #166534; }
+.stu-act__badge--warn { background: #fef3c7; color: #92400e; }
+.stu-act__badge--muted { background: var(--color-gray-100); color: var(--color-gray-600); }
+.stu-act-detail__crumb {
     font-size: 0.875rem;
-    color: var(--color-gray-600);
+    margin-bottom: 1rem;
+    color: var(--color-gray-500);
+}
+.stu-act-detail__crumb a {
+    color: #0f766e;
+    text-decoration: none;
+}
+.stu-act-detail__crumb a:hover { text-decoration: underline; }
+.stu-act-detail__crumb a:focus-visible {
+    outline: 3px solid #0d9488;
+    outline-offset: 2px;
+}
+.stu-act-detail__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
     margin-bottom: 1rem;
 }
-.coupon-static {
-    border-radius: 16px;
-    padding: 1.75rem 1.5rem;
-    text-align: center;
-    border: 2px dashed var(--color-gray-300);
-    background: linear-gradient(165deg, #fffbeb 0%, #fff 45%, #fef3c7 100%);
-}
-.coupon-static--muted {
-    background: var(--color-gray-50);
-    border-color: var(--color-gray-200);
-}
-.coupon-static--success {
-    border-style: solid;
-    border-color: #22c55e;
-    background: linear-gradient(165deg, #ecfdf5 0%, #fff 50%, #d1fae5 100%);
-}
-.coupon-static-icon { font-size: 2rem; line-height: 1; margin-bottom: 0.5rem; }
-.coupon-static-title { margin: 0 0 0.5rem 0; font-size: 1.125rem; }
-.coupon-static-text { margin: 0; font-size: 0.9rem; color: var(--color-gray-600); line-height: 1.5; }
-.be-code-list { list-style: none; padding: 0; margin: 1rem 0 0 0; text-align: left; }
-.be-code-list li { padding: 0.65rem 0; border-top: 1px solid rgba(0,0,0,0.06); }
-.be-code { font-size: 1.125rem; font-family: ui-monospace, monospace; }
-.be-code-note { display: block; font-size: 0.75rem; color: var(--color-gray-500); margin-top: 0.25rem; }
-
-.coupon-flip { perspective: 1000px; }
-.coupon-flip-inner {
-    position: relative;
-    min-height: 220px;
-    transition: transform 0.65s ease;
-    transform-style: preserve-3d;
-}
-.coupon-flip-inner.is-flipped { transform: rotateY(180deg); }
-.coupon-face {
-    position: absolute;
-    inset: 0;
-    backface-visibility: hidden;
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1.25rem;
-    box-sizing: border-box;
-}
-.coupon-front {
-    background: linear-gradient(145deg, #fef08a 0%, #fde047 35%, #facc15 100%);
-    border: 2px solid #ca8a04;
-    box-shadow: 0 8px 24px rgba(202, 138, 4, 0.25);
-    cursor: pointer;
-    font: inherit;
-    width: 100%;
-    text-align: center;
-}
-.coupon-front:focus { outline: 3px solid var(--primary); outline-offset: 2px; }
-.coupon-ribbon {
-    position: absolute;
-    top: 10px;
-    right: -8px;
-    background: #b45309;
-    color: #fff;
-    font-size: 0.65rem;
+.stu-act-detail__title {
+    margin: 0 0 0.35rem;
+    font-size: 1.375rem;
     font-weight: 700;
-    padding: 0.25rem 1.5rem 0.25rem 0.75rem;
-    border-radius: 4px 0 0 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    text-wrap: balance;
 }
-.coupon-dots {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 3px dotted rgba(180, 83, 9, 0.5);
-    margin-bottom: 0.75rem;
+.stu-act-detail__meta {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--color-gray-500);
 }
-.coupon-front-title {
-    font-weight: 800;
+.stu-act-detail__status {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+}
+.stu-act-detail__desc {
+    color: var(--color-gray-700);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    margin-bottom: 1.25rem;
+}
+.stu-act-detail__panel {
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: 14px;
+    padding: 1.35rem 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.stu-act-detail__notice {
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+    font-size: 0.9375rem;
+}
+.stu-act-detail__notice-title {
+    margin: 0 0 0.35rem;
+    font-weight: 700;
     font-size: 1.05rem;
-    color: #713f12;
-    padding: 0 0.5rem;
-    line-height: 1.3;
 }
-.coupon-front-hint {
-    margin-top: 0.75rem;
-    font-size: 0.8rem;
-    color: #92400e;
+.stu-act-detail__notice p { margin: 0; }
+.stu-act-detail__notice-sub {
+    margin-top: 0.35rem !important;
+    font-size: 0.875rem;
+    color: var(--color-gray-600);
+}
+.stu-act-detail__notice--action {
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    color: #134e4a;
+}
+.stu-act-detail__notice--success {
+    background: #ecfdf5;
+    border: 1px solid #86efac;
+    color: #14532d;
+}
+.stu-act-detail__notice--warn {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #78350f;
+}
+.stu-act-detail__notice--muted {
+    background: var(--color-gray-50);
+    border: 1px solid var(--color-gray-200);
+    color: var(--color-gray-700);
+}
+.stu-act-detail__notice a { color: #0f766e; font-weight: 600; }
+.stu-act-detail__form { margin: 0; }
+.stu-act-detail__submit {
+    width: 100%;
+    min-height: 3rem;
+    font-size: 1.0625rem;
     font-weight: 600;
 }
-.coupon-back {
-    transform: rotateY(180deg);
-    background: #fff;
-    border: 2px solid var(--color-gray-200);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-    overflow-y: auto;
-    align-items: stretch;
-    text-align: left;
+.stu-act-detail__codes {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
-.coupon-back-title { margin: 0 0 0.5rem 0; font-size: 1.05rem; text-align: center; }
-.coupon-back-text { margin: 0 0 1rem 0; font-size: 0.875rem; color: var(--color-gray-600); line-height: 1.5; }
-.coupon-form { text-align: center; }
-.btn-coupon-submit { min-height: 2.75rem; width: 100%; max-width: 100%; }
-@media (max-width: 640px) {
-    .barcode-event-page .card-header, .barcode-event-page .card-body { padding: 1rem; }
+.stu-act-detail__code-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.85rem 0;
+    border-top: 1px solid var(--color-gray-100);
+}
+.stu-act-detail__code-row:first-child { border-top: 0; padding-top: 0; }
+.stu-act-detail__code {
+    font-size: 1.25rem;
+    font-family: ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    padding: 0.35rem 0.65rem;
+    background: var(--color-gray-50);
+    border-radius: 8px;
+    flex: 1;
+    min-width: 0;
+    word-break: break-all;
+}
+.stu-act-detail__copy { touch-action: manipulation; }
+.stu-act-detail__copy:focus-visible {
+    outline: 3px solid #0d9488;
+    outline-offset: 2px;
+}
+.stu-act-detail__code-time {
+    width: 100%;
+    font-size: 0.75rem;
+    color: var(--color-gray-500);
+}
+@media (min-width: 480px) {
+    .stu-act-detail__code-time { width: auto; margin-left: auto; }
 }
 </style>
 <script>
 (function() {
-    var inner = document.getElementById('couponFlipInner');
-    var front = document.getElementById('couponFlipFront');
-    if (!inner || !front) return;
-    front.addEventListener('click', function() {
-        inner.classList.add('is-flipped');
+    document.querySelectorAll('.stu-act-detail__copy').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = btn.getAttribute('data-copy-target');
+            var el = id ? document.getElementById(id) : null;
+            if (!el) return;
+            var text = el.textContent || '';
+            function done(ok) {
+                var prev = btn.textContent;
+                btn.textContent = ok ? 'คัดลอกแล้ว' : 'คัดลอกไม่ได้';
+                setTimeout(function() { btn.textContent = prev; }, 2000);
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() { done(true); }).catch(function() { done(false); });
+            } else {
+                done(false);
+            }
+        });
     });
 })();
 </script>
