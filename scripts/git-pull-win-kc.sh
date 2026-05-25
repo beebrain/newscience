@@ -55,7 +55,7 @@ sshpass -e ssh \
   -o ProxyCommand="tailscale nc %h 22" \
   -o ConnectTimeout=25 \
   "${USER}@${HOST}" \
-  "cd /d ${REPO//\//\\\\} && (php spark cache:clear 2>nul || echo skip-cache) && (php spark migrate 2>nul || echo skip-migrate)" \
+  "cd /d ${REPO//\//\\\\} && (php spark cache:clear 2>nul || echo skip-cache) && (php spark migrate 2>nul || echo skip-migrate) && (php scripts/run_add_barcode_events_join_code.php 2>nul || echo skip-join-code)" \
   || true
 
 echo "=== done ==="
