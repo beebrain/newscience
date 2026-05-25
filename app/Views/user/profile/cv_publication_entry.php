@@ -82,6 +82,35 @@ if (is_array($entry) && ! empty($entry['publication_authors']) && is_array($entr
 @media (prefers-reduced-motion: reduce) {
     .cv-pub-page * { transition: none !important; }
 }
+.cv-author-search-dropdown {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+    max-height: 14rem;
+    overflow-y: auto;
+}
+.cv-author-search-item {
+    display: block;
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+.cv-author-search-item:hover { background: #f8fafc; }
+.cv-author-search-name {
+    display: block;
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+.cv-author-search-email {
+    display: block;
+    color: #64748b;
+    font-size: 0.75rem;
+}
 </style>
 <?= $this->endSection() ?>
 

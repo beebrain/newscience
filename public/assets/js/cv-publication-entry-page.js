@@ -117,9 +117,34 @@
             list.appendChild(row);
         });
         syncAuthorsHidden();
+        if (window.CvPublicationAuthorSearch && typeof window.CvPublicationAuthorSearch.refresh === 'function') {
+            window.CvPublicationAuthorSearch.refresh();
+        }
+    }
+
+    function collectAuthors() {
+        var list = el('cv-p-authors-list');
+        if (!list) return [];
+        var out = [];
+        list.querySelectorAll('[data-author-index]').forEach(function (row, i) {
+            var name = (row.querySelector('.cv-author-name') || {}).value || '';
+            var email = (row.querySelector('.cv-author-email') || {}).value || '';
+            name = name.trim();
+            email = email.trim().toLowerCase();
+            if (!name && !email) return;
+            out.push({
+                name: name,
+                email: email,
+                affiliation: ((row.querySelector('.cv-author-aff') || {}).value || '').trim(),
+                corresponding: (row.querySelector('.cv-author-corr') || {}).checked ? 1 : 0,
+                order: i + 1
+            });
+        });
+        return out;
     }
 
     window.syncPublicationAuthorsHidden = syncAuthorsHidden;
+    window.collectPublicationAuthors = collectAuthors;
     window.renderPublicationAuthors = renderAuthors;
     window.dedupePublicationAuthors = dedupeAuthors;
 
@@ -422,6 +447,9 @@
             initial = defaultAuthors();
         }
         renderAuthors(initial);
+        if (window.CvPublicationAuthorSearch && typeof window.CvPublicationAuthorSearch.refresh === 'function') {
+            window.CvPublicationAuthorSearch.refresh();
+        }
 
         var addBtn = el('cv-p-add-author');
         if (addBtn) {
@@ -448,6 +476,9 @@
                     '</div>';
                 list.appendChild(row);
                 syncAuthorsHidden();
+                if (window.CvPublicationAuthorSearch && typeof window.CvPublicationAuthorSearch.refresh === 'function') {
+                    window.CvPublicationAuthorSearch.refresh();
+                }
             });
         }
 

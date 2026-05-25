@@ -9,9 +9,14 @@
   };
   var timers = new WeakMap();
   var activeDropdown = null;
+  var globalBound = false;
 
   function endpoints() {
     return window.CV_AUTHOR_SEARCH_ENDPOINTS || {};
+  }
+
+  function authorLists() {
+    return document.querySelectorAll('#cv-p-authors-list, #cv-m-authors-list');
   }
 
   function escapeHtml(value) {
@@ -35,25 +40,6 @@
     if (typeof window.syncPublicationAuthorsHidden === 'function') {
       window.syncPublicationAuthorsHidden();
     }
-    var hidden = document.getElementById('cv-m-authors-json');
-    var list = document.getElementById('cv-m-authors-list');
-    if (!hidden || !list) return;
-    var out = [];
-    list.querySelectorAll('[data-author-index]').forEach(function (row, i) {
-      var name = (row.querySelector('.cv-author-name') || {}).value || '';
-      var email = (row.querySelector('.cv-author-email') || {}).value || '';
-      name = name.trim();
-      email = email.trim().toLowerCase();
-      if (!name && !email) return;
-      out.push({
-        name: name,
-        email: email,
-        affiliation: ((row.querySelector('.cv-author-aff') || {}).value || '').trim(),
-        corresponding: (row.querySelector('.cv-author-corr') || {}).checked ? 1 : 0,
-        order: i + 1,
-      });
-    });
-    hidden.value = JSON.stringify(out);
   }
 
   function applyResult(input, item) {
@@ -85,6 +71,7 @@
     var rect = input.getBoundingClientRect();
     var dropdown = document.createElement('div');
     dropdown.className = 'cv-author-search-dropdown';
+    dropdown.setAttribute('role', 'listbox');
     dropdown.style.position = 'fixed';
     dropdown.style.left = rect.left + 'px';
     dropdown.style.top = rect.bottom + 4 + 'px';
@@ -118,7 +105,7 @@
   }
 
   function searchName(input) {
-    var nameUrl = endpoints().name;
+    var nameUrl = endpoints().names || endpoints().name;
     var value = input.value.trim();
     if (!nameUrl || value.length < config.minNameLength) {
       clearDropdown();
@@ -152,8 +139,7 @@
     }
   }
 
-  function init() {
-    var list = document.getElementById('cv-m-authors-list');
+  function bindList(list) {
     if (!list || list.dataset.authorSearchBound === '1') return;
     list.dataset.authorSearchBound = '1';
     list.addEventListener('input', handleInput);
@@ -162,12 +148,22 @@
         searchName(event.target);
       }
     });
+  }
+
+  function bindGlobal() {
+    if (globalBound) return;
+    globalBound = true;
     document.addEventListener('mousedown', function (event) {
       if (activeDropdown && !activeDropdown.contains(event.target)) {
         clearDropdown();
       }
     });
     window.addEventListener('scroll', clearDropdown, true);
+  }
+
+  function init() {
+    authorLists().forEach(bindList);
+    bindGlobal();
   }
 
   window.CvPublicationAuthorSearch = { init: init, refresh: init };
