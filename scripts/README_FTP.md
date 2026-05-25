@@ -30,13 +30,13 @@ cd C:\xampp\htdocs\newScience\scripts
    ```powershell
    copy ftp_server_49.example.env ftp_server_49.env
    ```
-2. แก้ไข `ftp_server_49.env` กรอก User และรหัสผ่าน (และ path ถ้าไม่ใช่ `/sci_root`):
+2. แก้ไข `ftp_server_49.env` กรอก User และรหัสผ่าน (path ต้องเป็นโฟลเดอร์ **newscience** บน IIS — ไม่ใช้ `sci_root`):
    ```
    FTP_HOST=49.231.30.18
    FTP_PORT=21
    FTP_USER=Administrator
    FTP_PASS=รหัสผ่านจริง
-   FTP_REMOTE_PATH=/sci_root
+   FTP_REMOTE_PATH=/newscience
    ```
 3. **อย่า commit ไฟล์ `ftp_server_49.env`** (เพิ่มใน `.gitignore` ถ้าต้องการ)
 
@@ -60,7 +60,7 @@ $env:FTP_PASS = "รหัสผ่าน"
 | วัตถุประสงค์                        | คำสั่ง                                                                                                           |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | ทดสอบเชื่อมต่อ + แสดงรายการโฟลเดอร์ | `.\connect_ftp_server_49.ps1`                                                                                    |
-| อัปโหลดไฟล์เดียว                    | `.\connect_ftp_server_49.ps1 -UploadFile ".\enable-external-services.ps1" -UploadRemotePath "/sci_root/scripts"` |
+| อัปโหลดไฟล์เดียว                    | `.\connect_ftp_server_49.ps1 -UploadFile ".\enable-external-services.ps1" -UploadRemotePath "/newscience/scripts"` |
 
 ถ้าไม่ส่ง `-UploadRemotePath` จะใช้ค่า `FTP_REMOTE_PATH` จาก config/env
 

@@ -24,7 +24,7 @@ param(
     # Production SSH/SCP
     [string]$ServerHost = "49.231.30.18",
     [string]$ServerUser = "Administrator",
-    [string]$ServerSqlPath = "C:/inetpub/sci_root/tmp_eval_migrate.sql",
+    [string]$ServerSqlPath = "C:/inetpub/newscience/tmp_eval_migrate.sql",
 
     # Production MySQL (บน server)
     [string]$ServerDbUser = "root",

@@ -1,6 +1,7 @@
 # newScience production deploy path
 
-- **IIS site `sci` (sci.uru.ac.th)** uses `C:\inetpub\newscience\public` — this is the only app deploy root.
-- **`C:\inetpub\sci_root` is not used** for the live site (legacy/FTP-SCI only). Do not `git pull`, sync, or deploy NS code there unless the user explicitly asks.
+- **IIS site `sci` (sci.uru.ac.th)** — repo อยู่ที่ `C:\inetpub\newscience`, document root `C:\inetpub\newscience\public`.
+- **`C:\inetpub\sci_root` ไม่ได้ใช้งาน** (legacy เท่านั้น). ห้าม `git pull` / deploy โค้ด NS ที่นั่น — ถ้า pull ไป sci_root หน้า production จะไม่เปลี่ยน.
 - **Tailscale** server: `win-kc49a7sh1gd` → `100.74.66.65`, SSH `Administrator@100.74.66.65`.
-- After deploy: `cd C:\inetpub\newscience && git pull origin master && php spark cache:clear`
+- After deploy: `cd C:\inetpub\newscience && git pull origin master && php spark migrate && php spark cache:clear`
+- Publication entry UI: `GET /dashboard/profile/cv/publication?section_id={id}` (not modal)

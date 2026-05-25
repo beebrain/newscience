@@ -7,7 +7,7 @@
 .EXAMPLE
     .\connect_ftp_server_49.ps1
     .\connect_ftp_server_49.ps1 -ListOnly
-    .\connect_ftp_server_49.ps1 -UploadFile ".\enable-external-services.ps1" -RemotePath "/sci_root/scripts"
+    .\connect_ftp_server_49.ps1 -UploadFile ".\enable-external-services.ps1" -RemotePath "/newscience/scripts"
 #>
 
 param(

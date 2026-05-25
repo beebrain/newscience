@@ -98,6 +98,7 @@ $routes->get('/dashboard/calendar', 'User\CalendarController::index', ['filter' 
 $routes->get('/dashboard/profile', 'User\ProfileCv::index', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/identity', 'User\ProfileCv::saveAccountIdentity', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/cv', 'User\ProfileCv::cv', ['filter' => 'loggedin']);
+$routes->get('/dashboard/profile/cv/publication', 'User\ProfileCv::publicationEntry', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/sync-from-rr', 'User\ProfileCv::syncFromResearchRecord', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/photo', 'User\ProfileCv::saveCvPhoto', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/photo/remove', 'User\ProfileCv::removeCvPhoto', ['filter' => 'loggedin']);

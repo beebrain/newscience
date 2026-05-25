@@ -7,7 +7,7 @@ param(
     [int]$FtpPort       = 21,
     [string]$FtpUser    = "Administrator",
     [AllowEmptyString()][AllowNull()][string]$FtpPass = $null,
-    [string]$RemotePath = "/sci_root/public"
+    [string]$RemotePath = "/newscience/public"
 )
 
 if ($null -eq $FtpPass) {

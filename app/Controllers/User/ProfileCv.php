@@ -378,7 +378,78 @@ class ProfileCv extends BaseController
             'cv_edit_active_tab'         => $cvEditActiveTab,
             'ai_cv_publication_enabled'     => $aiCvCfg->isReady(),
             'cv_ai_publication_section_id'  => $cvAiPublicationSectionId,
-            'cv_ui_build'                   => 'split-modals-v2',
+            'cv_ui_build'                   => 'publication-page-v1',
+        ]);
+    }
+
+    /**
+     * หน้าเพิ่ม/แก้ไขผลงานตีพิมพ์ (ไม่ใช้ modal — URL ชัดเจน)
+     */
+    public function publicationEntry()
+    {
+        $this->response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $this->response->setHeader('Pragma', 'no-cache');
+
+        $email = $this->sessionEmail();
+        if ($email === '') {
+            return redirect()->to(base_url('admin/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
+        }
+
+        $personnelId = $this->personnelIdOrRedirect();
+        if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $personnelId;
+        }
+
+        $sectionId = (int) $this->request->getGet('section_id');
+        $entryId   = (int) $this->request->getGet('entry_id');
+        if ($sectionId <= 0) {
+            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'ไม่พบหัวข้อผลงาน');
+        }
+
+        $cvSectionModel = new CvSectionModel();
+        if (! $cvSectionModel->db->tableExists('cv_sections')) {
+            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'ระบบ CV ยังไม่พร้อม — รัน migrate');
+        }
+
+        $section        = $cvSectionModel->find($sectionId);
+        if (! is_array($section) || (int) ($section['personnel_id'] ?? 0) !== $personnelId) {
+            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'ไม่สามารถเข้าถึงหัวข้อนี้ได้');
+        }
+
+        if (! $this->isPublicationSection($section)) {
+            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'หัวข้อนี้ไม่ใช่ผลงานตีพิมพ์ — ใช้เพิ่มรายการทั่วไปแทน');
+        }
+
+        $person = $this->resolveOwnedPersonnel();
+        $entry  = null;
+        if ($entryId > 0) {
+            if (! CvEntryModel::isTablePresent()) {
+                return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'ระบบ CV ยังไม่พร้อม');
+            }
+            $cvEntryModel = new CvEntryModel();
+            $row          = $cvEntryModel->find($entryId);
+            if (! is_array($row) || (int) ($row['section_id'] ?? 0) !== $sectionId) {
+                return redirect()->to(base_url('dashboard/profile/cv/publication?section_id=' . $sectionId))->with('error', 'ไม่พบรายการ');
+            }
+            $entry = $this->hydrateCvEntryForEditor($row, $personnelId);
+        }
+
+        $aiCvCfg = config(AiCv::class);
+        $ownerEmail = ResearchRecordCvPull::canonicalEmailForPerson($person ?? []);
+        $ownerName  = PersonnelModel::resolvePublicDisplayNameTh($person ?? []);
+
+        return view('user/profile/cv_publication_entry', [
+            'page_title'                => $entry ? 'แก้ไขผลงานตีพิมพ์' : 'เพิ่มผลงานตีพิมพ์',
+            'person'                    => $person,
+            'section'                   => $section,
+            'entry'                     => $entry,
+            'section_id'                => $sectionId,
+            'entry_id'                  => $entryId,
+            'is_edit'                   => $entry !== null,
+            'ai_cv_publication_enabled' => $aiCvCfg->isReady(),
+            'open_ai_panel'             => $this->request->getGet('ai') === '1',
+            'cv_owner_email'            => $ownerEmail,
+            'cv_owner_name'             => $ownerName,
         ]);
     }
 
@@ -794,8 +865,8 @@ class ProfileCv extends BaseController
             return $this->ajaxOrRedirectError('กรุณากรอกชื่อรายการ');
         }
 
-        $secType = (string) ($section['type'] ?? '');
-        if (in_array($secType, ['research', 'articles'], true)) {
+        $isPubSection = $this->isPublicationSection($section);
+        if ($isPubSection) {
             $validationError = PublicationResearchFields::validateResearchSave($this->request->getPost());
             if ($validationError !== null) {
                 return $this->ajaxOrRedirectError($validationError);
@@ -839,8 +910,7 @@ class ProfileCv extends BaseController
             unset($meta['amount']);
         }
 
-        $secType = (string) ($section['type'] ?? '');
-        if (in_array($secType, ['research', 'articles'], true)) {
+        if ($isPubSection) {
             $meta = PublicationResearchFields::mergeResearchMetadataFromPost($this->request->getPost(), $meta);
 
             $ptype = trim((string) $this->request->getPost('publication_type'));
@@ -888,7 +958,7 @@ class ProfileCv extends BaseController
             }
         }
 
-        if ($entryId <= 0 && in_array($secType, ['research', 'articles'], true)) {
+        if ($entryId <= 0 && $isPubSection) {
             $dupId = CvPublicationDedupe::findDuplicateEntryId($personnelId, $meta, 0);
             if ($dupId !== null) {
                 $entryId   = $dupId;
@@ -915,7 +985,7 @@ class ProfileCv extends BaseController
 
         $startDate = $this->request->getPost('start_date') ?: null;
         $description = trim((string) $this->request->getPost('entry_description')) ?: null;
-        if (in_array($secType, ['research', 'articles'], true)) {
+        if ($isPubSection) {
             $yearBeRaw = trim((string) $this->request->getPost('publication_year_be'));
             if ($yearBeRaw !== '' && ctype_digit($yearBeRaw)) {
                 $yearCe = PublicationResearchFields::normalizeYearToCe((int) $yearBeRaw);
@@ -962,7 +1032,7 @@ class ProfileCv extends BaseController
             $savedId = (int) $cvEntryModel->getInsertID();
         }
 
-        if (in_array($secType, ['research', 'articles'], true) && PublicationCatalog::isReady()) {
+        if ($isPubSection && PublicationCatalog::isReady()) {
             $savedEntry = $cvEntryModel->find($savedId);
             if (is_array($savedEntry)) {
                 PublicationCatalog::syncFromCvEntry($personnelId, $section, $savedEntry);
@@ -995,7 +1065,72 @@ class ProfileCv extends BaseController
             ]);
         }
 
+        if ($this->request->getPost('cv_publication_page')) {
+            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('success', 'บันทึกผลงานสำเร็จ');
+        }
+
         return redirect()->back()->with('success', 'บันทึกข้อมูลสำเร็จ');
+    }
+
+    /**
+     * @param array<string,mixed> $section
+     */
+    private function isPublicationSection(array $section): bool
+    {
+        return ResearchRecordCvSyncMerge::isPublicationCvSection($section);
+    }
+
+    /**
+     * @param array<string,mixed> $entry
+     *
+     * @return array<string,mixed>
+     */
+    private function hydrateCvEntryForEditor(array $entry, int $personnelId): array
+    {
+        $entry['metadata_array'] = CvEntryModel::decodeMetadata($entry['metadata'] ?? null);
+        $entry['entry_url']      = (string) ($entry['metadata_array']['url'] ?? $entry['metadata_array']['legacy_url'] ?? '');
+        $entry['publication_type'] = (string) ($entry['metadata_array']['rr_publication_type'] ?? '');
+        $entry['entry_doi']        = (string) ($entry['metadata_array']['doi'] ?? '');
+        $rrPid                     = (int) ($entry['metadata_array']['rr_publication_id'] ?? 0);
+        $entry['publication_rr_id'] = $rrPid > 0 ? (string) $rrPid : '';
+        $yearBe = (int) ($entry['metadata_array']['publication_year_be'] ?? 0);
+        if ($yearBe <= 0 && ! empty($entry['start_date']) && preg_match('/^(\d{4})/', (string) $entry['start_date'], $ym)) {
+            $yearBe = (int) PublicationResearchFields::yearBeFromCe((int) $ym[1]);
+        }
+        $entry['publication_year_be'] = $yearBe > 0 ? (string) $yearBe : '';
+        $entry['publication_month'] = (string) ($entry['metadata_array']['publication_month'] ?? '');
+        foreach (PublicationResearchFields::BIBLIO_KEYS as $bibKey) {
+            $entry[$bibKey] = (string) ($entry['metadata_array'][$bibKey] ?? '');
+        }
+        if (PublicationCatalog::isReady()) {
+            $syncKey = PublicationIdentity::syncExternalKeyFromMetadata($entry['metadata_array']);
+            if ($syncKey !== '') {
+                $catalogRow = (new \App\Models\PublicationModel())->where('sync_external_key', $syncKey)->first();
+                if (is_array($catalogRow)) {
+                    $biblio = PublicationResearchFields::decodeBibliographicFromPublicationRow($catalogRow);
+                    foreach (PublicationResearchFields::BIBLIO_KEYS as $bibKey) {
+                        if (($entry[$bibKey] ?? '') === '' && ! empty($biblio[$bibKey])) {
+                            $entry[$bibKey] = (string) $biblio[$bibKey];
+                        }
+                    }
+                    if ($entry['publication_month'] === '' && ! empty($biblio['publication_month'])) {
+                        $entry['publication_month'] = (string) $biblio['publication_month'];
+                    }
+                    if ($entry['publication_year_be'] === '' && ! empty($catalogRow['publication_year'])) {
+                        $entry['publication_year_be'] = (string) PublicationResearchFields::yearBeFromCe((int) $catalogRow['publication_year']);
+                    }
+                }
+            }
+        }
+        $authors = PublicationCatalog::lookupContributorsForMetadata($entry['metadata_array']);
+        $entry['publication_authors'] = $authors;
+        foreach (['start_date', 'end_date'] as $df) {
+            if (! empty($entry[$df]) && strlen((string) $entry[$df]) > 10) {
+                $entry[$df] = substr((string) $entry[$df], 0, 10);
+            }
+        }
+
+        return $entry;
     }
 
     private function ajaxOrRedirectError(string $msg)
@@ -1034,48 +1169,7 @@ class ProfileCv extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Access denied']);
         }
 
-        $entry['metadata_array'] = CvEntryModel::decodeMetadata($entry['metadata'] ?? null);
-        $entry['entry_url']      = (string) ($entry['metadata_array']['url'] ?? $entry['metadata_array']['legacy_url'] ?? '');
-        $entry['publication_type'] = (string) ($entry['metadata_array']['rr_publication_type'] ?? '');
-        $entry['entry_doi']        = (string) ($entry['metadata_array']['doi'] ?? '');
-        $rrPid                     = (int) ($entry['metadata_array']['rr_publication_id'] ?? 0);
-        $entry['publication_rr_id'] = $rrPid > 0 ? (string) $rrPid : '';
-        $yearBe = (int) ($entry['metadata_array']['publication_year_be'] ?? 0);
-        if ($yearBe <= 0 && ! empty($entry['start_date']) && preg_match('/^(\d{4})/', (string) $entry['start_date'], $ym)) {
-            $yearBe = (int) PublicationResearchFields::yearBeFromCe((int) $ym[1]);
-        }
-        $entry['publication_year_be'] = $yearBe > 0 ? (string) $yearBe : '';
-        $entry['publication_month'] = (string) ($entry['metadata_array']['publication_month'] ?? '');
-        foreach (PublicationResearchFields::BIBLIO_KEYS as $bibKey) {
-            $entry[$bibKey] = (string) ($entry['metadata_array'][$bibKey] ?? '');
-        }
-        if (PublicationCatalog::isReady()) {
-            $syncKey = PublicationIdentity::syncExternalKeyFromMetadata($entry['metadata_array']);
-            if ($syncKey !== '') {
-                $catalogRow = (new \App\Models\PublicationModel())->where('sync_external_key', $syncKey)->first();
-                if (is_array($catalogRow)) {
-                    $biblio = PublicationResearchFields::decodeBibliographicFromPublicationRow($catalogRow);
-                    foreach (PublicationResearchFields::BIBLIO_KEYS as $bibKey) {
-                        if ($entry[$bibKey] === '' && ! empty($biblio[$bibKey])) {
-                            $entry[$bibKey] = (string) $biblio[$bibKey];
-                        }
-                    }
-                    if ($entry['publication_month'] === '' && ! empty($biblio['publication_month'])) {
-                        $entry['publication_month'] = (string) $biblio['publication_month'];
-                    }
-                    if ($entry['publication_year_be'] === '' && ! empty($catalogRow['publication_year'])) {
-                        $entry['publication_year_be'] = (string) PublicationResearchFields::yearBeFromCe((int) $catalogRow['publication_year']);
-                    }
-                }
-            }
-        }
-        $authors = PublicationCatalog::lookupContributorsForMetadata($entry['metadata_array']);
-        $entry['publication_authors'] = $authors;
-        foreach (['start_date', 'end_date'] as $df) {
-            if (!empty($entry[$df]) && strlen((string) $entry[$df]) > 10) {
-                $entry[$df] = substr((string) $entry[$df], 0, 10);
-            }
-        }
+        $entry = $this->hydrateCvEntryForEditor($entry, $personnelId);
 
         return $this->response->setJSON(['success' => true, 'entry' => $entry]);
     }

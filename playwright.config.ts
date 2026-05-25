@@ -8,13 +8,14 @@ function normalizeBaseUrl(u: string): string {
   const t = u.trim();
   return t.endsWith('/') ? t : `${t}/`;
 }
+/** ตั้ง PLAYWRIGHT_BASE_URL ให้ตรง nginx (มักเป็น newscience ตัวเล็ก) — ลงท้าย / */
 const baseURL = normalizeBaseUrl(
-  process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost/newScience/public',
+  process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost/newscience/public/',
 );
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 1 : undefined,

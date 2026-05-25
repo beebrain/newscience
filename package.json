@@ -3,6 +3,8 @@
   "private": true,
   "scripts": {
     "test:e2e": "playwright test",
+    "test:e2e:cv": "playwright test tests/e2e/cv-publication-page.spec.ts",
+    "test:e2e:cv:headed": "playwright test tests/e2e/cv-publication-page.spec.ts --headed",
     "test:e2e:production": "playwright test tests/e2e/production-publication-smoke.spec.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
