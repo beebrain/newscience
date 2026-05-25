@@ -1541,6 +1541,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
                 closeCvEntryModal();
             }
         });
+    });
 
     window.importOrcidCv = async function () {
         var inp = document.getElementById('cv-orcid-input');
