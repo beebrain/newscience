@@ -95,7 +95,15 @@ final class AiPublicationParser
         }
         $rrId = is_numeric($rrIdRaw) && (int) $rrIdRaw > 0 ? (int) $rrIdRaw : null;
 
-        $desc = trim((string) ($pub['description'] ?? $pub['abstract'] ?? $pub['abstract_th'] ?? $pub['abstract_en'] ?? $pub['notes'] ?? $pub['extra_info'] ?? ''));
+        $abstract = trim((string) ($pub['abstract_th'] ?? ''));
+        if ($abstract === '') {
+            $abstract = trim((string) ($pub['abstract_en'] ?? ''));
+        }
+        if ($abstract === '') {
+            $abstract = trim((string) ($pub['abstract'] ?? ''));
+        }
+
+        $desc = trim((string) ($pub['description'] ?? $pub['notes'] ?? $pub['extra_info'] ?? ''));
         $authors = self::extractStructuredContributors($pub);
         if ($authors === []) {
             $authorsLine = self::formatAuthorsLine($pub);
@@ -105,7 +113,10 @@ final class AiPublicationParser
                 $desc = $authorsLine;
             }
         }
-        $desc = self::appendBibliographicDetails($pub, $desc);
+
+        $volume   = trim((string) ($pub['volume'] ?? ''));
+        $pages    = trim((string) ($pub['pages'] ?? ''));
+        $keywords = self::formatKeywordsString($pub);
 
         [$startDate, $endDate] = self::resolvePublicationDates($y, $month);
 
@@ -121,7 +132,11 @@ final class AiPublicationParser
             'url'               => $url !== '' ? mb_substr($url, 0, 2048) : null,
             'publication_type'  => $ptype !== '' ? $ptype : null,
             'rr_publication_id' => $rrId,
+            'abstract'          => mb_substr($abstract, 0, 20000) ?: null,
             'description'       => mb_substr($desc, 0, 20000) ?: null,
+            'volume'            => $volume !== '' ? mb_substr($volume, 0, 100) : null,
+            'pages'             => $pages !== '' ? mb_substr($pages, 0, 100) : null,
+            'keywords'          => $keywords !== '' ? mb_substr($keywords, 0, 500) : null,
             'authors'           => $authors,
         ];
 
@@ -255,49 +270,15 @@ final class AiPublicationParser
     }
 
     /**
+     * คำสำคัญสำหรับฟิลด์ keywords (ไม่ปนกับบทคัดย่อ)
+     *
      * @param array<string, mixed> $pub
      */
-    private static function appendBibliographicDetails(array $pub, string $desc): string
+    private static function formatKeywordsString(array $pub): string
     {
-        $lines = [];
-        $volume = trim((string) ($pub['volume'] ?? ''));
-        if ($volume !== '') {
-            $lines[] = 'เล่ม (Volume): ' . $volume;
-        }
-        $issue = trim((string) ($pub['issue'] ?? ''));
-        if ($issue !== '') {
-            $lines[] = 'ฉบับ (Issue): ' . $issue;
-        }
-        $pages = trim((string) ($pub['pages'] ?? ''));
-        if ($pages !== '') {
-            $lines[] = 'หน้า: ' . $pages;
-        }
-        $isbn = trim((string) ($pub['isbn'] ?? ''));
-        if ($isbn !== '') {
-            $lines[] = 'ISBN: ' . $isbn;
-        }
-        $kwLine = self::formatKeywordsLine($pub);
-        if ($kwLine !== '') {
-            $lines[] = $kwLine;
-        }
-        if ($lines === []) {
-            return $desc;
-        }
-        $block = implode("\n", $lines);
-
-        return $desc !== '' ? $desc . "\n\n" . $block : $block;
-    }
-
-    /**
-     * @param array<string, mixed> $pub
-     */
-    private static function formatKeywordsLine(array $pub): string
-    {
-        $kw = $pub['keywords'] ?? $pub['keywords_th'] ?? $pub['keywords_en'] ?? null;
+        $kw = $pub['keywords_th'] ?? $pub['keywords_en'] ?? $pub['keywords'] ?? null;
         if (is_string($kw)) {
-            $kw = trim($kw);
-
-            return $kw !== '' ? 'คำสำคัญ: ' . mb_substr($kw, 0, 1000) : '';
+            return trim($kw);
         }
         if (! is_array($kw) || $kw === []) {
             return '';
@@ -309,7 +290,7 @@ final class AiPublicationParser
             }
         }
 
-        return $parts !== [] ? 'คำสำคัญ: ' . mb_substr(implode(', ', $parts), 0, 1000) : '';
+        return $parts !== [] ? implode(', ', $parts) : '';
     }
 
     /**

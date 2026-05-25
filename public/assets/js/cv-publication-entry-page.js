@@ -142,7 +142,7 @@
         if (cvEl('title')) cvEl('title').value = pub.title || '';
         if (cvEl('org')) cvEl('org').value = pub.organization || '';
         if (cvEl('loc')) cvEl('loc').value = pub.location || '';
-        if (cvEl('desc')) cvEl('desc').value = pub.description || '';
+        if (cvEl('desc')) cvEl('desc').value = pub.description || pub.notes || '';
         if (cvEl('doi')) cvEl('doi').value = pub.doi || '';
         if (cvEl('rrid')) cvEl('rrid').value = pub.rr_publication_id ? String(pub.rr_publication_id) : '';
         if (cvEl('meta-src')) cvEl('meta-src').value = 'ai_assistant';
@@ -161,10 +161,17 @@
             cvEl('year-be').value = String(parseInt(pub.year, 10) + 543);
         }
         if (pub.month && cvEl('month')) cvEl('month').value = String(pub.month);
-        if (cvEl('abstract')) cvEl('abstract').value = pub.abstract || pub.description || '';
+        if (cvEl('abstract')) {
+            var abs = pub.abstract || pub.abstract_th || pub.abstract_en || '';
+            cvEl('abstract').value = abs;
+        }
         if (pub.volume && cvEl('volume')) cvEl('volume').value = pub.volume;
         if (pub.pages && cvEl('pages')) cvEl('pages').value = pub.pages;
-        if (pub.keywords && cvEl('keywords')) cvEl('keywords').value = pub.keywords;
+        if (cvEl('keywords')) {
+            var kw = pub.keywords;
+            if (Array.isArray(kw)) kw = kw.filter(Boolean).join(', ');
+            if (kw) cvEl('keywords').value = String(kw);
+        }
         renderAuthors(Array.isArray(pub.authors) && pub.authors.length ? pub.authors : defaultAuthors());
         var title = cvEl('title');
         if (title) title.focus();

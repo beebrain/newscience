@@ -84,10 +84,10 @@ final class AiPublicationParserTest extends CIUnitTestCase
         $this->assertSame('2024-06-01', $r['publication']['start_date']);
         $this->assertSame('2024-06-30', $r['publication']['end_date']);
         $this->assertSame('ไทย หนึ่ง (English One)', $r['publication']['authors'][0]['name']);
-        $desc = (string) $r['publication']['description'];
-        $this->assertStringNotContainsString('ผู้แต่ง:', $desc);
-        $this->assertStringContainsString('เล่ม (Volume): 10', $desc);
-        $this->assertStringContainsString('คำสำคัญ:', $desc);
+        $this->assertNull($r['publication']['description']);
+        $this->assertSame('10', $r['publication']['volume']);
+        $this->assertSame('1-9', $r['publication']['pages']);
+        $this->assertSame('คำ1, คำ2', $r['publication']['keywords']);
     }
 
     public function testDedupeContributorsByEmailAndName(): void
@@ -132,7 +132,41 @@ final class AiPublicationParserTest extends CIUnitTestCase
 
         $this->assertTrue($r['success']);
         $this->assertSame('teacher.one@live.uru.ac.th', $r['publication']['authors'][0]['email']);
-        $this->assertSame('Abstract only', $r['publication']['description']);
+        $this->assertSame('Abstract only', $r['publication']['abstract']);
+        $this->assertNull($r['publication']['description']);
+    }
+
+    public function testNormalizeHeliyonShapePutsAbstractEnInAbstractField(): void
+    {
+        $sample = [
+            'source'       => 'ai_extraction',
+            'type'         => 'journal',
+            'journalname'  => 'Heliyon',
+            'title_en'     => 'Recognition awareness: adding awareness to pattern recognition using latent cognizance',
+            'title_th'     => '',
+            'authors_en'   => ['Tatpong Katanyukul', 'Pisit Nakjai'],
+            'abstract_en'  => 'This study investigates an application of a new probabilistic interpretation of a softmax output to Open-Set Recognition (OSR).',
+            'keywords_en'  => ['Artificial neural network', 'Open-set recognition'],
+            'volume'       => '8',
+            'issue'        => '4',
+            'pages'        => 'e09240',
+            'year_en'      => '2022',
+            'year_th'      => 2565,
+            'month_en'     => 'April',
+            'doi'          => '10.1016/j.heliyon.2022.e09240',
+            'url'          => 'https://doi.org/10.1016/j.heliyon.2022.e09240',
+        ];
+
+        $r = AiPublicationParser::normalizePublicationFromRrLikeArray($sample);
+        $this->assertTrue($r['success']);
+        $pub = $r['publication'];
+        $this->assertStringContainsString('softmax', (string) $pub['abstract']);
+        $this->assertStringNotContainsString('เล่ม (Volume)', (string) $pub['abstract']);
+        $this->assertSame('8', $pub['volume']);
+        $this->assertSame('e09240', $pub['pages']);
+        $this->assertStringContainsString('Open-set recognition', (string) $pub['keywords']);
+        $this->assertSame('Heliyon', $pub['organization']);
+        $this->assertSame(4, $pub['month']);
     }
 
     public function testParseN8nRootLevelArray(): void
