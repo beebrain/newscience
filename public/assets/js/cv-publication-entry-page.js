@@ -172,6 +172,168 @@
 
     window.__cvPubAiUploaded = null;
 
+    var FIELD_LABELS = {
+        entry_title: 'ชื่อผลงาน',
+        organization: 'แหล่งเผยแพร่',
+        publication_type: 'ประเภทผลงาน',
+        publication_year_be: 'ปีที่เผยแพร่ (พ.ศ.)'
+    };
+
+    function publicationValidationConfig() {
+        var v = (cfg.validation || {});
+        return {
+            yearBeMin: v.yearBeMin || 2400,
+            yearBeMax: v.yearBeMax || 2700,
+            fieldIds: v.fieldIds || {},
+            validPubTypeCodes: Array.isArray(v.validPubTypeCodes) ? v.validPubTypeCodes : []
+        };
+    }
+
+    function isValidPubTypeCode(code, validCodes) {
+        var v = String(code || '').trim();
+        if (!v) return false;
+        if (v === 'อื่นๆ') return true;
+        if (validCodes.indexOf(v) >= 0) return true;
+        return /^[a-z][a-z0-9_\-.]{0,79}$/i.test(v);
+    }
+
+    function collectPublicationPost() {
+        return {
+            entry_title: (cvEl('title') || {}).value || '',
+            organization: (cvEl('org') || {}).value || '',
+            publication_type: (cvEl('pubtype') || {}).value || '',
+            publication_year_be: (cvEl('year-be') || {}).value || '',
+            start_date: ''
+        };
+    }
+
+    /**
+     * @returns {Array<{field:string,message:string}>}
+     */
+    function publicationPageFieldErrors(post) {
+        var rules = publicationValidationConfig();
+        var errors = [];
+        var title = String(post.entry_title || '').trim();
+        if (!title) {
+            errors.push({ field: 'entry_title', message: 'กรุณากรอกชื่อรายการ' });
+        } else if (title.length > 500) {
+            errors.push({ field: 'entry_title', message: 'ชื่อรายการยาวเกิน 500 ตัวอักษร' });
+        }
+
+        var ptype = String(post.publication_type || '').trim();
+        if (!ptype) {
+            errors.push({ field: 'publication_type', message: 'กรุณาเลือกประเภทผลงานเผยแพร่' });
+        } else if (!isValidPubTypeCode(ptype, rules.validPubTypeCodes)) {
+            errors.push({ field: 'publication_type', message: 'ประเภทผลงานเผยแพร่ไม่ถูกต้อง' });
+        }
+
+        if (!String(post.organization || '').trim()) {
+            errors.push({ field: 'organization', message: 'กรุณากรอกแหล่งเผยแพร่ (source)' });
+        }
+
+        var yearBe = String(post.publication_year_be || '').trim();
+        var start = String(post.start_date || '').trim();
+        if (!yearBe && !start) {
+            errors.push({ field: 'publication_year_be', message: 'กรุณาระบุปีที่เผยแพร่ (พ.ศ.) หรือวันเริ่ม' });
+        } else if (yearBe && !start) {
+            if (!/^\d+$/.test(yearBe)) {
+                errors.push({ field: 'publication_year_be', message: 'ปีที่เผยแพร่ (พ.ศ.) ต้องเป็นตัวเลข' });
+            } else {
+                var y = parseInt(yearBe, 10);
+                if (y < rules.yearBeMin || y > rules.yearBeMax) {
+                    errors.push({
+                        field: 'publication_year_be',
+                        message: 'ปีที่เผยแพร่ (พ.ศ.) ต้องอยู่ระหว่าง ' + rules.yearBeMin + '–' + rules.yearBeMax
+                    });
+                }
+            }
+        }
+
+        return errors;
+    }
+
+    function fieldElement(field) {
+        var ids = publicationValidationConfig().fieldIds;
+        var domId = ids[field] || ('cv-p-' + field);
+        return el(domId);
+    }
+
+    function clearPublicationFieldErrors() {
+        var banner = el('cv-pub-form-errors');
+        if (banner) {
+            banner.textContent = '';
+            banner.classList.add('hidden');
+        }
+        document.querySelectorAll('.cv-pub-field--invalid').forEach(function (node) {
+            node.classList.remove('cv-pub-field--invalid');
+            node.removeAttribute('aria-invalid');
+        });
+        document.querySelectorAll('.cv-pub-field-error').forEach(function (node) {
+            node.remove();
+        });
+    }
+
+    function showPublicationFieldErrors(errors) {
+        clearPublicationFieldErrors();
+        if (!errors.length) return true;
+
+        var banner = el('cv-pub-form-errors');
+        var lines = errors.map(function (e) {
+            var label = FIELD_LABELS[e.field] || e.field;
+            return label + ': ' + e.message;
+        });
+        if (banner) {
+            banner.textContent = lines.join('\n');
+            banner.classList.remove('hidden');
+        }
+
+        var seen = {};
+        errors.forEach(function (err) {
+            if (seen[err.field]) return;
+            seen[err.field] = true;
+            var input = fieldElement(err.field);
+            if (!input) return;
+            input.classList.add('cv-pub-field--invalid');
+            input.setAttribute('aria-invalid', 'true');
+            var hint = document.createElement('span');
+            hint.className = 'cv-pub-field-error';
+            hint.id = input.id + '-error';
+            hint.textContent = err.message;
+            input.setAttribute('aria-describedby', hint.id);
+            if (input.parentNode) {
+                input.parentNode.appendChild(hint);
+            }
+        });
+
+        var first = fieldElement(errors[0].field);
+        if (first) {
+            first.focus({ preventScroll: false });
+            first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        var summary = 'กรุณาแก้ไขข้อมูลก่อนบันทึก:\n' + lines.join('\n');
+        if (typeof swalAlert === 'function') {
+            swalAlert(summary.replace(/\n/g, '<br>'), 'warning');
+        }
+
+        return false;
+    }
+
+    function bindPublicationFieldClear() {
+        var form = el('cv-pub-form');
+        if (!form) return;
+        form.addEventListener('input', function (ev) {
+            var t = ev.target;
+            if (!t || !t.classList || !t.classList.contains('cv-pub-field')) return;
+            if (!t.classList.contains('cv-pub-field--invalid')) return;
+            t.classList.remove('cv-pub-field--invalid');
+            t.removeAttribute('aria-invalid');
+            var errId = t.id + '-error';
+            var errNode = document.getElementById(errId);
+            if (errNode) errNode.remove();
+        });
+    }
+
     async function uploadAiFile(file) {
         var fs = el('cv-pub-ai-file-status');
         if (!file) {
@@ -294,10 +456,19 @@
             });
         }
 
+        bindPublicationFieldClear();
+
         var form = el('cv-pub-form');
         if (form) {
-            form.addEventListener('submit', function () {
+            form.addEventListener('submit', function (ev) {
                 syncAuthorsHidden();
+                var errors = publicationPageFieldErrors(collectPublicationPost());
+                if (errors.length) {
+                    ev.preventDefault();
+                    showPublicationFieldErrors(errors);
+                } else {
+                    clearPublicationFieldErrors();
+                }
             });
         }
 

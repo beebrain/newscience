@@ -119,28 +119,105 @@ final class PublicationResearchFields
         return $meta;
     }
 
+    /** ปี พ.ศ. ที่รับในฟอร์มหน้า publication */
+    public const PUBLICATION_YEAR_BE_MIN = 2400;
+
+    public const PUBLICATION_YEAR_BE_MAX = 2700;
+
+    /**
+     * รหัสฟิลด์ POST => id ของ input ในหน้า publication (สำหรับ client validation)
+     *
+     * @return array<string, string>
+     */
+    public static function publicationPageFieldElementIds(): array
+    {
+        return [
+            'entry_title'         => 'cv-p-title',
+            'organization'        => 'cv-p-org',
+            'publication_type'    => 'cv-p-pubtype',
+            'publication_year_be' => 'cv-p-year-be',
+        ];
+    }
+
+    /**
+     * ตรวจฟอร์มหน้าเพิ่ม/แก้ผลงานตีพิมพ์ — ข้อความตรงกับที่ saveCvEntry ใช้
+     *
+     * @param array<string,mixed> $post
+     *
+     * @return list<array{field:string,message:string}>
+     */
+    public static function publicationPageFieldErrors(array $post): array
+    {
+        $errors = [];
+
+        $title = trim((string) ($post['entry_title'] ?? ''));
+        if ($title === '') {
+            $errors[] = ['field' => 'entry_title', 'message' => 'กรุณากรอกชื่อรายการ'];
+        } elseif (mb_strlen($title) > 500) {
+            $errors[] = ['field' => 'entry_title', 'message' => 'ชื่อรายการยาวเกิน 500 ตัวอักษร'];
+        }
+
+        foreach (self::researchFieldErrors($post) as $row) {
+            $errors[] = $row;
+        }
+
+        $yearBe = trim((string) ($post['publication_year_be'] ?? ''));
+        $start  = trim((string) ($post['start_date'] ?? ''));
+        if ($yearBe !== '' && $start === '') {
+            if (! ctype_digit($yearBe)) {
+                $errors[] = ['field' => 'publication_year_be', 'message' => 'ปีที่เผยแพร่ (พ.ศ.) ต้องเป็นตัวเลข'];
+            } else {
+                $y = (int) $yearBe;
+                if ($y < self::PUBLICATION_YEAR_BE_MIN || $y > self::PUBLICATION_YEAR_BE_MAX) {
+                    $errors[] = [
+                        'field'   => 'publication_year_be',
+                        'message' => 'ปีที่เผยแพร่ (พ.ศ.) ต้องอยู่ระหว่าง '
+                            . self::PUBLICATION_YEAR_BE_MIN . '–' . self::PUBLICATION_YEAR_BE_MAX,
+                    ];
+                }
+            }
+        }
+
+        return $errors;
+    }
+
     /**
      * @param array<string,mixed> $post
+     *
+     * @return list<array{field:string,message:string}>
      */
-    public static function validateResearchSave(array $post): ?string
+    public static function researchFieldErrors(array $post): array
     {
+        $errors = [];
+
         $ptype = trim((string) ($post['publication_type'] ?? ''));
         if ($ptype === '') {
-            return 'กรุณาเลือกประเภทผลงานเผยแพร่';
-        }
-        if (! RrPublicationType::isValidPublicationTypeCode($ptype)) {
-            return 'ประเภทผลงานเผยแพร่ไม่ถูกต้อง';
+            $errors[] = ['field' => 'publication_type', 'message' => 'กรุณาเลือกประเภทผลงานเผยแพร่'];
+        } elseif (! RrPublicationType::isValidPublicationTypeCode($ptype)) {
+            $errors[] = ['field' => 'publication_type', 'message' => 'ประเภทผลงานเผยแพร่ไม่ถูกต้อง'];
         }
 
         $source = trim((string) ($post['organization'] ?? ''));
         if ($source === '') {
-            return 'กรุณากรอกแหล่งเผยแพร่ (source)';
+            $errors[] = ['field' => 'organization', 'message' => 'กรุณากรอกแหล่งเผยแพร่ (source)'];
         }
 
         $yearBe = trim((string) ($post['publication_year_be'] ?? ''));
         $start  = trim((string) ($post['start_date'] ?? ''));
         if ($yearBe === '' && $start === '') {
-            return 'กรุณาระบุปีที่เผยแพร่ (พ.ศ.) หรือวันเริ่ม';
+            $errors[] = ['field' => 'publication_year_be', 'message' => 'กรุณาระบุปีที่เผยแพร่ (พ.ศ.) หรือวันเริ่ม'];
+        }
+
+        return $errors;
+    }
+
+    /**
+     * @param array<string,mixed> $post
+     */
+    public static function validateResearchSave(array $post): ?string
+    {
+        foreach (self::researchFieldErrors($post) as $row) {
+            return $row['message'];
         }
 
         return null;

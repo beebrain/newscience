@@ -1066,7 +1066,9 @@ class ProfileCv extends BaseController
         }
 
         if ($this->request->getPost('cv_publication_page')) {
-            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('success', 'บันทึกผลงานสำเร็จ');
+            $open = 'dashboard/profile/cv?tab=sections&open_section=' . $sectionId;
+
+            return redirect()->to(base_url($open))->with('success', 'บันทึกผลงานสำเร็จ');
         }
 
         return redirect()->back()->with('success', 'บันทึกข้อมูลสำเร็จ');
@@ -1137,6 +1139,19 @@ class ProfileCv extends BaseController
     {
         if ($this->request->isAJAX()) {
             return $this->response->setJSON(['success' => false, 'message' => $msg]);
+        }
+
+        if ($this->request->getPost('cv_publication_page')) {
+            $sectionId = (int) $this->request->getPost('section_id');
+            $entryId   = (int) $this->request->getPost('entry_id');
+            if ($sectionId > 0) {
+                $url = 'dashboard/profile/cv/publication?section_id=' . $sectionId;
+                if ($entryId > 0) {
+                    $url .= '&entry_id=' . $entryId;
+                }
+
+                return redirect()->to(base_url($url))->with('error', $msg);
+            }
         }
 
         return redirect()->back()->with('error', $msg);

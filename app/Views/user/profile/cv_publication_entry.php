@@ -47,6 +47,19 @@ if (is_array($entry) && ! empty($entry['publication_authors']) && is_array($entr
     background: #fff;
 }
 .cv-pub-field:focus { border-color: #7c3aed; }
+.cv-pub-field--invalid {
+    border-color: #dc2626;
+    background: #fef2f2;
+}
+.cv-pub-field-error {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.8125rem;
+    color: #b91c1c;
+}
+#cv-pub-form-errors:not(:empty) {
+    display: block;
+}
 .cv-pub-label {
     display: block;
     font-size: 0.8125rem;
@@ -96,9 +109,14 @@ if (is_array($entry) && ! empty($entry['publication_authors']) && is_array($entr
           method="post"
           action="<?= esc($saveUrl, 'attr') ?>"
           class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start"
+          novalidate
           data-section-id="<?= $sectionId ?>"
           data-open-ai="<?= $openAi ? '1' : '0' ?>">
         <?= csrf_field() ?>
+        <div id="cv-pub-form-errors"
+             class="lg:col-span-3 hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+             role="alert"
+             aria-live="assertive"></div>
         <input type="hidden" name="cv_publication_page" value="1">
         <input type="hidden" name="section_id" id="cv-p-section-id" value="<?= $sectionId ?>">
         <input type="hidden" name="entry_id" id="cv-p-entry-id" value="<?= $isEdit ? $entryId : '' ?>">
@@ -119,16 +137,20 @@ if (is_array($entry) && ! empty($entry['publication_authors']) && is_array($entr
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="cv-p-org" class="cv-pub-label">แหล่งเผยแพร่ <span class="text-red-600">*</span></label>
-                            <input type="text" name="organization" id="cv-p-org" maxlength="500" class="cv-pub-field" placeholder="วารสาร / สำนักพิมพ์…" value="<?= esc($val('organization')) ?>">
+                            <input type="text" name="organization" id="cv-p-org" required maxlength="500" class="cv-pub-field" placeholder="วารสาร / สำนักพิมพ์…" value="<?= esc($val('organization')) ?>">
                         </div>
                         <div>
-                            <label for="cv-p-pubtype" class="cv-pub-label">ประเภทผลงาน</label>
-                            <select name="publication_type" id="cv-p-pubtype" class="cv-pub-field">
-                                <option value="">— ไม่ระบุ —</option>
+                            <label for="cv-p-pubtype" class="cv-pub-label">ประเภทผลงาน <span class="text-red-600">*</span></label>
+                            <select name="publication_type" id="cv-p-pubtype" required class="cv-pub-field">
+                                <?php $ptypeCur = $val('publication_type'); ?>
                                 <?php foreach (\App\Libraries\RrPublicationType::selectOptionGroups() as $groupLabel => $groupOpts): ?>
                                     <optgroup label="<?= esc($groupLabel) ?>">
                                         <?php foreach ($groupOpts as $pubOpt): ?>
-                                            <option value="<?= esc($pubOpt['value']) ?>" <?= $val('publication_type') === $pubOpt['value'] ? 'selected' : '' ?>><?= esc($pubOpt['label']) ?></option>
+                                            <?php
+                                            $selected = $ptypeCur === $pubOpt['value']
+                                                || ($ptypeCur === '' && $pubOpt['value'] === 'journal' && ! $isEdit);
+                                            ?>
+                                            <option value="<?= esc($pubOpt['value']) ?>" <?= $selected ? 'selected' : '' ?>><?= esc($pubOpt['label']) ?></option>
                                         <?php endforeach; ?>
                                     </optgroup>
                                 <?php endforeach; ?>
@@ -137,8 +159,8 @@ if (is_array($entry) && ! empty($entry['publication_authors']) && is_array($entr
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label for="cv-p-year-be" class="cv-pub-label">ปีที่เผยแพร่ (พ.ศ.)</label>
-                            <input type="number" name="publication_year_be" id="cv-p-year-be" class="cv-pub-field" min="2400" max="2700" inputmode="numeric" placeholder="เช่น 2567" value="<?= esc($val('publication_year_be')) ?>">
+                            <label for="cv-p-year-be" class="cv-pub-label">ปีที่เผยแพร่ (พ.ศ.) <span class="text-red-600">*</span></label>
+                            <input type="number" name="publication_year_be" id="cv-p-year-be" required class="cv-pub-field" min="2400" max="2700" inputmode="numeric" placeholder="เช่น 2567" value="<?= esc($val('publication_year_be') !== '' ? $val('publication_year_be') : '2567') ?>">
                         </div>
                         <div>
                             <label for="cv-p-month" class="cv-pub-label">เดือน</label>
@@ -274,6 +296,12 @@ if (is_array($entry) && ! empty($entry['publication_authors']) && is_array($entr
 <?= $this->section('scripts') ?>
 <script>
 window.CV_PUB_PAGE = {
+    validation: {
+        yearBeMin: <?= (int) \App\Libraries\PublicationResearchFields::PUBLICATION_YEAR_BE_MIN ?>,
+        yearBeMax: <?= (int) \App\Libraries\PublicationResearchFields::PUBLICATION_YEAR_BE_MAX ?>,
+        fieldIds: <?= json_encode(\App\Libraries\PublicationResearchFields::publicationPageFieldElementIds(), JSON_UNESCAPED_UNICODE) ?>,
+        validPubTypeCodes: <?= json_encode(array_values(array_unique(array_map(static fn (array $o): string => $o['value'], \App\Libraries\RrPublicationType::selectOptions()))), JSON_UNESCAPED_UNICODE) ?>
+    },
     csrf: { name: <?= json_encode(csrf_token()) ?>, hash: <?= json_encode(csrf_hash()) ?> },
     endpoints: {
         upload: <?= json_encode(base_url('dashboard/profile/cv/ai-publication-upload'), JSON_UNESCAPED_SLASHES) ?>,

@@ -96,6 +96,22 @@ test.describe('CV publication page — local (dev login)', () => {
     }
   });
 
+  test('L4a: ส่งฟอร์มไม่ครบ → แสดง validation ไม่ออกจากหน้า', async ({ page }) => {
+    await gotoCvSectionsTab(page);
+    await openPublicationPage(page, { fromSectionsTab: true });
+
+    await page.locator('#cv-p-title').fill('');
+    await page.locator('#cv-p-org').fill('');
+    await page.locator('#cv-p-year-be').fill('');
+
+    await page.locator('#cv-pub-submit').click();
+    await expect(page).toHaveURL(/\/cv\/publication/);
+    await expect(page.locator('#cv-pub-form-errors')).toBeVisible();
+    await expect(page.locator('#cv-pub-form-errors')).not.toBeEmpty();
+    await expect(page.locator('#cv-p-title.cv-pub-field--invalid')).toBeVisible();
+    await expect(page.locator('#cv-p-org.cv-pub-field--invalid')).toBeVisible();
+  });
+
   test('L4: บันทึกผลงานใหม่ → กลับแท็บหัวข้อ (redirect publication page)', async ({
     page,
   }) => {
@@ -107,15 +123,15 @@ test.describe('CV publication page — local (dev login)', () => {
     await fillMinimalPublicationForm(page, title);
     await page.locator('#cv-pub-submit').click();
 
-    await page.waitForURL(/dashboard\/profile\/cv.*tab=sections/, {
+    await page.waitForURL(/dashboard\/profile\/cv.*tab=sections.*open_section=/, {
       timeout: 45_000,
     });
     await expect(
       page.locator('.rounded-xl').filter({ hasText: /บันทึกผลงานสำเร็จ|บันทึกข้อมูลสำเร็จ/ }).first(),
     ).toBeVisible({ timeout: 15_000 });
-    await expect(
-      page.locator('.cv-entry-row__title-line', { hasText: title }),
-    ).toHaveCount(1);
+    const entryLine = page.locator('.cv-entry-row__title-line', { hasText: title });
+    await expect(entryLine).toHaveCount(1);
+    await expect(entryLine.first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('L5: หัวข้อทั่วไปยังใช้ modal เดิม (ไม่ใช่ลิงก์ publication)', async ({

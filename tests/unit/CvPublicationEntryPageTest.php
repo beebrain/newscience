@@ -18,6 +18,9 @@ final class CvPublicationEntryPageTest extends CIUnitTestCase
         $this->assertStringContainsString('เพิ่มผลงานตีพิมพ์', $html);
         $this->assertStringContainsString('cv-publication-entry-page.js', $html);
         $this->assertStringContainsString('name="cv_publication_page"', $html);
+        $this->assertStringContainsString('id="cv-pub-form-errors"', $html);
+        $this->assertStringContainsString('novalidate', $html);
+        $this->assertStringContainsString('validPubTypeCodes', $html);
         $this->assertStringNotContainsString('cv-pub-entry-modal', $html);
     }
 

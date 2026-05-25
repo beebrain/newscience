@@ -1470,6 +1470,15 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
                 return;
             }
         }
+        var openSection = new URLSearchParams(window.location.search).get('open_section');
+        if (openSection && typeof window.toggleCvSection === 'function') {
+            window.toggleCvSection(parseInt(openSection, 10));
+            var openEl = document.getElementById('cv-content-' + openSection);
+            if (openEl) {
+                openEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
         var sc = document.getElementById('cv-sections-container');
         if (sc && typeof Sortable !== 'undefined' && sc.querySelectorAll('.cv-section-item').length >= 2) {
             new Sortable(sc, {
