@@ -979,8 +979,6 @@ class ProfileCv extends BaseController
             }
         }
 
-        $metadataJson = $meta !== [] ? json_encode($meta, JSON_UNESCAPED_UNICODE) : null;
-
         $postSort = (int) ($this->request->getPost('entry_sort_order') ?? 0);
 
         $startDate = $this->request->getPost('start_date') ?: null;
@@ -1002,9 +1000,10 @@ class ProfileCv extends BaseController
             $refUrl = trim((string) ($meta['ref_url'] ?? ''));
             if ($refUrl !== '' && empty($meta['url'])) {
                 $meta['url'] = mb_substr($refUrl, 0, 2048);
-                $metadataJson = json_encode($meta, JSON_UNESCAPED_UNICODE);
             }
         }
+        $meta = ResearchRecordCvSyncMerge::stampNewScienceContentMetadata($meta);
+        $metadataJson = $meta !== [] ? json_encode($meta, JSON_UNESCAPED_UNICODE) : null;
 
         $entryData = [
             'section_id'        => $sectionId,
@@ -1221,6 +1220,10 @@ class ProfileCv extends BaseController
         }
 
         $cvEntryModel->delete($entryId);
+
+        if (in_array((string) ($section['type'] ?? ''), ['research', 'articles'], true)) {
+            PublicationCatalog::detachAfterCvEntryDelete($personnelId, $section, $entry);
+        }
 
         if ($this->request->isAJAX()) {
             return $this->response->setJSON(['success' => true, 'message' => 'ลบรายการเรียบร้อยแล้ว']);

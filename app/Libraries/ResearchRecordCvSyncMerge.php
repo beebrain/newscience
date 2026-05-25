@@ -133,6 +133,7 @@ class ResearchRecordCvSyncMerge
         foreach ($keys as $sk) {
             $nsSec = $nsMap[$sk] ?? null;
             $rrSec = $rrMap[$sk] ?? null;
+            $sectionStatus = self::compareSideStatus($nsSec, $rrSec, 'section');
             $rows[] = [
                 'id'          => 'section|' . $sk,
                 'kind'        => 'section',
@@ -142,7 +143,7 @@ class ResearchRecordCvSyncMerge
                 'summary_rr'  => self::summarizeSection($rrSec),
                 'has_ns'      => $nsSec !== null,
                 'has_rr'      => $rrSec !== null,
-            ];
+            ] + $sectionStatus;
 
             $nsEnt = self::entriesByKey($nsSec['entries'] ?? []);
             $rrEnt = self::entriesByKey($rrSec['entries'] ?? []);
@@ -152,6 +153,7 @@ class ResearchRecordCvSyncMerge
             foreach ($eKeys as $ek) {
                 $ne = $nsEnt[$ek] ?? null;
                 $re = $rrEnt[$ek] ?? null;
+                $entryStatus = self::compareSideStatus($ne, $re, 'entry');
                 $rows[] = [
                     'id'          => 'entry|' . $sk . '|' . $ek,
                     'kind'        => 'entry',
@@ -162,7 +164,7 @@ class ResearchRecordCvSyncMerge
                     'summary_rr'  => self::summarizeEntry($re),
                     'has_ns'      => $ne !== null,
                     'has_rr'      => $re !== null,
-                ];
+                ] + $entryStatus;
             }
         }
 
@@ -237,6 +239,20 @@ class ResearchRecordCvSyncMerge
                 $eo++;
                 $meta = is_array($pick['metadata'] ?? null) ? $pick['metadata'] : [];
                 $meta['sync_external_key'] = $ek;
+                if ($ec === 'rr') {
+                    $entryForHash = [
+                        'title'             => self::titleWithFallback($pick, $nsEnt[$ek] ?? null),
+                        'organization'      => $pick['organization'] ?? null,
+                        'location'          => $pick['location'] ?? null,
+                        'start_date'        => $pick['start_date'] ?? null,
+                        'end_date'          => $pick['end_date'] ?? null,
+                        'is_current'        => (int) ($pick['is_current'] ?? 0),
+                        'description'       => $pick['description'] ?? null,
+                        'visible_on_public' => (int) ($pick['visible_on_public'] ?? 1),
+                        'metadata'          => $meta,
+                    ];
+                    $meta = self::stampResearchRecordSyncMetadata($meta, $pick, self::sideComparableHash($entryForHash, 'entry'));
+                }
 
                 $entriesOut[] = [
                     'external_key'      => $ek,
@@ -975,9 +991,16 @@ class ResearchRecordCvSyncMerge
                 'end_date'          => null,
                 'is_current'        => 0,
                 'description'       => $desc !== '' ? $desc : null,
-                'metadata'          => json_encode(array_filter($meta, static fn ($v) => $v !== null && $v !== ''), JSON_UNESCAPED_UNICODE),
                 'visible_on_public' => 1,
             ];
+            $meta = self::stampResearchRecordSyncMetadata(
+                $existing !== null
+                    ? array_merge(CvEntryModel::decodeMetadata($existing['metadata'] ?? null), $meta)
+                    : $meta,
+                $pub,
+                self::sideComparableHash($rowData + ['metadata' => $meta], 'entry')
+            );
+            $rowData['metadata'] = json_encode(array_filter($meta, static fn ($v) => $v !== null && $v !== ''), JSON_UNESCAPED_UNICODE);
 
             if ($existing !== null) {
                 $rowData['sort_order'] = (int) ($existing['sort_order'] ?? 0);
@@ -1144,6 +1167,302 @@ class ResearchRecordCvSyncMerge
         }
 
         return $m;
+    }
+
+    /**
+     * Stamp only real user edits in NS. Sync/rebuild flows must not call this.
+     *
+     * @param array<string,mixed> $meta
+     *
+     * @return array<string,mixed>
+     */
+    public static function stampNewScienceContentMetadata(array $meta, ?string $now = null): array
+    {
+        $meta['ns_content_updated_at'] = self::normalizedSyncTime($now ?? date('Y-m-d H:i:s'));
+
+        return $meta;
+    }
+
+    /**
+     * @param array<string,mixed> $meta
+     * @param array<string,mixed> $rrRow
+     *
+     * @return array<string,mixed>
+     */
+    private static function stampResearchRecordSyncMetadata(array $meta, array $rrRow, string $contentHash, ?string $now = null): array
+    {
+        $rrUpdated = self::rawUpdatedAt($rrRow);
+        if ($rrUpdated !== '') {
+            $meta['rr_content_updated_at'] = self::normalizedSyncTime($rrUpdated);
+        }
+
+        $meta['last_synced_at']   = self::normalizedSyncTime($now ?? date('Y-m-d H:i:s'));
+        $meta['last_synced_hash'] = $contentHash;
+        $meta['last_synced_from'] = 'research_record';
+
+        return $meta;
+    }
+
+    private static function normalizedSyncTime(string $value): string
+    {
+        $ts = strtotime($value);
+
+        return $ts === false ? $value : date('Y-m-d H:i:s', $ts);
+    }
+
+    /**
+     * @param array<string,mixed>|null $ns
+     * @param array<string,mixed>|null $rr
+     *
+     * @return array<string,mixed>
+     */
+    private static function compareSideStatus(?array $ns, ?array $rr, string $kind): array
+    {
+        $hasNs    = $ns !== null;
+        $hasRr    = $rr !== null;
+        $presence = $hasNs && $hasRr ? 'both' : ($hasNs ? 'ns_only' : ($hasRr ? 'rr_only' : 'missing'));
+
+        if (! $hasNs || ! $hasRr) {
+            $newerSide = $hasNs ? 'ns' : ($hasRr ? 'rr' : 'unknown');
+
+            return [
+                'presence'        => $presence,
+                'content_status'  => 'unknown',
+                'newer_side'      => $newerSide,
+                'suggested'       => $hasRr ? 'rr' : ($hasNs ? 'ns' : 'skip'),
+                'status_label'    => $hasNs ? 'มีเฉพาะ NS' : ($hasRr ? 'มีเฉพาะ กบศ' : 'ไม่พบข้อมูล'),
+                'updated_at_ns'   => $hasNs ? self::sideUpdatedAt($ns, 'ns') : null,
+                'updated_at_rr'   => $hasRr ? self::sideUpdatedAt($rr, 'rr') : null,
+            ];
+        }
+
+        $nsHash    = self::sideComparableHash($ns, $kind);
+        $rrHash    = self::sideComparableHash($rr, $kind);
+        $same      = $nsHash === $rrHash;
+        $newerSide = $same ? 'same' : self::newerSideBySyncMetadata($ns, $rr, $nsHash, $rrHash);
+
+        return [
+            'presence'        => $presence,
+            'content_status'  => $same ? 'same' : 'differ',
+            'newer_side'      => $newerSide,
+            'suggested'       => in_array($newerSide, ['ns', 'rr'], true) ? $newerSide : ($same ? 'ns' : 'skip'),
+            'status_label'    => self::statusLabel($same, $newerSide),
+            'updated_at_ns'   => self::sideUpdatedAt($ns, 'ns'),
+            'updated_at_rr'   => self::sideUpdatedAt($rr, 'rr'),
+        ];
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     */
+    private static function sideComparableHash(array $row, string $kind): string
+    {
+        $data = $kind === 'section'
+            ? [
+                'type'              => $row['type'] ?? null,
+                'title'             => $row['title'] ?? null,
+                'description'       => $row['description'] ?? null,
+                'visible_on_public' => (int) ($row['visible_on_public'] ?? 1),
+            ]
+            : [
+                'title'             => $row['title'] ?? null,
+                'organization'      => $row['organization'] ?? null,
+                'location'          => $row['location'] ?? null,
+                'start_date'        => $row['start_date'] ?? null,
+                'end_date'          => $row['end_date'] ?? null,
+                'is_current'        => (int) ($row['is_current'] ?? 0),
+                'description'       => $row['description'] ?? null,
+                'visible_on_public' => (int) ($row['visible_on_public'] ?? 1),
+                'metadata'          => self::stripComparableVolatile($row['metadata'] ?? []),
+            ];
+
+        return hash('sha256', (string) json_encode(self::normalizeComparable($data), JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return mixed
+     */
+    private static function normalizeComparable($value)
+    {
+        if (! is_array($value)) {
+            return is_string($value) ? trim(preg_replace('/\s+/u', ' ', $value) ?? '') : $value;
+        }
+
+        ksort($value);
+        foreach ($value as $key => $item) {
+            $value[$key] = self::normalizeComparable($item);
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return mixed
+     */
+    private static function stripComparableVolatile($value)
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        $out = [];
+        foreach ($value as $key => $item) {
+            if (in_array((string) $key, [
+                'sync_external_key',
+                'rr_publication_id',
+                'rr_pull_fingerprint',
+                'ns_content_updated_at',
+                'rr_content_updated_at',
+                'created_at',
+                'updated_at',
+                'retrieved_at',
+                'last_synced_at',
+                'last_synced_hash',
+                'last_synced_from',
+                'source',
+            ], true)) {
+                continue;
+            }
+            $out[$key] = self::stripComparableVolatile($item);
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param array<string,mixed> $ns
+     * @param array<string,mixed> $rr
+     */
+    private static function newerSideBySyncMetadata(array $ns, array $rr, string $nsHash, string $rrHash): string
+    {
+        $nsMeta     = self::syncMetadata($ns);
+        $lastHash   = trim((string) ($nsMeta['last_synced_hash'] ?? ''));
+        $lastSynced = self::timestampFromValue($nsMeta['last_synced_at'] ?? null);
+
+        $nsChanged = null;
+        if ($lastHash !== '' && hash_equals($lastHash, $nsHash)) {
+            $nsChanged = false;
+        } elseif ($lastSynced !== null) {
+            $nsEditedAt = self::timestampFromValue($nsMeta['ns_content_updated_at'] ?? null);
+            $nsChanged = $nsEditedAt !== null ? $nsEditedAt > $lastSynced : null;
+        }
+
+        $rrChanged = null;
+        if ($lastHash !== '' && hash_equals($lastHash, $rrHash)) {
+            $rrChanged = false;
+        } elseif ($lastSynced !== null) {
+            $rrEditedAt = self::timestampFromValue(self::contentUpdatedAt($rr, 'rr'));
+            $rrChanged = $rrEditedAt !== null ? $rrEditedAt > $lastSynced : null;
+        }
+
+        if ($nsChanged === true && $rrChanged === true) {
+            return 'conflict';
+        }
+        if ($nsChanged === true && $rrChanged !== true) {
+            return 'ns';
+        }
+        if ($rrChanged === true && $nsChanged !== true) {
+            return 'rr';
+        }
+
+        $nsTime = self::timestampFromValue(self::contentUpdatedAt($ns, 'ns'));
+        $rrTime = self::timestampFromValue(self::contentUpdatedAt($rr, 'rr'));
+        if ($lastSynced === null && $nsTime !== null && $rrTime !== null && $nsTime !== $rrTime) {
+            return $nsTime > $rrTime ? 'ns' : 'rr';
+        }
+
+        return 'unknown';
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     */
+    private static function sideUpdatedAt(array $row, string $side): ?string
+    {
+        $raw = self::contentUpdatedAt($row, $side);
+        if ($raw === '') {
+            return null;
+        }
+
+        $ts = strtotime($raw);
+
+        return $ts === false ? $raw : date('Y-m-d H:i:s', $ts);
+    }
+
+    private static function timestampFromValue($value): ?int
+    {
+        $raw = trim((string) ($value ?? ''));
+        if ($raw === '') {
+            return null;
+        }
+
+        $ts = strtotime($raw);
+
+        return $ts === false ? null : $ts;
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     */
+    private static function contentUpdatedAt(array $row, string $side): string
+    {
+        $meta = self::syncMetadata($row);
+        if ($side === 'ns' && ! empty($meta['ns_content_updated_at'])) {
+            return (string) $meta['ns_content_updated_at'];
+        }
+        if ($side === 'rr' && ! empty($meta['rr_content_updated_at'])) {
+            return (string) $meta['rr_content_updated_at'];
+        }
+
+        return $side === 'rr' ? self::rawUpdatedAt($row) : '';
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     *
+     * @return array<string,mixed>
+     */
+    private static function syncMetadata(array $row): array
+    {
+        $meta = $row['metadata'] ?? [];
+
+        return is_array($meta) ? $meta : [];
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     */
+    private static function rawUpdatedAt(array $row): string
+    {
+        foreach (['updated_at', 'updatedAt', 'modified_at', 'modifiedAt', 'last_modified_at', 'lastModifiedAt'] as $key) {
+            if (! empty($row[$key])) {
+                return (string) $row[$key];
+            }
+        }
+
+        return '';
+    }
+
+    private static function statusLabel(bool $same, string $newerSide): string
+    {
+        if ($same) {
+            return 'ข้อมูลตรงกัน';
+        }
+        if ($newerSide === 'ns') {
+            return 'NS ใหม่กว่า';
+        }
+        if ($newerSide === 'rr') {
+            return 'กบศ ใหม่กว่า';
+        }
+        if ($newerSide === 'conflict') {
+            return 'แก้ทั้งสองฝั่ง';
+        }
+
+        return 'ข้อมูลต่างกัน (เลือกเอง)';
     }
 
     /**

@@ -61,8 +61,7 @@ class CvBundleCanonical
 
     public static function hashBundle(array $bundle): string
     {
-        $copy = $bundle;
-        unset($copy['retrieved_at'], $copy['source']);
+        $copy = self::stripVolatileHashFields($bundle);
 
         $flags = JSON_UNESCAPED_UNICODE;
         if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
@@ -128,6 +127,7 @@ class CvBundleCanonical
                     'visible_on_public'  => (int) ($e['visible_on_public'] ?? 1),
                     'metadata'           => $meta,
                     'sort_order'         => (int) ($e['sort_order'] ?? 0),
+                    'updated_at'         => $e['updated_at'] ?? null,
                 ];
             }
 
@@ -139,6 +139,7 @@ class CvBundleCanonical
                 'sort_order'        => (int) ($section['sort_order'] ?? 0),
                 'visible_on_public' => (int) ($section['visible_on_public'] ?? 1),
                 'entries'           => $entryRows,
+                'updated_at'        => $section['updated_at'] ?? null,
             ];
         }
 
@@ -335,6 +336,30 @@ class CvBundleCanonical
     private static function norm(string $s): string
     {
         return strtolower(trim(preg_replace('/\s+/', ' ', $s)));
+    }
+
+    /**
+     * Timestamp fields help compare freshness but should not make content hashes change.
+     *
+     * @param mixed $value
+     *
+     * @return mixed
+     */
+    private static function stripVolatileHashFields($value)
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        $out = [];
+        foreach ($value as $key => $item) {
+            if (in_array((string) $key, ['created_at', 'updated_at', 'retrieved_at', 'source'], true)) {
+                continue;
+            }
+            $out[$key] = self::stripVolatileHashFields($item);
+        }
+
+        return $out;
     }
 
     private static function hashSegment(string $s): string

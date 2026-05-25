@@ -159,6 +159,52 @@ class PublicationCatalog
         return ['publication_id' => $publicationId, 'inserted' => $inserted, 'updated' => $updated];
     }
 
+    /**
+     * เมื่อลบรายการผลงานใน CV — ถอนลิงก์ section↔catalog และปิด publication ถ้าไม่มีการอ้างอิงเหลือ
+     * (เพื่อ reconcile/push ไม่ส่งรายการที่ผู้ใช้ลบจาก CV แล้ว)
+     */
+    public static function detachAfterCvEntryDelete(int $personnelId, array $section, array $entry): void
+    {
+        if ($personnelId <= 0 || ! self::isReady()) {
+            return;
+        }
+        if (! in_array((string) ($section['type'] ?? ''), ['research', 'articles'], true)) {
+            return;
+        }
+
+        $meta      = CvEntryModel::decodeMetadata($entry['metadata'] ?? null);
+        $syncKey   = trim((string) ($meta['sync_external_key'] ?? ''));
+        $rrId      = (int) ($meta['rr_publication_id'] ?? 0);
+        $sectionId = (int) ($section['id'] ?? 0);
+
+        $pub = self::findPublicationForCvEntry($entry, $meta, $syncKey, $rrId);
+        if ($pub === null) {
+            return;
+        }
+
+        $publicationId = (int) ($pub['id'] ?? 0);
+        if ($publicationId <= 0) {
+            return;
+        }
+
+        $db = \Config\Database::connect();
+        if ($sectionId > 0 && $db->tableExists('cv_section_publications')) {
+            $db->table('cv_section_publications')
+                ->where('section_id', $sectionId)
+                ->where('publication_id', $publicationId)
+                ->delete();
+        }
+
+        if (self::personnelStillReferencesPublication($personnelId, $publicationId, $syncKey, $rrId)) {
+            return;
+        }
+
+        self::detachPersonnelContributor($personnelId, $publicationId);
+        if (! self::publicationHasAnySectionReference($publicationId)) {
+            (new PublicationModel())->update($publicationId, ['is_active' => 0]);
+        }
+    }
+
     public static function isReady(): bool
     {
         $db = \Config\Database::connect();
@@ -641,5 +687,102 @@ class PublicationCatalog
     private static function normalizeText(string $value): string
     {
         return mb_strtolower(trim(preg_replace('/\s+/u', ' ', $value) ?? ''));
+    }
+
+    /**
+     * @param array<string,mixed> $entry
+     * @param array<string,mixed> $meta
+     *
+     * @return array<string,mixed>|null
+     */
+    private static function findPublicationForCvEntry(array $entry, array $meta, string $syncKey, int $rrId): ?array
+    {
+        if ($syncKey === '') {
+            $syncKey = PublicationIdentity::syncExternalKeyFromMetadata($meta);
+        }
+        if ($syncKey !== '') {
+            $row = (new PublicationModel())->where('sync_external_key', $syncKey)->first();
+
+            return is_array($row) ? $row : null;
+        }
+
+        $pub = PublicationResearchFields::buildPublicationPayloadFromEntry(
+            $entry,
+            $meta,
+            PublicationResearchFields::contributorsFromMetadataOrCatalog($meta)
+        );
+        $pub['rr_publication_id'] = $rrId;
+
+        return self::findPublication($pub, self::externalKeyFromPayload($pub));
+    }
+
+    private static function personnelStillReferencesPublication(int $personnelId, int $publicationId, string $syncKey, int $rrId): bool
+    {
+        $db = \Config\Database::connect();
+        if ($db->tableExists('cv_section_publications') && $db->tableExists('cv_sections')) {
+            $linked = $db->table('cv_section_publications csp')
+                ->join('cv_sections cs', 'cs.id = csp.section_id', 'inner')
+                ->where('cs.personnel_id', $personnelId)
+                ->whereIn('cs.type', ['research', 'articles'])
+                ->where('csp.publication_id', $publicationId)
+                ->countAllResults();
+            if ($linked > 0) {
+                return true;
+            }
+        }
+
+        if (CvEntryModel::isTablePresent($db)) {
+            $sections = (new CvSectionModel())
+                ->where('personnel_id', $personnelId)
+                ->whereIn('type', ['research', 'articles'])
+                ->findAll();
+            $sectionIds = array_map(static fn (array $s): int => (int) ($s['id'] ?? 0), $sections);
+            $sectionIds = array_values(array_filter($sectionIds, static fn (int $id): bool => $id > 0));
+            if ($sectionIds !== []) {
+                $entries = (new CvEntryModel())->whereIn('section_id', $sectionIds)->findAll();
+                foreach ($entries as $row) {
+                    $m = CvEntryModel::decodeMetadata($row['metadata'] ?? null);
+                    if ($rrId > 0 && (int) ($m['rr_publication_id'] ?? 0) === $rrId) {
+                        return true;
+                    }
+                    $ek = trim((string) ($m['sync_external_key'] ?? ''));
+                    if ($syncKey !== '' && $ek === $syncKey) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static function detachPersonnelContributor(int $personnelId, int $publicationId): void
+    {
+        $email = self::emailForPersonnel($personnelId);
+        if ($email === '') {
+            return;
+        }
+
+        $db = \Config\Database::connect();
+        if (! $db->tableExists('publication_contributors')) {
+            return;
+        }
+
+        $db->table('publication_contributors')
+            ->where('publication_id', $publicationId)
+            ->where('contributor_email_norm', $email)
+            ->delete();
+    }
+
+    private static function publicationHasAnySectionReference(int $publicationId): bool
+    {
+        $db = \Config\Database::connect();
+        if (! $db->tableExists('cv_section_publications')) {
+            return false;
+        }
+
+        return $db->table('cv_section_publications')
+            ->where('publication_id', $publicationId)
+            ->countAllResults() > 0;
     }
 }

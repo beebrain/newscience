@@ -91,6 +91,111 @@ final class ResearchRecordCvSyncMergeTest extends CIUnitTestCase
         $this->assertSame('ชื่อผลงานในฐานข้อมูลคณะ', $merged['sections'][0]['entries'][0]['title']);
     }
 
+    public function testBuildMergeRowsFlagsNewScienceNewerFromSyncMetadata(): void
+    {
+        $nsBundle = [
+            'sections' => [[
+                'external_key' => 'section:research',
+                'type'         => 'research',
+                'title'        => 'ผลงานตีพิมพ์',
+                'entries'      => [[
+                    'external_key' => 'entry:paper',
+                    'title'        => 'ชื่อจาก NS',
+                    'organization' => 'Journal',
+                    'metadata'     => [
+                        'last_synced_at'       => '2026-05-24 12:00:00',
+                        'last_synced_hash'     => 'old',
+                        'ns_content_updated_at' => '2026-05-25 12:00:00',
+                    ],
+                ]],
+            ]],
+        ];
+        $rrBundle = [
+            'sections' => [[
+                'external_key' => 'section:research',
+                'type'         => 'research',
+                'title'        => 'ผลงานตีพิมพ์',
+                'entries'      => [[
+                    'external_key' => 'entry:paper',
+                    'title'        => 'ชื่อจาก กบศ',
+                    'organization' => 'Journal',
+                    'updated_at'   => '2026-05-23 12:00:00',
+                    'metadata'     => [],
+                ]],
+            ]],
+        ];
+
+        $rows = ResearchRecordCvSyncMerge::buildMergeRows($nsBundle, $rrBundle);
+        $entryRows = array_values(array_filter($rows, static fn (array $row): bool => ($row['kind'] ?? '') === 'entry'));
+
+        $this->assertSame('differ', $entryRows[0]['content_status']);
+        $this->assertSame('ns', $entryRows[0]['newer_side']);
+        $this->assertSame('ns', $entryRows[0]['suggested']);
+        $this->assertSame('NS ใหม่กว่า', $entryRows[0]['status_label']);
+    }
+
+    public function testBuildMergeRowsFlagsResearchRecordNewerFromSyncMetadata(): void
+    {
+        $rows = ResearchRecordCvSyncMerge::buildMergeRows(
+            $this->bundleWithOneEntry('ชื่อจาก NS', [
+                'last_synced_at'   => '2026-05-24 12:00:00',
+                'last_synced_hash' => 'old',
+            ]),
+            $this->bundleWithOneEntry('ชื่อจาก กบศ', [], '2026-05-25 12:00:00')
+        );
+        $entry = $this->firstEntryRow($rows);
+
+        $this->assertSame('differ', $entry['content_status']);
+        $this->assertSame('rr', $entry['newer_side']);
+        $this->assertSame('rr', $entry['suggested']);
+        $this->assertSame('กบศ ใหม่กว่า', $entry['status_label']);
+    }
+
+    public function testBuildMergeRowsFlagsConflictWhenBothSidesChangedAfterSync(): void
+    {
+        $rows = ResearchRecordCvSyncMerge::buildMergeRows(
+            $this->bundleWithOneEntry('ชื่อจาก NS', [
+                'last_synced_at'        => '2026-05-24 12:00:00',
+                'last_synced_hash'      => 'old',
+                'ns_content_updated_at' => '2026-05-25 09:00:00',
+            ]),
+            $this->bundleWithOneEntry('ชื่อจาก กบศ', [], '2026-05-25 12:00:00')
+        );
+        $entry = $this->firstEntryRow($rows);
+
+        $this->assertSame('conflict', $entry['newer_side']);
+        $this->assertSame('skip', $entry['suggested']);
+        $this->assertSame('แก้ทั้งสองฝั่ง', $entry['status_label']);
+    }
+
+    public function testBuildMergeRowsRequiresManualChoiceWhenTimestampEvidenceIsMissing(): void
+    {
+        $rows = ResearchRecordCvSyncMerge::buildMergeRows(
+            $this->bundleWithOneEntry('ชื่อจาก NS'),
+            $this->bundleWithOneEntry('ชื่อจาก กบศ')
+        );
+        $entry = $this->firstEntryRow($rows);
+
+        $this->assertSame('unknown', $entry['newer_side']);
+        $this->assertSame('skip', $entry['suggested']);
+        $this->assertSame('ข้อมูลต่างกัน (เลือกเอง)', $entry['status_label']);
+    }
+
+    public function testBuildMergeRowsDoesNotTreatDatabaseUpdatedAtAsNewScienceContentEdit(): void
+    {
+        $rows = ResearchRecordCvSyncMerge::buildMergeRows(
+            $this->bundleWithOneEntry('ชื่อจาก NS', [
+                'last_synced_at'   => '2026-05-24 12:00:00',
+                'last_synced_hash' => 'old',
+            ], '2026-05-25 12:00:00'),
+            $this->bundleWithOneEntry('ชื่อจาก กบศ')
+        );
+        $entry = $this->firstEntryRow($rows);
+
+        $this->assertSame('unknown', $entry['newer_side']);
+        $this->assertSame('skip', $entry['suggested']);
+    }
+
     public function testPublicationSectionGroupingPreservesMeaningfulHeadings(): void
     {
         $method = new ReflectionMethod(ResearchRecordCvSyncMerge::class, 'publicationSectionGroupKey');
@@ -207,5 +312,44 @@ final class ResearchRecordCvSyncMergeTest extends CIUnitTestCase
         $this->assertTrue(ResearchRecordCvSyncMerge::isPublicationCvSection(['type' => 'custom', 'title' => 'ผลงานตีพิมพ์']));
         $this->assertFalse(ResearchRecordCvSyncMerge::isPublicationCvSection(['type' => 'custom', 'title' => 'รางวัล']));
         $this->assertFalse(ResearchRecordCvSyncMerge::isPublicationCvSection(['type' => 'work', 'title' => 'ประสบการณ์']));
+    }
+
+    /**
+     * @param array<string,mixed> $metadata
+     *
+     * @return array<string,mixed>
+     */
+    private function bundleWithOneEntry(string $title, array $metadata = [], ?string $updatedAt = null): array
+    {
+        $entry = [
+            'external_key' => 'entry:paper',
+            'title'        => $title,
+            'organization' => 'Journal',
+            'metadata'     => $metadata,
+        ];
+        if ($updatedAt !== null) {
+            $entry['updated_at'] = $updatedAt;
+        }
+
+        return [
+            'sections' => [[
+                'external_key' => 'section:research',
+                'type'         => 'research',
+                'title'        => 'ผลงานตีพิมพ์',
+                'entries'      => [$entry],
+            ]],
+        ];
+    }
+
+    /**
+     * @param list<array<string,mixed>> $rows
+     *
+     * @return array<string,mixed>
+     */
+    private function firstEntryRow(array $rows): array
+    {
+        $entryRows = array_values(array_filter($rows, static fn (array $row): bool => ($row['kind'] ?? '') === 'entry'));
+
+        return $entryRows[0];
     }
 }

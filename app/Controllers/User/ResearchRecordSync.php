@@ -5,6 +5,7 @@ namespace App\Controllers\User;
 use App\Controllers\BaseController;
 use App\Libraries\CvBundleCanonical;
 use App\Libraries\CvProfile;
+use App\Libraries\CvResearchRecordReconcile;
 use App\Libraries\PublicationSyncEngine;
 use App\Libraries\ResearchRecordCvPull;
 use App\Libraries\ResearchRecordCvSyncClient;
@@ -221,6 +222,43 @@ class ResearchRecordSync extends BaseController
 
             return $this->response->setJSON(['success' => false, 'message' => $e->getMessage()]);
         }
+    }
+
+    public function reconcileAll()
+    {
+        if (! $this->request->isAJAX()) {
+            return $this->response->setStatusCode(400);
+        }
+
+        $person = $this->resolveOwnedPersonnel();
+        if ($person === null) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบบุคลากร']);
+        }
+
+        $researchApi = config(ResearchApi::class);
+        if (! $researchApi->syncConfigured()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'ยังไม่ได้ตั้งค่า API กบศ — ตรวจ RESEARCH_API_BASE_URL และ RESEARCH_API_KEY',
+            ]);
+        }
+
+        $personnelId = (int) ($person['id'] ?? 0);
+        $email       = $this->canonicalEmailForPerson($person);
+        $result      = CvResearchRecordReconcile::runFull($personnelId, $email, CvResearchRecordReconcile::TRIGGER_UI);
+
+        return $this->response->setJSON([
+            'success'            => $result['success'] ?? false,
+            'message'            => $result['message'] ?? '',
+            'partial'            => $result['partial'] ?? false,
+            'publications_stats' => is_array($result['publications'] ?? null)
+                ? [
+                    'rr_to_ns' => ($result['publications']['rr_to_ns'] ?? null),
+                    'ns_to_rr' => ($result['publications']['ns_to_rr'] ?? null),
+                ]
+                : null,
+            'pull_stats'         => $result['pull']['publications_stats'] ?? null,
+        ]);
     }
 
     public function pullAll()

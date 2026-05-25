@@ -494,8 +494,12 @@ $pubEntryBase = base_url('dashboard/profile/cv/publication');
                         <?php if ($research_sync_configured): ?>
                             <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-2 shrink-0 max-w-md">
                                 <p class="w-full text-xs text-slate-500 leading-relaxed sm:order-first">
-                                    ผลงานตีพิมพ์ซิงค์อัตโนมัติเมื่อบันทึก — ใช้ปุ่มด้านล่างเมื่อต้องการดึง CV ทั้งชุดจาก <span translate="no">กบศ</span>
+                                    ผลงานซิงค์เมื่อบันทึก — ปุ่ม <strong>ซิงค์ให้ตรงกัน</strong> ดึงจาก กบศ + ส่งผลงาน/การศึกษากลับ (อ่านคำเตือนการลบในหน้าซิงค์ละเอียด)
                                 </p>
+                                <button type="button" id="cv-btn-rr-reconcile"
+                                        class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-[6px] border border-violet-600 bg-violet-600 text-white font-semibold hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 transition-colors sm:order-1">
+                                    ซิงค์ให้ตรงกัน ↔ <span translate="no">กบศ</span>
+                                </button>
                                 <form method="post" action="<?= base_url('dashboard/profile/cv/sync-from-rr') ?>" class="inline-flex sm:order-2"
                                       onsubmit="if (!confirm('ซิงค์จาก กบศ แบบเสริม (รักษาข้อมูลที่กรอกใน ฐานข้อมูลคณะ) ตอนนี้?')) return false; var b=this.querySelector('button[type=submit]'); if (b.dataset.busy==='1') return false; b.dataset.busy='1'; b.disabled=true; b.setAttribute('aria-busy','true'); return true;">
                                     <?= csrf_field() ?>
@@ -1083,6 +1087,30 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         }
         return p;
     }
+
+    (function () {
+        var btn = document.getElementById('cv-btn-rr-reconcile');
+        if (!btn) return;
+        btn.addEventListener('click', async function () {
+            if (!confirm('ซิงค์ให้ ฐานข้อมูลคณะ กับ กบศ ตรงกัน?\n\nดึงจาก กบศ (เสริม) → ซิงค์ผลงาน → ส่งการศึกษา\n\nถ้าลบใน ฐานข้อมูลคณะ แต่ กบศ ยังมี รายการอาจกลับมา')) return;
+            btn.disabled = true;
+            btn.setAttribute('aria-busy', 'true');
+            try {
+                var res = await fetch(<?= json_encode(base_url('dashboard/profile/research-record-sync/reconcile-all'), JSON_UNESCAPED_SLASHES) ?>, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: '{}',
+                    credentials: 'same-origin'
+                });
+                var data = await res.json().catch(function () { return {}; });
+                alert(data.message || (data.success ? 'ซิงค์สำเร็จ' : 'ซิงค์ไม่สำเร็จ'));
+                if (data.success) location.reload();
+            } finally {
+                btn.disabled = false;
+                btn.removeAttribute('aria-busy');
+            }
+        });
+    })();
 
     window.toggleCvSection = function (id) {
         var c = document.getElementById('cv-content-' + id);

@@ -12,7 +12,7 @@ $email = $sync_email ?? '';
                 <div class="w-1 h-6 bg-emerald-600 rounded-full"></div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-800 text-balance">ซิงค์ CV จาก <span translate="no">กบศ</span></h1>
             </div>
-            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — <strong class="text-gray-700">แนวหลัก:</strong> ดึงจาก กบศ มาเสริมฐานข้อมูลคณะ — ปุ่ม <strong>ส่งประวัติการศึกษาและผลงานไป กบศ</strong> ส่งเฉพาะหัวข้อการศึกษา + ผลงานตีพิมพ์ (หัวข้อ CV อื่นบน กบศ คงเดิม)</p>
+            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — ใช้ปุ่ม <strong>ซิงค์ให้ตรงกัน</strong> เมื่อต้องการให้ NS กับ กบศ สอดคล้องกัน (ดึงเสริม → ผลงานสองทาง → ส่งการศึกษา)</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="<?= base_url('dashboard/profile/cv') ?>"
@@ -32,13 +32,25 @@ $email = $sync_email ?? '';
 
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4">
         <?php if ($apiOk): ?>
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-950">
-                <p class="font-semibold mb-1">แนวทางหลัก: ฐานข้อมูลคณะเป็นหลัก — กบศเสริม</p>
-                <p class="text-emerald-900/90">กด <strong>ดึงทั้งหมดจาก กบศ → ฐานข้อมูลคณะ</strong> เพื่อซิงค์แบบเสริม: รักษาข้อมูลที่กรอกใน ฐานข้อมูลคณะ และเพิ่มจากกบศที่ยังไม่มีในระบบ พร้อมนำเข้าผลงานตีพิมพ์ (รายการที่ข้อมูลเท่าเดิมจะไม่เขียนทับซ้ำ)</p>
+            <div class="rounded-xl border border-violet-200 bg-violet-50/80 px-4 py-3 text-sm text-violet-950">
+                <p class="font-semibold mb-1">ซิงค์ให้ตรงกัน (แนะนำ)</p>
+                <p class="text-violet-900/90">ดึง CV แบบเสริม (ฐานข้อมูลคณะเป็นหลัก) → ซิงค์ผลงานสองทาง → ส่งประวัติการศึกษาไป กบศ ใช้เมื่อต้องการให้ทั้งสองระบบใกล้เคียงกันหลังแก้ไขฝั่งใดฝั่งหนึ่ง</p>
+            </div>
+            <div class="rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-950">
+                <p class="font-semibold mb-1">เรื่องการลบ — อ่านก่อนกดซิงค์</p>
+                <ul class="list-disc pl-5 space-y-1 text-amber-900/90">
+                    <li><strong>ลบใน ฐานข้อมูลคณะ</strong> แล้วซิงค์: ถ้า กบศ ยังมีรายการนั้น อาจ<strong>กลับมา</strong>หลังดึงจาก กบศ (ลบผลงานใน CV จะถอนออกจาก catalog ที่ส่งไป กบศ ด้วย)</li>
+                    <li><strong>ลบใน กบศ</strong> อย่างเดียว: ซิงค์อาจ<strong>ไม่ลบ</strong>ใน ฐานข้อมูลคณะ — ต้องลบใน CV หรือเลือกฝั่งในโหมดเปรียบเทียบ</li>
+                    <li>การส่งผลงานเป็น <strong>upsert</strong> — รายการที่ยังอยู่บน กบศ แต่ไม่มีใน catalog อาจยังไม่หายจาก กบศ</li>
+                    <li>อย่ากดซิงค์ซ้ำพร้อมกัน — รอจบรอบก่อน (มีล็อกดึง CV)</li>
+                </ul>
             </div>
         <?php endif; ?>
 
         <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="rrsync-btn-reconcile"
+                    class="px-4 py-2.5 rounded-lg bg-violet-700 text-white text-sm font-semibold hover:bg-violet-800 disabled:opacity-50 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 transition-colors"
+                    <?= $apiOk ? '' : 'disabled' ?>>ซิงค์ให้ตรงกัน (NS ↔ กบศ)</button>
             <button type="button" id="rrsync-btn-pull"
                     class="px-4 py-2.5 rounded-lg bg-emerald-700 text-white text-sm font-semibold hover:bg-emerald-800 disabled:opacity-50 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors"
                     <?= $apiOk ? '' : 'disabled' ?>>ดึงทั้งหมดจาก <span translate="no">กบศ</span></button>
@@ -67,6 +79,7 @@ $email = $sync_email ?? '';
                         <th class="px-3 py-2 font-semibold text-gray-600">หัวข้อ</th>
                         <th class="px-3 py-2 font-semibold text-gray-600">ฐานข้อมูลคณะ</th>
                         <th class="px-3 py-2 font-semibold text-gray-600">กบศ</th>
+                        <th class="px-3 py-2 font-semibold text-gray-600">สถานะ</th>
                         <th class="px-3 py-2 font-semibold text-gray-600">ใช้ฝั่ง</th>
                     </tr>
                 </thead>
@@ -96,10 +109,30 @@ $email = $sync_email ?? '';
     }
 
     function defaultChoice(row) {
+        if (row.suggested) return row.suggested;
         if (row.kind === 'publication') return 'rr';
         if (row.has_rr && !row.has_ns) return 'rr';
         if (row.has_ns && !row.has_rr) return 'ns';
         return 'ns';
+    }
+
+    function statusBadge(row) {
+        var label = row.status_label || 'ไม่ทราบสถานะ';
+        var cls = 'bg-slate-100 text-slate-700 border-slate-200';
+        if (row.content_status === 'same') cls = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+        else if (row.newer_side === 'conflict') cls = 'bg-rose-50 text-rose-800 border-rose-200';
+        else if (row.newer_side === 'ns') cls = 'bg-blue-50 text-blue-800 border-blue-200';
+        else if (row.newer_side === 'rr') cls = 'bg-violet-50 text-violet-800 border-violet-200';
+        else if (row.content_status === 'differ') cls = 'bg-amber-50 text-amber-800 border-amber-200';
+        else if (row.presence === 'ns_only') cls = 'bg-blue-50 text-blue-800 border-blue-200';
+        else if (row.presence === 'rr_only') cls = 'bg-violet-50 text-violet-800 border-violet-200';
+
+        var title = [];
+        if (row.updated_at_ns) title.push('NS: ' + row.updated_at_ns);
+        if (row.updated_at_rr) title.push('กบศ: ' + row.updated_at_rr);
+
+        return '<span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ' + cls + '"' +
+            (title.length ? ' title="' + escapeHtml(title.join(' | ')) + '"' : '') + '>' + escapeHtml(label) + '</span>';
     }
 
     function renderTable() {
@@ -127,6 +160,7 @@ $email = $sync_email ?? '';
                 '<td class="px-3 py-2 font-medium text-gray-900">' + escapeHtml(row.title || '') + '</td>' +
                 '<td class="px-3 py-2 text-gray-600 max-w-xs">' + escapeHtml(row.summary_ns || '—') + '</td>' +
                 '<td class="px-3 py-2 text-gray-600 max-w-xs">' + escapeHtml(row.summary_rr || '—') + '</td>' +
+                '<td class="px-3 py-2 whitespace-nowrap">' + statusBadge(row) + '</td>' +
                 '<td class="px-3 py-2"></td>';
             tr.querySelector('td:last-child').appendChild(sel);
             tb.appendChild(tr);
@@ -190,6 +224,27 @@ $email = $sync_email ?? '';
         setStatus('แฮช ฐานข้อมูลคณะ: ' + (data.ns_hash || '').substring(0, 12) + '… | แฮช กบศ: ' + (data.rr_hash || '').substring(0, 12) + '…');
         renderTable();
         renderPubs();
+    });
+
+    var reconcileConfirm = 'ซิงค์ให้ NS กับ กบศ ตรงกัน?\n\n'
+        + '1) ดึงจาก กบศ แบบเสริม (ข้อมูลที่กรอกใน ฐานข้อมูลคณะเป็นหลัก)\n'
+        + '2) ซิงค์ผลงานสองทาง\n'
+        + '3) ส่งประวัติการศึกษาไป กบศ\n\n'
+        + 'คำเตือน: ถ้าลบใน ฐานข้อมูลคณะ แต่ กบศ ยังมี — รายการอาจกลับมา\n'
+        + 'ถ้าลบใน กบศ อย่างเดียว — รายการอาจยังอยู่ใน ฐานข้อมูลคณะ';
+
+    document.getElementById('rrsync-btn-reconcile') && document.getElementById('rrsync-btn-reconcile').addEventListener('click', async function () {
+        if (!confirm(reconcileConfirm)) return;
+        var btn = this;
+        setStatus('กำลังซิงค์ให้ตรงกัน… (อาจใช้เวลาสักครู่)');
+        btn.disabled = true;
+        try {
+            var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/reconcile-all') ?>', {});
+            setStatus(data.message || (data.success ? 'สำเร็จ' : 'ผิดพลาด'));
+            if (data.success) location.reload();
+        } finally {
+            btn.disabled = false;
+        }
     });
 
     document.getElementById('rrsync-btn-pull') && document.getElementById('rrsync-btn-pull').addEventListener('click', async function () {

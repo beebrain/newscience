@@ -122,6 +122,7 @@ $routes->get('/dashboard/profile/research-record-sync', 'User\ResearchRecordSync
 $routes->post('/dashboard/profile/research-record-sync/compare', 'User\ResearchRecordSync::compare', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/research-record-sync/apply', 'User\ResearchRecordSync::apply', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/research-record-sync/pull-all', 'User\ResearchRecordSync::pullAll', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/research-record-sync/reconcile-all', 'User\ResearchRecordSync::reconcileAll', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/research-record-sync/push-all', 'User\ResearchRecordSync::pushAll', ['filter' => 'loggedin']);
 $routes->get('/go-research-record', 'Admin\Auth::goResearchRecord', ['filter' => 'loggedin']);
 $routes->post('/admin/impersonation/stop', 'Admin\Impersonation::stop', ['filter' => ['loggedin', 'csrf']]);
