@@ -270,7 +270,7 @@ $superAdminMemberPortal = ($userRole === 'super_admin') && session()->get(\App\C
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        window.BASE_URL = '<?= base_url() ?>';
+        window.BASE_URL = <?= json_encode(rtrim((string) base_url(), '/')) ?>;
 
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {

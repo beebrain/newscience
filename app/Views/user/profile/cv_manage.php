@@ -1062,8 +1062,18 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
 <?php endif; ?>
 <script>
 (function () {
-    window.CV_CSRF = { name: '<?= esc($csrfName, 'js') ?>', hash: '<?= esc($csrfHash, 'js') ?>' };
+    window.CV_CSRF = <?= json_encode(['name' => $csrfName, 'hash' => $csrfHash], JSON_UNESCAPED_UNICODE) ?>;
     var CV_PUB_PAGE_BASE = <?= json_encode($pubEntryBase, JSON_UNESCAPED_SLASHES) ?>;
+    var CV_API = <?= json_encode([
+        'entry'          => base_url('dashboard/profile/cv/entry'),
+        'entryDelete'    => base_url('dashboard/profile/cv/entry/delete'),
+        'sectionDelete'  => base_url('dashboard/profile/cv/section/delete'),
+        'sectionToggle'  => base_url('dashboard/profile/cv/section/toggle'),
+        'entryToggle'    => base_url('dashboard/profile/cv/entry/toggle'),
+        'sectionReorder' => base_url('dashboard/profile/cv/section/reorder'),
+        'entryReorder'   => base_url('dashboard/profile/cv/entry/reorder'),
+        'orcidImport'    => base_url('dashboard/profile/cv/orcid/import'),
+    ], JSON_UNESCAPED_SLASHES) ?>;
 
     function csrfBody(extra) {
         var p = new URLSearchParams();
@@ -1356,7 +1366,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     }
 
     window.editCvEntry = async function (sectionId, entryId) {
-        var url = '<?= base_url('dashboard/profile/cv/entry') ?>/' + entryId;
+        var url = CV_API.entry + '/' + entryId;
         var res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         var data = await res.json();
         if (!data.success || !data.entry) {
@@ -1386,7 +1396,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         }
         if (!ok) return;
         var p = csrfBody();
-        await fetch('<?= base_url('dashboard/profile/cv/entry/delete') ?>/' + entryId, {
+        await fetch(CV_API.entryDelete + '/' + entryId, {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
             body: p.toString()
@@ -1403,7 +1413,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         }
         if (!ok) return;
         var p = csrfBody();
-        await fetch('<?= base_url('dashboard/profile/cv/section/delete') ?>/' + sectionId, {
+        await fetch(CV_API.sectionDelete + '/' + sectionId, {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
             body: p.toString()
@@ -1415,7 +1425,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         if (el) el.disabled = true;
         try {
             var p = csrfBody();
-            var res = await fetch('<?= base_url('dashboard/profile/cv/section/toggle') ?>/' + sectionId, {
+            var res = await fetch(CV_API.sectionToggle + '/' + sectionId, {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: p.toString()
@@ -1435,7 +1445,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         if (el) el.disabled = true;
         try {
             var p = csrfBody();
-            var res = await fetch('<?= base_url('dashboard/profile/cv/entry/toggle') ?>/' + entryId, {
+            var res = await fetch(CV_API.entryToggle + '/' + entryId, {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: p.toString()
@@ -1471,7 +1481,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
                         return { id: el.dataset.sectionId, order: i };
                     });
                     var p = csrfBody({ order: JSON.stringify(order) });
-                    await fetch('<?= base_url('dashboard/profile/cv/section/reorder') ?>', {
+                    await fetch(CV_API.sectionReorder, {
                         method: 'POST',
                         headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: p.toString()
@@ -1493,7 +1503,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
                         return { id: el.dataset.entryId, order: i };
                     });
                     var p = csrfBody({ section_id: sectionId, order: JSON.stringify(order) });
-                    await fetch('<?= base_url('dashboard/profile/cv/entry/reorder') ?>', {
+                    await fetch(CV_API.entryReorder, {
                         method: 'POST',
                         headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: p.toString()
@@ -1564,7 +1574,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         if (btn) { btn.disabled = true; btn.textContent = 'กำลังดึงข้อมูล…'; }
         try {
             var p = csrfBody({ orcid_id: id, scopes: scopes.join(',') });
-            var res = await fetch('<?= base_url('dashboard/profile/cv/orcid/import') ?>', {
+            var res = await fetch(CV_API.orcidImport, {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: p.toString()
