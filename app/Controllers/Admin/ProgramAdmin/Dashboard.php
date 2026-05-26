@@ -296,6 +296,94 @@ class Dashboard extends BaseController
     /**
      * Update program page content
      */
+    private function normalizeJsonList($raw, array $allowedKeys, int $maxItems = 20): string
+    {
+        if (! is_string($raw) || trim($raw) === '') {
+            return '[]';
+        }
+
+        $decoded = json_decode($raw, true);
+        if (! is_array($decoded)) {
+            return '[]';
+        }
+
+        $out = [];
+        foreach ($decoded as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $clean = [];
+            $hasValue = false;
+            foreach ($allowedKeys as $key) {
+                $value = trim((string) ($row[$key] ?? ''));
+                if ($value !== '') {
+                    $hasValue = true;
+                }
+                $clean[$key] = mb_substr($value, 0, 2000);
+            }
+            if ($hasValue) {
+                $out[] = $clean;
+            }
+            if (count($out) >= $maxItems) {
+                break;
+            }
+        }
+
+        return json_encode($out, JSON_UNESCAPED_UNICODE);
+    }
+
+    private function normalizeCurriculumCreditStructure($raw): string
+    {
+        if (! is_string($raw) || trim($raw) === '') {
+            return '[]';
+        }
+
+        $decoded = json_decode($raw, true);
+        if (! is_array($decoded)) {
+            return '[]';
+        }
+
+        $out = [];
+        foreach ($decoded as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $label = trim((string) ($row['label'] ?? ''));
+            $credits = trim((string) ($row['credits'] ?? ''));
+            $note = trim((string) ($row['note'] ?? ''));
+            if ($label === '' && $credits === '' && $note === '') {
+                continue;
+            }
+            $out[] = [
+                'label' => mb_substr($label, 0, 200),
+                'credits' => mb_substr($credits, 0, 50),
+                'note' => mb_substr($note, 0, 500),
+            ];
+            if (count($out) >= 20) {
+                break;
+            }
+        }
+
+        return json_encode($out, JSON_UNESCAPED_UNICODE);
+    }
+
+    private function normalizeProgramSocialLinks($raw): string
+    {
+        $decoded = is_string($raw) && trim($raw) !== '' ? json_decode($raw, true) : [];
+        if (! is_array($decoded)) {
+            $decoded = [];
+        }
+
+        $facebook = trim((string) ($decoded['facebook'] ?? ''));
+        if ($facebook !== '' && ! preg_match('#^https?://#i', $facebook)) {
+            $facebook = 'https://' . $facebook;
+        }
+
+        return json_encode([
+            'facebook' => mb_substr($facebook, 0, 500),
+        ], JSON_UNESCAPED_UNICODE);
+    }
+
     public function updatePage($programId)
     {
         $isAjax = $this->request->isAJAX();
@@ -315,10 +403,13 @@ class Dashboard extends BaseController
         $rules = [
             'philosophy' => 'max_length[5000]',
             'objectives' => 'max_length[20000]',
+            'program_identity' => 'max_length[10000]',
             'graduate_profile' => 'max_length[20000]',
             'elos_json' => 'max_length[65000]',
+            'ylo_json' => 'max_length[65000]',
             'learning_standards_json' => 'max_length[65000]',
             'curriculum_json' => 'max_length[65000]',
+            'curriculum_credit_structure_json' => 'max_length[65000]',
             'curriculum_structure' => 'max_length[10000]',
             'study_plan' => 'max_length[10000]',
             'course_details' => 'max_length[10000]',
@@ -328,6 +419,7 @@ class Dashboard extends BaseController
             'admission_info' => 'max_length[5000]',
             'contact_info' => 'max_length[5000]',
             'intro_video_url' => 'max_length[500]',
+            'social_links' => 'max_length[5000]',
             'meta_description' => 'max_length[500]',
         ];
 
@@ -343,14 +435,20 @@ class Dashboard extends BaseController
         $tuitionFeesJson = tuition_fees_json_normalize($this->request->getPost('tuition_fees_json'));
         $objectivesStored = overview_lines_normalize($this->request->getPost('objectives'));
         $graduateStored = overview_lines_normalize($this->request->getPost('graduate_profile'));
+        $yloJson = $this->normalizeJsonList($this->request->getPost('ylo_json'), ['year', 'title', 'detail'], 12);
+        $creditStructureJson = $this->normalizeCurriculumCreditStructure($this->request->getPost('curriculum_credit_structure_json'));
+        $socialLinksJson = $this->normalizeProgramSocialLinks($this->request->getPost('social_links'));
 
         $updateData = [
             'philosophy' => $this->request->getPost('philosophy'),
             'objectives' => $objectivesStored,
+            'program_identity' => $this->request->getPost('program_identity'),
             'graduate_profile' => $graduateStored,
             'elos_json' => $this->request->getPost('elos_json'),
+            'ylo_json' => $yloJson,
             'learning_standards_json' => $this->request->getPost('learning_standards_json'),
             'curriculum_json' => $this->request->getPost('curriculum_json'),
+            'curriculum_credit_structure_json' => $creditStructureJson,
             'curriculum_structure' => $this->request->getPost('curriculum_structure'),
             'study_plan' => $this->request->getPost('study_plan'),
             'course_details' => $this->request->getPost('course_details'),
@@ -360,6 +458,7 @@ class Dashboard extends BaseController
             'admission_info' => $this->request->getPost('admission_info'),
             'contact_info' => $this->request->getPost('contact_info'),
             'intro_video_url' => $this->request->getPost('intro_video_url'),
+            'social_links' => $socialLinksJson,
             'meta_description' => $this->request->getPost('meta_description'),
             'is_published' => $this->request->getPost('is_published') ? 1 : 0,
         ];

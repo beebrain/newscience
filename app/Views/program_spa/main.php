@@ -101,6 +101,10 @@
                     <h2 id="about-philosophy-heading" class="text-4xl font-bold text-primary mb-8 leading-tight hidden">ปรัชญาและวัตถุประสงค์</h2>
                     <div id="about-philosophy-rule" class="section-rule mb-8 hidden"></div>
                     <p id="philosophy-text" class="text-lg text-on-surface-variant leading-relaxed mb-6 font-light hidden"></p>
+                    <div id="program-identity-wrap" class="hidden mt-8 p-8 bg-surface-alt border border-outline-variant/50 rounded-sm">
+                        <h3 class="text-xl font-bold text-primary mb-4">อัตลักษณ์ของหลักสูตร</h3>
+                        <div id="program-identity-text" class="text-on-surface-variant leading-relaxed font-light"></div>
+                    </div>
                 </div>
                 <div id="objective-cards" class="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-8"></div>
             </div>
@@ -110,7 +114,7 @@
     <section id="plo-elo" class="py-28 md:py-32 bg-white w-full border-t border-outline-variant/30">
         <div class="max-w-[1280px] mx-auto px-8">
             <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-primary mb-6">มาตรฐานการเรียนรู้ 5 ด้าน</h2>
+                <h2 class="text-4xl font-bold text-primary mb-6">มาตรฐานการเรียนรู้ / TQF</h2>
                 <div class="section-rule mx-auto mb-6"></div>
                 <p class="text-on-surface-variant text-sm md:text-base max-w-3xl mx-auto font-light">มาตรฐานการเรียนรู้ตามกรอบมาตรฐานคุณวุฒิระดับอุดมศึกษาแห่งชาติ (TQF) — OBE / AUN-QA</p>
             </div>
@@ -118,7 +122,7 @@
             <div id="plo-elo-body" class="space-y-16">
                 <div id="plo-intro-wrap" class="hidden max-w-4xl mx-auto text-on-surface-variant leading-relaxed text-lg font-light border border-outline-variant/40 rounded-sm bg-surface p-8 md:p-10 shadow-elegant"></div>
                 <div id="domains-section" class="hidden">
-                    <h3 class="text-2xl font-bold text-primary text-center mb-10">มาตรฐานการเรียนรู้ (5 ด้าน)</h3>
+                    <h3 class="text-2xl font-bold text-primary text-center mb-10">มาตรฐานการเรียนรู้</h3>
                     <div id="domains-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
                 </div>
                 <div id="ls-section" class="hidden">
@@ -167,6 +171,7 @@
                 <h2 class="text-4xl font-bold text-primary mb-6">โครงสร้างหลักสูตรและรายวิชา</h2>
                 <div class="section-rule mx-auto mb-6"></div>
             </div>
+            <div id="credit-structure-wrap" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10"></div>
             <div class="bg-surface rounded-sm shadow-elegant border border-outline-variant/40 overflow-hidden">
                 <div id="curriculum-empty" class="hidden p-12 md:p-16"></div>
                 <div id="curriculum-loaded">
@@ -231,6 +236,16 @@
                 <p class="text-on-surface-variant max-w-2xl mx-auto">เอกสารและไฟล์แนบจากหลักสูตร — อัปโหลดผ่านระบบจัดการหลักสูตร</p>
             </div>
             <div id="documents-list" class="max-w-3xl mx-auto space-y-4"></div>
+        </div>
+    </section>
+
+    <section id="program-news" class="py-28 bg-white w-full border-t border-outline-variant/30 hidden">
+        <div class="max-w-[1280px] mx-auto px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-primary mb-6">ข่าวของหลักสูตร</h2>
+                <div class="section-rule mx-auto mb-6"></div>
+            </div>
+            <div id="program-news-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
         </div>
     </section>
 
@@ -304,9 +319,7 @@
                             <?php if ($footer_website !== '') : ?>
                                 <a href="<?= esc($footer_website, 'attr') ?>" class="inline-flex items-center px-4 py-2 rounded-sm border border-white/30 text-sm hover:bg-white/10" target="_blank" rel="noopener noreferrer">เว็บไซต์คณะ</a>
                             <?php endif; ?>
-                            <?php if ($footer_facebook !== '') : ?>
-                                <a href="<?= esc($footer_facebook, 'attr') ?>" class="inline-flex items-center px-4 py-2 rounded-sm border border-white/30 text-sm hover:bg-white/10" target="_blank" rel="noopener noreferrer">Facebook</a>
-                            <?php endif; ?>
+                            <a id="footer-facebook-link" href="<?= esc($footer_facebook, 'attr') ?>" class="<?= $footer_facebook === '' ? 'hidden ' : '' ?>inline-flex items-center px-4 py-2 rounded-sm border border-white/30 text-sm hover:bg-white/10" target="_blank" rel="noopener noreferrer">Facebook</a>
                         </p>
                     </div>
                     <?php if ($footer_phone === '' && $footer_email === '' && $footer_address_th === '' && $footer_fax === '') : ?>
@@ -434,7 +447,7 @@
     function renderNavLinks() {
         var spec = [
             ['#about',                'ปรัชญาและวัตถุประสงค์'],
-            ['#plo-elo',              'มาตรฐานการเรียนรู้ 5 ด้าน'],
+            ['#plo-elo',              'มาตรฐานการเรียนรู้ / TQF'],
             ['#curriculum',           'โครงสร้างหลักสูตรและรายวิชา'],
             ['#faculty',              'คณาจารย์และบุคลากร'],
             ['#graduate-journey',     'ผลลัพธ์การเรียนรู้รายชั้นปี (YLOs)'],
@@ -443,6 +456,7 @@
             ['#careers',              'อาชีพที่สามารถประกอบได้'],
             ['#admission-requirements','คุณสมบัติของผู้เข้าเรียน'],
             ['#documents',            'เอกสารดาวน์โหลด'],
+            ['#program-news',         'ข่าวของหลักสูตร'],
             ['#learning-supports',    'สิ่งสนับสนุนการเรียนการสอน'],
             ['#contact',              'การติดต่อ']
         ];
@@ -577,18 +591,40 @@
                 hrefEsc + '" target="_blank" rel="noopener noreferrer">' +
                 esc(wurl) + '</a>');
         }
+        var fb = programFacebookUrl(dRef || {});
+        if (fb !== '') {
+            parts.push('<a class="bg-transparent border border-white/30 text-white px-10 py-4 rounded-sm text-sm hover:bg-white/10 transition-colors font-semibold" href="' +
+                esc(fb) + '" target="_blank" rel="noopener noreferrer">Facebook หลักสูตร</a>');
+        }
 
         document.getElementById('hero-actions').innerHTML = parts.join('');
     }
 
     function graduatePairs(d) {
-        var p = nonEmpty(d.graduate_profile_list);
-        if (!p.length) p = listFromString(d.graduate_profile);
+        var ylo = Array.isArray(d.ylo) ? d.ylo : [];
         var out = [];
-        for (var i = 0; i + 1 < p.length; i += 2) {
-            out.push({ headline: text(p[i]), detail: text(p[i + 1]) });
+        ylo.forEach(function (row) {
+            if (!row) return;
+            var year = text(row.year);
+            var title = text(row.title);
+            var detail = text(row.detail);
+            if (year || title || detail) {
+                out.push({ year: year, headline: title || year, detail: detail });
+            }
+        });
+        if (!out.length) {
+            var p = nonEmpty(d.graduate_profile_list);
+            if (!p.length) p = listFromString(d.graduate_profile);
+            for (var i = 0; i + 1 < p.length; i += 2) {
+                out.push({ year: '', headline: text(p[i]), detail: text(p[i + 1]) });
+            }
         }
         return out;
+    }
+
+    function programFacebookUrl(d) {
+        var social = d && d.social_links && typeof d.social_links === 'object' ? d.social_links : {};
+        return text(social.facebook);
     }
 
     var dRef = null;
@@ -605,6 +641,18 @@
             phEl.innerHTML = '';
             phEl.classList.add('hidden');
         }
+        var identity = text(d.program_identity);
+        var identityWrap = document.getElementById('program-identity-wrap');
+        var identityText = document.getElementById('program-identity-text');
+        if (identityWrap && identityText) {
+            if (identity) {
+                identityText.innerHTML = rich(identity);
+                identityWrap.classList.remove('hidden');
+            } else {
+                identityText.innerHTML = '';
+                identityWrap.classList.add('hidden');
+            }
+        }
 
         var objSource = nonEmpty(d.objectives_list);
         if (!objSource.length) objSource = listFromString(d.vision);
@@ -616,7 +664,7 @@
         });
         document.getElementById('objective-cards').innerHTML = cards.join('');
 
-        var showAbout = !!phi || cards.length > 0;
+        var showAbout = !!phi || !!identity || cards.length > 0;
         showEl('about', showAbout);
     }
 
@@ -667,9 +715,13 @@
         gridEl.innerHTML = pairs.map(function (pair, i) {
             var raw = pair.headline;
             var yearLabel = '';
-            var mYear = /^ชั้นปีที่\s*\d+/i.exec(raw);
-            if (mYear) yearLabel = mYear[0].trim();
-            var titleRest = raw.replace(/^ชั้นปีที่\s*\d+\s*/i, '').trim() || raw;
+            if (pair.year) {
+                yearLabel = pair.year;
+            } else {
+                var mYear = /^ชั้นปีที่\s*\d+/i.exec(raw);
+                if (mYear) yearLabel = mYear[0].trim();
+            }
+            var titleRest = pair.year ? raw : (raw.replace(/^ชั้นปีที่\s*\d+\s*/i, '').trim() || raw);
             return '<div class="relative bg-surface p-10 rounded-sm shadow-elegant border border-outline-variant/40 flex flex-col items-center text-center">' +
                 '<div class="w-20 h-20 rounded-full bg-surface-alt border border-outline-variant text-primary flex items-center justify-center mb-6">' +
                 svgIcon(jIcons[i % jIcons.length], 'w-9 h-9') + '</div>' +
@@ -697,6 +749,27 @@
         emptyEl.innerHTML = '';
         emptyEl.classList.add('hidden');
         wrap.classList.remove('hidden');
+        var creditWrap = document.getElementById('credit-structure-wrap');
+        var creditRows = Array.isArray(d.curriculum_credit_structure) ? d.curriculum_credit_structure.filter(function (row) {
+            return !!(row && (text(row.label) || text(row.credits) || text(row.note)));
+        }) : [];
+        if (creditWrap) {
+            if (creditRows.length) {
+                creditWrap.classList.remove('hidden');
+                creditWrap.innerHTML = creditRows.map(function (row) {
+                    var credits = text(row.credits);
+                    return '<article class="bg-surface p-6 rounded-sm shadow-elegant border border-outline-variant/40 text-center">' +
+                        '<h3 class="text-sm font-semibold text-on-surface-variant mb-2">' + esc(text(row.label) || 'หมวดรายวิชา') + '</h3>' +
+                        '<p class="text-3xl font-bold text-primary">' + esc(credits || '—') + '</p>' +
+                        '<p class="text-xs text-gold font-semibold mt-1">หน่วยกิต</p>' +
+                        (text(row.note) ? '<p class="text-xs text-on-surface-variant mt-3 leading-relaxed">' + esc(text(row.note)) + '</p>' : '') +
+                        '</article>';
+                }).join('');
+            } else {
+                creditWrap.innerHTML = '';
+                creditWrap.classList.add('hidden');
+            }
+        }
         var plan = d.curriculum;
         document.getElementById('year-tabs').innerHTML = plan.map(function (y, i) {
             return '<button type="button" class="year-tab flex-1 py-6 px-6 text-sm font-semibold text-center border-b-2 transition-all ' +
@@ -727,7 +800,7 @@
                     '<div class="overflow-x-auto"><table class="w-full text-left">' +
                     '<thead><tr class="border-b border-outline-variant/30 text-xs text-on-surface-variant">' +
                     '<th class="pb-6 font-semibold">รหัสวิชา</th><th class="pb-6 font-semibold">ชื่อรายวิชา</th>' +
-                    '<th class="pb-6 font-semibold text-right">หน่วยกิจ</th></tr></thead>' +
+                    '<th class="pb-6 font-semibold text-right">หน่วยกิต</th></tr></thead>' +
                     '<tbody class="text-base font-light">' + rows + '</tbody></table></div></div>';
             }).join('');
             return '<div class="year-panel ' + (yi === 0 ? 'block' : 'hidden') +
@@ -1059,6 +1132,35 @@
         }
     }
 
+    function renderProgramNews(d) {
+        var section = document.getElementById('program-news');
+        var grid = document.getElementById('program-news-grid');
+        if (!section || !grid) return;
+        var news = Array.isArray(d.news) ? d.news.filter(function (n) {
+            return !!(n && text(n.title));
+        }) : [];
+        if (!news.length) {
+            grid.innerHTML = '';
+            section.classList.add('hidden');
+            return;
+        }
+        section.classList.remove('hidden');
+        grid.innerHTML = news.slice(0, 6).map(function (n) {
+            var url = text(n.url) || (<?= json_encode(base_url('news/')) ?> + encodeURIComponent(n.id || ''));
+            var image = text(n.image_url || n.image || n.featured_image || n.thumbnail || '');
+            var excerpt = text(n.excerpt || n.summary || '');
+            var date = text(n.published_at_formatted || n.created_at_formatted || n.published_at || '');
+            return '<article class="bg-surface rounded-sm shadow-elegant border border-outline-variant/40 overflow-hidden hover:border-gold/30 transition-colors">' +
+                (image ? '<a href="' + esc(url) + '"><img src="' + esc(image) + '" alt="" class="w-full h-48 object-cover"></a>' : '') +
+                '<div class="p-8">' +
+                (date ? '<p class="text-xs text-gold font-semibold mb-3">' + esc(date) + '</p>' : '') +
+                '<h3 class="text-xl font-bold text-primary leading-snug mb-3"><a href="' + esc(url) + '" class="hover:text-red-accent">' + esc(text(n.title)) + '</a></h3>' +
+                (excerpt ? '<p class="text-sm text-on-surface-variant leading-relaxed font-light mb-5">' + esc(excerpt) + '</p>' : '') +
+                '<a href="' + esc(url) + '" class="text-sm font-semibold text-red-accent hover:text-primary">อ่านต่อ</a>' +
+                '</div></article>';
+        }).join('');
+    }
+
     function renderCareers(d) {
         var grid = document.getElementById('careers-grid');
         var emptyEl = document.getElementById('careers-empty');
@@ -1134,6 +1236,13 @@
         } else {
             el.innerHTML = '<p class="text-white/60 leading-relaxed">' + esc(LABEL_NO_PROGRAM_CONTACT) + '</p>';
         }
+        var fb = programFacebookUrl(d);
+        var fbLink = document.getElementById('footer-facebook-link');
+        if (fbLink && fb) {
+            fbLink.href = fb;
+            fbLink.textContent = 'Facebook หลักสูตร';
+            fbLink.classList.remove('hidden');
+        }
     }
 
     function renderData(d) {
@@ -1149,6 +1258,7 @@
         renderCareers(d);
         renderAdmissionRequirements(d);
         renderDocuments(d);
+        renderProgramNews(d);
         renderSupports(d);
         updateHeroAnchors();
         bindTabs();

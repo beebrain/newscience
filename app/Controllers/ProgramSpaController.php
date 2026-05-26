@@ -56,6 +56,10 @@ class ProgramSpaController extends BaseController
             'course_details' => '',
             'graduation_requirements' => '',
             'contact_info' => '',
+            'program_identity' => '',
+            'social_links' => '',
+            'ylo_json' => '',
+            'curriculum_credit_structure_json' => '',
         ];
     }
 
@@ -357,6 +361,50 @@ class ProgramSpaController extends BaseController
         $objectivesList = overview_text_lines_from_db($page['objectives'] ?? null);
         $graduateProfileList = overview_text_lines_from_db($page['graduate_profile'] ?? null);
         $admissionDetails = admission_details_decode($page['admission_details_json'] ?? null);
+        $ylo = [];
+        $yloRaw = $page['ylo_json'] ?? '';
+        if (is_string($yloRaw) && trim($yloRaw) !== '') {
+            $decodedYlo = json_decode($yloRaw, true);
+            if (is_array($decodedYlo)) {
+                foreach ($decodedYlo as $row) {
+                    if (! is_array($row)) {
+                        continue;
+                    }
+                    $year = trim((string) ($row['year'] ?? ''));
+                    $title = trim((string) ($row['title'] ?? ''));
+                    $detail = trim((string) ($row['detail'] ?? ''));
+                    if ($year !== '' || $title !== '' || $detail !== '') {
+                        $ylo[] = ['year' => $year, 'title' => $title, 'detail' => $detail];
+                    }
+                }
+            }
+        }
+        $creditStructure = [];
+        $creditRaw = $page['curriculum_credit_structure_json'] ?? '';
+        if (is_string($creditRaw) && trim($creditRaw) !== '') {
+            $decodedCredits = json_decode($creditRaw, true);
+            if (is_array($decodedCredits)) {
+                foreach ($decodedCredits as $row) {
+                    if (! is_array($row)) {
+                        continue;
+                    }
+                    $label = trim((string) ($row['label'] ?? ''));
+                    $credits = trim((string) ($row['credits'] ?? ''));
+                    $note = trim((string) ($row['note'] ?? ''));
+                    if ($label !== '' || $credits !== '' || $note !== '') {
+                        $creditStructure[] = ['label' => $label, 'credits' => $credits, 'note' => $note];
+                    }
+                }
+            }
+        }
+        $socialLinks = ['facebook' => ''];
+        $socialRaw = $page['social_links'] ?? '';
+        if (is_string($socialRaw) && trim($socialRaw) !== '') {
+            $decodedSocial = json_decode($socialRaw, true);
+            if (is_array($decodedSocial)) {
+                $socialLinks['facebook'] = trim((string) ($decodedSocial['facebook'] ?? ''));
+            }
+        }
 
         $data = [
             'id'                   => $id,
@@ -375,11 +423,14 @@ class ProgramSpaController extends BaseController
             'text_color'            => !empty($page['text_color']) ? $page['text_color'] : null,
             'background_color'     => !empty($page['background_color']) ? $page['background_color'] : null,
             'philosophy'           => $page['philosophy'] ?? '',
+            'program_identity'     => $page['program_identity'] ?? '',
             'vision'               => $page['objectives'] ?? '',
             'objectives_list'     => $objectivesList,
             'graduate_profile'     => $page['graduate_profile'] ?? '',
             'graduate_profile_list' => $graduateProfileList,
+            'ylo'                  => $ylo,
             'curriculum_structure'  => $page['curriculum_structure'] ?? '',
+            'curriculum_credit_structure' => $creditStructure,
             'study_plan'           => $page['study_plan'] ?? '',
             'course_details'       => $page['course_details'] ?? '',
             'graduation_requirements' => $page['graduation_requirements'] ?? '',
@@ -390,6 +441,7 @@ class ProgramSpaController extends BaseController
             'admission_info'       => $page['admission_info'] ?? '',
             'admission_details'    => $admissionDetails,
             'contact_info'         => $page['contact_info'] ?? '',
+            'social_links'         => $socialLinks,
             'intro_video_url'      => $page['intro_video_url'] ?? '',
             'elos'                 => $elos,
             'learning_standards'   => $learningStandards,

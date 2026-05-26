@@ -275,6 +275,11 @@
                     <div id="content-sub-overview" class="content-subpanel active" role="tabpanel">
                         <?php helper('overview_lists');
                         $overview_objectives_init = overview_text_lines_from_db($program_page['objectives'] ?? null);
+                        $ylo_initial = [];
+                        if (! empty($program_page['ylo_json'])) {
+                            $decodedYlo = json_decode($program_page['ylo_json'], true);
+                            if (is_array($decodedYlo)) { $ylo_initial = $decodedYlo; }
+                        }
                         ?>
                         <div class="form-section">
                             <h4 class="form-section-title">ภาพรวมหลักสูตร</h4>
@@ -291,13 +296,27 @@
                             <button type="button" class="btn btn-outline btn-sm" id="objectives-line-add" style="margin-top:0.5rem">+ เพิ่มข้อ</button>
                             <textarea name="objectives" id="objectives" class="ol-serialized" hidden aria-hidden="true"></textarea>
                         </div>
+
+                        <div class="form-group">
+                            <label for="program_identity" class="form-label">อัตลักษณ์ของหลักสูตร</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">ระบุจุดเด่นหรืออัตลักษณ์เฉพาะของหลักสูตร ถ้าไม่มีให้เว้นว่าง</p>
+                            <textarea id="program_identity" name="program_identity" class="form-control" rows="4" placeholder="เช่น บัณฑิตมีทักษะปฏิบัติจริง ใช้เทคโนโลยีได้ และทำงานร่วมกับชุมชน"><?= esc($program_page['program_identity'] ?? '') ?></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">ผลการเรียนรู้ที่คาดหวังรายปี (YLO)</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เพิ่มผลลัพธ์ตามชั้นปี หากหลักสูตรใช้ OBE ให้กรอกเป็น YLO</p>
+                            <div id="ylo-editor" class="ylo-editor" data-initial="<?= htmlspecialchars(json_encode($ylo_initial, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"></div>
+                            <button type="button" class="btn btn-outline btn-sm" id="ylo-add-btn" style="margin-top: 0.5rem;">+ เพิ่มปี/YLO</button>
+                            <textarea name="ylo_json" id="ylo_json" hidden aria-hidden="true"><?= esc($program_page['ylo_json'] ?? '[]') ?></textarea>
+                        </div>
                         </div>
                     </div>
 
                     <div id="content-sub-quality" class="content-subpanel" role="tabpanel">
                         <div class="form-section">
                             <h4 class="form-section-title">มาตรฐานการเรียนรู้ &amp; PLO</h4>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1.25rem;">เลือกโหมดที่จะแสดงบนหน้าเว็บหลักสูตร — ปีนี้ใช้มาตรฐานการเรียนรู้ 5 ด้าน, ปีหน้าใช้ PLO ที่หลักสูตรกำหนดเอง</p>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1.25rem;">เลือกโหมดที่จะแสดงบนหน้าเว็บหลักสูตร — ปีนี้ใช้มาตรฐานการเรียนรู้ 5 ด้านหลัก และเพิ่มด้านทักษะการฝึกปฏิบัติได้ถ้าหลักสูตรต้องระบุ, ปีหน้าใช้ PLO ที่หลักสูตรกำหนดเอง</p>
 
                             <?php
                             $qualityMode = $ls_initial['mode'] ?? 'this_year';
@@ -307,6 +326,7 @@
                                 3 => 'ด้านทักษะทางปัญญา',
                                 4 => 'ด้านความสัมพันธ์ระหว่างบุคคลและความรับผิดชอบ',
                                 5 => 'ด้านทักษะการวิเคราะห์เชิงตัวเลข การสื่อสาร และการใช้เทคโนโลยี',
+                                6 => 'ด้านทักษะการฝึกปฏิบัติ',
                             ];
                             $domainsData = [];
                             if (!empty($ls_initial['domains']) && is_array($ls_initial['domains'])) {
@@ -332,7 +352,7 @@
                                     <button type="button" id="mode-this-year-btn"
                                         class="btn btn-sm <?= $qualityMode === 'this_year' ? 'btn-primary' : 'btn-outline' ?>"
                                         onclick="switchQualityMode('this_year')">
-                                        ปีนี้ — มาตรฐานการเรียนรู้ 5 ด้าน
+                                        ปีนี้ — มาตรฐานการเรียนรู้ / TQF
                                     </button>
                                     <button type="button" id="mode-next-year-btn"
                                         class="btn btn-sm <?= $qualityMode === 'next_year' ? 'btn-primary' : 'btn-outline' ?>"
@@ -343,9 +363,9 @@
                                 <p class="form-text text-muted" id="quality-mode-desc" style="font-size: 0.8125rem;"></p>
                             </div>
 
-                            <!-- มาตรฐานการเรียนรู้ 5 ด้าน (ปีนี้) -->
+                            <!-- มาตรฐานการเรียนรู้ / TQF (ปีนี้) -->
                             <div id="standards-domains-panel" style="<?= $qualityMode === 'next_year' ? 'display:none;' : '' ?>">
-                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 1rem;">ทุกหลักสูตรต้องมีครบทั้ง 5 ด้าน — เพิ่มรายการย่อยได้ตามต้องการในแต่ละด้าน</p>
+                                <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 1rem;">ด้านที่ 1-5 เป็นมาตรฐานหลัก ส่วนด้านที่ 6 ทักษะการฝึกปฏิบัติให้กรอกเฉพาะหลักสูตรที่ต้องระบุ</p>
                                 <?php foreach ($domainDefs as $domId => $domName):
                                     $initItems = $domainsData[$domId] ?? [];
                                 ?>
@@ -395,6 +415,11 @@
                             $decoded = json_decode($program_page['curriculum_json'], true);
                             if (is_array($decoded)) { $curriculum_initial = $decoded; }
                         }
+                        $credit_structure_initial = [];
+                        if (!empty($program_page['curriculum_credit_structure_json'])) {
+                            $decodedCredits = json_decode($program_page['curriculum_credit_structure_json'], true);
+                            if (is_array($decodedCredits)) { $credit_structure_initial = $decodedCredits; }
+                        }
                         ?>
                         <div class="form-group curriculum-editor-wrap">
                             <label class="form-label">รายวิชาโครงสร้างหลักสูตร (แยกตามปี/ภาค)</label>
@@ -417,6 +442,14 @@
                                 <button type="button" class="btn btn-primary btn-sm" id="curriculum-structure-save-ajax-btn">บันทึกโครงสร้างหลักสูตร</button>
                                 <span id="curriculum-structure-ajax-msg" class="ajax-msg" aria-live="polite"></span>
                             </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">สรุปโครงสร้างหลักสูตรตามหมวดหน่วยกิต</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">ระบุจำนวนหน่วยกิตของรายวิชาบังคับ รายวิชาเลือก และเลือกเสรี เพื่อแสดงบนหน้าเว็บหลักสูตร</p>
+                            <div id="credit-structure-editor" data-initial="<?= htmlspecialchars(json_encode($credit_structure_initial, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"></div>
+                            <button type="button" class="btn btn-outline btn-sm" id="credit-structure-add-btn" style="margin-top: 0.5rem;">+ เพิ่มหมวด</button>
+                            <textarea id="curriculum_credit_structure_json" name="curriculum_credit_structure_json" hidden aria-hidden="true"><?= esc($program_page['curriculum_credit_structure_json'] ?? '[]') ?></textarea>
                         </div>
 
                         <div class="form-group">
@@ -524,6 +557,20 @@
                         <div class="form-group content-with-toolbar">
                             <label for="contact_info" class="form-label">ข้อมูลติดต่อ</label>
                             <textarea id="contact_info" name="contact_info" class="form-control" rows="4"><?= esc($program_page['contact_info'] ?? '') ?></textarea>
+                        </div>
+
+                        <?php
+                        $socialLinks = [];
+                        if (! empty($program_page['social_links'])) {
+                            $decodedSocial = json_decode($program_page['social_links'], true);
+                            if (is_array($decodedSocial)) { $socialLinks = $decodedSocial; }
+                        }
+                        ?>
+                        <div class="form-group">
+                            <label for="program_facebook_url" class="form-label">Facebook ของหลักสูตร</label>
+                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">ถ้าเว้นว่าง หน้าเว็บจะใช้ Facebook คณะเป็นค่าเริ่มต้น</p>
+                            <input type="url" id="program_facebook_url" class="form-control" value="<?= esc($socialLinks['facebook'] ?? '') ?>" placeholder="https://facebook.com/...">
+                            <textarea name="social_links" id="social_links" hidden aria-hidden="true"><?= esc($program_page['social_links'] ?? '{}') ?></textarea>
                         </div>
 
                         <div class="form-group">
@@ -1787,7 +1834,7 @@
             swalAlert('JSON ไม่ถูกต้อง: ' + e.message, 'error');
         }
     }
-    // --- เนื้อหาหลักสูตร: มาตรฐานการเรียนรู้ 5 ด้าน + PLO ---
+    // --- เนื้อหาหลักสูตร: มาตรฐานการเรียนรู้ / TQF + PLO ---
     var contentForm = document.querySelector('#content-tab form');
     if (!contentForm) return;
 
@@ -1807,7 +1854,8 @@
         'ด้านความรู้',
         'ด้านทักษะทางปัญญา',
         'ด้านความสัมพันธ์ระหว่างบุคคลและความรับผิดชอบ',
-        'ด้านทักษะการวิเคราะห์เชิงตัวเลข การสื่อสาร และการใช้เทคโนโลยี'
+        'ด้านทักษะการวิเคราะห์เชิงตัวเลข การสื่อสาร และการใช้เทคโนโลยี',
+        'ด้านทักษะการฝึกปฏิบัติ'
     ];
 
     var currentQualityMode = '<?= $qualityMode ?? 'this_year' ?>';
@@ -1825,7 +1873,7 @@
         if (btnNext) { btnNext.classList.toggle('btn-primary', mode === 'next_year'); btnNext.classList.toggle('btn-outline', mode !== 'next_year'); }
         if (descEl) {
             descEl.textContent = mode === 'this_year'
-                ? 'หน้าเว็บหลักสูตรจะแสดงมาตรฐานการเรียนรู้ 5 ด้านพร้อมรายการย่อย'
+                ? 'หน้าเว็บหลักสูตรจะแสดงมาตรฐานการเรียนรู้ / TQF พร้อมรายการย่อย'
                 : 'หน้าเว็บหลักสูตรจะแสดง PLO ที่หลักสูตรกำหนด';
         }
         // Auto-save mode change to learning_standards_json
@@ -1859,6 +1907,8 @@
                 });
             }
             return { domain: domNum, name: name, items: items };
+        }).filter(function (dom) {
+            return dom.domain !== 6 || (dom.items && dom.items.length > 0);
         });
         var obj = { mode: currentQualityMode, domains: domains };
         lsJsonField.value = JSON.stringify(obj);
@@ -1878,7 +1928,7 @@
     }
 
     // Init domain editors
-    for (var di = 1; di <= 5; di++) {
+    for (var di = 1; di <= DOMAIN_NAMES.length; di++) {
         (function (domNum) {
             var container = document.getElementById('domain-' + domNum + '-items');
             if (!container) return;
@@ -2200,11 +2250,116 @@
         };
     })();
 
+    (function initYloEditor() {
+        var editor = document.getElementById('ylo-editor');
+        var hidden = document.getElementById('ylo_json');
+        var addBtn = document.getElementById('ylo-add-btn');
+        if (!editor || !hidden) return;
+        function escAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+        function addRow(data) {
+            data = data || {};
+            var row = document.createElement('div');
+            row.className = 'ylo-row';
+            row.style.cssText = 'display:grid;grid-template-columns:110px 1fr auto;gap:0.6rem;align-items:start;margin-bottom:0.6rem;padding:0.8rem;border:1px solid var(--color-gray-200);border-radius:8px;background:#fafafa;';
+            row.innerHTML =
+                '<div><label class="form-label" style="font-size:0.8rem">ปี</label><input type="text" class="form-control ylo-year" maxlength="50" value="' + escAttr(data.year || '') + '" placeholder="ปี 1"></div>' +
+                '<div><label class="form-label" style="font-size:0.8rem">หัวข้อ / YLO</label><input type="text" class="form-control ylo-title" maxlength="500" value="' + escAttr(data.title || '') + '" placeholder="เช่น พื้นฐานวิชาชีพ"></div>' +
+                '<button type="button" class="btn btn-outline btn-sm ylo-remove" style="align-self:end">ลบ</button>' +
+                '<div style="grid-column:1/-1"><label class="form-label" style="font-size:0.8rem">รายละเอียด</label><textarea class="form-control ylo-detail" rows="2" maxlength="2000" placeholder="ผลการเรียนรู้ที่คาดหวังในปีนี้">' + escAttr(data.detail || '') + '</textarea></div>';
+            row.querySelector('.ylo-remove').addEventListener('click', function () { row.remove(); sync(); });
+            row.addEventListener('input', sync);
+            row.addEventListener('change', sync);
+            editor.appendChild(row);
+        }
+        function sync() {
+            var arr = [];
+            editor.querySelectorAll('.ylo-row').forEach(function (row) {
+                var year = (row.querySelector('.ylo-year') || { value: '' }).value.trim();
+                var title = (row.querySelector('.ylo-title') || { value: '' }).value.trim();
+                var detail = (row.querySelector('.ylo-detail') || { value: '' }).value.trim();
+                if (year || title || detail) arr.push({ year: year, title: title, detail: detail });
+            });
+            hidden.value = JSON.stringify(arr);
+        }
+        var initial = [];
+        try { initial = JSON.parse(editor.getAttribute('data-initial') || '[]'); } catch (e) { initial = []; }
+        if (!Array.isArray(initial) || initial.length === 0) initial = [
+            { year: 'ปี 1', title: '', detail: '' },
+            { year: 'ปี 2', title: '', detail: '' },
+            { year: 'ปี 3', title: '', detail: '' },
+            { year: 'ปี 4', title: '', detail: '' }
+        ];
+        initial.forEach(addRow);
+        if (addBtn) addBtn.addEventListener('click', function () { addRow({}); sync(); });
+        window.buildYloJson = sync;
+        sync();
+    })();
+
+    (function initCreditStructureEditor() {
+        var editor = document.getElementById('credit-structure-editor');
+        var hidden = document.getElementById('curriculum_credit_structure_json');
+        var addBtn = document.getElementById('credit-structure-add-btn');
+        if (!editor || !hidden) return;
+        function escAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+        function addRow(data) {
+            data = data || {};
+            var row = document.createElement('div');
+            row.className = 'credit-structure-row';
+            row.style.cssText = 'display:grid;grid-template-columns:1fr 120px auto;gap:0.6rem;align-items:end;margin-bottom:0.55rem;';
+            row.innerHTML =
+                '<div><label class="form-label" style="font-size:0.8rem">หมวดรายวิชา</label><input type="text" class="form-control cs-label" maxlength="200" value="' + escAttr(data.label || '') + '" placeholder="รายวิชาบังคับ"></div>' +
+                '<div><label class="form-label" style="font-size:0.8rem">หน่วยกิต</label><input type="text" class="form-control cs-credits" maxlength="50" value="' + escAttr(data.credits || '') + '" placeholder="90"></div>' +
+                '<button type="button" class="btn btn-outline btn-sm cs-remove">ลบ</button>' +
+                '<div style="grid-column:1/-1"><input type="text" class="form-control cs-note" maxlength="500" value="' + escAttr(data.note || '') + '" placeholder="หมายเหตุ (ถ้ามี)"></div>';
+            row.querySelector('.cs-remove').addEventListener('click', function () { row.remove(); sync(); });
+            row.addEventListener('input', sync);
+            row.addEventListener('change', sync);
+            editor.appendChild(row);
+        }
+        function sync() {
+            var arr = [];
+            editor.querySelectorAll('.credit-structure-row').forEach(function (row) {
+                var label = (row.querySelector('.cs-label') || { value: '' }).value.trim();
+                var credits = (row.querySelector('.cs-credits') || { value: '' }).value.trim();
+                var note = (row.querySelector('.cs-note') || { value: '' }).value.trim();
+                if (label || credits || note) arr.push({ label: label, credits: credits, note: note });
+            });
+            hidden.value = JSON.stringify(arr);
+        }
+        var initial = [];
+        try { initial = JSON.parse(editor.getAttribute('data-initial') || '[]'); } catch (e) { initial = []; }
+        if (!Array.isArray(initial) || initial.length === 0) initial = [
+            { label: 'รายวิชาบังคับ', credits: '', note: '' },
+            { label: 'รายวิชาเลือก', credits: '', note: '' },
+            { label: 'เลือกเสรี', credits: '', note: '' }
+        ];
+        initial.forEach(addRow);
+        if (addBtn) addBtn.addEventListener('click', function () { addRow({}); sync(); });
+        window.buildCreditStructureJson = sync;
+        sync();
+    })();
+
+    (function initProgramSocialLinks() {
+        var facebook = document.getElementById('program_facebook_url');
+        var hidden = document.getElementById('social_links');
+        if (!facebook || !hidden) return;
+        function sync() {
+            hidden.value = JSON.stringify({ facebook: (facebook.value || '').trim() });
+        }
+        facebook.addEventListener('input', sync);
+        facebook.addEventListener('change', sync);
+        window.buildProgramSocialLinks = sync;
+        sync();
+    })();
+
     contentForm.addEventListener('submit', function () {
         if (typeof buildLearningStandardsJson === 'function') buildLearningStandardsJson();
         if (typeof buildElosJson === 'function') buildElosJson();
         if (typeof window.syncOverviewLineEditors === 'function') window.syncOverviewLineEditors();
         if (typeof window.syncPtbAll === 'function') window.syncPtbAll();
+        if (typeof buildYloJson === 'function') buildYloJson();
+        if (typeof buildCreditStructureJson === 'function') buildCreditStructureJson();
+        if (typeof buildProgramSocialLinks === 'function') buildProgramSocialLinks();
         if (typeof buildCareersJson === 'function') buildCareersJson();
         if (typeof buildTuitionJson === 'function') buildTuitionJson();
     });
@@ -2615,7 +2770,12 @@
                 '<td><input type="number" class="form-control form-control-sm curriculum-course-credits" value="' + esc(c.credits ?? '') + '" placeholder="0" min="0" style="width:4rem"></td>' +
                 '<td><button type="button" class="btn btn-danger btn-sm curriculum-remove-course">ลบ</button></td>';
             semBody.appendChild(tr);
-            tr.querySelector('.curriculum-remove-course').addEventListener('click', function () { tr.remove(); });
+            tr.querySelector('.curriculum-remove-course').addEventListener('click', function () {
+                if (confirm('ลบรายวิชานี้?')) {
+                    tr.remove();
+                    buildCurriculumJson();
+                }
+            });
         }
         function addSemester(yearCard, sem) {
             sem = sem || {};
@@ -2628,8 +2788,13 @@
             (sem.courses || []).forEach(function (c) { addCourseRow(tbody, c); });
             if (!(sem.courses && sem.courses.length)) addCourseRow(tbody, {});
             yearCard.querySelector('.curriculum-year-body').appendChild(semDiv);
-            semDiv.querySelector('.curriculum-add-course').addEventListener('click', function () { addCourseRow(tbody, {}); });
-            semDiv.querySelector('.curriculum-remove-semester').addEventListener('click', function () { semDiv.remove(); });
+            semDiv.querySelector('.curriculum-add-course').addEventListener('click', function () { addCourseRow(tbody, {}); buildCurriculumJson(); });
+            semDiv.querySelector('.curriculum-remove-semester').addEventListener('click', function () {
+                if (confirm('ลบภาคเรียนนี้และรายวิชาทั้งหมดในภาคเรียน?')) {
+                    semDiv.remove();
+                    buildCurriculumJson();
+                }
+            });
         }
         function addYearCard(data) {
             data = data || {};
@@ -2646,8 +2811,13 @@
             curriculumList.appendChild(card);
             (data.semesters || []).forEach(function (s) { addSemester(card, s); });
             if (!(data.semesters && data.semesters.length)) addSemester(card, {});
-            card.querySelector('.curriculum-add-semester').addEventListener('click', function () { addSemester(card, {}); });
-            card.querySelector('.curriculum-remove-year').addEventListener('click', function () { card.remove(); });
+            card.querySelector('.curriculum-add-semester').addEventListener('click', function () { addSemester(card, {}); buildCurriculumJson(); });
+            card.querySelector('.curriculum-remove-year').addEventListener('click', function () {
+                if (confirm('ลบชั้นปีนี้และรายวิชาทั้งหมด?')) {
+                    card.remove();
+                    buildCurriculumJson();
+                }
+            });
         }
         function buildCurriculumJson() {
             var years = [];
