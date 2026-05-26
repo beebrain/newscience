@@ -387,6 +387,21 @@ class UserManagement extends BaseController
     }
 
     /**
+     * กรองข้อมูลให้เหลือเฉพาะคอลัมน์ที่มีในตาราง student_user
+     */
+    private function filterDataForStudentTable(array $data): array
+    {
+        $fields = $this->studentUserModel->db->getFieldNames($this->studentUserModel->getTable());
+        $out = [];
+        foreach ($data as $key => $value) {
+            if (in_array($key, $fields, true)) {
+                $out[$key] = $value;
+            }
+        }
+        return $out;
+    }
+
+    /**
      * AJAX: Update student
      */
     public function ajaxUpdateStudent($id)
@@ -424,18 +439,31 @@ class UserManagement extends BaseController
             'status' => $input['status'] ?? $student['status'] ?? 'active',
         ];
 
-        $titleTrim = trim((string) ($data['title'] ?? ''));
-        if (! CvProfile::isAllowedUserTitle($titleTrim)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'คำนำหน้าชื่อไม่ตรงกับรายการมาตรฐาน']);
+        if (array_key_exists('title', $input)) {
+            $titleTrim = trim((string) ($data['title'] ?? ''));
+            if (! CvProfile::isAllowedUserTitle($titleTrim)) {
+                return $this->response->setJSON(['success' => false, 'message' => 'คำนำหน้าชื่อไม่ตรงกับรายการมาตรฐาน']);
+            }
+            $data['title'] = $titleTrim === '' ? null : $titleTrim;
+        } else {
+            unset($data['title']);
         }
-        $data['title'] = $titleTrim === '' ? null : $titleTrim;
 
         if ($data['email'] === '') {
             return $this->response->setJSON(['success' => false, 'message' => 'กรุณาระบุอีเมลนักศึกษา']);
         }
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'รูปแบบอีเมลนักศึกษาไม่ถูกต้อง']);
+        }
 
         if ($requestedRole === '') {
             return $this->response->setJSON(['success' => false, 'message' => 'กรุณาเลือกสิทธิ์นักศึกษา']);
+        }
+        if (!in_array($data['role'], ['student', 'club', 'admin_student'], true)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'สิทธิ์นักศึกษาไม่ถูกต้อง']);
+        }
+        if (!in_array($data['status'], ['active', 'inactive', 'pending'], true)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'สถานะนักศึกษาไม่ถูกต้อง']);
         }
 
         // Validate role assignment
@@ -443,8 +471,31 @@ class UserManagement extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่สามารถกำหนดสิทธิ์นี้ได้']);
         }
 
-        if ($this->studentUserModel->update($id, $data)) {
-            return $this->response->setJSON(['success' => true, 'message' => 'อัปเดตข้อมูลนักศึกษาสำเร็จ']);
+        $dataToUpdate = $this->filterDataForStudentTable($data);
+        $newEmail = $dataToUpdate['email'] ?? null;
+        $currentEmail = strtolower(trim((string) ($student['email'] ?? '')));
+        if ($newEmail !== null && $newEmail !== $currentEmail) {
+            $existing = $this->studentUserModel->db->table($this->studentUserModel->getTable())
+                ->where('email', $newEmail)
+                ->where('id !=', (int) $id)
+                ->limit(1)
+                ->get()
+                ->getRowArray();
+            if ($existing) {
+                return $this->response->setJSON(['success' => false, 'message' => 'อีเมลนี้ถูกใช้โดยนักศึกษาคนอื่นแล้ว']);
+            }
+        }
+
+        try {
+            $ok = $this->studentUserModel->db->table($this->studentUserModel->getTable())
+                ->where('id', (int) $id)
+                ->update($dataToUpdate);
+            if ($ok) {
+                return $this->response->setJSON(['success' => true, 'message' => 'อัปเดตข้อมูลนักศึกษาสำเร็จ']);
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'UserManagement::ajaxUpdateStudent ' . $e->getMessage());
+            return $this->response->setJSON(['success' => false, 'message' => 'อัปเดตข้อมูลนักศึกษาไม่สำเร็จ: ' . $e->getMessage()]);
         }
 
         return $this->response->setJSON(['success' => false, 'message' => 'อัปเดตข้อมูลนักศึกษาไม่สำเร็จ']);

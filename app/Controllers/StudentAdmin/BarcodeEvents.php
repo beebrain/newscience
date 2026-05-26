@@ -51,13 +51,13 @@ class BarcodeEvents extends BaseController
     }
 
     /**
-     * Resolve creator IDs for new/update: admin → user_uid, club → student_user_id
+     * Resolve creator IDs for new/update: admin → user_uid, student-admin role → student_user_id
      */
     private function getCreatorIds(): array
     {
         $studentUserId = null;
         $userUid = null;
-        if (session()->get('student_logged_in') && session()->get('student_role') === 'club') {
+        if (session()->get('student_logged_in') && in_array(session()->get('student_role'), ['club', 'admin_student'], true)) {
             $studentUserId = (int) session()->get('student_id');
         }
         if (session()->get('admin_logged_in')) {

@@ -147,7 +147,7 @@
     </a>
 </div>
 
-<?php if (session()->get('student_role') === 'club'): ?>
+<?php if (in_array(session()->get('student_role'), ['club', 'admin_student'], true)): ?>
     <p class="portal-hub-section-title">สำหรับนักศึกษาสโมสร</p>
     <div class="portal-hub-grid">
         <a href="<?= base_url('student-admin/barcode-events') ?>" class="portal-hub-card portal-hub-card--admin">

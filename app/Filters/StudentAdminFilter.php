@@ -7,7 +7,7 @@ use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 
 /**
- * Student Admin: อนุญาตเมื่อเป็น admin ระบบ (user) หรือ นักศึกษาสโมสร (student_user role=club)
+ * Student Admin: อนุญาตเมื่อเป็น admin ระบบ (user) หรือ student_user role=club/admin_student
  * ใช้กับ route กลุ่ม /student-admin
  */
 class StudentAdminFilter implements FilterInterface
@@ -25,8 +25,8 @@ class StudentAdminFilter implements FilterInterface
             }
         }
 
-        // 2) นักศึกษาสโมสร (login ผ่าน student_user, role=club)
-        if ($session->get('student_logged_in') && $session->get('student_role') === 'club') {
+        // 2) นักศึกษาที่มีสิทธิ์จัดการฝั่ง student-admin
+        if ($session->get('student_logged_in') && in_array($session->get('student_role'), ['club', 'admin_student'], true)) {
             return; // allow
         }
 
@@ -37,7 +37,7 @@ class StudentAdminFilter implements FilterInterface
                 ->with('error', 'หน้านี้สำหรับผู้ดูแลระบบหรือนักศึกษาสโมสรเท่านั้น');
         }
         return redirect()->to(base_url('student/login'))
-            ->with('error', 'กรุณาเข้าสู่ระบบ (นักศึกษาสโมสร) หรือใช้บัญชีผู้ดูแลระบบ');
+            ->with('error', 'กรุณาเข้าสู่ระบบ (นักศึกษาสโมสร/Student Admin) หรือใช้บัญชีผู้ดูแลระบบ');
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
