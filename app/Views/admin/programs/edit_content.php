@@ -433,18 +433,6 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">โครงสร้างหลักสูตร</label>
-                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">เพิ่มเป็นหัวข้อย่อยและรายละเอียด — กรอกข้อความธรรมดาได้ แทรกรูป/ลิงก์ที่ช่องรายละเอียด (คลิกในช่องก่อน แล้วใช้อัปโหลดแทรกหรือปุ่มด้านล่าง)</p>
-                            <div id="ptb-wrap-curriculum_structure" class="ptb-editor-wrap" data-ptb-kind="curriculum"></div>
-                            <button type="button" class="btn btn-outline btn-sm" id="ptb-add-curriculum_structure" style="margin-top:0.5rem">+ เพิ่มหัวข้อ</button>
-                            <textarea id="curriculum_structure" name="curriculum_structure" class="ptb-serialized-field" hidden aria-hidden="true"><?= esc($program_page['curriculum_structure'] ?? '') ?></textarea>
-                            <div style="margin-top: 0.5rem;">
-                                <button type="button" class="btn btn-primary btn-sm" id="curriculum-structure-save-ajax-btn">บันทึกโครงสร้างหลักสูตร</button>
-                                <span id="curriculum-structure-ajax-msg" class="ajax-msg" aria-live="polite"></span>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
                             <label class="form-label">สรุปโครงสร้างหลักสูตรตามหมวดหน่วยกิต</label>
                             <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">ระบุจำนวนหน่วยกิตของรายวิชาบังคับ รายวิชาเลือก และเลือกเสรี เพื่อแสดงบนหน้าเว็บหลักสูตร</p>
                             <div id="credit-structure-editor" data-initial="<?= htmlspecialchars(json_encode($credit_structure_initial, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"></div>
@@ -2052,7 +2040,7 @@
         });
     }
 
-    // --- โครงสร้างหลักสูตร / แผนการเรียน: หัวข้อ + รายละเอียด (บันทึกเป็น HTML มาร์กเกอร์ ไม่ใช่ JSON) ---
+    // --- แผนการเรียน: หัวข้อ + รายละเอียด (บันทึกเป็น HTML มาร์กเกอร์ ไม่ใช่ JSON) ---
     (function initPtbEditors() {
         function bodyLooksLikeHtml(s) {
             if (!s) return false;
@@ -2170,13 +2158,8 @@
         }
         window.syncPtbField = function () {};
         window.syncPtbAll = function () {};
-        if (document.getElementById('ptb-wrap-curriculum_structure')) {
-            initWrap('curriculum_structure');
+        if (document.getElementById('ptb-wrap-study_plan')) {
             initWrap('study_plan');
-            document.getElementById('ptb-add-curriculum_structure') && document.getElementById('ptb-add-curriculum_structure').addEventListener('click', function () {
-                var w = document.getElementById('ptb-wrap-curriculum_structure');
-                if (w) addPtbRow(w, 'curriculum_structure', {});
-            });
             document.getElementById('ptb-add-study_plan') && document.getElementById('ptb-add-study_plan').addEventListener('click', function () {
                 var w = document.getElementById('ptb-wrap-study_plan');
                 if (w) addPtbRow(w, 'study_plan', {});
@@ -2188,7 +2171,6 @@
             });
             window.syncPtbField = syncPtbField;
             window.syncPtbAll = function () {
-                syncPtbField('curriculum_structure');
                 syncPtbField('study_plan');
             };
         }
@@ -2872,26 +2854,6 @@
         contentForm.addEventListener('submit', function () { buildCurriculumJson(); });
     }
 
-    var structureTa = document.getElementById('curriculum_structure');
-    if (structureTa) {
-        document.getElementById('curriculum-structure-save-ajax-btn') && document.getElementById('curriculum-structure-save-ajax-btn').addEventListener('click', function () {
-            var btn = this;
-            var msgEl = document.getElementById('curriculum-structure-ajax-msg');
-            if (typeof window.syncPtbField === 'function') window.syncPtbField('curriculum_structure');
-            btn.disabled = true;
-            if (msgEl) msgEl.textContent = 'กำลังบันทึก...';
-            var fd = new FormData();
-            fd.append('curriculum_structure', structureTa.value);
-            if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
-            fetch(updatePageJsonUrl, { method: 'POST', body: fd })
-                .then(function (r) { return r.json(); })
-                .then(function (res) {
-                    btn.disabled = false;
-                    if (msgEl) { msgEl.textContent = res.success ? 'บันทึกโครงสร้างหลักสูตรเรียบร้อย' : (res.message || 'เกิดข้อผิดพลาด'); msgEl.style.color = res.success ? 'var(--secondary)' : 'var(--color-error)'; }
-                })
-                .catch(function () { btn.disabled = false; if (msgEl) msgEl.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ'; });
-        });
-    }
 })();
 </script>
 <script>
