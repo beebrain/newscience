@@ -440,13 +440,6 @@
                             <textarea id="curriculum_credit_structure_json" name="curriculum_credit_structure_json" hidden aria-hidden="true"><?= esc($program_page['curriculum_credit_structure_json'] ?? '[]') ?></textarea>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label">แผนการเรียน (คำอธิบาย)</label>
-                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.75rem;">อธิบายแนวทาง/ลำดับการเรียน (แยกจากตารางรายวิชารายปีด้านบน)</p>
-                            <div id="ptb-wrap-study_plan" class="ptb-editor-wrap" data-ptb-kind="study"></div>
-                            <button type="button" class="btn btn-outline btn-sm" id="ptb-add-study_plan" style="margin-top:0.5rem">+ เพิ่มหัวข้อ</button>
-                            <textarea id="study_plan" name="study_plan" class="ptb-serialized-field" hidden aria-hidden="true"><?= esc($program_page['study_plan'] ?? '') ?></textarea>
-                        </div>
                         </div>
                     </div>
 
@@ -2040,142 +2033,6 @@
         });
     }
 
-    // --- แผนการเรียน: หัวข้อ + รายละเอียด (บันทึกเป็น HTML มาร์กเกอร์ ไม่ใช่ JSON) ---
-    (function initPtbEditors() {
-        function bodyLooksLikeHtml(s) {
-            if (!s) return false;
-            return /<(img|a|p|ul|ol|h\d|br|div|span|table|tr|td|th|em|strong|b|i|hr)\b/i.test(s);
-        }
-        function bodyToStoredHtml(s) {
-            if (!s) return '';
-            if (bodyLooksLikeHtml(s)) {
-                return s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
-            }
-            return escapeHtml(s).replace(/\n/g, '<br>');
-        }
-        function parsePtb(raw, kind) {
-            if (!raw || !String(raw).trim()) return [{ title: '', body: '' }];
-            var s = String(raw);
-            if (s.indexOf('ptb-' + kind) === -1) {
-                return [{ title: '', body: s.trim() }];
-            }
-            var doc;
-            try {
-                doc = new DOMParser().parseFromString(s, 'text/html');
-            } catch (e) {
-                return [{ title: '', body: s.trim() }];
-            }
-            var root = doc.querySelector('.ptb-' + kind);
-            if (!root) return [{ title: '', body: s.trim() }];
-            var blocks = root.querySelectorAll('.ptb-block');
-            if (!blocks || !blocks.length) return [{ title: '', body: s.trim() }];
-            var out = [];
-            for (var i = 0; i < blocks.length; i++) {
-                var b = blocks[i];
-                var th = b.querySelector('.ptb-title');
-                var bd = b.querySelector('.ptb-body');
-                out.push({
-                    title: th ? th.textContent.trim() : '',
-                    body: bd ? (bd.innerHTML || '').trim() : ''
-                });
-            }
-            return out.length ? out : [{ title: '', body: s.trim() }];
-        }
-        function serializePtb(rows, kind) {
-            var cls = 'ptb ptb-' + kind;
-            var h = '\n<!--ptb:' + kind + ':v1-->\n<div class="' + cls + '" data-ptb-version="1">';
-            for (var i = 0; i < rows.length; i++) {
-                var r = rows[i];
-                var title = r.title != null ? String(r.title) : '';
-                var body = r.body != null ? String(r.body) : '';
-                if (!title.trim() && !body.trim()) continue;
-                h += '<section class="ptb-block"><h3 class="ptb-title">' + escapeHtml(title) + '</h3><div class="ptb-body">' + bodyToStoredHtml(body) + '</div></section>';
-            }
-            h += '</div>\n<!--/ptb:' + kind + ':v1-->\n';
-            return h.trim() ? h : '';
-        }
-        function addPtbRow(wrap, fieldName, data) {
-            data = data || {};
-            var row = document.createElement('div');
-            row.className = 'ptb-dyn-block';
-            row.style.cssText = 'border:1px solid var(--color-gray-200); border-radius:8px; padding:0.9rem; margin-bottom:0.6rem; background:#fafafa;';
-            row.innerHTML =
-                '<div class="form-group" style="margin:0 0 0.6rem 0;">' +
-                '<label class="form-label" style="font-size:0.8rem;">หัวข้อ</label>' +
-                '<input type="text" class="form-control ptb-block-title" maxlength="500" value="" placeholder="เช่น โครงสร้างเครดิตรวม">' +
-                '</div>' +
-                '<div class="form-group" style="margin:0;">' +
-                '<label class="form-label" style="font-size:0.8rem;">รายละเอียด</label>' +
-                '<textarea class="form-control ptb-block-body" rows="5" data-ptb-field="' + fieldName + '"></textarea>' +
-                '</div>' +
-                '<div style="margin-top:0.5rem;text-align:right;"><button type="button" class="btn btn-outline btn-sm ptb-row-remove">ลบก้อนนี้</button></div>';
-            var titleIn = row.querySelector('.ptb-block-title');
-            var bodyIn = row.querySelector('.ptb-block-body');
-            if (titleIn) titleIn.value = data.title != null ? data.title : '';
-            if (bodyIn) bodyIn.value = data.body != null ? data.body : '';
-            if (bodyIn) {
-                bodyIn.addEventListener('focus', function () { window._ptbLastBody = bodyIn; });
-            }
-            row.querySelector('.ptb-row-remove').addEventListener('click', function () { row.remove(); syncPtbField(fieldName); });
-            ['input', 'change'].forEach(function (ev) {
-                row.addEventListener(ev, function (e) {
-                    if (e.target && (e.target.classList.contains('ptb-block-title') || e.target.classList.contains('ptb-block-body'))) {
-                        syncPtbField(fieldName);
-                    }
-                });
-            });
-            wrap.appendChild(row);
-        }
-        function syncPtbField(fieldName) {
-            var wrap = document.getElementById('ptb-wrap-' + fieldName);
-            var hidden = document.getElementById(fieldName);
-            if (!wrap || !hidden) return;
-            var kind = wrap.getAttribute('data-ptb-kind') || (fieldName === 'study_plan' ? 'study' : 'curriculum');
-            var rows = [];
-            wrap.querySelectorAll('.ptb-dyn-block').forEach(function (row) {
-                var t = (row.querySelector('.ptb-block-title') && row.querySelector('.ptb-block-title').value) || '';
-                var b = (row.querySelector('.ptb-block-body') && row.querySelector('.ptb-block-body').value) || '';
-                if (!t.trim() && !b.trim()) return;
-                rows.push({ title: t, body: b });
-            });
-            hidden.value = rows.length ? serializePtb(rows, kind) : '';
-        }
-        function initWrap(fieldName) {
-            var wrap = document.getElementById('ptb-wrap-' + fieldName);
-            var hidden = document.getElementById(fieldName);
-            if (!wrap || !hidden) return;
-            var kind = wrap.getAttribute('data-ptb-kind') || (fieldName === 'study_plan' ? 'study' : 'curriculum');
-            var initial = (hidden && hidden.value) ? hidden.value : '';
-            var rows = parsePtb(initial, kind);
-            wrap.innerHTML = '';
-            if (rows.length === 0) rows = [{ title: '', body: '' }];
-            for (var i = 0; i < rows.length; i++) {
-                addPtbRow(wrap, fieldName, rows[i]);
-            }
-            var firstB = wrap.querySelector('.ptb-block-body');
-            if (firstB) window._ptbLastBody = firstB;
-            syncPtbField(fieldName);
-        }
-        window.syncPtbField = function () {};
-        window.syncPtbAll = function () {};
-        if (document.getElementById('ptb-wrap-study_plan')) {
-            initWrap('study_plan');
-            document.getElementById('ptb-add-study_plan') && document.getElementById('ptb-add-study_plan').addEventListener('click', function () {
-                var w = document.getElementById('ptb-wrap-study_plan');
-                if (w) addPtbRow(w, 'study_plan', {});
-            });
-            document.addEventListener('focusin', function (e) {
-                if (e.target && e.target.classList && e.target.classList.contains('ptb-block-body')) {
-                    window._ptbLastBody = e.target;
-                }
-            });
-            window.syncPtbField = syncPtbField;
-            window.syncPtbAll = function () {
-                syncPtbField('study_plan');
-            };
-        }
-    })();
-
     (function initOverviewLineEditors() {
         function addRow(wrap, val) {
             var row = document.createElement('div');
@@ -2338,7 +2195,6 @@
         if (typeof buildLearningStandardsJson === 'function') buildLearningStandardsJson();
         if (typeof buildElosJson === 'function') buildElosJson();
         if (typeof window.syncOverviewLineEditors === 'function') window.syncOverviewLineEditors();
-        if (typeof window.syncPtbAll === 'function') window.syncPtbAll();
         if (typeof buildYloJson === 'function') buildYloJson();
         if (typeof buildCreditStructureJson === 'function') buildCreditStructureJson();
         if (typeof buildProgramSocialLinks === 'function') buildProgramSocialLinks();
