@@ -98,10 +98,6 @@
         if (objList && objList.length) {
             boxes.push({ type: 'ol', label: 'วัตถุประสงค์ (Objectives)', items: objList });
         }
-        var gpList = (data.graduate_profile_list && data.graduate_profile_list.length) ? data.graduate_profile_list : parseListField(data.graduate_profile);
-        if (gpList && gpList.length) {
-            boxes.push({ type: 'ol', label: 'คุณลักษณะบัณฑิต (Graduate Profile)', items: gpList });
-        }
 
         if (boxes.length === 0) {
             $('#pd-overview').hide();

@@ -275,11 +275,10 @@
                     <div id="content-sub-overview" class="content-subpanel active" role="tabpanel">
                         <?php helper('overview_lists');
                         $overview_objectives_init = overview_text_lines_from_db($program_page['objectives'] ?? null);
-                        $overview_graduate_init    = overview_text_lines_from_db($program_page['graduate_profile'] ?? null);
                         ?>
                         <div class="form-section">
                             <h4 class="form-section-title">ภาพรวมหลักสูตร</h4>
-                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">ปรัชญา (ย่อหน้า) · วัตถุประสงค์ · คุณลักษณะบัณฑิต — สองรายหลังกรอกทีละข้อ แสดงเป็นหมายเลขบนหน้าเว็บ (ข้อมูลเก่าหลายบรรทัดยังอ่านได้)</p>
+                            <p class="form-text text-muted" style="font-size: 0.875rem; margin-bottom: 1rem;">ปรัชญา (ย่อหน้า) · วัตถุประสงค์ — วัตถุประสงค์กรอกทีละข้อ แสดงเป็นหมายเลขบนหน้าเว็บ (ข้อมูลเก่าหลายบรรทัดยังอ่านได้)</p>
                         <div class="form-group">
                             <label for="philosophy" class="form-label">ปรัชญาหลักสูตร</label>
                             <textarea id="philosophy" name="philosophy" class="form-control" rows="4" placeholder="ข้อความอธิบายปรัชญา"><?= esc($program_page['philosophy'] ?? '') ?></textarea>
@@ -291,14 +290,6 @@
                             <div id="objectives-line-editor" class="ol-line-editor" data-initial="<?= htmlspecialchars(json_encode($overview_objectives_init, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"></div>
                             <button type="button" class="btn btn-outline btn-sm" id="objectives-line-add" style="margin-top:0.5rem">+ เพิ่มข้อ</button>
                             <textarea name="objectives" id="objectives" class="ol-serialized" hidden aria-hidden="true"></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">คุณลักษณะบัณฑิต (ทีละข้อ)</label>
-                            <p class="form-text text-muted" style="font-size: 0.8125rem; margin-bottom: 0.5rem;">กำหนดทีละข้อ แสดงเป็นหมายเลขเช่นกัน</p>
-                            <div id="graduate-line-editor" class="ol-line-editor" data-initial="<?= htmlspecialchars(json_encode($overview_graduate_init, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"></div>
-                            <button type="button" class="btn btn-outline btn-sm" id="graduate-line-add" style="margin-top:0.5rem">+ เพิ่มข้อ</button>
-                            <textarea name="graduate_profile" id="graduate_profile" class="ol-serialized" hidden aria-hidden="true"></textarea>
                         </div>
                         </div>
                     </div>
@@ -2178,9 +2169,9 @@
                 n++;
             });
         }
-        function syncOverviewOne(wrap) {
+            function syncOverviewOne(wrap) {
             if (!wrap) return;
-            var hidden = wrap.id === 'objectives-line-editor' ? document.getElementById('objectives') : document.getElementById('graduate_profile');
+            var hidden = document.getElementById('objectives');
             if (!hidden) return;
             var arr = [];
             wrap.querySelectorAll('.ol-line-input').forEach(function (inp) {
@@ -2203,12 +2194,9 @@
             syncOverviewOne(wrap);
         }
         initEditor('objectives-line-editor', 'objectives-line-add');
-        initEditor('graduate-line-editor', 'graduate-line-add');
         window.syncOverviewLineEditors = function () {
             var o = document.getElementById('objectives-line-editor');
-            var g = document.getElementById('graduate-line-editor');
             if (o) syncOverviewOne(o);
-            if (g) syncOverviewOne(g);
         };
     })();
 

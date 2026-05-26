@@ -116,22 +116,6 @@
                         </section>
                     <?php endif; ?>
 
-                    <?php if ($previewGpLines !== []): ?>
-                        <section style="margin-bottom: 3rem;">
-                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">คุณลักษณะบัณฑิต</h2>
-                            <ol style="color: var(--color-gray-700); line-height: 1.7; padding-left: 1.25rem;">
-                                <?php foreach ($previewGpLines as $line): ?>
-                                    <li style="margin-bottom: 0.35rem;"><?= esc($line) ?></li>
-                                <?php endforeach; ?>
-                            </ol>
-                        </section>
-                    <?php elseif (!empty($page['graduate_profile'])): ?>
-                        <section style="margin-bottom: 3rem;">
-                            <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">คุณลักษณะบัณฑิต</h2>
-                            <div style="color: var(--color-gray-700); line-height: 1.6;"><?= nl2br(esc($page['graduate_profile'])) ?></div>
-                        </section>
-                    <?php endif; ?>
-
                     <?php if (!empty($page['curriculum_structure'])): ?>
                         <section style="margin-bottom: 3rem;">
                             <h2 style="color: var(--color-gray-900); margin-bottom: 1rem; font-size: 1.875rem; font-weight: 600;">โครงสร้างหลักสูตร</h2>
