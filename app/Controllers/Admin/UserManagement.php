@@ -426,8 +426,19 @@ class UserManagement extends BaseController
             $requestedRole = 'admin_student';
         }
 
+        $programIdFromInput = null;
+        if (array_key_exists('program_id', $input)) {
+            $programIdFromInput = ($input['program_id'] !== '' && $input['program_id'] !== null)
+                ? (int) $input['program_id']
+                : null;
+        }
+        $existingProgramId = isset($student['program_id']) && $student['program_id'] !== '' && $student['program_id'] !== null
+            ? (int) $student['program_id']
+            : null;
+        $programIdForUpdate = $programIdFromInput ?? $existingProgramId;
+
         $data = [
-            'login_uid' => $input['student_id'] ?? $input['login_uid'] ?? $student['login_uid'] ?? '',
+            'login_uid' => trim((string) ($input['student_id'] ?? $input['login_uid'] ?? $student['login_uid'] ?? '')),
             'email' => strtolower(trim((string) ($input['email'] ?? $student['email'] ?? ''))),
             'title' => $input['title'] ?? $student['title'] ?? '',
             'gf_name' => $input['gf_name'] ?? $student['gf_name'] ?? '',
@@ -435,7 +446,7 @@ class UserManagement extends BaseController
             'tf_name' => $input['tf_name'] ?? $input['th_name'] ?? $student['tf_name'] ?? '',
             'tl_name' => $input['tl_name'] ?? $input['thai_lastname'] ?? $student['tl_name'] ?? '',
             'role' => $requestedRole,
-            'program_id' => isset($input['program_id']) && $input['program_id'] !== '' ? (int)$input['program_id'] : null,
+            'program_id' => $programIdForUpdate,
             'status' => $input['status'] ?? $student['status'] ?? 'active',
         ];
 
@@ -466,9 +477,13 @@ class UserManagement extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'สถานะนักศึกษาไม่ถูกต้อง']);
         }
 
-        // Validate role assignment
-        if (!$this->canAssignStudentRole($data['role'] ?? '', $data['program_id'])) {
-            return $this->response->setJSON(['success' => false, 'message' => 'ไม่สามารถกำหนดสิทธิ์นี้ได้']);
+        if ($data['role'] === 'admin_student' && ($programIdForUpdate === null || $programIdForUpdate < 1)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'กรุณาเลือกหลักสูตรก่อนตั้งเป็น Admin Student']);
+        }
+
+        // Validate role assignment (ใช้หลักสูตรที่จะบันทึกจริง)
+        if (!$this->canAssignStudentRole($data['role'] ?? '', $programIdForUpdate)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่สามารถกำหนดสิทธิ์นี้ได้ (ตรวจสอบหลักสูตรและสิทธิ์ของคุณ)']);
         }
 
         $dataToUpdate = $this->filterDataForStudentTable($data);
@@ -493,12 +508,20 @@ class UserManagement extends BaseController
             if ($ok) {
                 return $this->response->setJSON(['success' => true, 'message' => 'อัปเดตข้อมูลนักศึกษาสำเร็จ']);
             }
+
+            $dbError = $this->studentUserModel->db->error();
+            $dbMessage = trim((string) ($dbError['message'] ?? ''));
+            log_message('error', 'UserManagement::ajaxUpdateStudent update failed id=' . $id . ' data=' . json_encode($dataToUpdate) . ' db=' . json_encode($dbError));
+            $message = 'อัปเดตข้อมูลนักศึกษาไม่สำเร็จ';
+            if ($dbMessage !== '') {
+                $message .= ': ' . $dbMessage;
+            }
+
+            return $this->response->setJSON(['success' => false, 'message' => $message]);
         } catch (\Throwable $e) {
             log_message('error', 'UserManagement::ajaxUpdateStudent ' . $e->getMessage());
             return $this->response->setJSON(['success' => false, 'message' => 'อัปเดตข้อมูลนักศึกษาไม่สำเร็จ: ' . $e->getMessage()]);
         }
-
-        return $this->response->setJSON(['success' => false, 'message' => 'อัปเดตข้อมูลนักศึกษาไม่สำเร็จ']);
     }
 
     /**
