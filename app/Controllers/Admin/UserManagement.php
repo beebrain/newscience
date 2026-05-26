@@ -171,7 +171,7 @@ class UserManagement extends BaseController
             $formattedStudents[] = [
                 'id' => (int)($student['id'] ?? 0),
                 'login_uid' => $student['login_uid'] ?? '',
-                'student_id' => $student['student_id'] ?? '',
+                'student_id' => $student['login_uid'] ?? '',
                 'email' => $student['email'] ?? '',
                 'gf_name' => $student['gf_name'] ?? '',
                 'gl_name' => $student['gl_name'] ?? '',
@@ -248,10 +248,10 @@ class UserManagement extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการนักศึกษานี้']);
         }
 
-        $isActive = (int) ($student['active'] ?? 0) === 1;
         $studentData = [
             'id' => (int)$student['id'],
             'login_uid' => $student['login_uid'] ?? '',
+            'student_id' => $student['login_uid'] ?? '',
             'email' => $student['email'] ?? '',
             'title' => $student['title'] ?? '',
             'gf_name' => $student['gf_name'] ?? '',
@@ -260,7 +260,7 @@ class UserManagement extends BaseController
             'tl_name' => $student['tl_name'] ?? '',
             'role' => $student['role'] ?? 'student',
             'program_id' => (int)($student['program_id'] ?? 0),
-            'status' => $isActive ? 'active' : 'inactive',
+            'status' => $student['status'] ?? 'active',
         ];
 
         return $this->response->setJSON([
@@ -401,17 +401,27 @@ class UserManagement extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'ไม่มีสิทธิ์จัดการนักศึกษานี้']);
         }
 
+        $input = $this->request->getJSON(true);
+        if (!is_array($input)) {
+            $input = $this->request->getPost() ?? [];
+        }
+
+        $requestedRole = (string) ($input['role'] ?? '');
+        if ($requestedRole === 'admin') {
+            $requestedRole = 'admin_student';
+        }
+
         $data = [
-            'login_uid' => $this->request->getPost('login_uid'),
-            'email' => $this->request->getPost('email'),
-            'title' => $this->request->getPost('title'),
-            'gf_name' => $this->request->getPost('gf_name'),
-            'gl_name' => $this->request->getPost('gl_name'),
-            'tf_name' => $this->request->getPost('tf_name') ?? $this->request->getPost('th_name'),
-            'tl_name' => $this->request->getPost('tl_name') ?? $this->request->getPost('thai_lastname'),
-            'role' => $this->request->getPost('role'),
-            'program_id' => $this->request->getPost('program_id') ? (int)$this->request->getPost('program_id') : null,
-            'status' => $this->request->getPost('status'),
+            'login_uid' => $input['student_id'] ?? $input['login_uid'] ?? $student['login_uid'] ?? '',
+            'email' => strtolower(trim((string) ($input['email'] ?? $student['email'] ?? ''))),
+            'title' => $input['title'] ?? $student['title'] ?? '',
+            'gf_name' => $input['gf_name'] ?? $student['gf_name'] ?? '',
+            'gl_name' => $input['gl_name'] ?? $student['gl_name'] ?? '',
+            'tf_name' => $input['tf_name'] ?? $input['th_name'] ?? $student['tf_name'] ?? '',
+            'tl_name' => $input['tl_name'] ?? $input['thai_lastname'] ?? $student['tl_name'] ?? '',
+            'role' => $requestedRole,
+            'program_id' => isset($input['program_id']) && $input['program_id'] !== '' ? (int)$input['program_id'] : null,
+            'status' => $input['status'] ?? $student['status'] ?? 'active',
         ];
 
         $titleTrim = trim((string) ($data['title'] ?? ''));
@@ -419,6 +429,14 @@ class UserManagement extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'คำนำหน้าชื่อไม่ตรงกับรายการมาตรฐาน']);
         }
         $data['title'] = $titleTrim === '' ? null : $titleTrim;
+
+        if ($data['email'] === '') {
+            return $this->response->setJSON(['success' => false, 'message' => 'กรุณาระบุอีเมลนักศึกษา']);
+        }
+
+        if ($requestedRole === '') {
+            return $this->response->setJSON(['success' => false, 'message' => 'กรุณาเลือกสิทธิ์นักศึกษา']);
+        }
 
         // Validate role assignment
         if (!$this->canAssignStudentRole($data['role'] ?? '', $data['program_id'])) {
