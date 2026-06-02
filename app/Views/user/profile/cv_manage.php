@@ -3,7 +3,8 @@ helper(['form', 'security']);
 use App\Libraries\ResearchRecordCvSyncMerge;
 
 $ai_cv_publication_enabled = ! empty($ai_cv_publication_enabled);
-$cv_ai_publication_section_id = (int) ($cv_ai_publication_section_id ?? 0);
+$cv_publication_section_id = (int) ($cv_publication_section_id ?? $cv_ai_publication_section_id ?? 0);
+$cv_ai_publication_section_id = $cv_publication_section_id;
 $ai_cv_ready_js = $ai_cv_publication_enabled ? 'true' : 'false';
 ?>
 <?= $this->extend('layouts/user_layout') ?>
@@ -695,6 +696,43 @@ $pubAiEntryBase  = base_url('dashboard/profile/cv/publication');
                             <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
                         </a>
                     </div>
+                </section>
+                <?php endif; ?>
+                <?php
+                $cv_publication_section_id = (int) ($cv_publication_section_id ?? $cv_ai_publication_section_id ?? 0);
+                $research_record_sso_ready = ! empty($research_record_sso_ready);
+                ?>
+                <?php if ($cv_publication_section_id > 0): ?>
+                <section class="cv-edit-stitch-panel mb-4 border-amber-200 bg-gradient-to-r from-amber-50/90 to-white">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900">ผลงานตีพิมพ์ / งานวิจัย</p>
+                            <p class="text-sm text-slate-600 mt-1">บันทึกเนื้อหาที่ระบบ <span translate="no">กบศ</span> แล้วกลับมาหน้านี้อัตโนมัติ — กดหัวข้อด้านล่างเพื่อดูรายการ</p>
+                            <?php if (! $research_record_sso_ready): ?>
+                            <p class="text-xs text-amber-900 mt-2">ยังไม่พร้อม SSO กบศ — ตรวจ <code class="text-[11px] bg-amber-100 px-1 rounded">researchrecordsso.*</code> ใน .env</p>
+                            <?php endif; ?>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <a href="<?= esc($rrPubCreateBase . '?section_id=' . $cv_publication_section_id, 'attr') ?>"
+                               class="inline-flex items-center justify-center gap-1.5 text-sm px-5 py-2.5 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold shadow-sm transition-colors <?= $research_record_sso_ready ? '' : 'opacity-60 pointer-events-none' ?>"
+                               <?= $research_record_sso_ready ? '' : 'aria-disabled="true" tabindex="-1"' ?>>
+                                <span aria-hidden="true">+</span> เพิ่มผลงานที่ กบศ
+                            </a>
+                            <a href="<?= esc($pubAiEntryBase . '?section_id=' . $cv_publication_section_id . '&ai=1', 'attr') ?>"
+                               class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg border border-violet-300 bg-violet-50 text-violet-900 font-semibold hover:bg-violet-100 transition-colors">
+                                <span aria-hidden="true">✦</span> ร่างด้วย AI
+                            </a>
+                        </div>
+                    </div>
+                </section>
+                <?php else: ?>
+                <section class="cv-edit-stitch-panel mb-4 border-slate-200 bg-slate-50">
+                    <p class="text-sm text-slate-700">
+                        ยังไม่มีหัวข้อผลงาน — เพิ่มหัวข้อประเภท <strong>งานวิจัย</strong> หรือ <strong>บทความ</strong> ด้านล่าง
+                        <?php if ($research_sync_configured): ?>
+                        หรือกด <strong>ดึงจาก กบศ</strong> เพื่อสร้างหัวข้ออัตโนมัติ
+                        <?php endif; ?>
+                    </p>
                 </section>
                 <?php endif; ?>
                 <section class="cv-edit-stitch-panel">
@@ -1506,9 +1544,17 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
             }
         }
         var openSection = qs.get('open_section');
+        var pubSectionId = <?= (int) ($cv_publication_section_id ?? $cv_ai_publication_section_id ?? 0) ?>;
+        if (!openSection && pubSectionId > 0) {
+            openSection = String(pubSectionId);
+        }
         if (openSection && typeof window.toggleCvSection === 'function') {
-            window.toggleCvSection(parseInt(openSection, 10));
-            var openEl = document.getElementById('cv-content-' + openSection);
+            var sid = parseInt(openSection, 10);
+            var content = document.getElementById('cv-content-' + sid);
+            if (content && content.classList.contains('hidden')) {
+                window.toggleCvSection(sid);
+            }
+            var openEl = document.getElementById('cv-content-' + sid);
             if (openEl) {
                 openEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }

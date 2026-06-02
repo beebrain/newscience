@@ -47,7 +47,11 @@ final class CvPublicationEntryPageTest extends CIUnitTestCase
         $src  = (string) file_get_contents($path);
 
         $this->assertStringContainsString('cv-entry-modal', $src);
-        $this->assertStringContainsString('publication-rr-v1', $src);
+        $this->assertStringContainsString('publication-rr-v2', $src);
+
+        $manage = (string) file_get_contents(APPPATH . 'Views/user/profile/cv_manage.php');
+        $this->assertStringContainsString('เพิ่มผลงานที่ กบศ', $manage);
+        $this->assertStringContainsString('rr-publication/create', $manage);
         $this->assertStringNotContainsString('cv-pub-entry-modal', $src);
     }
 

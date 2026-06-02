@@ -362,13 +362,14 @@ class ProfileCv extends BaseController
         $cvEditActiveTab = in_array($tabRaw, $cvEditTabs, true) ? $tabRaw : 'narrative';
 
         $aiCvCfg = config(AiCv::class);
-        $cvAiPublicationSectionId = 0;
+        $rrSsoCfg = config(\Config\ResearchRecordSso::class);
+        $cvPublicationSectionId = 0;
         foreach ($cvSections as $sec) {
             if (! is_array($sec) || ! ResearchRecordCvSyncMerge::isPublicationCvSection($sec)) {
                 continue;
             }
-            $cvAiPublicationSectionId = (int) ($sec['id'] ?? 0);
-            if ($cvAiPublicationSectionId > 0) {
+            $cvPublicationSectionId = (int) ($sec['id'] ?? 0);
+            if ($cvPublicationSectionId > 0) {
                 break;
             }
         }
@@ -389,8 +390,12 @@ class ProfileCv extends BaseController
             'rr_auto_pull_max_age_days'  => $researchSyncConfigured ? $syncCfg->autoPullMaxAgeDays : null,
             'cv_edit_active_tab'         => $cvEditActiveTab,
             'ai_cv_publication_enabled'     => $aiCvCfg->isReady(),
-            'cv_ai_publication_section_id'  => $cvAiPublicationSectionId,
-            'cv_ui_build'                   => 'publication-rr-v1',
+            'cv_publication_section_id'     => $cvPublicationSectionId,
+            'research_record_sso_ready'     => $rrSsoCfg->enabled
+                && $rrSsoCfg->baseUrl !== ''
+                && $rrSsoCfg->sharedSecret !== ''
+                && $rrSsoCfg->sharedSecret !== 'SHARED_SECRET_PLACEHOLDER',
+            'cv_ui_build'                   => 'publication-rr-v2',
         ]);
     }
 

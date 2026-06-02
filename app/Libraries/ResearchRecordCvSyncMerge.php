@@ -484,11 +484,14 @@ class ResearchRecordCvSyncMerge
      */
     public static function isPublicationCvSection(array $section): bool
     {
-        if (self::isProtectedPublicationSection($section)) {
+        $type = strtolower(trim((string) ($section['type'] ?? '')));
+        if (in_array($type, ['research', 'articles'], true)) {
             return true;
         }
 
-        $type = strtolower(trim((string) ($section['type'] ?? '')));
+        if (self::isProtectedPublicationSection($section)) {
+            return true;
+        }
 
         return $type === 'custom' && self::isPublicationSectionHeading((string) ($section['title'] ?? ''));
     }
