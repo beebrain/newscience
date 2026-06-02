@@ -40,7 +40,7 @@ test.describe('CV publication page — local (dev login)', () => {
     await devLoginForCv(page, cvUserEmail);
   });
 
-  test('L1: แท็บหัวข้อ — มีลิงก์ + เพิ่มผลงาน ไปหน้า publication (ไม่มี modal เก่า)', async ({
+  test('L1: แท็บหัวข้อ — เพิ่มผลงานไป กบศ + AI ใน NS (ไม่มี modal เก่า)', async ({
     page,
   }) => {
     await gotoCvSectionsTab(page);
@@ -49,13 +49,13 @@ test.describe('CV publication page — local (dev login)', () => {
 
     const { sectionId, section } = await requirePublicationSection(page);
 
-    const addLink = section.locator('a[href*="cv/publication"]').filter({
+    const addLink = section.locator('a[href*="rr-publication/create"]').filter({
       hasText: /เพิ่มผลงาน/,
     });
     await expect(addLink).toHaveCount(1);
     await expect(addLink).toHaveAttribute(
       'href',
-      new RegExp(`/dashboard/profile/cv/publication\\?section_id=${sectionId}`),
+      new RegExp(`/dashboard/profile/cv/rr-publication/create\\?section_id=${sectionId}`),
     );
 
     const aiLink = section.locator('a[href*="cv/publication"]').filter({
@@ -64,9 +64,9 @@ test.describe('CV publication page — local (dev login)', () => {
     await expect(aiLink).toHaveAttribute('href', /[?&]ai=1/);
   });
 
-  test('L2: เปิดหน้า publication — ฟอร์ม + แผง AI', async ({ page }) => {
+  test('L2: เปิดหน้า publication (AI) — ฟอร์ม + แผง AI', async ({ page }) => {
     await gotoCvSectionsTab(page);
-    const sectionId = await openPublicationPage(page, { fromSectionsTab: true });
+    const sectionId = await openPublicationPage(page, { fromSectionsTab: true, ai: true });
     await expectPublicationEntryPage(page);
     await expect(page.locator('#cv-pub-form')).toHaveAttribute(
       'data-open-ai',
@@ -98,7 +98,7 @@ test.describe('CV publication page — local (dev login)', () => {
 
   test('L3b: autocomplete ผู้แต่ง — พิมพ์ชื่อแล้วเห็นรายชื่อ', async ({ page }) => {
     await gotoCvSectionsTab(page);
-    await openPublicationPage(page, { fromSectionsTab: true });
+    await openPublicationPage(page, { fromSectionsTab: true, ai: true });
 
     const nameInput = page.locator(
       '#cv-p-authors-list .cv-author-name',
@@ -132,7 +132,7 @@ test.describe('CV publication page — local (dev login)', () => {
 
   test('L4a: ส่งฟอร์มไม่ครบ → แสดง validation ไม่ออกจากหน้า', async ({ page }) => {
     await gotoCvSectionsTab(page);
-    await openPublicationPage(page, { fromSectionsTab: true });
+    await openPublicationPage(page, { fromSectionsTab: true, ai: true });
 
     await page.locator('#cv-p-title').fill('');
     await page.locator('#cv-p-org').fill('');
@@ -146,12 +146,12 @@ test.describe('CV publication page — local (dev login)', () => {
     await expect(page.locator('#cv-p-org.cv-pub-field--invalid')).toBeVisible();
   });
 
-  test('L4: บันทึกผลงานใหม่ → กลับแท็บหัวข้อ (redirect publication page)', async ({
+  test('L4: บันทึกผลงานใหม่ (AI หน้า NS) → กลับแท็บหัวข้อ', async ({
     page,
   }) => {
     test.slow();
     await gotoCvSectionsTab(page);
-    await openPublicationPage(page, { fromSectionsTab: true });
+    await openPublicationPage(page, { fromSectionsTab: true, ai: true });
 
     const title = `E2E Playwright ${Date.now()}`;
     await fillMinimalPublicationForm(page, title);

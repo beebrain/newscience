@@ -18,15 +18,18 @@ final class PublicationDisplay
      */
     public static function enrichSections(int $personnelId, array $sections): array
     {
-        if (! PublicationCatalog::isReady() || $sections === []) {
+        if ($sections === []) {
             return $sections;
         }
 
-        $catalogByKey = self::loadCatalogByExternalKey($personnelId);
-        $contributorsByPubId = self::loadContributorsByPublicationId(array_values(array_filter(array_map(
-            static fn (array $row): int => (int) ($row['id'] ?? 0),
-            $catalogByKey
-        ))));
+        $catalogReady = PublicationCatalog::isReady();
+        $catalogByKey = $catalogReady ? self::loadCatalogByExternalKey($personnelId) : [];
+        $contributorsByPubId = $catalogReady
+            ? self::loadContributorsByPublicationId(array_values(array_filter(array_map(
+                static fn (array $row): int => (int) ($row['id'] ?? 0),
+                $catalogByKey
+            ))))
+            : [];
 
         foreach ($sections as &$section) {
             $type = (string) ($section['type'] ?? '');
@@ -41,23 +44,37 @@ final class PublicationDisplay
 
             foreach ($entries as &$entry) {
                 $meta = $entry['metadata_array'] ?? CvEntryModel::decodeMetadata($entry['metadata'] ?? null);
-                $key = PublicationIdentity::syncExternalKeyFromMetadata(is_array($meta) ? $meta : []);
-                if ($key === '' && is_array($meta) && ! empty($meta['doi'])) {
+                if (! is_array($meta)) {
+                    $meta = [];
+                }
+
+                $fromRrBundle = ($meta['source'] ?? '') === 'research_record'
+                    || (int) ($meta['rr_publication_id'] ?? 0) > 0;
+
+                $key = PublicationIdentity::syncExternalKeyFromMetadata($meta);
+                if ($key === '' && ! empty($meta['doi'])) {
                     $key = 'pub:h:' . substr(hash('sha256', PublicationIdentity::normalizeDoi((string) $meta['doi'])), 0, 40);
                 }
 
-                $catalog = $key !== '' ? ($catalogByKey[$key] ?? null) : null;
-                $pubId = is_array($catalog) ? (int) ($catalog['id'] ?? 0) : 0;
+                $catalog = ($catalogReady && $key !== '') ? ($catalogByKey[$key] ?? null) : null;
+                $pubId   = is_array($catalog) ? (int) ($catalog['id'] ?? 0) : 0;
                 $catalogContributors = $pubId > 0 ? ($contributorsByPubId[$pubId] ?? []) : [];
 
-                $authors = PublicationResearchFields::contributorsFromMetadataOrCatalog(
-                    is_array($meta) ? $meta : [],
-                    $catalogContributors
-                );
-
-                $biblio = is_array($catalog)
-                    ? PublicationResearchFields::decodeBibliographicFromPublicationRow($catalog)
-                    : PublicationResearchFields::extractBibliographicFromMetadata(is_array($meta) ? $meta : []);
+                if ($fromRrBundle) {
+                    $authors = PublicationResearchFields::contributorsFromMetadataOrCatalog($meta, null);
+                    $biblio  = PublicationResearchFields::extractBibliographicFromMetadata($meta);
+                    if ($authors === [] && $catalogContributors !== []) {
+                        $authors = $catalogContributors;
+                    }
+                    if ($biblio === [] && is_array($catalog)) {
+                        $biblio = PublicationResearchFields::decodeBibliographicFromPublicationRow($catalog);
+                    }
+                } else {
+                    $authors = PublicationResearchFields::contributorsFromMetadataOrCatalog($meta, $catalogContributors);
+                    $biblio  = is_array($catalog)
+                        ? PublicationResearchFields::decodeBibliographicFromPublicationRow($catalog)
+                        : PublicationResearchFields::extractBibliographicFromMetadata($meta);
+                }
 
                 $entry['publication_catalog'] = $catalog;
                 $entry['publication_contributors'] = $authors;

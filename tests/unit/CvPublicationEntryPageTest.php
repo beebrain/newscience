@@ -27,14 +27,16 @@ final class CvPublicationEntryPageTest extends CIUnitTestCase
         $this->assertStringNotContainsString('cv-pub-entry-modal', $html);
     }
 
-    public function testCvManageUsesPublicationPageLinksNotPubModal(): void
+    public function testCvManageUsesRrPublicationLinksNotPubModal(): void
     {
         $path = APPPATH . 'Views/user/profile/cv_manage.php';
         $this->assertFileExists($path);
         $src = (string) file_get_contents($path);
 
+        $this->assertStringContainsString('dashboard/profile/cv/rr-publication/create', $src);
         $this->assertStringContainsString('dashboard/profile/cv/publication', $src);
-        $this->assertStringContainsString('CV_PUB_PAGE_BASE', $src);
+        $this->assertStringContainsString('CV_RR_PUB_CREATE_BASE', $src);
+        $this->assertStringContainsString('CV_PUB_AI_BASE', $src);
         $this->assertStringNotContainsString('cv-pub-entry-modal', $src);
         $this->assertStringNotContainsString('cv-ai-modal', $src);
     }
@@ -45,7 +47,7 @@ final class CvPublicationEntryPageTest extends CIUnitTestCase
         $src  = (string) file_get_contents($path);
 
         $this->assertStringContainsString('cv-entry-modal', $src);
-        $this->assertStringContainsString('publication-page-v1', $src);
+        $this->assertStringContainsString('publication-rr-v1', $src);
         $this->assertStringNotContainsString('cv-pub-entry-modal', $src);
     }
 

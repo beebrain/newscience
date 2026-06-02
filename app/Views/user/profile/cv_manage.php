@@ -340,7 +340,9 @@ $cvEditTabs = ['identity', 'narrative', 'photo', 'orcid', 'sections'];
 $tTab = strtolower((string) ($cv_edit_active_tab ?? 'narrative'));
 $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
 $account_user = $account_user ?? null;
-$pubEntryBase = base_url('dashboard/profile/cv/publication');
+$rrPubCreateBase = base_url('dashboard/profile/cv/rr-publication/create');
+$rrPubEditBase   = base_url('dashboard/profile/cv/rr-publication/edit');
+$pubAiEntryBase  = base_url('dashboard/profile/cv/publication');
 ?>
 
 <div class="cv-manage-page px-3 sm:px-5 md:px-8 lg:px-10 xl:px-12 py-4 sm:py-6 space-y-4 sm:space-y-6 min-h-[calc(100dvh-11rem)] w-full">
@@ -494,7 +496,7 @@ $pubEntryBase = base_url('dashboard/profile/cv/publication');
                         <?php if ($research_sync_configured): ?>
                             <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-2 shrink-0 max-w-md">
                                 <p class="w-full text-xs text-slate-500 leading-relaxed sm:order-first">
-                                    ผลงานซิงค์เมื่อบันทึก — ปุ่ม <strong>ซิงค์ให้ตรงกัน</strong> ดึงจาก กบศ + ส่งผลงาน/การศึกษากลับ (อ่านคำเตือนการลบในหน้าซิงค์ละเอียด)
+                                    บันทึกผลงานที่ระบบ กบศ — ปุ่ม <strong>ซิงค์ให้ตรงกัน</strong> ดึง CV/ผลงานจาก กบศ และส่งประวัติการศึกษากลับ (อ่านคำเตือนการลบในหน้าซิงค์ละเอียด)
                                 </p>
                                 <button type="button" id="cv-btn-rr-reconcile"
                                         class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-[6px] border border-violet-600 bg-violet-600 text-white font-semibold hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 transition-colors sm:order-1">
@@ -688,7 +690,7 @@ $pubEntryBase = base_url('dashboard/profile/cv/publication');
                             <p class="text-xs text-amber-800 mt-2">ยังไม่เปิดใช้บนเซิร์ฟเวอร์ — ตั้ง <code class="text-[11px] bg-amber-100 px-1 rounded">AI_CV_N8N_URL</code> ใน .env</p>
                             <?php endif; ?>
                         </div>
-                        <a href="<?= esc($pubEntryBase . '?section_id=' . $cv_ai_publication_section_id . '&ai=1', 'attr') ?>"
+                        <a href="<?= esc($pubAiEntryBase . '?section_id=' . $cv_ai_publication_section_id . '&ai=1', 'attr') ?>"
                            class="inline-flex items-center justify-center gap-1.5 shrink-0 text-sm px-5 py-2.5 rounded-lg border font-semibold shadow-sm transition-colors <?= $ai_cv_publication_enabled ? 'border-violet-400 bg-violet-600 text-white hover:bg-violet-700' : 'border-amber-300 bg-amber-50 text-amber-950 hover:bg-amber-100' ?>">
                             <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
                         </a>
@@ -847,6 +849,10 @@ $pubEntryBase = base_url('dashboard/profile/cv/publication');
                                         }
                                         $metaLine = implode(' · ', $metaBits);
                                         $rowTitleAttr = trim(($entry['title'] ?? '') . ($metaLine !== '' ? ' — ' . $metaLine : ''));
+                                        $rrPubId = (int) ($entry['metadata_array']['rr_publication_id'] ?? 0);
+                                        $pubEditHref = $rrPubId > 0
+                                            ? $rrPubEditBase . '/' . $rrPubId . '?section_id=' . $sid
+                                            : $rrPubCreateBase . '?section_id=' . $sid;
                                     ?>
                                         <div class="entry-card cv-entry-row cv-entry-item rounded-lg border border-slate-200/80 bg-white px-2 py-1.5 sm:px-3 sm:py-2 shadow-sm hover:border-slate-300 hover:bg-slate-50/80 transition-colors" data-entry-id="<?= $eid ?>">
                                             <?php if ($canReorderEntries): ?>
@@ -875,8 +881,8 @@ $pubEntryBase = base_url('dashboard/profile/cv/publication');
                                                     </button>
                                                 </div>
                                                 <?php if ($showPublicationType): ?>
-                                                <a href="<?= esc($pubEntryBase . '?section_id=' . $sid . '&entry_id=' . $eid, 'attr') ?>"
-                                                   class="text-xs px-2 py-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">แก้ไข</a>
+                                                <a href="<?= esc($pubEditHref, 'attr') ?>"
+                                                   class="text-xs px-2 py-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">แก้ไขที่ กบศ</a>
                                                 <?php else: ?>
                                                 <button type="button" onclick="editCvEntry(<?= $sid ?>, <?= $eid ?>)"
                                                         class="text-xs px-2 py-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">แก้ไข</button>
@@ -893,16 +899,16 @@ $pubEntryBase = base_url('dashboard/profile/cv/publication');
                         </div>
 
                         <div class="cv-section-foot py-4 sm:py-5 border-t border-gray-100 bg-gray-50/80 flex flex-wrap items-center justify-between gap-3">
-                            <p class="text-sm text-gray-600">เพิ่มหรือแก้ไขรายการในหัวข้อนี้</p>
+                            <p class="text-sm text-gray-600"><?= $showPublicationType ? 'บันทึกเนื้อหาที่ กบศ แล้วกลับมาหน้านี้อัตโนมัติ · AI ช่วยร่างใน ฐานข้อมูลคณะ' : 'เพิ่มหรือแก้ไขรายการในหัวข้อนี้' ?></p>
                             <div class="flex flex-wrap items-center gap-2">
                                 <?php if ($showPublicationType): ?>
-                                <a href="<?= esc($pubEntryBase . '?section_id=' . $sid . '&ai=1', 'attr') ?>"
+                                <a href="<?= esc($pubAiEntryBase . '?section_id=' . $sid . '&ai=1', 'attr') ?>"
                                    class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg border font-semibold transition-colors <?= $ai_cv_publication_enabled ? 'border-violet-300 bg-violet-50 text-violet-900 hover:bg-violet-100' : 'border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100' ?>">
                                     <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
                                 </a>
-                                <a href="<?= esc($pubEntryBase . '?section_id=' . $sid, 'attr') ?>"
+                                <a href="<?= esc($rrPubCreateBase . '?section_id=' . $sid, 'attr') ?>"
                                    class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold shadow-sm transition-colors">
-                                    <span aria-hidden="true">+</span> เพิ่มผลงาน
+                                    <span aria-hidden="true">+</span> เพิ่มผลงานที่ กบศ
                                 </a>
                                 <?php else: ?>
                                 <button type="button"
@@ -1067,7 +1073,8 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
 <script>
 (function () {
     window.CV_CSRF = <?= json_encode(['name' => $csrfName, 'hash' => $csrfHash], JSON_UNESCAPED_UNICODE) ?>;
-    var CV_PUB_PAGE_BASE = <?= json_encode($pubEntryBase, JSON_UNESCAPED_SLASHES) ?>;
+    var CV_RR_PUB_CREATE_BASE = <?= json_encode($rrPubCreateBase, JSON_UNESCAPED_SLASHES) ?>;
+    var CV_PUB_AI_BASE = <?= json_encode($pubAiEntryBase, JSON_UNESCAPED_SLASHES) ?>;
     var CV_API = <?= json_encode([
         'entry'          => base_url('dashboard/profile/cv/entry'),
         'entryDelete'    => base_url('dashboard/profile/cv/entry/delete'),
@@ -1092,7 +1099,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         var btn = document.getElementById('cv-btn-rr-reconcile');
         if (!btn) return;
         btn.addEventListener('click', async function () {
-            if (!confirm('ซิงค์ให้ ฐานข้อมูลคณะ กับ กบศ ตรงกัน?\n\nดึงจาก กบศ (เสริม) → ซิงค์ผลงาน → ส่งการศึกษา\n\nถ้าลบใน ฐานข้อมูลคณะ แต่ กบศ ยังมี รายการอาจกลับมา')) return;
+            if (!confirm('ซิงค์ให้ ฐานข้อมูลคณะ กับ กบศ ตรงกัน?\n\nดึง CV/ผลงานจาก กบศ → ส่งประวัติการศึกษากลับ\n\nถ้าลบใน ฐานข้อมูลคณะ แต่ กบศ ยังมี รายการอาจกลับมา')) return;
             btn.disabled = true;
             btn.setAttribute('aria-busy', 'true');
             try {
@@ -1296,7 +1303,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     window.launchCvAiAssist = function (sectionId) {
         var sid = parseInt(sectionId, 10) || 0;
         if (!sid) return;
-        window.location.href = CV_PUB_PAGE_BASE + '?section_id=' + sid + '&ai=1';
+        window.location.href = CV_PUB_AI_BASE + '?section_id=' + sid + '&ai=1';
     };
 
     function resetPublicationSelectOptions() {
@@ -1367,7 +1374,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     };
 
     window.openCvPubEntryModal = function (sectionId) {
-        window.location.href = CV_PUB_PAGE_BASE + '?section_id=' + sectionId;
+        window.location.href = CV_RR_PUB_CREATE_BASE + '?section_id=' + sectionId;
     };
 
     window.openCvEntryModal = function (sectionId) {
@@ -1403,7 +1410,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         }
         var e = data.entry;
         if (cvSectionIsPublication(sectionId)) {
-            window.location.href = CV_PUB_PAGE_BASE + '?section_id=' + sectionId + '&entry_id=' + entryId;
+            window.location.href = CV_RR_PUB_CREATE_BASE + '?section_id=' + sectionId;
             return;
         }
         {
@@ -1490,21 +1497,26 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     };
 
     document.addEventListener('DOMContentLoaded', function () {
+        var qs = new URLSearchParams(window.location.search);
         var aiSectionId = <?= (int) $cv_ai_publication_section_id ?>;
         if (aiSectionId > 0) {
-            var qs = new URLSearchParams(window.location.search);
             if (qs.get('tab') === 'sections' && qs.get('ai') === '1') {
-                window.location.href = CV_PUB_PAGE_BASE + '?section_id=' + aiSectionId + '&ai=1';
+                window.location.href = CV_PUB_AI_BASE + '?section_id=' + aiSectionId + '&ai=1';
                 return;
             }
         }
-        var openSection = new URLSearchParams(window.location.search).get('open_section');
+        var openSection = qs.get('open_section');
         if (openSection && typeof window.toggleCvSection === 'function') {
             window.toggleCvSection(parseInt(openSection, 10));
             var openEl = document.getElementById('cv-content-' + openSection);
             if (openEl) {
                 openEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
+        }
+        if (qs.get('rr_sync') === '1' && window.history && window.history.replaceState) {
+            qs.delete('rr_sync');
+            var clean = window.location.pathname + (qs.toString() ? '?' + qs.toString() : '') + window.location.hash;
+            window.history.replaceState({}, '', clean);
         }
 
         var sc = document.getElementById('cv-sections-container');

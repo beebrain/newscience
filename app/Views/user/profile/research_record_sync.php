@@ -12,7 +12,7 @@ $email = $sync_email ?? '';
                 <div class="w-1 h-6 bg-emerald-600 rounded-full"></div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-800 text-balance">ซิงค์ CV จาก <span translate="no">กบศ</span></h1>
             </div>
-            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — ใช้ปุ่ม <strong>ซิงค์ให้ตรงกัน</strong> เมื่อต้องการให้ NS กับ กบศ สอดคล้องกัน (ดึงเสริม → ผลงานสองทาง → ส่งการศึกษา)</p>
+            <p class="text-sm text-gray-500 ml-3">จับคู่ด้วยอีเมล <strong class="text-gray-800"><?= esc($email) ?></strong> — ใช้ปุ่ม <strong>ซิงค์ให้ตรงกัน</strong> เมื่อต้องการดึง CV/ผลงานจาก กบศ และส่งประวัติการศึกษา (ผลงานบันทึกที่ กบศ โดยตรง)</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="<?= base_url('dashboard/profile/cv') ?>"
@@ -34,14 +34,14 @@ $email = $sync_email ?? '';
         <?php if ($apiOk): ?>
             <div class="rounded-xl border border-violet-200 bg-violet-50/80 px-4 py-3 text-sm text-violet-950">
                 <p class="font-semibold mb-1">ซิงค์ให้ตรงกัน (แนะนำ)</p>
-                <p class="text-violet-900/90">ดึง CV แบบเสริม (ฐานข้อมูลคณะเป็นหลัก) → ซิงค์ผลงานสองทาง → ส่งประวัติการศึกษาไป กบศ ใช้เมื่อต้องการให้ทั้งสองระบบใกล้เคียงกันหลังแก้ไขฝั่งใดฝั่งหนึ่ง</p>
+                <p class="text-violet-900/90">ดึง CV แบบเสริม (ฐานข้อมูลคณะเป็นหลัก) → ดึงผลงานจาก กบศ (pull-only) → ส่งประวัติการศึกษาไป กบศ</p>
             </div>
             <div class="rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-950">
                 <p class="font-semibold mb-1">เรื่องการลบ — อ่านก่อนกดซิงค์</p>
                 <ul class="list-disc pl-5 space-y-1 text-amber-900/90">
                     <li><strong>ลบใน ฐานข้อมูลคณะ</strong> แล้วซิงค์: ถ้า กบศ ยังมีรายการนั้น อาจ<strong>กลับมา</strong>หลังดึงจาก กบศ (ลบผลงานใน CV จะถอนออกจาก catalog ที่ส่งไป กบศ ด้วย)</li>
                     <li><strong>ลบใน กบศ</strong> อย่างเดียว: ซิงค์อาจ<strong>ไม่ลบ</strong>ใน ฐานข้อมูลคณะ — ต้องลบใน CV หรือเลือกฝั่งในโหมดเปรียบเทียบ</li>
-                    <li>การส่งผลงานเป็น <strong>upsert</strong> — รายการที่ยังอยู่บน กบศ แต่ไม่มีใน catalog อาจยังไม่หายจาก กบศ</li>
+                    <li>เนื้อหาผลงานใหม่/แก้ไขทำที่ <strong>ระบบ กบศ</strong> — ปุ่มส่งด้านล่างส่งเฉพาะประวัติการศึกษา</li>
                     <li>อย่ากดซิงค์ซ้ำพร้อมกัน — รอจบรอบก่อน (มีล็อกดึง CV)</li>
                 </ul>
             </div>
@@ -59,9 +59,9 @@ $email = $sync_email ?? '';
                     <?= $apiOk ? '' : 'disabled' ?>>เปรียบเทียบแล้วเลือกรายแถว</button>
             <button type="button" id="rrsync-btn-push"
                     class="px-4 py-2.5 rounded-lg bg-slate-800 text-white text-sm font-semibold hover:bg-slate-900 disabled:opacity-50 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 transition-colors"
-                    <?= $apiOk ? '' : 'disabled' ?>>ส่งประวัติการศึกษาและผลงานไป <span translate="no">กบศ</span></button>
+                    <?= $apiOk ? '' : 'disabled' ?>>ส่งประวัติการศึกษาไป <span translate="no">กบศ</span></button>
         </div>
-        <p class="text-xs text-gray-500">การส่งไป กบศ: อัปเดตหัวข้อ <strong>ประวัติการศึกษา</strong> จาก ฐานข้อมูลคณะ (แม้ยังไม่มีรายการในหัวข้อ — จะส่งหัวข้อว่าง) หัวข้อ CV อื่นบน กบศ ไม่เปลี่ยน · upsert <strong>ผลงานตีพิมพ์</strong> จาก catalog</p>
+        <p class="text-xs text-gray-500">การส่งไป กบศ: อัปเดตหัวข้อ <strong>ประวัติการศึกษา</strong> จาก ฐานข้อมูลคณะเท่านั้น — ผลงานตีพิมพ์บันทึก/แก้ที่ กบศ จากหน้า CV</p>
 
         <p id="rrsync-status" class="text-sm text-gray-600" role="status" aria-live="polite"></p>
 
@@ -228,7 +228,7 @@ $email = $sync_email ?? '';
 
     var reconcileConfirm = 'ซิงค์ให้ NS กับ กบศ ตรงกัน?\n\n'
         + '1) ดึงจาก กบศ แบบเสริม (ข้อมูลที่กรอกใน ฐานข้อมูลคณะเป็นหลัก)\n'
-        + '2) ซิงค์ผลงานสองทาง\n'
+        + '2) ดึงผลงานจาก กบศ (ไม่ส่งผลงานจาก ฐานข้อมูลคณะ)\n'
         + '3) ส่งประวัติการศึกษาไป กบศ\n\n'
         + 'คำเตือน: ถ้าลบใน ฐานข้อมูลคณะ แต่ กบศ ยังมี — รายการอาจกลับมา\n'
         + 'ถ้าลบใน กบศ อย่างเดียว — รายการอาจยังอยู่ใน ฐานข้อมูลคณะ';
@@ -262,9 +262,9 @@ $email = $sync_email ?? '';
     });
 
     document.getElementById('rrsync-btn-push') && document.getElementById('rrsync-btn-push').addEventListener('click', async function () {
-        if (!confirm('ส่งประวัติการศึกษาและผลงานตีพิมพ์จาก ฐานข้อมูลคณะ ไป กบศ?\n\nเฉพาะหัวข้อการศึกษาบน กบศ จะถูกอัปเดต — หัวข้อ CV อื่นบน กบศ คงเดิม — ผลงาน upsert ไม่ลบรายการที่กรอกใน กบศ โดยตรง')) return;
+        if (!confirm('ส่งประวัติการศึกษาจาก ฐานข้อมูลคณะ ไป กบศ?\n\nผลงานตีพิมพ์ไม่ถูกส่งจากปุ่มนี้ — ใช้ปุ่มเพิ่ม/แก้ที่ กบศ ในหน้า CV')) return;
         var btn = this;
-        setStatus('กำลังส่งประวัติการศึกษาและผลงาน…');
+        setStatus('กำลังส่งประวัติการศึกษา…');
         btn.disabled = true;
         try {
             var data = await postJson('<?= base_url('dashboard/profile/research-record-sync/push-all') ?>', {});

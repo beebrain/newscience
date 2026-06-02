@@ -6,7 +6,6 @@ use App\Controllers\BaseController;
 use App\Libraries\CvBundleCanonical;
 use App\Libraries\CvProfile;
 use App\Libraries\CvResearchRecordReconcile;
-use App\Libraries\PublicationSyncEngine;
 use App\Libraries\ResearchRecordCvPull;
 use App\Libraries\ResearchRecordCvSyncClient;
 use App\Libraries\ResearchRecordCvSyncMerge;
@@ -252,10 +251,7 @@ class ResearchRecordSync extends BaseController
             'message'            => $result['message'] ?? '',
             'partial'            => $result['partial'] ?? false,
             'publications_stats' => is_array($result['publications'] ?? null)
-                ? [
-                    'rr_to_ns' => ($result['publications']['rr_to_ns'] ?? null),
-                    'ns_to_rr' => ($result['publications']['ns_to_rr'] ?? null),
-                ]
+                ? ($result['publications']['publications_stats'] ?? null)
                 : null,
             'pull_stats'         => $result['pull']['publications_stats'] ?? null,
         ]);
@@ -329,23 +325,10 @@ class ResearchRecordSync extends BaseController
             $cvPushOk = true;
         }
 
-        $pubResult = PublicationSyncEngine::pushToResearchRecord($personnelId, $email, 'push_education_pubs_ui');
-        if (! ($pubResult['success'] ?? false)) {
-            $partial = $cvPushOk ? 'ส่งประวัติการศึกษาไป กบศ แล้ว แต่ส่งผลงานตีพิมพ์ไม่สำเร็จ: ' : 'ส่งผลงานตีพิมพ์ไม่สำเร็จ: ';
-
-            return $this->response->setJSON([
-                'success'            => false,
-                'message'            => $partial . ($pubResult['message'] ?? ''),
-                'cv_push_ok'         => $cvPushOk,
-                'education_empty'    => $educationEmpty,
-                'publications_stats' => $pubResult['ns_to_rr'] ?? null,
-            ]);
-        }
-
-        if (! $cvPushOk && ! empty($pubResult['skipped'])) {
+        if (! $cvPushOk) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'ระบบผลงานยังไม่พร้อม — ไม่มีข้อมูลให้ส่ง',
+                'message' => 'ไม่มีประวัติการศึกษาให้ส่ง — ผลงานตีพิมพ์บันทึกที่ กบศ โดยตรง',
             ]);
         }
 
@@ -354,15 +337,13 @@ class ResearchRecordSync extends BaseController
             $rrHash = is_array($rr['bundle'] ?? null) ? ($rr['bundle']['content_hash'] ?? null) : null;
             $log->insert([
                 'personnel_id'    => $personnelId,
-                'direction'       => 'push_education_pubs_ns_to_rr',
+                'direction'       => 'push_education_ns_to_rr',
                 'ns_content_hash' => is_array($bundle) ? ($bundle['content_hash'] ?? null) : null,
                 'rr_content_hash' => $rrHash,
                 'decisions_json'  => json_encode([
                     'education_empty'    => $educationEmpty,
                     'education_sections' => $eduBuild['education_section_count'] ?? 0,
                     'education_entries'  => $eduBuild['education_entry_count'] ?? 0,
-                    'publications'       => $pubResult['ns_to_rr'] ?? [],
-                    'pub_skipped'        => ! empty($pubResult['skipped']),
                 ], JSON_UNESCAPED_UNICODE),
                 'created_at'      => date('Y-m-d H:i:s'),
             ]);
@@ -374,29 +355,11 @@ class ResearchRecordSync extends BaseController
                 ? 'ประวัติการศึกษา (หัวข้อว่าง — ล้างรายการการศึกษาบน กบศ)'
                 : 'ประวัติการศึกษา';
         }
-        if (! empty($pubResult['skipped'])) {
-            $parts[] = 'ข้ามผลงาน (catalog ยังไม่พร้อม)';
-        } else {
-            $stats = $pubResult['ns_to_rr'] ?? [];
-            $total = (int) ($stats['inserted'] ?? 0) + (int) ($stats['updated'] ?? 0) + (int) ($stats['skipped_unchanged'] ?? 0);
-            if ($total > 0) {
-                $parts[] = sprintf(
-                    'ผลงาน %d รายการ (เพิ่ม %d อัปเดต %d ข้าม %d)',
-                    $total,
-                    (int) ($stats['inserted'] ?? 0),
-                    (int) ($stats['updated'] ?? 0),
-                    (int) ($stats['skipped_unchanged'] ?? 0)
-                );
-            } else {
-                $parts[] = 'ผลงาน (ไม่มีใน catalog)';
-            }
-        }
 
         return $this->response->setJSON([
-            'success'            => true,
-            'message'            => 'ส่งไป กบศ แล้ว: ' . implode(' · ', $parts) . ' — หัวข้อ CV อื่นบน กบศ ไม่ถูกแทนที่',
-            'publications_stats' => $pubResult['ns_to_rr'] ?? [],
-            'education_empty'    => $educationEmpty,
+            'success'         => true,
+            'message'         => 'ส่งไป กบศ แล้ว: ' . implode(' · ', $parts) . ' — ผลงานตีพิมพ์บันทึกที่ กบศ โดยตรง',
+            'education_empty' => $educationEmpty,
         ]);
     }
 }

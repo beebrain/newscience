@@ -5,9 +5,9 @@ namespace App\Libraries;
 use App\Models\CvSyncLogModel;
 
 /**
- * ซิงค์ให้ NS กับ กบศ ใกล้เคียงกัน: ดึง CV แบบเสริม (NS หลัก) → reconcile ผลงาน (ดึง RR แล้วส่ง catalog กลับ) → ส่งประวัติการศึกษา
+ * ซิงค์ให้ NS กับ กบศ ใกล้เคียงกัน: ดึง CV แบบเสริม (NS หลัก) → ดึงผลงานจาก RR (pull-only) → ส่งประวัติการศึกษา
  *
- * ข้อจำกัด: การลบฝั่งเดียวอาจกลับมาหลัง pull; การส่งผลงานเป็น upsert — รายการที่ยังอยู่ใน กบศ แต่ถูกปิดใน catalog อาจยังไม่หายจาก กบศ จนกว่าจะลบที่ กบศ
+ * ข้อจำกัด: การลบฝั่งเดียวอาจกลับมาหลัง pull; แก้/เพิ่มเนื้อหาผลงานทำที่ฟอร์ม กบศ ไม่ push จากฟอร์ม NS
  */
 class CvResearchRecordReconcile
 {
@@ -41,21 +41,18 @@ class CvResearchRecordReconcile
             ];
         }
 
-        $pub = ['success' => true, 'message' => 'publication catalog not ready', 'skipped' => true];
-        if (PublicationCatalog::isReady()) {
-            $pub = PublicationSyncEngine::reconcileForPersonnel($personnelId, $email, $trigger);
-            if (! ($pub['success'] ?? false)) {
-                self::logReconcile($personnelId, $trigger, false, $pull, $pub, null);
+        $pub = ResearchRecordCvPull::pullPublicationsOnly($personnelId, $email, $trigger);
+        if (! ($pub['success'] ?? false)) {
+            self::logReconcile($personnelId, $trigger, false, $pull, $pub, null);
 
-                return [
-                    'success'  => false,
-                    'message'  => ($pull['message'] ?? 'ดึง CV แล้ว') . ' แต่ซิงค์ผลงานไม่สำเร็จ: ' . ($pub['message'] ?? ''),
-                    'error'    => $pub['error'] ?? 'PUB_RECONCILE_FAILED',
-                    'partial'  => true,
-                    'pull'     => $pull,
-                    'publications' => $pub,
-                ];
-            }
+            return [
+                'success'      => false,
+                'message'      => ($pull['message'] ?? 'ดึง CV แล้ว') . ' แต่ดึงผลงานไม่สำเร็จ: ' . ($pub['message'] ?? ''),
+                'error'        => $pub['error'] ?? 'PUB_PULL_FAILED',
+                'partial'      => true,
+                'pull'         => $pull,
+                'publications' => $pub,
+            ];
         }
 
         $edu = self::pushEducationToResearchRecord($personnelId, $email, $trigger);
@@ -141,16 +138,12 @@ class CvResearchRecordReconcile
         $parts = ['ซิงค์ให้ตรงกันแล้ว'];
         $parts[] = $pull['message'] ?? 'ดึง CV จาก กบศ แล้ว';
 
-        if (! empty($pub['skipped'])) {
-            $parts[] = 'ข้ามซิงค์ผลงาน (catalog ยังไม่พร้อม)';
-        } elseif ($pub['success'] ?? false) {
-            $rrStats = $pub['rr_to_ns'] ?? [];
-            $nsStats = $pub['ns_to_rr'] ?? [];
+        if ($pub['success'] ?? false) {
+            $stats = $pub['publications_stats'] ?? [];
             $parts[] = sprintf(
-                'ผลงาน: รับจาก กบศ +%d/~%d · ส่งไป กบศ %d',
-                (int) ($rrStats['inserted'] ?? 0) + (int) ($rrStats['updated'] ?? 0),
-                (int) ($rrStats['skipped_unchanged'] ?? 0),
-                (int) ($nsStats['sent'] ?? 0)
+                'ผลงาน: ดึงจาก กบศ (เพิ่ม %d, อัปเดต %d)',
+                (int) ($stats['inserted'] ?? 0),
+                (int) ($stats['updated'] ?? 0)
             );
         }
 
@@ -187,9 +180,8 @@ class CvResearchRecordReconcile
                     'publications_stats' => $pull['publications_stats'] ?? null,
                 ],
                 'publications' => [
-                    'rr_to_ns' => $pub['rr_to_ns'] ?? null,
-                    'ns_to_rr' => $pub['ns_to_rr'] ?? null,
-                    'skipped'  => ! empty($pub['skipped']),
+                    'publications_stats' => $pub['publications_stats'] ?? null,
+                    'trigger'            => $pub['trigger'] ?? null,
                 ],
                 'education'    => $edu,
             ], JSON_UNESCAPED_UNICODE),

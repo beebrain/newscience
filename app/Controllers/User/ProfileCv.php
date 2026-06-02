@@ -3,6 +3,7 @@
 namespace App\Controllers\User;
 
 use App\Controllers\BaseController;
+use App\Libraries\AdminImpersonation;
 use App\Libraries\AiPublicationParser;
 use App\Libraries\CvAiFileStorage;
 use App\Libraries\CvProfile;
@@ -12,7 +13,7 @@ use App\Libraries\PublicationAuthorSearch;
 use App\Libraries\PublicationDisplay;
 use App\Libraries\PublicationIdentity;
 use App\Libraries\PublicationResearchFields;
-use App\Libraries\PublicationSyncEngine;
+use App\Libraries\ResearchRecordSsoBridge;
 use App\Libraries\RrPublicationType;
 use App\Libraries\OrcidPublicRecord;
 use App\Libraries\OrcidCvImport;
@@ -311,18 +312,29 @@ class ProfileCv extends BaseController
             }
         }
 
-        if ($researchSyncConfigured) {
+        $canonical = ResearchRecordCvPull::canonicalEmailForPerson($person);
+
+        if ($researchSyncConfigured && $this->request->getGet('rr_sync') === '1') {
+            $pubPull = ResearchRecordCvPull::pullPublicationsOnly($personnelId, $canonical, 'rr_return_sync');
+            if ($pubPull['success'] ?? false) {
+                $rrLastPullFormatted = (new \DateTimeImmutable())->format('d/m/Y H:i');
+                $rrSyncNotice        = [
+                    'type'   => 'success',
+                    'text'   => 'กลับจากระบบ กบศ — ' . ($pubPull['message'] ?? 'ดึงผลงานแล้ว'),
+                    'detail' => 'รายการในหัวข้อผลงานอัปเดตจาก กบศ แล้ว',
+                ];
+            } else {
+                $rrSyncNotice = [
+                    'type'   => 'warning',
+                    'text'   => 'ดึงผลงานจาก กบศ ไม่สำเร็จ',
+                    'detail' => $pubPull['message'] ?? '',
+                ];
+            }
+        } elseif ($researchSyncConfigured) {
             $trigger = ResearchRecordCvPull::shouldAutoPull($personnelId, $syncCfg->autoPullMaxAgeDays);
             if ($trigger !== false) {
-                $canonical = ResearchRecordCvPull::canonicalEmailForPerson($person);
-                $pullRes     = ResearchRecordCvPull::run($personnelId, $canonical, $trigger);
+                $pullRes = ResearchRecordCvPull::run($personnelId, $canonical, $trigger);
                 if ($pullRes['success']) {
-                    if (PublicationCatalog::isReady()) {
-                        $pubSync = PublicationSyncEngine::reconcileForPersonnel($personnelId, $canonical, $trigger);
-                        if (! ($pubSync['success'] ?? false)) {
-                            log_message('warning', 'Publication auto sync failed: ' . ($pubSync['message'] ?? 'unknown'));
-                        }
-                    }
                     $rrLastPullFormatted = (new \DateTimeImmutable())->format('d/m/Y H:i');
                     $rrSyncNotice        = [
                         'type' => 'success',
@@ -378,14 +390,118 @@ class ProfileCv extends BaseController
             'cv_edit_active_tab'         => $cvEditActiveTab,
             'ai_cv_publication_enabled'     => $aiCvCfg->isReady(),
             'cv_ai_publication_section_id'  => $cvAiPublicationSectionId,
-            'cv_ui_build'                   => 'publication-page-v1',
+            'cv_ui_build'                   => 'publication-rr-v1',
         ]);
     }
 
     /**
-     * หน้าเพิ่ม/แก้ไขผลงานตีพิมพ์ (ไม่ใช้ modal — URL ชัดเจน)
+     * Redirect ไป RR เพิ่มผลงาน (SSO) — กลับมาหน้า CV หลังบันทึก
+     */
+    public function goRrPublicationCreate()
+    {
+        return $this->redirectToResearchRecordPublication('create');
+    }
+
+    /**
+     * Redirect ไป RR แก้ผลงาน (SSO)
+     */
+    public function goRrPublicationEdit(int $rrId)
+    {
+        return $this->redirectToResearchRecordPublication('edit', $rrId);
+    }
+
+    /**
+     * Redirect ไป RR จัดการผลงาน (SSO) — ใช้จากแดชบอร์ด
+     */
+    public function goRrPublicationManage()
+    {
+        return $this->redirectToResearchRecordPublication('manage');
+    }
+
+    /**
+     * @return \CodeIgniter\HTTP\RedirectResponse
+     */
+    private function redirectToResearchRecordPublication(string $action, int $rrId = 0)
+    {
+        if (AdminImpersonation::isActive()) {
+            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))
+                ->with('error', 'ไม่สามารถไปยังระบบภายนอกระหว่าง Login As ได้');
+        }
+
+        $person = $this->resolveOwnedPersonnel();
+        if ($person === null) {
+            return redirect()->to(base_url('dashboard/profile'))->with('error', 'ไม่พบข้อมูลบุคลากร');
+        }
+
+        $email = ResearchRecordCvPull::canonicalEmailForPerson($person);
+        if ($email === '') {
+            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))
+                ->with('error', 'ไม่พบอีเมลสำหรับเข้า กบศ — กรุณาติดต่อเจ้าหน้าที่');
+        }
+
+        $sectionId = (int) $this->request->getGet('section_id');
+        $returnAfter = $this->buildCvReturnUrl($sectionId);
+
+        $entryRedirect = match ($action) {
+            'edit'   => ResearchRecordSsoBridge::rrEntryPath('publications/edit/' . max(1, $rrId)),
+            'manage' => ResearchRecordSsoBridge::rrEntryPath('publications/manage'),
+            default  => ResearchRecordSsoBridge::rrEntryPath('publications/create'),
+        };
+
+        $name = PersonnelModel::resolvePublicDisplayNameTh($person);
+        $url  = ResearchRecordSsoBridge::signedEntryUrl($email, $name, $entryRedirect, $returnAfter);
+        if ($url === null) {
+            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))
+                ->with('error', 'Research Record SSO ยังไม่พร้อมใช้งาน');
+        }
+
+        return redirect()->to($url);
+    }
+
+    private function buildCvReturnUrl(int $sectionId = 0): string
+    {
+        $params = ['tab' => 'sections'];
+        if ($sectionId > 0) {
+            $params['open_section'] = (string) $sectionId;
+        }
+
+        return base_url('dashboard/profile/cv?' . http_build_query($params));
+    }
+
+    /**
+     * หน้าเพิ่ม/แก้ไขผลงานตีพิมพ์ — AI ยังอยู่ NS; นอกนั้น redirect ไป กบศ
      */
     public function publicationEntry()
+    {
+        if ($this->request->getGet('ai') === '1') {
+            return $this->renderCvPublicationAiEntry();
+        }
+
+        $sectionId = (int) $this->request->getGet('section_id');
+        $entryId   = (int) $this->request->getGet('entry_id');
+        $meta      = [];
+        if ($entryId > 0 && CvEntryModel::isTablePresent()) {
+            $row = (new CvEntryModel())->find($entryId);
+            if (is_array($row)) {
+                $meta = CvEntryModel::decodeMetadata($row['metadata'] ?? null);
+            }
+        }
+        $rrId = (int) ($meta['rr_publication_id'] ?? 0);
+        if ($rrId > 0) {
+            return redirect()->to(base_url('dashboard/profile/cv/rr-publication/edit/' . $rrId . '?' . http_build_query(array_filter([
+                'section_id' => $sectionId > 0 ? $sectionId : null,
+            ]))));
+        }
+
+        $q = $sectionId > 0 ? '?section_id=' . $sectionId : '';
+
+        return redirect()->to(base_url('dashboard/profile/cv/rr-publication/create' . $q));
+    }
+
+    /**
+     * หน้าช่วยเติมผลงานด้วย AI (บันทึกลง cv_entries ใน NS — เนื้อหาหลักยังอยู่ กบศ)
+     */
+    private function renderCvPublicationAiEntry()
     {
         $this->response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
         $this->response->setHeader('Pragma', 'no-cache');
@@ -411,35 +527,30 @@ class ProfileCv extends BaseController
             return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'ระบบ CV ยังไม่พร้อม — รัน migrate');
         }
 
-        $section        = $cvSectionModel->find($sectionId);
+        $section = $cvSectionModel->find($sectionId);
         if (! is_array($section) || (int) ($section['personnel_id'] ?? 0) !== $personnelId) {
             return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'ไม่สามารถเข้าถึงหัวข้อนี้ได้');
         }
 
         if (! $this->isPublicationSection($section)) {
-            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'หัวข้อนี้ไม่ใช่ผลงานตีพิมพ์ — ใช้เพิ่มรายการทั่วไปแทน');
+            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'หัวข้อนี้ไม่ใช่ผลงานตีพิมพ์');
         }
 
         $person = $this->resolveOwnedPersonnel();
         $entry  = null;
-        if ($entryId > 0) {
-            if (! CvEntryModel::isTablePresent()) {
-                return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'ระบบ CV ยังไม่พร้อม');
-            }
-            $cvEntryModel = new CvEntryModel();
-            $row          = $cvEntryModel->find($entryId);
+        if ($entryId > 0 && CvEntryModel::isTablePresent()) {
+            $row = (new CvEntryModel())->find($entryId);
             if (! is_array($row) || (int) ($row['section_id'] ?? 0) !== $sectionId) {
-                return redirect()->to(base_url('dashboard/profile/cv/publication?section_id=' . $sectionId))->with('error', 'ไม่พบรายการ');
+                return redirect()->to(base_url('dashboard/profile/cv/publication?section_id=' . $sectionId . '&ai=1'))
+                    ->with('error', 'ไม่พบรายการ');
             }
             $entry = $this->hydrateCvEntryForEditor($row, $personnelId);
         }
 
         $aiCvCfg = config(AiCv::class);
-        $ownerEmail = ResearchRecordCvPull::canonicalEmailForPerson($person ?? []);
-        $ownerName  = PersonnelModel::resolvePublicDisplayNameTh($person ?? []);
 
         return view('user/profile/cv_publication_entry', [
-            'page_title'                => $entry ? 'แก้ไขผลงานตีพิมพ์' : 'เพิ่มผลงานตีพิมพ์',
+            'page_title'                => $entry ? 'แก้ไขผลงานตีพิมพ์ (AI)' : 'เพิ่มผลงานตีพิมพ์ (AI)',
             'person'                    => $person,
             'section'                   => $section,
             'entry'                     => $entry,
@@ -447,9 +558,9 @@ class ProfileCv extends BaseController
             'entry_id'                  => $entryId,
             'is_edit'                   => $entry !== null,
             'ai_cv_publication_enabled' => $aiCvCfg->isReady(),
-            'open_ai_panel'             => $this->request->getGet('ai') === '1',
-            'cv_owner_email'            => $ownerEmail,
-            'cv_owner_name'             => $ownerName,
+            'open_ai_panel'             => true,
+            'cv_owner_email'            => ResearchRecordCvPull::canonicalEmailForPerson($person ?? []),
+            'cv_owner_name'             => PersonnelModel::resolvePublicDisplayNameTh($person ?? []),
         ]);
     }
 
@@ -866,11 +977,23 @@ class ProfileCv extends BaseController
         }
 
         $isPubSection = $this->isPublicationSection($section);
-        if ($isPubSection) {
-            $validationError = PublicationResearchFields::validateResearchSave($this->request->getPost());
-            if ($validationError !== null) {
-                return $this->ajaxOrRedirectError($validationError);
+        $fromCvPublicationPage = $this->request->getPost('cv_publication_page') === '1';
+        if ($isPubSection && ! $fromCvPublicationPage) {
+            $rrId = 0;
+            if ($entryId > 0) {
+                $row = (new CvEntryModel())->find($entryId);
+                if (is_array($row)) {
+                    $meta = CvEntryModel::decodeMetadata($row['metadata'] ?? null);
+                    $rrId = (int) ($meta['rr_publication_id'] ?? 0);
+                }
             }
+            if ($rrId > 0) {
+                return redirect()->to(base_url('dashboard/profile/cv/rr-publication/edit/' . $rrId . '?section_id=' . $sectionId))
+                    ->with('info', 'แก้ไขเนื้อหาผลงานที่ระบบ กบศ');
+            }
+
+            return redirect()->to(base_url('dashboard/profile/cv/rr-publication/create?section_id=' . $sectionId))
+                ->with('info', 'บันทึกผลงานที่ระบบ กบศ');
         }
 
         $cvEntryModel = new CvEntryModel();
@@ -1029,26 +1152,6 @@ class ProfileCv extends BaseController
             $entryData['sort_order'] = $postSort > 0 ? $postSort : $cvEntryModel->nextSortOrder($sectionId);
             $cvEntryModel->insert($entryData);
             $savedId = (int) $cvEntryModel->getInsertID();
-        }
-
-        if ($isPubSection && PublicationCatalog::isReady()) {
-            $savedEntry = $cvEntryModel->find($savedId);
-            if (is_array($savedEntry)) {
-                PublicationCatalog::syncFromCvEntry($personnelId, $section, $savedEntry);
-                if (config(ResearchApi::class)->syncConfigured()) {
-                    $personForSync = (new PersonnelModel())->find($personnelId);
-                    if (is_array($personForSync)) {
-                        $syncRes = PublicationSyncEngine::reconcileForPersonnel(
-                            $personnelId,
-                            ResearchRecordCvPull::canonicalEmailForPerson($personForSync),
-                            'save_cv_entry'
-                        );
-                        if (! ($syncRes['success'] ?? false)) {
-                            log_message('warning', 'Publication sync after save failed: ' . ($syncRes['message'] ?? 'unknown'));
-                        }
-                    }
-                }
-            }
         }
 
         if ($this->request->isAJAX()) {

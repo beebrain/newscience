@@ -249,4 +249,61 @@ class ResearchRecordCvPull
             }
         }
     }
+
+    /**
+     * ดึงผลงานจาก RR ลง cv_entries เท่านั้น (ไม่ push กลับ RR)
+     *
+     * @return array{success:bool,message?:string,error?:string,publications_stats?:array}
+     */
+    public static function pullPublicationsOnly(int $personnelId, string $canonicalEmail, string $trigger = 'pull_publications'): array
+    {
+        $email = CvProfile::normalizeEmail($canonicalEmail);
+        if ($email === '') {
+            return ['success' => false, 'message' => 'ไม่มีอีเมลสำหรับซิงค์', 'error' => 'EMAIL_REQUIRED'];
+        }
+
+        $db = \Config\Database::connect();
+        if (! $db->tableExists('cv_sections') || ! CvEntryModel::isTablePresent($db)) {
+            return [
+                'success' => false,
+                'message' => 'ระบบ CV ยังไม่ครบ — รัน php spark migrate',
+                'error'   => 'SCHEMA_MISSING',
+            ];
+        }
+
+        $pubRes = ResearchRecordCvSyncClient::fetchPublicationsSyncBundle($email);
+        if (! ($pubRes['success'] ?? false)) {
+            return [
+                'success' => false,
+                'message' => $pubRes['message'] ?? 'ดึงผลงานจาก กบศ ไม่สำเร็จ',
+                'error'   => $pubRes['error'] ?? 'FETCH_FAILED',
+            ];
+        }
+
+        $pubStats = ['inserted' => 0, 'updated' => 0, 'skipped_unchanged' => 0];
+        if (! empty($pubRes['publications']) && is_array($pubRes['publications'])) {
+            $pubStats = ResearchRecordCvSyncMerge::applyPublicationsToCvEntries(
+                $personnelId,
+                $pubRes['publications'],
+                []
+            );
+            if (PublicationCatalog::isReady()) {
+                PublicationCatalog::syncFromRrPayload($personnelId, $email, $pubRes['publications']);
+            }
+        }
+
+        ResearchRecordCvSyncMerge::finalizeCvSectionsForPerson($personnelId);
+
+        $changed = (int) ($pubStats['inserted'] ?? 0) + (int) ($pubStats['updated'] ?? 0);
+        $msg     = $changed > 0
+            ? sprintf('ดึงผลงานจาก กบศแล้ว (เพิ่ม %d, อัปเดต %d)', $pubStats['inserted'], $pubStats['updated'])
+            : 'ดึงผลงานจาก กบศแล้ว (ข้อมูลตรงกับที่มีอยู่)';
+
+        return [
+            'success'            => true,
+            'message'            => $msg,
+            'publications_stats' => $pubStats,
+            'trigger'            => $trigger,
+        ];
+    }
 }

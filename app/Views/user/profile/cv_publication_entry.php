@@ -8,8 +8,11 @@ $entryId = (int) ($entry_id ?? 0);
 $sectionTitle = (string) ($section['title'] ?? '');
 $aiReady = ! empty($ai_cv_publication_enabled);
 $openAi = ! empty($open_ai_panel);
-$backUrl = base_url('dashboard/profile/cv?tab=sections');
+$backUrl = base_url('dashboard/profile/cv?tab=sections' . ($sectionId > 0 ? '&open_section=' . $sectionId : ''));
 $saveUrl = base_url('dashboard/profile/cv/entry/save');
+$rrCreateUrl = $sectionId > 0
+    ? base_url('dashboard/profile/cv/rr-publication/create?section_id=' . $sectionId)
+    : base_url('dashboard/profile/cv/rr-publication/create');
 
 $val = static function (string $key, string $default = '') use ($entry): string {
     if (! is_array($entry)) {
@@ -133,8 +136,13 @@ if (is_array($entry) && ! empty($entry['publication_authors']) && is_array($entr
     <?php endif; ?>
 
     <header class="mb-6">
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 text-pretty"><?= $isEdit ? 'แก้ไขผลงานตีพิมพ์' : 'เพิ่มผลงานตีพิมพ์' ?></h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 text-pretty"><?= $isEdit ? 'แก้ไขผลงานตีพิมพ์ (ร่าง)' : 'เพิ่มผลงานตีพิมพ์ (ร่างด้วย AI)' ?></h1>
         <p class="mt-2 text-slate-600">หัวข้อ: <strong class="text-slate-800"><?= esc($sectionTitle) ?></strong></p>
+        <p class="mt-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-950">
+            ร่างใน ฐานข้อมูลคณะ — เนื้อหาหลักบันทึกที่
+            <a href="<?= esc($rrCreateUrl, 'attr') ?>" class="font-semibold text-violet-800 underline hover:text-violet-900">ระบบ กบศ</a>
+            แล้วกลับมาหน้า CV อัตโนมัติ
+        </p>
     </header>
 
     <form id="cv-pub-form"

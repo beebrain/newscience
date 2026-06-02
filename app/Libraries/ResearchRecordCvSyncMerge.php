@@ -970,14 +970,17 @@ class ResearchRecordCvSyncMerge
 
             $pubTypeRaw = trim((string) ($pub['publication_type'] ?? ''));
             $doiNorm    = PublicationIdentity::normalizeDoi((string) ($pub['doi'] ?? ''));
-            $meta       = [
-                'source'                => 'research_record',
-                'sync_external_key'     => $key,
-                'rr_publication_id'     => $pub['rr_publication_id'] ?? null,
-                'doi'                   => $doiNorm !== '' ? $doiNorm : null,
-                'rr_pull_fingerprint'    => $fingerprint,
-                'rr_publication_type'   => $pubTypeRaw !== '' ? $pubTypeRaw : null,
-            ];
+            $meta       = array_merge(
+                PublicationResearchFields::encodeBibliographicMetadata($pub),
+                [
+                    'source'              => 'research_record',
+                    'sync_external_key'   => $key,
+                    'rr_publication_id'   => $pub['rr_publication_id'] ?? null,
+                    'doi'                 => $doiNorm !== '' ? $doiNorm : null,
+                    'rr_pull_fingerprint' => $fingerprint,
+                    'rr_publication_type' => $pubTypeRaw !== '' ? $pubTypeRaw : null,
+                ]
+            );
             $title = mb_substr((string) ($pub['title'] ?? ''), 0, 500);
             $year  = $pub['publication_year'] ?? null;
             $desc  = trim((string) ($pub['source'] ?? '') !== '' ? 'แหล่ง: ' . trim((string) $pub['source']) : '');

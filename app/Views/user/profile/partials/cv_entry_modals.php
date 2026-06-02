@@ -5,7 +5,7 @@
  */
 $saveUrl = base_url('dashboard/profile/cv/entry/save');
 ?>
-    <span id="cv-ui-build-marker" class="hidden" data-cv-ui="publication-page-v1" aria-hidden="true"></span>
+    <span id="cv-ui-build-marker" class="hidden" data-cv-ui="publication-rr-v1" aria-hidden="true"></span>
     <div id="cv-entry-modal" class="fixed inset-0 z-[6000] hidden flex flex-col items-stretch justify-start sm:justify-center overflow-y-auto bg-slate-900/50 backdrop-blur-[2px] p-3 sm:p-6 overscroll-contain" role="dialog" aria-modal="true" aria-labelledby="cv-entry-modal-title">
         <div class="cv-entry-modal__panel relative bg-white overflow-hidden flex flex-col min-h-0 w-full max-w-[56rem] mx-auto shrink-0" onclick="event.stopPropagation()">
             <button type="button" id="cv-entry-modal-close" class="absolute top-3 right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-600 text-xl leading-none shadow-md ring-1 ring-slate-200/90 hover:bg-slate-50 hover:text-slate-900 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600" aria-label="ปิด">&times;</button>
