@@ -16,17 +16,17 @@ use CodeIgniter\Config\BaseConfig;
  */
 class ResearchRecordSso extends BaseConfig
 {
-    /** Base URL ของ Research Record (ไม่มี slash ท้าย) */
-    public string $baseUrl = 'https://research.academic.uru.ac.th';
+    /** Base URL ของ Research Record (ไม่มี slash ท้าย) — sci.uru.ac.th/Research */
+    public string $baseUrl = 'https://sci.uru.ac.th/recordresearch';
 
     /** URL ของ Research Record API สำหรับแลก one-time code เป็น user info (POST) */
-    public string $exchangeCodeUrl = 'https://research.academic.uru.ac.th/api/sso/exchange-code';
+    public string $exchangeCodeUrl = 'https://sci.uru.ac.th/recordresearch/api/sso/exchange-code';
 
     /** Shared secret (ใช้ค่าเดียวกับ Edoc และ Research Record) */
     public string $sharedSecret = 'SHARED_SECRET_PLACEHOLDER';
 
     /** เปิดใช้ SSO ผ่าน Research Record หรือไม่ */
-    public bool $enabled = false;
+    public bool $enabled = true;
 
     /** URL ออกจากระบบของ Research Record (ว่าง = ไม่ redirect ไป logout ที่ Research Record) */
     public string $logoutUrl = '';
@@ -42,7 +42,13 @@ class ResearchRecordSso extends BaseConfig
         parent::__construct();
         $this->baseUrl = env('researchrecordsso.baseUrl', $this->baseUrl) ?: $this->baseUrl;
         $this->exchangeCodeUrl = env('researchrecordsso.exchangeCodeUrl', $this->exchangeCodeUrl) ?: $this->exchangeCodeUrl;
-        $this->sharedSecret = env('researchrecordsso.sharedSecret', $this->sharedSecret) ?: env('edocsso.sharedSecret', $this->sharedSecret);
+        $secret = env('researchrecordsso.sharedSecret');
+        if ($secret === null || $secret === '' || $secret === 'SHARED_SECRET_PLACEHOLDER') {
+            $secret = env('edocsso.sharedSecret');
+        }
+        if ($secret !== null && $secret !== '') {
+            $this->sharedSecret = $secret;
+        }
         $enabled = env('researchrecordsso.enabled', 'true');
         $this->enabled = ($enabled === 'true' || $enabled === '1' || $enabled === true);
         $this->logoutUrl = rtrim(env('researchrecordsso.logoutUrl', $this->logoutUrl) ?? '', '/ ');

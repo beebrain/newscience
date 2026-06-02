@@ -14,8 +14,17 @@ class LoggedInFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         if (!session()->get('admin_logged_in')) {
-            session()->set('redirect_url', current_url());
-            return redirect()->to(base_url('admin/login'))
+            $returnUrl = current_url();
+            if (str_contains($returnUrl, 'go-research-record')) {
+                return redirect()->to(base_url('oauth/login') . '?' . http_build_query([
+                    'intent' => 'researchrecord',
+                ]))
+                    ->with('error', 'กรุณาเข้าสู่ระบบ');
+            }
+
+            return redirect()->to(base_url('oauth/login') . '?' . http_build_query([
+                'redirect_url' => $returnUrl,
+            ]))
                 ->with('error', 'กรุณาเข้าสู่ระบบ');
         }
     }

@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\AdminImpersonation;
+use App\Libraries\ResearchRecordSsoBridge;
 use App\Models\UserModel;
 use Config\EdocSso;
 use Config\ResearchRecordSso;
@@ -25,14 +26,27 @@ class Auth extends BaseController
      */
     public function login()
     {
-        // If already logged in, redirect to admin dashboard
+        $intent = $this->request->getGet('intent');
+        $forResearchRecord = is_string($intent) && trim($intent) === 'researchrecord';
+
         if (session()->get('admin_logged_in')) {
+            if ($forResearchRecord) {
+                return $this->redirectToResearchRecordSso();
+            }
             log_message('debug', 'Admin Auth: already logged in, redirect to admin/news. admin_id=' . (session()->get('admin_id') ?? ''));
             return redirect()->to(base_url('admin/news'));
         }
 
+        // จาก RR — ตั้ง session NS ผ่าน OAuth แล้วส่งตรงไป RR sso-entry (ไม่วนที่ go-research-record)
+        if ($forResearchRecord) {
+            return redirect()->to(base_url('oauth/login') . '?' . http_build_query([
+                'intent' => 'researchrecord',
+            ]));
+        }
+
         $data = [
-            'page_title' => 'Admin Login'
+            'page_title'      => 'Admin Login',
+            'oauth_login_url' => base_url('oauth/login'),
         ];
 
         return view('admin/auth/login', $data);
@@ -45,7 +59,13 @@ class Auth extends BaseController
     {
         // ปิด login email/password — ใช้เฉพาะ URU Portal OAuth
         log_message('info', 'Admin Auth: attemptLogin blocked — redirecting to OAuth');
-        return redirect()->to(base_url('oauth/login'))
+        $intent = $this->request->getGet('intent');
+        $params = [];
+        if (is_string($intent) && trim($intent) === 'researchrecord') {
+            $params = ['intent' => 'researchrecord'];
+        }
+
+        return redirect()->to(base_url('oauth/login') . ($params ? '?' . http_build_query($params) : ''))
             ->with('error', 'กรุณาเข้าสู่ระบบผ่าน URU Portal');
     }
 
@@ -218,8 +238,23 @@ class Auth extends BaseController
      */
     public function portalLoginResearch()
     {
-        // Redirect ไป Sci OAuth แทนการไป Research Record
-        return redirect()->to(base_url('oauth/login'));
+        if (! session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('oauth/login'));
+        }
+
+        $adminId = session()->get('admin_id');
+        $user    = $this->userModel->find($adminId);
+        if (! $user) {
+            return redirect()->to(base_url('dashboard'))->with('error', 'ไม่พบข้อมูลผู้ใช้');
+        }
+
+        $url = $this->getResearchSsoUrl($user);
+        if ($url === null) {
+            return redirect()->to(base_url('dashboard'))
+                ->with('error', 'Research Record SSO ยังไม่พร้อมใช้งาน');
+        }
+
+        return redirect()->to($url);
     }
 
     /**
@@ -435,8 +470,35 @@ class Auth extends BaseController
                 ->with('error', 'ไม่สามารถไปยังระบบภายนอกระหว่าง Login As ได้ กรุณาหยุดใช้งานแทนก่อน');
         }
 
-        // Redirect ไป Sci OAuth แทนการไป Research Record
-        return redirect()->to(base_url('oauth/login'));
+        if (! session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('oauth/login') . '?' . http_build_query([
+                'intent' => 'researchrecord',
+            ]));
+        }
+
+        // RR-initiated only: ไม่อนุญาตให้เข้า RR จาก NS หลัง login ปกติ
+        return redirect()->to(base_url('dashboard'))
+            ->with('error', 'ไม่อนุญาตให้เข้าสู่ Research Record จาก newScience โดยตรง (ต้องเริ่มจากหน้า Research Record)');
+    }
+
+    /**
+     * Redirect ไป RR /auth/sso-entry โดยตรง (ไม่ผ่าน go-research-record ในแถบที่อยู่)
+     */
+    private function redirectToResearchRecordSso(): \CodeIgniter\HTTP\RedirectResponse
+    {
+        $adminId = session()->get('admin_id');
+        $user    = $this->userModel->find($adminId);
+        if (! $user) {
+            return redirect()->to(base_url('dashboard'))->with('error', 'ไม่พบข้อมูลผู้ใช้');
+        }
+
+        $url = ResearchRecordSsoBridge::entryUrlForUser($user);
+        if ($url === null) {
+            return redirect()->to(base_url('dashboard'))
+                ->with('error', 'Research Record SSO ยังไม่พร้อมใช้งาน');
+        }
+
+        return redirect()->to($url);
     }
 
     // -------------------------------------------------------------------------
@@ -453,40 +515,12 @@ class Auth extends BaseController
 
     private function getResearchSsoUrl(array $user): ?string
     {
-        $config = config(ResearchRecordSso::class);
-        if (!$config->enabled || $config->baseUrl === '' || $config->sharedSecret === '') return null;
-
-        return $this->generateSsoUrl($user, $config->baseUrl . $config->ssoEntryPath, $config->sharedSecret);
+        return ResearchRecordSsoBridge::entryUrlForUser($user);
     }
 
     private function generateSsoUrl(array $user, string $entryUrl, string $secret): string
     {
-        $email = $user['email'] ?? '';
-        // Use Thai Name if available for friendlier display, else first name
-        $name  = $user['tf_name'] ?? $user['first_name_th'] ?? $user['first_name_en'] ?? 'User';
-
-        $exp = time() + 120; // 2 minutes expiry
-        $payload = [
-            'email' => $email,
-            'name'  => $name,
-            'exp'   => $exp,
-        ];
-        $payloadJson = json_encode($payload);
-        $payloadB64 = $this->base64UrlEncode($payloadJson);
-        $signature = hash_hmac('sha256', $payloadB64, $secret, true);
-        $sigB64 = $this->base64UrlEncode($signature);
-        $token = $payloadB64 . '.' . $sigB64;
-
-        $sep = str_contains($entryUrl, '?') ? '&' : '?';
-        return $entryUrl . $sep . 'token=' . rawurlencode($token);
-    }
-
-    /**
-     * Base64 URL-safe encode (no padding)
-     */
-    private function base64UrlEncode(string $data): string
-    {
-        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+        return ResearchRecordSsoBridge::buildSignedUrl($user, $entryUrl, $secret);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Libraries\AdminImpersonation;
+use App\Libraries\ResearchRecordSsoBridge;
 use App\Libraries\UruPortalOAuthService;
 use App\Models\UserModel;
 use App\Models\StudentUserModel;
@@ -42,6 +43,8 @@ class OAuthController extends BaseController
     private const SESSION_ATTEMPT_ID = 'uru_oauth_attempt_id';
     /** เก็บว่าเริ่ม OAuth จากหน้านักศึกษา (redirect error กลับ /student/login) */
     private const SESSION_OAUTH_INTENT = 'oauth_intent';
+    /** ใช้ยืนยันว่าเริ่ม SSO RR มาจาก RR จริง (RR-initiated only) */
+    private const SESSION_RR_INIT_OK = 'rr_init_ok';
 
     public function __construct()
     {
@@ -76,8 +79,48 @@ class OAuthController extends BaseController
                 ->with('error', 'การเข้าสู่ระบบผ่าน URU Portal ยังไม่เปิดใช้งาน');
         }
 
+        $intentGet = $this->request->getGet('intent');
+        $forResearchRecord = is_string($intentGet) && trim($intentGet) === 'researchrecord';
+
+        // RR-initiated only: ถ้าขอ intent=researchrecord ต้องมี rr_init ที่ตรวจสอบได้
+        if ($forResearchRecord) {
+            $rrInit = $this->request->getGet('rr_init');
+            $ok = is_string($rrInit) && $rrInit !== '' && $this->verifyRrInitToken($rrInit);
+            if (! $ok) {
+                session()->remove([self::SESSION_OAUTH_INTENT, self::SESSION_RR_INIT_OK]);
+                return redirect()->to(base_url('admin/login'))
+                    ->with('error', 'ไม่อนุญาตให้เข้าสู่ Research Record จาก newScience โดยตรง (ต้องเริ่มจากหน้า Research Record)');
+            }
+            session()->set(self::SESSION_RR_INIT_OK, true);
+        }
+
         // ถ้า login อยู่แล้ว redirect ไปหน้าที่เหมาะสม
         if (session()->get('admin_logged_in')) {
+            if ($forResearchRecord) {
+                $user = $this->userModel->find(session()->get('admin_id'));
+                $rrUrl = $user ? ResearchRecordSsoBridge::entryUrlForUser($user) : null;
+                if ($rrUrl !== null) {
+                    return redirect()->to($rrUrl);
+                }
+            }
+
+            $intended = $this->request->getGet('redirect_url');
+            if ($intended && is_string($intended) && strpos($intended, base_url()) === 0) {
+                if ($forResearchRecord && str_contains($intended, 'go-research-record')) {
+                    $user = $this->userModel->find(session()->get('admin_id'));
+                    $rrUrl = $user ? ResearchRecordSsoBridge::entryUrlForUser($user) : null;
+                    if ($rrUrl !== null) {
+                        return redirect()->to($rrUrl);
+                    }
+                }
+                $this->writeLog('login_skip', 'User already logged in as admin (redirect_url honored)', [
+                    'ip' => $ip,
+                    'admin_id' => session()->get('admin_id'),
+                    'email' => session()->get('admin_email'),
+                    'redirect_to' => $intended,
+                ]);
+                return redirect()->to($intended);
+            }
             $this->writeLog('login_skip', 'User already logged in as admin', [
                 'ip' => $ip,
                 'admin_id' => session()->get('admin_id'),
@@ -87,6 +130,16 @@ class OAuthController extends BaseController
             return redirect()->to(base_url('dashboard'));
         }
         if (session()->get('student_logged_in')) {
+            $intended = $this->request->getGet('redirect_url');
+            if ($intended && is_string($intended) && strpos($intended, base_url()) === 0) {
+                $this->writeLog('login_skip', 'User already logged in as student (redirect_url honored)', [
+                    'ip' => $ip,
+                    'student_id' => session()->get('student_id'),
+                    'email' => session()->get('student_email'),
+                    'redirect_to' => $intended,
+                ]);
+                return redirect()->to($intended);
+            }
             $this->writeLog('login_skip', 'User already logged in as student', [
                 'ip' => $ip,
                 'student_id' => session()->get('student_id'),
@@ -100,8 +153,15 @@ class OAuthController extends BaseController
         session()->set(self::SESSION_ATTEMPT_ID, $attemptId);
 
         $intent = $this->request->getGet('intent');
-        if (is_string($intent) && trim($intent) === 'student') {
-            session()->set(self::SESSION_OAUTH_INTENT, 'student');
+        if (is_string($intent)) {
+            $intent = trim($intent);
+            if ($intent === 'student') {
+                session()->set(self::SESSION_OAUTH_INTENT, 'student');
+            } elseif ($intent === 'researchrecord') {
+                session()->set(self::SESSION_OAUTH_INTENT, 'researchrecord');
+            } else {
+                session()->remove(self::SESSION_OAUTH_INTENT);
+            }
         } else {
             session()->remove(self::SESSION_OAUTH_INTENT);
         }
@@ -144,6 +204,51 @@ class OAuthController extends BaseController
         ]);
 
         return redirect()->to($authUrl);
+    }
+
+    // -------------------------------------------------------------------------
+    // Private: RR-initiated guard
+    // -------------------------------------------------------------------------
+
+    private function verifyRrInitToken(string $rrInit): bool
+    {
+        $parts = explode('.', trim($rrInit), 2);
+        if (count($parts) !== 2) {
+            return false;
+        }
+        [$payloadB64, $sigB64] = $parts;
+
+        $secret = getenv('researchrecordsso.sharedSecret') ?: getenv('edocsso.sharedSecret') ?: '';
+        if ($secret === '') {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $payloadB64, $secret, true);
+        $sig = $this->base64UrlDecode($sigB64);
+        if ($sig === null || ! hash_equals($expected, $sig)) {
+            return false;
+        }
+
+        $payloadJson = $this->base64UrlDecode($payloadB64);
+        if ($payloadJson === null) {
+            return false;
+        }
+        $payload = json_decode($payloadJson, true);
+        if (! is_array($payload) || empty($payload['exp'])) {
+            return false;
+        }
+
+        return (int) $payload['exp'] >= time();
+    }
+
+    private function base64UrlDecode(string $data): ?string
+    {
+        $padding = 4 - (strlen($data) % 4);
+        if ($padding !== 4) {
+            $data .= str_repeat('=', $padding);
+        }
+        $decoded = base64_decode(strtr($data, '-_', '+/'), true);
+        return $decoded !== false ? $decoded : null;
     }
 
     // -------------------------------------------------------------------------
@@ -309,6 +414,16 @@ class OAuthController extends BaseController
         $studentId = $session->get('student_id');
         $email    = $session->get('admin_email') ?? $session->get('student_email') ?? '';
 
+        $returnUrl = $this->request->getGet('return_url');
+        $safeReturnUrl = null;
+        if (is_string($returnUrl) && $returnUrl !== '') {
+            // allow only same-origin redirects (avoid open redirect)
+            $base = rtrim(base_url(), '/');
+            if (strpos($returnUrl, $base . '/') === 0) {
+                $safeReturnUrl = $returnUrl;
+            }
+        }
+
         $this->writeLog('logout', 'User logged out', [
             'admin_id'   => $adminId ?? '',
             'student_id' => $studentId ?? '',
@@ -340,7 +455,16 @@ class OAuthController extends BaseController
         ]);
         $session->destroy();
 
-        return redirect()->to(base_url('admin/login?logout=1'))
+        // ถ้า return_url เป็นหน้า RR อยู่แล้ว แปลว่าถูกเรียกมาจาก RR logout chain → ไม่ต้องวนไป logout RR ซ้ำ
+        if ($safeReturnUrl !== null && strpos($safeReturnUrl, '/recordresearch/') !== false) {
+            return redirect()->to($safeReturnUrl)
+                ->with('success', 'ออกจากระบบแล้ว');
+        }
+
+        // ปกติ: logout NS แล้วต้อง logout RR ด้วย (ถ้าเคยเข้า RR) เพื่อให้ session สองระบบไม่ค้างเหลื่อมกัน
+        $rrLogout = base_url('recordresearch/index.php/auth/logout?skip_ns=1&return_url=' . rawurlencode($safeReturnUrl ?: base_url('admin/login?logout=1')));
+
+        return redirect()->to($rrLogout)
             ->with('success', 'ออกจากระบบแล้ว');
     }
 
@@ -538,8 +662,31 @@ class OAuthController extends BaseController
             'ip' => $ip,
         ]);
 
+        $intent = session()->get(self::SESSION_OAUTH_INTENT);
+        if ($intent === 'researchrecord') {
+            if (! session()->get(self::SESSION_RR_INIT_OK)) {
+                session()->remove([self::SESSION_OAUTH_INTENT, self::SESSION_RR_INIT_OK]);
+                session()->destroy();
+                return redirect()->to(base_url('admin/login'))
+                    ->with('error', 'ไม่อนุญาตให้เข้าสู่ Research Record จาก newScience โดยตรง');
+            }
+            $rrUrl = ResearchRecordSsoBridge::entryUrlForUser($user);
+            if ($rrUrl === null) {
+                session()->remove([self::SESSION_OAUTH_INTENT, self::SESSION_RR_INIT_OK, 'oauth_redirect_url', 'redirect_url']);
+
+                return redirect()->to(base_url('dashboard'))
+                    ->with('error', 'Research Record SSO ยังไม่พร้อมใช้งาน');
+            }
+            // intent=researchrecord: newScience เป็นแค่ OAuth callback relay
+            // ต้องไม่ทำให้ผู้ใช้ "ติด session newScience" จากการเริ่ม login ที่ RR
+            session()->remove(['oauth_redirect_url', 'redirect_url', self::SESSION_OAUTH_INTENT, self::SESSION_RR_INIT_OK]);
+            session()->destroy();
+
+            return redirect()->to($rrUrl);
+        }
+
         $redirectUrl = session()->get('oauth_redirect_url') ?? session()->get('redirect_url') ?? base_url('dashboard');
-        session()->remove(['oauth_redirect_url', 'redirect_url']);
+        session()->remove(['oauth_redirect_url', 'redirect_url', self::SESSION_OAUTH_INTENT]);
 
         $this->writeLog('login_complete', 'Personnel login flow completed successfully', [
             'attempt_id' => $attemptId,
