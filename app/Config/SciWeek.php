@@ -165,5 +165,29 @@ class SciWeek extends BaseConfig
             'contact'       => 'ผศ.ดร.สุภาพร พงศ์ธรพฤกษ์ ajann_envi@uru.ac.th 089-704-4407',
             'notes'         => 'ประกวดเดี่ยว, ใช้ดินสอขาวดำ, หัวข้อ "โลกสีเขียวแห่งอนาคต"',
         ],
+
+        'network_champion' => [
+            'name_th'       => 'การแข่งขันทักษะ URU Network Champion (Cabling 2026)',
+            'name_en'       => 'URU Network Champion — Cabling 2026',
+            'docs'          => ['ใบสมัคร URU Network Champion.docx'],
+            'levels'        => [
+                'lower_secondary' => 'ระดับมัธยมศึกษาตอนต้น / ปวช. หรือเทียบเท่า',
+                'higher'          => 'ระดับมัธยมศึกษาตอนปลาย / เทียบเท่า / อุดมศึกษา',
+            ],
+            'team_min'      => 2,
+            'team_max'      => 2,
+            'has_reserve'   => false,
+            'reserve_max'   => 0,
+            'per_person'    => [
+                'level_class' => ['label' => 'ระดับชั้น', 'required' => true, 'type' => 'text'],
+            ],
+            'cap_per_level' => null,
+            'cap_total'     => 8, // รับสมัคร 8 ทีมรวมทุกระดับ
+            'cap_per_school'=> null,
+            'deadline'      => '2026-08-01',
+            'extra_coaches' => 1,
+            'contact'       => 'อ.พิชิต พวงภาคีศิริ 081-973-6457',
+            'notes'         => 'แข่งขันสายสัญญาณเครือข่าย (Cabling) ทีมละ 2 คน จำกัดรวม 8 ทีม',
+        ],
     ];
 }
