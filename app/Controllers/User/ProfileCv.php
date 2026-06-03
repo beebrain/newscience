@@ -376,6 +376,21 @@ class ProfileCv extends BaseController
         $ownerEmail = ResearchRecordCvPull::canonicalEmailForPerson($person);
         $ownerName = PersonnelModel::resolvePublicDisplayNameTh($person);
 
+        $rrSsoReady = $rrSsoCfg->enabled
+            && $rrSsoCfg->baseUrl !== ''
+            && $rrSsoCfg->sharedSecret !== ''
+            && $rrSsoCfg->sharedSecret !== 'SHARED_SECRET_PLACEHOLDER';
+        $cvReturnForRr = $this->buildCvReturnUrl($cvPublicationSectionId);
+        $rrPubCreateDirect = ResearchRecordSsoBridge::absoluteRrPathWithNsReturn('publications/create', $cvReturnForRr);
+        $rrPubCreateSso = $rrSsoReady && $ownerEmail !== ''
+            ? ResearchRecordSsoBridge::signedEntryUrl(
+                $ownerEmail,
+                $ownerName,
+                ResearchRecordSsoBridge::rrEntryPath('publications/create'),
+                $cvReturnForRr
+            )
+            : null;
+
         return view('user/profile/cv_manage', [
             'page_title'                 => 'จัดการ CV',
             'person'                     => $person,
@@ -391,11 +406,10 @@ class ProfileCv extends BaseController
             'cv_edit_active_tab'         => $cvEditActiveTab,
             'ai_cv_publication_enabled'     => $aiCvCfg->isReady(),
             'cv_publication_section_id'     => $cvPublicationSectionId,
-            'research_record_sso_ready'     => $rrSsoCfg->enabled
-                && $rrSsoCfg->baseUrl !== ''
-                && $rrSsoCfg->sharedSecret !== ''
-                && $rrSsoCfg->sharedSecret !== 'SHARED_SECRET_PLACEHOLDER',
-            'cv_ui_build'                   => 'publication-rr-v2',
+            'research_record_sso_ready'     => $rrSsoReady,
+            'rr_publication_create_direct'  => $rrPubCreateDirect,
+            'rr_publication_create_sso'     => $rrPubCreateSso,
+            'cv_ui_build'                   => 'publication-rr-v3',
         ]);
     }
 

@@ -76,6 +76,24 @@ class ResearchRecordSsoBridge
         return $path;
     }
 
+    /** URL เต็มใน RR เช่น https://sci.uru.ac.th/recordresearch/index.php/publications/create */
+    public static function absoluteRrPath(string $suffix): string
+    {
+        $config = config(ResearchRecordSso::class);
+
+        return rtrim($config->baseUrl, '/') . self::rrEntryPath($suffix);
+    }
+
+    public static function absoluteRrPathWithNsReturn(string $suffix, string $returnAfterSave): string
+    {
+        $url = self::absoluteRrPath($suffix);
+        if ($returnAfterSave === '') {
+            return $url;
+        }
+
+        return $url . (str_contains($url, '?') ? '&' : '?') . 'return_after_save=' . rawurlencode($returnAfterSave);
+    }
+
     /**
      * @param array{email:string,name:string,exp:int,entry_redirect?:string,return_after_save?:string}|array<string,mixed> $user
      */

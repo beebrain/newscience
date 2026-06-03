@@ -341,9 +341,11 @@ $cvEditTabs = ['identity', 'narrative', 'photo', 'orcid', 'sections'];
 $tTab = strtolower((string) ($cv_edit_active_tab ?? 'narrative'));
 $cvEditActiveTab = in_array($tTab, $cvEditTabs, true) ? $tTab : 'narrative';
 $account_user = $account_user ?? null;
-$rrPubCreateBase = base_url('dashboard/profile/cv/rr-publication/create');
-$rrPubEditBase   = base_url('dashboard/profile/cv/rr-publication/edit');
-$pubAiEntryBase  = base_url('dashboard/profile/cv/publication');
+$rrPubCreateDirect = (string) ($rr_publication_create_direct ?? '');
+$rrPubCreateSso    = (string) ($rr_publication_create_sso ?? '');
+$rrPubCreateHref   = $rrPubCreateSso !== '' ? $rrPubCreateSso : ($rrPubCreateDirect !== '' ? $rrPubCreateDirect : base_url('dashboard/profile/cv/rr-publication/create'));
+$rrPubEditBase     = base_url('dashboard/profile/cv/rr-publication/edit');
+$pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
 ?>
 
 <div class="cv-manage-page px-3 sm:px-5 md:px-8 lg:px-10 xl:px-12 py-4 sm:py-6 space-y-4 sm:space-y-6 min-h-[calc(100dvh-11rem)] w-full">
@@ -713,9 +715,9 @@ $pubAiEntryBase  = base_url('dashboard/profile/cv/publication');
                             <?php endif; ?>
                         </div>
                         <div class="flex flex-wrap items-center gap-2 shrink-0">
-                            <a href="<?= esc($rrPubCreateBase . '?section_id=' . $cv_publication_section_id, 'attr') ?>"
-                               class="inline-flex items-center justify-center gap-1.5 text-sm px-5 py-2.5 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold shadow-sm transition-colors <?= $research_record_sso_ready ? '' : 'opacity-60 pointer-events-none' ?>"
-                               <?= $research_record_sso_ready ? '' : 'aria-disabled="true" tabindex="-1"' ?>>
+                            <a href="<?= esc($rrPubCreateHref, 'attr') ?>"
+                               class="inline-flex items-center justify-center gap-1.5 text-sm px-5 py-2.5 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold shadow-sm transition-colors <?= ($rrPubCreateSso !== '' || $rrPubCreateDirect !== '') ? '' : 'opacity-60 pointer-events-none' ?>"
+                               <?= ($rrPubCreateSso !== '' || $rrPubCreateDirect !== '') ? '' : 'aria-disabled="true" tabindex="-1"' ?>>
                                 <span aria-hidden="true">+</span> เพิ่มผลงานที่ กบศ
                             </a>
                             <a href="<?= esc($pubAiEntryBase . '?section_id=' . $cv_publication_section_id . '&ai=1', 'attr') ?>"
@@ -890,7 +892,7 @@ $pubAiEntryBase  = base_url('dashboard/profile/cv/publication');
                                         $rrPubId = (int) ($entry['metadata_array']['rr_publication_id'] ?? 0);
                                         $pubEditHref = $rrPubId > 0
                                             ? $rrPubEditBase . '/' . $rrPubId . '?section_id=' . $sid
-                                            : $rrPubCreateBase . '?section_id=' . $sid;
+                                            : $rrPubCreateHref;
                                     ?>
                                         <div class="entry-card cv-entry-row cv-entry-item rounded-lg border border-slate-200/80 bg-white px-2 py-1.5 sm:px-3 sm:py-2 shadow-sm hover:border-slate-300 hover:bg-slate-50/80 transition-colors" data-entry-id="<?= $eid ?>">
                                             <?php if ($canReorderEntries): ?>
@@ -944,7 +946,7 @@ $pubAiEntryBase  = base_url('dashboard/profile/cv/publication');
                                    class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg border font-semibold transition-colors <?= $ai_cv_publication_enabled ? 'border-violet-300 bg-violet-50 text-violet-900 hover:bg-violet-100' : 'border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100' ?>">
                                     <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
                                 </a>
-                                <a href="<?= esc($rrPubCreateBase . '?section_id=' . $sid, 'attr') ?>"
+                                <a href="<?= esc($rrPubCreateHref, 'attr') ?>"
                                    class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold shadow-sm transition-colors">
                                     <span aria-hidden="true">+</span> เพิ่มผลงานที่ กบศ
                                 </a>
@@ -1111,7 +1113,7 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
 <script>
 (function () {
     window.CV_CSRF = <?= json_encode(['name' => $csrfName, 'hash' => $csrfHash], JSON_UNESCAPED_UNICODE) ?>;
-    var CV_RR_PUB_CREATE_BASE = <?= json_encode($rrPubCreateBase, JSON_UNESCAPED_SLASHES) ?>;
+    var CV_RR_PUB_CREATE_BASE = <?= json_encode($rrPubCreateHref, JSON_UNESCAPED_SLASHES) ?>;
     var CV_PUB_AI_BASE = <?= json_encode($pubAiEntryBase, JSON_UNESCAPED_SLASHES) ?>;
     var CV_API = <?= json_encode([
         'entry'          => base_url('dashboard/profile/cv/entry'),
