@@ -30,9 +30,9 @@ class MigrateCvEntriesToRr extends BaseCommand
 
     public function run(array $params)
     {
-        $apply      = (bool) CLI::getOption('apply');
-        $emailOpt   = strtolower(trim((string) (CLI::getOption('email') ?? '')));
-        $excludeOpt = (string) (CLI::getOption('exclude') ?? '');
+        $apply      = $this->hasFlag('apply', $params);
+        $emailOpt   = strtolower(trim((string) ($this->optionValue('email', $params) ?? '')));
+        $excludeOpt = (string) ($this->optionValue('exclude', $params) ?? '');
         $exclude    = array_values(array_filter(array_map('intval', explode(',', $excludeOpt))));
 
         $db = Database::connect();
@@ -156,6 +156,47 @@ class MigrateCvEntriesToRr extends BaseCommand
         }
 
         CLI::write('DONE ' . json_encode($totals, JSON_UNESCAPED_UNICODE), 'green');
+    }
+
+    /**
+     * Robust option reader — CLI::getOption is unreliable on spark/IIS here,
+     * so fall back to scanning argv (same approach as SyncPublicationsWithRr).
+     */
+    private function optionValue(string $name, array $params): ?string
+    {
+        $value = CLI::getOption($name);
+        if ($value !== null && $value !== false && $value !== true) {
+            return (string) $value;
+        }
+
+        $needle = '--' . $name;
+        $argv   = array_merge($params, array_slice($_SERVER['argv'] ?? [], 2));
+        foreach ($argv as $idx => $param) {
+            $param = (string) $param;
+            if (str_starts_with($param, $needle . '=')) {
+                return substr($param, strlen($needle) + 1);
+            }
+            if ($param === $needle && isset($argv[$idx + 1])) {
+                return (string) $argv[$idx + 1];
+            }
+        }
+
+        return null;
+    }
+
+    private function hasFlag(string $name, array $params): bool
+    {
+        if (CLI::getOption($name)) {
+            return true;
+        }
+        $argv = array_merge($params, array_slice($_SERVER['argv'] ?? [], 2));
+        foreach ($argv as $param) {
+            if ((string) $param === '--' . $name) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @param array<string,array<string,mixed>> $keyToEntry */
