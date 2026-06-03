@@ -80,11 +80,20 @@ class MigrateCvEntriesToRr extends BaseCommand
                 $meta = json_decode((string) $e['metadata'], true) ?: [];
                 $doi  = self::normDoi($meta['doi'] ?? '');
                 $year = $e['start_date'] ? (int) substr((string) $e['start_date'], 0, 4) : (int) ($meta['publication_year'] ?? 0);
-                $type = trim((string) ($meta['rr_publication_type'] ?? '')) ?: self::typeFromWork((string) ($meta['work_type'] ?? ''));
+                $type = self::normalizeType((string) ($meta['rr_publication_type'] ?? ''), (string) ($meta['work_type'] ?? ''));
                 $key  = trim((string) ($meta['sync_external_key'] ?? ''));
                 if ($key === '') {
                     $key = $doi !== '' ? 'h:' . sha1(strtolower($doi)) : 'nsentry:' . (int) $e['id'];
                 }
+                // RR `source` is NOT NULL varchar(500): never send empty.
+                $source = trim((string) ($e['organization'] ?? ''));
+                if ($source === '') {
+                    $source = trim((string) ($e['description'] ?? ''));
+                }
+                if ($source === '') {
+                    $source = 'ไม่ระบุแหล่งตีพิมพ์';
+                }
+                $source = mb_substr($source, 0, 500);
                 $keyToEntry[$key] = $e;
                 $payload[] = [
                     'external_key'      => $key,
@@ -92,8 +101,8 @@ class MigrateCvEntriesToRr extends BaseCommand
                     'rr_publication_id' => null,
                     'title'             => (string) $e['title'],
                     'publication_year'  => $year ?: null,
-                    'publication_type'  => $type ?: 'journal',
-                    'source'            => ($e['organization'] !== null && trim((string) $e['organization']) !== '') ? $e['organization'] : null,
+                    'publication_type'  => $type,
+                    'source'            => $source,
                     'doi'               => $doi !== '' ? $doi : null,
                     'sync_origin'       => 'newscience',
                     'content_hash'      => null,
@@ -222,14 +231,31 @@ class MigrateCvEntriesToRr extends BaseCommand
         return strtolower(trim(str_replace(['\\', ' '], '', (string) $doi)));
     }
 
-    private static function typeFromWork(string $work): string
+    /**
+     * Clamp to RR publication_type enum:
+     * journal, book, proceedings, thesis, report, other.
+     */
+    private static function normalizeType(string $rrType, string $workType): string
     {
-        $work = strtolower($work);
-        if (str_contains($work, 'conference') || str_contains($work, 'proceeding')) {
-            return 'conference';
+        $allowed = ['journal', 'book', 'proceedings', 'thesis', 'report', 'other'];
+        $candidate = strtolower(trim($rrType !== '' ? $rrType : $workType));
+        if (in_array($candidate, $allowed, true)) {
+            return $candidate;
         }
-        if (str_contains($work, 'book') || str_contains($work, 'chapter')) {
+        if (str_contains($candidate, 'conference') || str_contains($candidate, 'proceeding')) {
+            return 'proceedings';
+        }
+        if (str_contains($candidate, 'book') || str_contains($candidate, 'chapter')) {
             return 'book';
+        }
+        if (str_contains($candidate, 'thesis') || str_contains($candidate, 'dissertation')) {
+            return 'thesis';
+        }
+        if (str_contains($candidate, 'report')) {
+            return 'report';
+        }
+        if (str_contains($candidate, 'journal') || str_contains($candidate, 'article')) {
+            return 'journal';
         }
 
         return 'journal';
