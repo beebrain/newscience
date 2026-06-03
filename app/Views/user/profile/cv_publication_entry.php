@@ -140,7 +140,7 @@ if (is_array($entry) && ! empty($entry['publication_authors']) && is_array($entr
         <p class="mt-2 text-slate-600">หัวข้อ: <strong class="text-slate-800"><?= esc($sectionTitle) ?></strong></p>
         <p class="mt-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-950">
             ร่างใน ฐานข้อมูลคณะ — เนื้อหาหลักบันทึกที่
-            <a href="<?= esc($rrCreateUrl, 'attr') ?>" class="font-semibold text-violet-800 underline hover:text-violet-900">ระบบ กบศ</a>
+            <a href="<?= esc($rrCreateUrl, 'attr') ?>" class="font-semibold text-violet-800 underline hover:text-violet-900">ระบบผลงานวิจัย</a>
             แล้วกลับมาหน้า CV อัตโนมัติ
         </p>
     </header>
@@ -271,7 +271,7 @@ if (is_array($entry) && ! empty($entry['publication_authors']) && is_array($entr
                 <legend>เพิ่มเติม</legend>
                 <div class="mt-4 space-y-4">
                     <div>
-                        <label for="cv-p-rrid" class="cv-pub-label">รหัสผลงานใน กบศ</label>
+                        <label for="cv-p-rrid" class="cv-pub-label">รหัสผลงานวิจัย</label>
                         <input type="text" name="publication_rr_id" id="cv-p-rrid" class="cv-pub-field" maxlength="12" inputmode="numeric" pattern="[0-9]*" autocomplete="off" spellcheck="false" value="<?= esc($val('publication_rr_id')) ?>">
                     </div>
                     <div>
@@ -287,7 +287,7 @@ if (is_array($entry) && ! empty($entry['publication_authors']) && is_array($entr
                 <h2 id="cv-pub-ai-heading" class="text-base font-bold text-violet-950 flex items-center gap-2">
                     <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
                 </h2>
-                <p class="text-sm text-violet-900/90 mt-2 leading-relaxed">อัปโหลด PDF/รูป หรือใส่ DOI — ระบบกรอกฟอร์มให้ (แบบ กบศ)</p>
+                <p class="text-sm text-violet-900/90 mt-2 leading-relaxed">อัปโหลด PDF/รูป หรือใส่ DOI — ระบบกรอกฟอร์มให้ (อัตโนมัติ)</p>
                 <?php if (! $aiReady): ?>
                     <p class="text-xs text-amber-800 mt-2 rounded-md bg-amber-50 border border-amber-200 px-2 py-1.5">ยังไม่เปิดใช้บนเซิร์ฟเวอร์ — ตั้ง <code class="text-[11px]">AI_CV_N8N_URL</code></p>
                 <?php endif; ?>

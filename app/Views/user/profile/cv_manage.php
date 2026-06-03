@@ -451,7 +451,7 @@ $pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
                     <a href="<?= esc(base_url('dashboard/profile/cv?tab=orcid'), 'attr') ?>"
                        class="cv-edit-tab-nav <?= $cvEditActiveTab === 'orcid' ? 'cv-edit-tab-nav--active' : '' ?>">ORCID</a>
                     <a href="<?= esc(base_url('dashboard/profile/cv?tab=sections'), 'attr') ?>"
-                       class="cv-edit-tab-nav <?= $cvEditActiveTab === 'sections' ? 'cv-edit-tab-nav--active' : '' ?>">หัวข้อและรายการ<?php if ($cv_ai_publication_section_id > 0): ?> <span class="text-[10px] font-bold text-violet-300 align-middle">✦ AI</span><?php endif; ?></a>
+                       class="cv-edit-tab-nav <?= $cvEditActiveTab === 'sections' ? 'cv-edit-tab-nav--active' : '' ?>">หัวข้อและรายการ</a>
                 </nav>
 
                 <div class="mt-auto pt-8 border-t border-white/10 space-y-2">
@@ -475,49 +475,8 @@ $pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
                         <div class="min-w-0">
                             <p class="cv-edit-stitch-kicker mb-1">แก้ไขประวัติในระบบ</p>
                             <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">จัดการ CV</h1>
-                            <p class="text-sm text-slate-600 mt-2 leading-relaxed max-w-3xl">แบบเดียวกับ กบศ — หัวข้อกำหนดเอง ลากเรียงได้ รายการมีองค์กร สถานที่ วันที่</p>
-                            <?php if ($research_sync_configured): ?>
-                                <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                                    <?php if ($rr_last_pull_at !== null && $rr_last_pull_at !== ''): ?>
-                                        <span class="inline-flex items-center gap-1.5">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true"></span>
-                                            ดึงจาก กบศ ล่าสุด: <strong class="font-medium text-slate-700"><?= esc($rr_last_pull_at) ?></strong>
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="inline-flex items-center gap-1.5">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-slate-300 shrink-0" aria-hidden="true"></span>
-                                            ยังไม่มีประวัติดึงจาก กบศ ในหน้านี้
-                                        </span>
-                                    <?php endif; ?>
-                                    <?php if ($rr_auto_pull_max_age_days !== null): ?>
-                                        <span class="text-slate-400 hidden sm:inline" aria-hidden="true">|</span>
-                                        <span>อัตโนมัติเมื่อเกิน <strong class="text-slate-600"><?= (int) $rr_auto_pull_max_age_days ?></strong> วันหลังดึงล่าสุด</span>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
+                            <p class="text-sm text-slate-600 mt-2 leading-relaxed max-w-3xl">หัวข้อกำหนดเอง ลากเรียงได้ รายการมีองค์กร สถานที่ วันที่</p>
                         </div>
-                        <?php if ($research_sync_configured): ?>
-                            <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch gap-2 shrink-0 max-w-md">
-                                <p class="w-full text-xs text-slate-500 leading-relaxed sm:order-first">
-                                    บันทึกผลงานที่ระบบ กบศ — ปุ่ม <strong>ซิงค์ให้ตรงกัน</strong> ดึง CV/ผลงานจาก กบศ และส่งประวัติการศึกษากลับ (อ่านคำเตือนการลบในหน้าซิงค์ละเอียด)
-                                </p>
-                                <button type="button" id="cv-btn-rr-reconcile"
-                                        class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-[6px] border border-violet-600 bg-violet-600 text-white font-semibold hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 transition-colors sm:order-1">
-                                    ซิงค์ให้ตรงกัน ↔ <span translate="no">กบศ</span>
-                                </button>
-                                <form method="post" action="<?= base_url('dashboard/profile/cv/sync-from-rr') ?>" class="inline-flex sm:order-2"
-                                      onsubmit="if (!confirm('ซิงค์จาก กบศ แบบเสริม (รักษาข้อมูลที่กรอกใน ฐานข้อมูลคณะ) ตอนนี้?')) return false; var b=this.querySelector('button[type=submit]'); if (b.dataset.busy==='1') return false; b.dataset.busy='1'; b.disabled=true; b.setAttribute('aria-busy','true'); return true;">
-                                    <?= csrf_field() ?>
-                                    <button type="submit"
-                                            class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-[6px] border border-emerald-600 bg-white text-emerald-800 font-semibold hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors">
-                                        <svg class="w-4 h-4 shrink-0 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                        ดึงจาก <span translate="no">กบศ</span> ตอนนี้
-                                    </button>
-                                </form>
-                                <a href="<?= base_url('dashboard/profile/research-record-sync') ?>"
-                                   class="inline-flex items-center justify-center text-sm px-3 py-2.5 rounded-[6px] border border-slate-200 bg-slate-50 text-slate-700 font-medium hover:bg-white hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 transition-colors sm:order-3">เปรียบเทียบแบบละเอียด…</a>
-                            </div>
-                        <?php endif; ?>
                     </div>
                 </header>
 
@@ -683,23 +642,6 @@ $pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
                 </section>
 
                 <div id="cv-edit-sections" class="<?= $cvEditActiveTab !== 'sections' ? 'hidden' : '' ?>">
-                <?php if ($cv_ai_publication_section_id > 0): ?>
-                <section class="cv-edit-stitch-panel mb-4 border-violet-200 bg-gradient-to-r from-violet-50/90 to-white">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <div>
-                            <p class="text-sm font-semibold text-violet-950">เพิ่มผลงานตีพิมพ์ด้วย AI</p>
-                            <p class="text-sm text-slate-600 mt-1">อัปโหลด PDF/รูป หรือใส่ DOI — ระบบวิเคราะห์แล้วกรอกฟอร์มให้ (แบบ กบศ)</p>
-                            <?php if (! $ai_cv_publication_enabled): ?>
-                            <p class="text-xs text-amber-800 mt-2">ยังไม่เปิดใช้บนเซิร์ฟเวอร์ — ตั้ง <code class="text-[11px] bg-amber-100 px-1 rounded">AI_CV_N8N_URL</code> ใน .env</p>
-                            <?php endif; ?>
-                        </div>
-                        <a href="<?= esc($pubAiEntryBase . '?section_id=' . $cv_ai_publication_section_id . '&ai=1', 'attr') ?>"
-                           class="inline-flex items-center justify-center gap-1.5 shrink-0 text-sm px-5 py-2.5 rounded-lg border font-semibold shadow-sm transition-colors <?= $ai_cv_publication_enabled ? 'border-violet-400 bg-violet-600 text-white hover:bg-violet-700' : 'border-amber-300 bg-amber-50 text-amber-950 hover:bg-amber-100' ?>">
-                            <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
-                        </a>
-                    </div>
-                </section>
-                <?php endif; ?>
                 <?php
                 $cv_publication_section_id = (int) ($cv_publication_section_id ?? $cv_ai_publication_section_id ?? 0);
                 $research_record_sso_ready = ! empty($research_record_sso_ready);
@@ -709,20 +651,16 @@ $pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
                             <p class="text-sm font-semibold text-gray-900">ผลงานตีพิมพ์ / งานวิจัย</p>
-                            <p class="text-sm text-slate-600 mt-1">บันทึกเนื้อหาที่ระบบ <span translate="no">กบศ</span> แล้วกลับมาหน้านี้อัตโนมัติ — กดหัวข้อด้านล่างเพื่อดูรายการ</p>
+                            <p class="text-sm text-slate-600 mt-1">กดเพิ่มผลงานเพื่อบันทึกในระบบผลงานวิจัย แล้วระบบจะนำกลับมาหน้านี้อัตโนมัติ — กดหัวข้อด้านล่างเพื่อดูรายการ</p>
                             <?php if (! $research_record_sso_ready): ?>
-                            <p class="text-xs text-amber-900 mt-2">ยังไม่พร้อม SSO กบศ — ตรวจ <code class="text-[11px] bg-amber-100 px-1 rounded">researchrecordsso.*</code> ใน .env</p>
+                            <p class="text-xs text-amber-900 mt-2">ยังไม่พร้อมใช้งาน — ตรวจ <code class="text-[11px] bg-amber-100 px-1 rounded">researchrecordsso.*</code> ใน .env</p>
                             <?php endif; ?>
                         </div>
                         <div class="flex flex-wrap items-center gap-2 shrink-0">
                             <a href="<?= esc($rrPubCreateHref, 'attr') ?>"
                                class="inline-flex items-center justify-center gap-1.5 text-sm px-5 py-2.5 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold shadow-sm transition-colors <?= ($rrPubCreateSso !== '' || $rrPubCreateDirect !== '') ? '' : 'opacity-60 pointer-events-none' ?>"
                                <?= ($rrPubCreateSso !== '' || $rrPubCreateDirect !== '') ? '' : 'aria-disabled="true" tabindex="-1"' ?>>
-                                <span aria-hidden="true">+</span> เพิ่มผลงานที่ กบศ
-                            </a>
-                            <a href="<?= esc($pubAiEntryBase . '?section_id=' . $cv_publication_section_id . '&ai=1', 'attr') ?>"
-                               class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg border border-violet-300 bg-violet-50 text-violet-900 font-semibold hover:bg-violet-100 transition-colors">
-                                <span aria-hidden="true">✦</span> ร่างด้วย AI
+                                <span aria-hidden="true">+</span> เพิ่มผลงานตีพิมพ์
                             </a>
                         </div>
                     </div>
@@ -731,9 +669,6 @@ $pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
                 <section class="cv-edit-stitch-panel mb-4 border-slate-200 bg-slate-50">
                     <p class="text-sm text-slate-700">
                         ยังไม่มีหัวข้อผลงาน — เพิ่มหัวข้อประเภท <strong>งานวิจัย</strong> หรือ <strong>บทความ</strong> ด้านล่าง
-                        <?php if ($research_sync_configured): ?>
-                        หรือกด <strong>ดึงจาก กบศ</strong> เพื่อสร้างหัวข้ออัตโนมัติ
-                        <?php endif; ?>
                     </p>
                 </section>
                 <?php endif; ?>
@@ -875,7 +810,7 @@ $pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
                                         }
                                         $srcRaw = (string) ($entry['metadata_array']['source'] ?? '');
                                         if ($srcRaw === 'research_record') {
-                                            $metaBits[] = 'กบศ';
+                                            $metaBits[] = 'ผลงานวิจัย';
                                         } elseif ($srcRaw === 'ai_assistant') {
                                             $metaBits[] = 'AI';
                                         } elseif ($srcRaw === 'orcid') {
@@ -922,7 +857,7 @@ $pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
                                                 </div>
                                                 <?php if ($showPublicationType): ?>
                                                 <a href="<?= esc($pubEditHref, 'attr') ?>"
-                                                   class="text-xs px-2 py-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">แก้ไขที่ กบศ</a>
+                                                   class="text-xs px-2 py-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">แก้ไข</a>
                                                 <?php else: ?>
                                                 <button type="button" onclick="editCvEntry(<?= $sid ?>, <?= $eid ?>)"
                                                         class="text-xs px-2 py-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">แก้ไข</button>
@@ -939,16 +874,12 @@ $pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
                         </div>
 
                         <div class="cv-section-foot py-4 sm:py-5 border-t border-gray-100 bg-gray-50/80 flex flex-wrap items-center justify-between gap-3">
-                            <p class="text-sm text-gray-600"><?= $showPublicationType ? 'บันทึกเนื้อหาที่ กบศ แล้วกลับมาหน้านี้อัตโนมัติ · AI ช่วยร่างใน ฐานข้อมูลคณะ' : 'เพิ่มหรือแก้ไขรายการในหัวข้อนี้' ?></p>
+                            <p class="text-sm text-gray-600"><?= $showPublicationType ? 'กดเพิ่มผลงานเพื่อบันทึกในระบบผลงานวิจัย แล้วระบบจะนำกลับมาหน้านี้อัตโนมัติ' : 'เพิ่มหรือแก้ไขรายการในหัวข้อนี้' ?></p>
                             <div class="flex flex-wrap items-center gap-2">
                                 <?php if ($showPublicationType): ?>
-                                <a href="<?= esc($pubAiEntryBase . '?section_id=' . $sid . '&ai=1', 'attr') ?>"
-                                   class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg border font-semibold transition-colors <?= $ai_cv_publication_enabled ? 'border-violet-300 bg-violet-50 text-violet-900 hover:bg-violet-100' : 'border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100' ?>">
-                                    <span aria-hidden="true">✦</span> ช่วยเติมด้วย AI
-                                </a>
                                 <a href="<?= esc($rrPubCreateHref, 'attr') ?>"
                                    class="inline-flex items-center justify-center gap-1.5 text-sm px-4 py-2.5 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold shadow-sm transition-colors">
-                                    <span aria-hidden="true">+</span> เพิ่มผลงานที่ กบศ
+                                    <span aria-hidden="true">+</span> เพิ่มผลงานตีพิมพ์
                                 </a>
                                 <?php else: ?>
                                 <button type="button"
@@ -1135,30 +1066,6 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         return p;
     }
 
-    (function () {
-        var btn = document.getElementById('cv-btn-rr-reconcile');
-        if (!btn) return;
-        btn.addEventListener('click', async function () {
-            if (!confirm('ซิงค์ให้ ฐานข้อมูลคณะ กับ กบศ ตรงกัน?\n\nดึง CV/ผลงานจาก กบศ → ส่งประวัติการศึกษากลับ\n\nถ้าลบใน ฐานข้อมูลคณะ แต่ กบศ ยังมี รายการอาจกลับมา')) return;
-            btn.disabled = true;
-            btn.setAttribute('aria-busy', 'true');
-            try {
-                var res = await fetch(<?= json_encode(base_url('dashboard/profile/research-record-sync/reconcile-all'), JSON_UNESCAPED_SLASHES) ?>, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-                    body: '{}',
-                    credentials: 'same-origin'
-                });
-                var data = await res.json().catch(function () { return {}; });
-                alert(data.message || (data.success ? 'ซิงค์สำเร็จ' : 'ซิงค์ไม่สำเร็จ'));
-                if (data.success) location.reload();
-            } finally {
-                btn.disabled = false;
-                btn.removeAttribute('aria-busy');
-            }
-        });
-    })();
-
     window.toggleCvSection = function (id) {
         var c = document.getElementById('cv-content-' + id);
         var t = document.getElementById('cv-toggle-' + id);
@@ -1339,12 +1246,6 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
     function cvSectionRow(sectionId) {
         return document.querySelector('.cv-section-item[data-section-id="' + sectionId + '"]');
     }
-
-    window.launchCvAiAssist = function (sectionId) {
-        var sid = parseInt(sectionId, 10) || 0;
-        if (!sid) return;
-        window.location.href = CV_PUB_AI_BASE + '?section_id=' + sid + '&ai=1';
-    };
 
     function resetPublicationSelectOptions() {
         var sel = cvEl('p', 'pubtype');
@@ -1538,13 +1439,6 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
 
     document.addEventListener('DOMContentLoaded', function () {
         var qs = new URLSearchParams(window.location.search);
-        var aiSectionId = <?= (int) $cv_ai_publication_section_id ?>;
-        if (aiSectionId > 0) {
-            if (qs.get('tab') === 'sections' && qs.get('ai') === '1') {
-                window.location.href = CV_PUB_AI_BASE + '?section_id=' + aiSectionId + '&ai=1';
-                return;
-            }
-        }
         var openSection = qs.get('open_section');
         var pubSectionId = <?= (int) ($cv_publication_section_id ?? $cv_ai_publication_section_id ?? 0) ?>;
         if (!openSection && pubSectionId > 0) {
