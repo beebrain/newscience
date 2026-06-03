@@ -66,12 +66,15 @@ class OrcidCvImport
 
         $educationSection  = self::ensureCvSection($cvSectionModel, $personnelId, 'education', ResearchRecordCvSyncMerge::canonicalEducationSectionTitle(), $education !== []);
         $employmentSection = self::ensureCvSection($cvSectionModel, $personnelId, 'work', 'ประสบการณ์การทำงาน', $employment !== []);
-        $worksSection      = self::ensureCvSectionForWorks($cvSectionModel, $personnelId, $works !== []);
 
         $cvEntryModel = new CvEntryModel();
         $eduCount     = self::upsertEntries($cvEntryModel, $educationSection, $education);
         $empCount     = self::upsertEntries($cvEntryModel, $employmentSection, $employment);
-        $worksCount   = self::upsertEntries($cvEntryModel, $worksSection, $works);
+
+        // ผลงานตีพิมพ์จาก ORCID → บันทึกที่ Research Record (แหล่งความจริง) แล้วดึงกลับมาผูกใน CV
+        $worksResult  = self::pushOrcidWorksToResearchRecord($personnelId, $works);
+        $worksCount   = $worksResult['count'];
+        $worksWarning = $worksResult['message'] ?? null;
 
         ResearchRecordCvSyncMerge::finalizeCvSectionsForPerson($personnelId);
 
@@ -79,6 +82,9 @@ class OrcidCvImport
         $msg        = $hasAnyData
             ? 'นำเข้าจาก ORCID เรียบร้อยแล้ว'
             : 'ไม่พบรายการที่เปิดเผยใน ORCID สำหรับประเภทที่เลือก';
+        if ($worksWarning !== null) {
+            $msg .= ' — ' . $worksWarning;
+        }
 
         return [
             'success'          => true,
@@ -89,6 +95,113 @@ class OrcidCvImport
             'orcid_id'         => $orcidId,
             'scopes'           => $scopes,
         ];
+    }
+
+    /**
+     * ผลักผลงานตีพิมพ์จาก ORCID ไปบันทึกใน Research Record (dedup-safe) แล้วดึงกลับมาผูกใน CV
+     *
+     * @param list<array<string,mixed>> $works
+     *
+     * @return array{count:int,message?:string}
+     */
+    private static function pushOrcidWorksToResearchRecord(int $personnelId, array $works): array
+    {
+        if ($works === []) {
+            return ['count' => 0];
+        }
+
+        $person = (new PersonnelModel())->find($personnelId);
+        $email  = $person !== null ? ResearchRecordCvPull::canonicalEmailForPerson($person) : '';
+        if ($email === '') {
+            return ['count' => 0, 'message' => 'ไม่พบอีเมลสำหรับบันทึกผลงานในระบบวิจัย จึงข้ามส่วนผลงานตีพิมพ์'];
+        }
+        $name = PersonnelModel::resolvePublicDisplayNameTh($person);
+
+        $payload = [];
+        foreach ($works as $w) {
+            $meta    = is_array($w['orcid_meta'] ?? null) ? $w['orcid_meta'] : [];
+            $doi     = strtolower(trim(str_replace([' ', '\\'], '', (string) ($meta['doi'] ?? ''))));
+            $putCode = trim((string) ($w['put_code'] ?? ''));
+            $year    = ! empty($w['start_date']) ? (int) substr((string) $w['start_date'], 0, 4) : 0;
+
+            $source = trim((string) ($w['organization'] ?? ''));
+            if ($source === '') {
+                $source = trim((string) ($w['description'] ?? ''));
+            }
+            if ($source === '') {
+                $source = 'ไม่ระบุแหล่งตีพิมพ์';
+            }
+
+            if ($putCode !== '') {
+                $key = 'orcid:' . $putCode;
+            } elseif ($doi !== '') {
+                $key = 'h:' . sha1($doi);
+            } else {
+                $key = 'orcidwork:' . sha1((string) ($w['title'] ?? '') . '|' . $year);
+            }
+
+            $payload[] = [
+                'external_key'      => $key,
+                'ns_publication_id' => null,
+                'rr_publication_id' => null,
+                'title'             => (string) ($w['title'] ?? ''),
+                'publication_year'  => $year ?: null,
+                'publication_type'  => self::orcidWorkTypeToRr((string) ($meta['work_type'] ?? '')),
+                'source'            => mb_substr($source, 0, 500),
+                'doi'               => $doi !== '' ? $doi : null,
+                'sync_origin'       => 'orcid',
+                'content_hash'      => null,
+                'ref_url'           => $meta['url'] ?? null,
+                'contributors'      => [[
+                    'email'         => $email,
+                    'name'          => $name !== '' ? $name : $email,
+                    'order'         => 1,
+                    'corresponding' => 1,
+                    'affiliation'   => 'มหาวิทยาลัยราชภัฏอุตรดิตถ์',
+                ]],
+            ];
+        }
+
+        $push = ResearchRecordCvSyncClient::pushPublicationsSyncBundle($email, $payload);
+        if (! ($push['success'] ?? false)) {
+            return ['count' => 0, 'message' => 'บันทึกผลงานตีพิมพ์ไปยังระบบวิจัยไม่สำเร็จ: ' . (string) ($push['message'] ?? $push['error'] ?? '')];
+        }
+
+        // ดึงกลับมาผูกเป็นรายการผลงานใน CV (อิงผู้แต่ง)
+        $bundle = ResearchRecordCvSyncClient::fetchPublicationsSyncBundle($email);
+        if (($bundle['success'] ?? false) && ! empty($bundle['publications']) && is_array($bundle['publications'])) {
+            ResearchRecordCvSyncMerge::applyPublicationsToCvEntries($personnelId, $bundle['publications'], []);
+        }
+
+        $stats = $push['stats'] ?? [];
+        $count = (int) (($stats['inserted'] ?? 0) + ($stats['updated'] ?? 0));
+
+        return ['count' => $count > 0 ? $count : count($payload)];
+    }
+
+    private static function orcidWorkTypeToRr(string $workType): string
+    {
+        $w = strtolower(trim($workType));
+        if ($w === '') {
+            return 'journal';
+        }
+        if (str_contains($w, 'conference') || str_contains($w, 'proceeding')) {
+            return 'proceedings';
+        }
+        if (str_contains($w, 'book') || str_contains($w, 'chapter')) {
+            return 'book';
+        }
+        if (str_contains($w, 'thesis') || str_contains($w, 'dissertation')) {
+            return 'thesis';
+        }
+        if (str_contains($w, 'report')) {
+            return 'report';
+        }
+        if (str_contains($w, 'journal') || str_contains($w, 'article') || str_contains($w, 'preprint')) {
+            return 'journal';
+        }
+
+        return 'other';
     }
 
     /**

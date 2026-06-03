@@ -616,6 +616,7 @@ $pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
                                 ผลงานตีพิมพ์ (works)
                             </label>
                         </div>
+                        <p class="text-xs text-slate-500">ผลงานตีพิมพ์ที่นำเข้าจาก ORCID จะถูกบันทึกไว้ในระบบผลงานวิจัย แล้วแสดงเป็นรายการผลงานใน CV ให้อัตโนมัติ</p>
                         <form method="post" action="<?= base_url('dashboard/profile/cv/orcid/save') ?>" class="flex flex-col gap-3">
                             <?= csrf_field() ?>
                             <div class="flex flex-col sm:flex-row sm:items-end gap-3">
