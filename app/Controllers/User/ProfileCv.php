@@ -488,101 +488,6 @@ class ProfileCv extends BaseController
         return base_url('dashboard/profile/cv?' . http_build_query($params));
     }
 
-    /**
-     * หน้าเพิ่ม/แก้ไขผลงานตีพิมพ์ — AI ยังอยู่ NS; นอกนั้น redirect ไป กบศ
-     */
-    public function publicationEntry()
-    {
-        if ($this->request->getGet('ai') === '1') {
-            return $this->renderCvPublicationAiEntry();
-        }
-
-        $sectionId = (int) $this->request->getGet('section_id');
-        $entryId   = (int) $this->request->getGet('entry_id');
-        $meta      = [];
-        if ($entryId > 0 && CvEntryModel::isTablePresent()) {
-            $row = (new CvEntryModel())->find($entryId);
-            if (is_array($row)) {
-                $meta = CvEntryModel::decodeMetadata($row['metadata'] ?? null);
-            }
-        }
-        $rrId = (int) ($meta['rr_publication_id'] ?? 0);
-        if ($rrId > 0) {
-            return redirect()->to(base_url('dashboard/profile/cv/rr-publication/edit/' . $rrId . '?' . http_build_query(array_filter([
-                'section_id' => $sectionId > 0 ? $sectionId : null,
-            ]))));
-        }
-
-        $q = $sectionId > 0 ? '?section_id=' . $sectionId : '';
-
-        return redirect()->to(base_url('dashboard/profile/cv/rr-publication/create' . $q));
-    }
-
-    /**
-     * หน้าช่วยเติมผลงานด้วย AI (บันทึกลง cv_entries ใน NS — เนื้อหาหลักยังอยู่ กบศ)
-     */
-    private function renderCvPublicationAiEntry()
-    {
-        $this->response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-        $this->response->setHeader('Pragma', 'no-cache');
-
-        $email = $this->sessionEmail();
-        if ($email === '') {
-            return redirect()->to(base_url('admin/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
-        }
-
-        $personnelId = $this->personnelIdOrRedirect();
-        if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
-            return $personnelId;
-        }
-
-        $sectionId = (int) $this->request->getGet('section_id');
-        $entryId   = (int) $this->request->getGet('entry_id');
-        if ($sectionId <= 0) {
-            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'ไม่พบหัวข้อผลงาน');
-        }
-
-        $cvSectionModel = new CvSectionModel();
-        if (! $cvSectionModel->db->tableExists('cv_sections')) {
-            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'ระบบ CV ยังไม่พร้อม — รัน migrate');
-        }
-
-        $section = $cvSectionModel->find($sectionId);
-        if (! is_array($section) || (int) ($section['personnel_id'] ?? 0) !== $personnelId) {
-            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'ไม่สามารถเข้าถึงหัวข้อนี้ได้');
-        }
-
-        if (! $this->isPublicationSection($section)) {
-            return redirect()->to(base_url('dashboard/profile/cv?tab=sections'))->with('error', 'หัวข้อนี้ไม่ใช่ผลงานตีพิมพ์');
-        }
-
-        $person = $this->resolveOwnedPersonnel();
-        $entry  = null;
-        if ($entryId > 0 && CvEntryModel::isTablePresent()) {
-            $row = (new CvEntryModel())->find($entryId);
-            if (! is_array($row) || (int) ($row['section_id'] ?? 0) !== $sectionId) {
-                return redirect()->to(base_url('dashboard/profile/cv/publication?section_id=' . $sectionId . '&ai=1'))
-                    ->with('error', 'ไม่พบรายการ');
-            }
-            $entry = $this->hydrateCvEntryForEditor($row, $personnelId);
-        }
-
-        $aiCvCfg = config(AiCv::class);
-
-        return view('user/profile/cv_publication_entry', [
-            'page_title'                => $entry ? 'แก้ไขผลงานตีพิมพ์ (AI)' : 'เพิ่มผลงานตีพิมพ์ (AI)',
-            'person'                    => $person,
-            'section'                   => $section,
-            'entry'                     => $entry,
-            'section_id'                => $sectionId,
-            'entry_id'                  => $entryId,
-            'is_edit'                   => $entry !== null,
-            'ai_cv_publication_enabled' => $aiCvCfg->isReady(),
-            'open_ai_panel'             => true,
-            'cv_owner_email'            => ResearchRecordCvPull::canonicalEmailForPerson($person ?? []),
-            'cv_owner_name'             => PersonnelModel::resolvePublicDisplayNameTh($person ?? []),
-        ]);
-    }
 
     public function searchPersonnelNames()
     {
@@ -660,40 +565,6 @@ class ProfileCv extends BaseController
         return redirect()->back()->with('success', 'บันทึกการแนะนำข้อมูลและความเชี่ยวชาญแล้ว');
     }
 
-    /**
-     * POST — ดึง CV + ผลงานจาก กบศ ลง ฐานข้อมูลคณะ (manual)
-     */
-    public function syncFromResearchRecord()
-    {
-        if (! $this->request->is('post')) {
-            return redirect()->to(base_url('dashboard/profile/cv'));
-        }
-
-        $personnelId = $this->personnelIdOrRedirect();
-        if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
-            return $personnelId;
-        }
-
-        $personnelModel = new PersonnelModel();
-        $person          = $personnelModel->find($personnelId);
-        if ($person === null) {
-            return redirect()->to(base_url('dashboard/profile'))->with('error', 'ไม่พบข้อมูลบุคลากร');
-        }
-
-        $researchApi = config(ResearchApi::class);
-        if (! $researchApi->syncConfigured()) {
-            return redirect()->back()->with('error', 'ยังไม่ได้ตั้งค่า Research API ใน .env (RESEARCH_API_BASE_URL, RESEARCH_API_KEY)');
-        }
-
-        $canonical = ResearchRecordCvPull::canonicalEmailForPerson($person);
-        $result    = ResearchRecordCvPull::run($personnelId, $canonical, ResearchRecordCvPull::TRIGGER_MANUAL);
-
-        if ($result['success']) {
-            return redirect()->back()->with('success', $result['message'] ?? 'ดึงจาก กบศ เรียบร้อย');
-        }
-
-        return redirect()->back()->with('error', $result['message'] ?? 'ดึงจาก กบศ ไม่สำเร็จ');
-    }
 
     /**
      * POST — อัปโหลดรูปประกอบ CV สาธารณะ (ไม่แก้ user.profile_image)
@@ -1263,19 +1134,6 @@ class ProfileCv extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => $msg]);
         }
 
-        if ($this->request->getPost('cv_publication_page')) {
-            $sectionId = (int) $this->request->getPost('section_id');
-            $entryId   = (int) $this->request->getPost('entry_id');
-            if ($sectionId > 0) {
-                $url = 'dashboard/profile/cv/publication?section_id=' . $sectionId;
-                if ($entryId > 0) {
-                    $url .= '&entry_id=' . $entryId;
-                }
-
-                return redirect()->to(base_url($url))->with('error', $msg);
-            }
-        }
-
         return redirect()->back()->with('error', $msg);
     }
 
@@ -1536,103 +1394,6 @@ class ProfileCv extends BaseController
         return $out;
     }
 
-    /**
-     * POST AJAX — อัปโหลดไฟล์ก่อนส่ง URL ให้ n8n (แบบ Research Record)
-     */
-    public function aiPublicationUpload()
-    {
-        if (! $this->request->isAJAX()) {
-            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
-        }
-        $personnelId = $this->personnelIdOrRedirect();
-        if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
-        }
-        $uid = (int) session()->get('admin_id');
-        if ($uid <= 0) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
-        }
 
-        $file = $this->request->getFile('file');
-        $res  = CvAiFileStorage::storeUploadedFile($file);
-        if (! ($res['success'] ?? false)) {
-            return $this->response->setJSON($res);
-        }
 
-        $stored = (string) ($res['stored_name'] ?? '');
-        CvAiFileStorage::rememberUploadForUser($uid, $stored);
-
-        return $this->response->setJSON([
-            'success'      => true,
-            'file'         => [
-                'stored_name'   => $stored,
-                'download_url'  => $res['download_url'] ?? '',
-                'original_name' => $res['original_name'] ?? '',
-                'file_size'     => $res['file_size'] ?? 0,
-            ],
-        ]);
-    }
-
-    /**
-     * POST AJAX — วิเคราะห์ผลงาน: ไฟล์ที่อัปโหลด (ส่ง url) / URL ภายนอก / ข้อความ
-     */
-    public function aiPublicationPreview()
-    {
-        if (! $this->request->isAJAX()) {
-            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid request']);
-        }
-        $personnelId = $this->personnelIdOrRedirect();
-        if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
-        }
-        $cfg = config(AiCv::class);
-        if (! $cfg->isReady()) {
-            return $this->response->setJSON(['success' => false, 'message' => 'ยังไม่ได้ตั้งค่า AI (AI_CV_N8N_URL หรือ AI_CV_API_URL + AI_CV_API_KEY)']);
-        }
-        $uid = (int) session()->get('admin_id');
-        if ($uid <= 0 || ! $this->consumeAiCvRateSlot($uid, $cfg)) {
-            return $this->response->setJSON(['success' => false, 'message' => 'ใช้งาน AI เกินขีดจำกัดต่อชั่วโมง กรุณารอ']);
-        }
-
-        $storedName = trim((string) $this->request->getPost('stored_name'));
-        $extUrl     = trim((string) $this->request->getPost('url'));
-        $text       = trim((string) $this->request->getPost('text'));
-
-        if ($storedName !== '') {
-            if (! CvAiFileStorage::userOwnsUpload($uid, $storedName)) {
-                return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบไฟล์ที่อัปโหลด — กรุณาอัปโหลดใหม่']);
-            }
-            $analyzeUrl = CvAiFileStorage::publicDownloadUrl($storedName);
-            $r          = AiPublicationParser::parseFromUrl($analyzeUrl);
-        } elseif ($extUrl !== '') {
-            $r = AiPublicationParser::parseFromUrl($extUrl);
-        } elseif ($text !== '') {
-            $r = AiPublicationParser::parseFromText($text);
-        } else {
-            return $this->response->setJSON(['success' => false, 'message' => 'กรุณาอัปโหลดไฟล์ ใส่ URL หรือวางข้อความ']);
-        }
-
-        if (! $r['success']) {
-            return $this->response->setJSON($r);
-        }
-
-        return $this->response->setJSON(['success' => true, 'publication' => $r['publication']]);
-    }
-
-    private function consumeAiCvRateSlot(int $userId, AiCv $cfg): bool
-    {
-        $key    = 'ai_cv_rl_' . $userId;
-        $now    = time();
-        $bucket = session()->get($key);
-        if (! is_array($bucket) || $now - (int) ($bucket['t'] ?? 0) > 3600) {
-            $bucket = ['t' => $now, 'n' => 0];
-        }
-        if ((int) ($bucket['n'] ?? 0) >= $cfg->rateLimitPerHour) {
-            return false;
-        }
-        $bucket['n'] = (int) $bucket['n'] + 1;
-        session()->set($key, $bucket);
-
-        return true;
-    }
 }

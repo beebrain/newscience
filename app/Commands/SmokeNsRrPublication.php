@@ -82,14 +82,6 @@ class SmokeNsRrPublication extends BaseCommand
             $fail++;
         }
 
-        $syncView = (string) file_get_contents(APPPATH . 'Views/user/profile/research_record_sync.php');
-        if (str_contains($syncView, 'pull-only') && ! str_contains($syncView, 'ซิงค์ผลงานสองทาง')) {
-            CLI::write('[PASS] research_record_sync UI: pull-only copy', 'green');
-        } else {
-            CLI::write('[FAIL] research_record_sync still mentions two-way publication sync', 'red');
-            $fail++;
-        }
-
         $mergeSrc = (string) file_get_contents(APPPATH . 'Libraries/ResearchRecordCvSyncMerge.php');
         if (str_contains($mergeSrc, 'encodeBibliographicMetadata($pub)')) {
             CLI::write('[PASS] pull merges RR bundle biblio into cv_entries metadata', 'green');

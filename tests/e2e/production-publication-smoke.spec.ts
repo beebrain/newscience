@@ -114,31 +114,6 @@ test.describe('Production — CV manage (logged in)', () => {
     ).toBeVisible({ timeout: 15_000 });
   });
 
-  test('P7: หน้า publication entry โหลดได้ (ไม่ใช่ modal)', async ({
-    page,
-  }) => {
-    await page.goto('dashboard/profile/cv?tab=sections', {
-      waitUntil: 'domcontentloaded',
-      timeout: 45_000,
-    });
-    const pubSection = page.locator('.cv-section-item[data-show-pub="1"]').first();
-    test.skip((await pubSection.count()) === 0, 'ไม่มีหัวข้อผลงานตีพิมพ์');
-
-    const sectionId = await pubSection.getAttribute('data-section-id');
-    test.skip(!sectionId, 'ไม่พบ section_id');
-
-    const res = await page.goto(
-      `dashboard/profile/cv/publication?section_id=${sectionId}`,
-      { waitUntil: 'domcontentloaded', timeout: 45_000 },
-    );
-    expect(res?.status()).toBeLessThan(400);
-    await expect(page.locator('#cv-pub-form')).toBeVisible({ timeout: 20_000 });
-    await expect(page.locator('#cv-pub-ai-panel')).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: /เพิ่มผลงานตีพิมพ์|แก้ไขผลงานตีพิมพ์/ }),
-    ).toBeVisible();
-  });
-
   test('P8: จัดการ CV ไม่มี modal publication เก่า', async ({ page }) => {
     await page.goto('dashboard/profile/cv?tab=sections', {
       waitUntil: 'domcontentloaded',

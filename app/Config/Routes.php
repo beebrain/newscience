@@ -98,12 +98,10 @@ $routes->get('/dashboard/calendar', 'User\CalendarController::index', ['filter' 
 $routes->get('/dashboard/profile', 'User\ProfileCv::index', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/identity', 'User\ProfileCv::saveAccountIdentity', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/cv', 'User\ProfileCv::cv', ['filter' => 'loggedin']);
-$routes->get('/dashboard/profile/cv/publication', 'User\ProfileCv::publicationEntry', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/cv/rr-publication/create', 'User\ProfileCv::goRrPublicationCreate', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/cv/rr-publication/edit/(:num)', 'User\ProfileCv::goRrPublicationEdit/$1', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/cv/rr-publication/manage', 'User\ProfileCv::goRrPublicationManage', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/cv/go-rr-publication', 'User\ProfileCv::goRrPublicationManage', ['filter' => 'loggedin']);
-$routes->post('/dashboard/profile/cv/sync-from-rr', 'User\ProfileCv::syncFromResearchRecord', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/photo', 'User\ProfileCv::saveCvPhoto', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/photo/remove', 'User\ProfileCv::removeCvPhoto', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/narrative', 'User\ProfileCv::saveCvNarrative', ['filter' => 'loggedin']);
@@ -120,16 +118,8 @@ $routes->post('/dashboard/profile/cv/entry/toggle/(:num)', 'User\ProfileCv::togg
 $routes->post('/dashboard/profile/cv/entry/reorder', 'User\ProfileCv::reorderCvEntries', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/orcid/import', 'User\ProfileCv::importOrcidCv', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/orcid/save', 'User\ProfileCv::saveOrcidId', ['filter' => 'loggedin']);
-$routes->post('/dashboard/profile/cv/ai-publication-upload', 'User\ProfileCv::aiPublicationUpload', ['filter' => 'loggedin']);
-$routes->post('/dashboard/profile/cv/ai-publication-preview', 'User\ProfileCv::aiPublicationPreview', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/cv/search-personnel-names', 'User\ProfileCv::searchPersonnelNames', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/cv/search-personnel-email', 'User\ProfileCv::searchPersonnelEmail', ['filter' => 'loggedin']);
-$routes->get('/dashboard/profile/research-record-sync', 'User\ResearchRecordSync::index', ['filter' => 'loggedin']);
-$routes->post('/dashboard/profile/research-record-sync/compare', 'User\ResearchRecordSync::compare', ['filter' => 'loggedin']);
-$routes->post('/dashboard/profile/research-record-sync/apply', 'User\ResearchRecordSync::apply', ['filter' => 'loggedin']);
-$routes->post('/dashboard/profile/research-record-sync/pull-all', 'User\ResearchRecordSync::pullAll', ['filter' => 'loggedin']);
-$routes->post('/dashboard/profile/research-record-sync/reconcile-all', 'User\ResearchRecordSync::reconcileAll', ['filter' => 'loggedin']);
-$routes->post('/dashboard/profile/research-record-sync/push-all', 'User\ResearchRecordSync::pushAll', ['filter' => 'loggedin']);
 $routes->get('/go-research-record', 'Admin\Auth::goResearchRecord', ['filter' => 'loggedin']);
 $routes->post('/admin/impersonation/stop', 'Admin\Impersonation::stop', ['filter' => ['loggedin', 'csrf']]);
 

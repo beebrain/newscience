@@ -345,7 +345,6 @@ $rrPubCreateDirect = (string) ($rr_publication_create_direct ?? '');
 $rrPubCreateSso    = (string) ($rr_publication_create_sso ?? '');
 $rrPubCreateHref   = $rrPubCreateSso !== '' ? $rrPubCreateSso : ($rrPubCreateDirect !== '' ? $rrPubCreateDirect : base_url('dashboard/profile/cv/rr-publication/create'));
 $rrPubEditBase     = base_url('dashboard/profile/cv/rr-publication/edit');
-$pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
 ?>
 
 <div class="cv-manage-page px-3 sm:px-5 md:px-8 lg:px-10 xl:px-12 py-4 sm:py-6 space-y-4 sm:space-y-6 min-h-[calc(100dvh-11rem)] w-full">
@@ -1061,7 +1060,6 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
 (function () {
     window.CV_CSRF = <?= json_encode(['name' => $csrfName, 'hash' => $csrfHash], JSON_UNESCAPED_UNICODE) ?>;
     var CV_RR_PUB_CREATE_BASE = <?= json_encode($rrPubCreateHref, JSON_UNESCAPED_SLASHES) ?>;
-    var CV_PUB_AI_BASE = <?= json_encode($pubAiEntryBase, JSON_UNESCAPED_SLASHES) ?>;
     var CV_API = <?= json_encode([
         'entry'          => base_url('dashboard/profile/cv/entry'),
         'entryDelete'    => base_url('dashboard/profile/cv/entry/delete'),
