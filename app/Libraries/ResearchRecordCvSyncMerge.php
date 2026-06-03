@@ -857,6 +857,7 @@ class ResearchRecordCvSyncMerge
             strtolower(trim((string) ($pub['doi'] ?? ''))),
             (string) ($pub['publication_type'] ?? ''),
             (string) ($pub['source'] ?? ''),
+            strtolower(trim((string) ($pub['created_by_email'] ?? ''))),
         ];
 
         return hash('sha256', implode("\x1e", $parts));
@@ -979,6 +980,7 @@ class ResearchRecordCvSyncMerge
                     'source'              => 'research_record',
                     'sync_external_key'   => $key,
                     'rr_publication_id'   => $pub['rr_publication_id'] ?? null,
+                    'created_by_email'    => ($cb = strtolower(trim((string) ($pub['created_by_email'] ?? '')))) !== '' ? $cb : null,
                     'doi'                 => $doiNorm !== '' ? $doiNorm : null,
                     'rr_pull_fingerprint' => $fingerprint,
                     'rr_publication_type' => $pubTypeRaw !== '' ? $pubTypeRaw : null,

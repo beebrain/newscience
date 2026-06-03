@@ -116,6 +116,61 @@ class ResearchRecordCvSyncClient
     }
 
     /**
+     * Delete an entire RR publication. The server authorises only the recorder
+     * (created_by_email) of that publication.
+     */
+    public static function deletePublication(string $canonicalEmail, int $publicationId): array
+    {
+        return self::postPublicationAction('publication-delete-by-email', $canonicalEmail, $publicationId);
+    }
+
+    /**
+     * Remove only this person's author tag from an RR publication (data stays).
+     */
+    public static function untagAuthor(string $canonicalEmail, int $publicationId): array
+    {
+        return self::postPublicationAction('publication-untag-by-email', $canonicalEmail, $publicationId);
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    private static function postPublicationAction(string $path, string $canonicalEmail, int $publicationId): array
+    {
+        $researchApi = config(ResearchApi::class);
+        if ($researchApi->baseUrl === '' || $researchApi->apiKey === '') {
+            return ['success' => false, 'error' => 'NOT_CONFIGURED', 'message' => 'ตั้ง RESEARCH_API_BASE_URL และ RESEARCH_API_KEY ใน .env'];
+        }
+        if ($publicationId <= 0) {
+            return ['success' => false, 'error' => 'PUBLICATION_ID_REQUIRED', 'message' => 'ไม่พบรหัสผลงานในระบบวิจัย'];
+        }
+
+        $url = self::buildUrl($path, $canonicalEmail);
+
+        try {
+            $response = HttpTransport::post($url, ['timeout' => 45], [
+                'headers' => [
+                    'X-API-KEY'    => $researchApi->apiKey,
+                    'Accept'       => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode(['publication_id' => $publicationId], JSON_UNESCAPED_UNICODE),
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'ResearchRecordCvSyncClient::' . $path . ' ' . $e->getMessage());
+
+            return ['success' => false, 'error' => 'REQUEST_FAILED', 'message' => $e->getMessage()];
+        }
+
+        $decoded = self::decodeResponse($response);
+        if (! ($decoded['success'] ?? false)) {
+            return $decoded;
+        }
+
+        return ['success' => true] + ($decoded['data'] ?? []);
+    }
+
+    /**
      * @return array{success:bool,data?:array,bundle?:array,error?:string,message?:string}
      */
     private static function getJson(string $path, string $canonicalEmail): array

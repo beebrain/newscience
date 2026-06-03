@@ -18,6 +18,7 @@ use App\Libraries\RrPublicationType;
 use App\Libraries\OrcidPublicRecord;
 use App\Libraries\OrcidCvImport;
 use App\Libraries\ResearchRecordCvPull;
+use App\Libraries\ResearchRecordCvSyncClient;
 use App\Libraries\ResearchRecordCvSyncMerge;
 use App\Libraries\StaffImageUpload;
 use App\Models\CvEntryModel;
@@ -1352,6 +1353,84 @@ class ProfileCv extends BaseController
         }
 
         return redirect()->back()->with('success', 'ลบรายการเรียบร้อยแล้ว');
+    }
+
+    /**
+     * ลบผลงานทั้งรายการในระบบวิจัย (เฉพาะผู้บันทึก) — RR ลบให้ทุกผู้แต่ง (cascade)
+     */
+    public function deleteRrPublication(?int $entryId = null)
+    {
+        return $this->rrPublicationDeleteAction($entryId, 'delete');
+    }
+
+    /**
+     * นำชื่อของผู้ใช้ออกจากผลงาน (ผู้ถูก tag ที่ไม่ใช่ผู้บันทึก) — ข้อมูลผลงานยังอยู่
+     */
+    public function untagRrPublication(?int $entryId = null)
+    {
+        return $this->rrPublicationDeleteAction($entryId, 'untag');
+    }
+
+    /**
+     * @return \CodeIgniter\HTTP\ResponseInterface
+     */
+    private function rrPublicationDeleteAction(?int $entryId, string $mode)
+    {
+        $personnelId = $this->personnelIdOrRedirect();
+        if ($personnelId instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $this->response->setJSON(['success' => false, 'message' => 'กรุณาเข้าสู่ระบบ']);
+        }
+        if (AdminImpersonation::isActive()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่สามารถดำเนินการระหว่าง Login As ได้']);
+        }
+        if (! $entryId || ! CvEntryModel::isTablePresent()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบรายการที่ต้องการ']);
+        }
+
+        $cvEntryModel = new CvEntryModel();
+        $entry        = $cvEntryModel->find($entryId);
+        if (! $entry) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบรายการที่ต้องการ']);
+        }
+
+        $cvSectionModel = new CvSectionModel();
+        $section        = $cvSectionModel->find($entry['section_id']);
+        if (! $section || (int) $section['personnel_id'] !== $personnelId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่สามารถดำเนินการกับรายการนี้ได้']);
+        }
+
+        $meta = CvEntryModel::decodeMetadata($entry['metadata'] ?? null);
+        $rrId = (int) ($meta['rr_publication_id'] ?? 0);
+        if ($rrId <= 0) {
+            // รายการที่ยังไม่ผูกกับระบบวิจัย — ลบเฉพาะรายการในหน้านี้
+            $cvEntryModel->delete($entryId);
+
+            return $this->response->setJSON(['success' => true, 'message' => 'ลบรายการเรียบร้อยแล้ว']);
+        }
+
+        $person = $this->resolveOwnedPersonnel();
+        $email  = $person !== null ? ResearchRecordCvPull::canonicalEmailForPerson($person) : '';
+        if ($email === '') {
+            return $this->response->setJSON(['success' => false, 'message' => 'ไม่พบอีเมลสำหรับตรวจสอบสิทธิ์']);
+        }
+
+        $res = $mode === 'delete'
+            ? ResearchRecordCvSyncClient::deletePublication($email, $rrId)
+            : ResearchRecordCvSyncClient::untagAuthor($email, $rrId);
+
+        if (! ($res['success'] ?? false)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => (string) ($res['message'] ?? 'ดำเนินการไม่สำเร็จ'),
+            ]);
+        }
+
+        $cvEntryModel->delete($entryId);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => $mode === 'delete' ? 'ลบผลงานออกจากระบบเรียบร้อยแล้ว' : 'นำชื่อของคุณออกจากผลงานเรียบร้อยแล้ว',
+        ]);
     }
 
     /**

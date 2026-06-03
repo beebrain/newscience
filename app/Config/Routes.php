@@ -114,6 +114,8 @@ $routes->post('/dashboard/profile/cv/section/delete/(:num)', 'User\ProfileCv::de
 $routes->post('/dashboard/profile/cv/entry/save', 'User\ProfileCv::saveCvEntry', ['filter' => 'loggedin']);
 $routes->get('/dashboard/profile/cv/entry/(:num)', 'User\ProfileCv::getCvEntry/$1', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/entry/delete/(:num)', 'User\ProfileCv::deleteCvEntry/$1', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/publication/delete-rr/(:num)', 'User\ProfileCv::deleteRrPublication/$1', ['filter' => 'loggedin']);
+$routes->post('/dashboard/profile/cv/publication/untag-rr/(:num)', 'User\ProfileCv::untagRrPublication/$1', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/entry/toggle/(:num)', 'User\ProfileCv::toggleCvEntryPublic/$1', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/entry/reorder', 'User\ProfileCv::reorderCvEntries', ['filter' => 'loggedin']);
 $routes->post('/dashboard/profile/cv/orcid/import', 'User\ProfileCv::importOrcidCv', ['filter' => 'loggedin']);

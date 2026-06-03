@@ -828,6 +828,9 @@ $pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
                                         $pubEditHref = $rrPubId > 0
                                             ? $rrPubEditBase . '/' . $rrPubId . '?section_id=' . $sid
                                             : $rrPubCreateHref;
+                                        $entryRecorder = strtolower(trim((string) ($entry['metadata_array']['created_by_email'] ?? '')));
+                                        $ownerEmailNorm = strtolower(trim((string) ($cv_owner_email ?? '')));
+                                        $isRecorder = $rrPubId > 0 && $entryRecorder !== '' && $entryRecorder === $ownerEmailNorm;
                                     ?>
                                         <div class="entry-card cv-entry-row cv-entry-item rounded-lg border border-slate-200/80 bg-white px-2 py-1.5 sm:px-3 sm:py-2 shadow-sm hover:border-slate-300 hover:bg-slate-50/80 transition-colors" data-entry-id="<?= $eid ?>">
                                             <?php if ($canReorderEntries): ?>
@@ -862,8 +865,20 @@ $pubAiEntryBase    = base_url('dashboard/profile/cv/publication');
                                                 <button type="button" onclick="editCvEntry(<?= $sid ?>, <?= $eid ?>)"
                                                         class="text-xs px-2 py-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">แก้ไข</button>
                                                 <?php endif; ?>
+                                                <?php if ($showPublicationType && $rrPubId > 0): ?>
+                                                    <?php if ($isRecorder): ?>
+                                                    <button type="button" onclick="deleteRrPublication(<?= $eid ?>, '<?= esc($entry['title'] ?? '', 'js') ?>')"
+                                                            class="text-xs px-2 py-1 rounded-md border border-red-300 bg-red-50 text-red-700 font-semibold hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                                                            title="ลบผลงานนี้ออกจากระบบ — มีผลกับผู้แต่งร่วมทุกคน">ลบผลงาน</button>
+                                                    <?php else: ?>
+                                                    <button type="button" onclick="untagRrPublication(<?= $eid ?>, '<?= esc($entry['title'] ?? '', 'js') ?>')"
+                                                            class="text-xs px-2 py-1 rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                                                            title="นำชื่อของคุณออกจากผลงานนี้ — ข้อมูลผลงานยังอยู่สำหรับผู้แต่งคนอื่น">นำชื่อฉันออก</button>
+                                                    <?php endif; ?>
+                                                <?php else: ?>
                                                 <button type="button" onclick="deleteCvEntry(<?= $eid ?>, '<?= esc($entry['title'] ?? '', 'js') ?>')"
                                                         class="text-xs px-2 py-1 rounded-md border border-red-200/90 text-red-600 hover:bg-red-50">ลบ</button>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     <?php endforeach; ?>
@@ -1055,6 +1070,8 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
         'sectionReorder' => base_url('dashboard/profile/cv/section/reorder'),
         'entryReorder'   => base_url('dashboard/profile/cv/entry/reorder'),
         'orcidImport'    => base_url('dashboard/profile/cv/orcid/import'),
+        'pubDeleteRr'    => base_url('dashboard/profile/cv/publication/delete-rr'),
+        'pubUntagRr'     => base_url('dashboard/profile/cv/publication/untag-rr'),
     ], JSON_UNESCAPED_SLASHES) ?>;
 
     function csrfBody(extra) {
@@ -1378,6 +1395,62 @@ window.CV_AUTHOR_SEARCH_ENDPOINTS = {
             body: p.toString()
         });
         location.reload();
+    };
+
+    async function submitPublicationDelete(url) {
+        var p = csrfBody();
+        var data = {};
+        try {
+            var res = await fetch(url, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+                body: p.toString()
+            });
+            data = await res.json().catch(function () { return {}; });
+        } catch (e) {
+            data = { success: false, message: 'เครือข่ายขัดข้อง' };
+        }
+        if (data && data.success) {
+            location.reload();
+        } else if (typeof window.swalAlert === 'function') {
+            window.swalAlert((data && data.message) || 'ดำเนินการไม่สำเร็จ', 'error');
+        } else {
+            alert((data && data.message) || 'ดำเนินการไม่สำเร็จ');
+        }
+    }
+
+    // ผู้บันทึก: ลบผลงานทั้งรายการ (มีผลกับผู้แต่งร่วมทุกคน)
+    window.deleteRrPublication = async function (entryId, title) {
+        var ok = true;
+        if (typeof swalConfirm === 'function') {
+            ok = await swalConfirm({
+                title: 'ลบผลงานนี้ออกจากระบบ?',
+                text: '“' + title + '” จะถูกลบออกจากระบบผลงานวิจัยถาวร และมีผลกับผู้แต่งร่วมทุกคน',
+                confirmText: 'ลบผลงานถาวร',
+                cancelText: 'ยกเลิก'
+            });
+        } else {
+            ok = window.confirm('ลบผลงาน "' + title + '" ถาวร? มีผลกับผู้แต่งร่วมทุกคน');
+        }
+        if (!ok) return;
+        await submitPublicationDelete(CV_API.pubDeleteRr + '/' + entryId);
+    };
+
+    // ผู้ถูก tag: นำชื่อตัวเองออก (ข้อมูลผลงานยังอยู่ของผู้แต่งคนอื่น)
+    window.untagRrPublication = async function (entryId, title) {
+        var ok = true;
+        if (typeof swalConfirm === 'function') {
+            ok = await swalConfirm({
+                title: 'นำชื่อของคุณออกจากผลงานนี้?',
+                text: '“' + title + '” จะไม่แสดงใน CV ของคุณ แต่ข้อมูลผลงานยังอยู่สำหรับผู้แต่งคนอื่น',
+                confirmText: 'นำชื่อฉันออก',
+                cancelText: 'ยกเลิก'
+            });
+        } else {
+            ok = window.confirm('นำชื่อของคุณออกจาก "' + title + '"?');
+        }
+        if (!ok) return;
+        await submitPublicationDelete(CV_API.pubUntagRr + '/' + entryId);
     };
 
     window.deleteCvSection = async function (sectionId, title) {
