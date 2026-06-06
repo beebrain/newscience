@@ -61,14 +61,18 @@ final class PublicationDisplay
                 $catalogContributors = $pubId > 0 ? ($contributorsByPubId[$pubId] ?? []) : [];
 
                 if ($fromRrBundle) {
-                    $authors = PublicationResearchFields::contributorsFromMetadataOrCatalog($meta, null);
-                    $biblio  = PublicationResearchFields::extractBibliographicFromMetadata($meta);
-                    if ($authors === [] && $catalogContributors !== []) {
-                        $authors = $catalogContributors;
-                    }
-                    if ($biblio === [] && is_array($catalog)) {
-                        $biblio = PublicationResearchFields::decodeBibliographicFromPublicationRow($catalog);
-                    }
+                    // RR is authoritative for linked publications. The metadata
+                    // snapshot stored on the cv_entry can be stale — e.g. legacy
+                    // imports kept thesis-program style author strings ("ชื่อ
+                    // (วิทยาศาสตรมหาบัณฑิต)") that were since edited away in RR.
+                    // Prefer catalog contributors; fall back to metadata only
+                    // when the catalog has nothing.
+                    $authors = $catalogContributors !== []
+                        ? PublicationResearchFields::normalizeContributors($catalogContributors)
+                        : PublicationResearchFields::contributorsFromMetadataOrCatalog($meta, null);
+                    $biblio  = is_array($catalog)
+                        ? PublicationResearchFields::decodeBibliographicFromPublicationRow($catalog)
+                        : PublicationResearchFields::extractBibliographicFromMetadata($meta);
                 } else {
                     $authors = PublicationResearchFields::contributorsFromMetadataOrCatalog($meta, $catalogContributors);
                     $biblio  = is_array($catalog)
