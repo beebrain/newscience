@@ -868,8 +868,11 @@ class ProfileCv extends BaseController
         }
 
         $isPubSection = $this->isPublicationSection($section);
-        $fromCvPublicationPage = $this->request->getPost('cv_publication_page') === '1';
-        if ($isPubSection && ! $fromCvPublicationPage) {
+        // Publication data lives in Research Record (กบศ) only — any
+        // add/edit on a publication CV section must round-trip through RR.
+        // The legacy cv_publication_page escape hatch is removed because no
+        // UI ever sent that flag and it would allow stale local snapshots.
+        if ($isPubSection) {
             $rrId = 0;
             if ($entryId > 0) {
                 $row = (new CvEntryModel())->find($entryId);
@@ -1198,6 +1201,21 @@ class ProfileCv extends BaseController
         $section        = $cvSectionModel->find($entry['section_id']);
         if (!$section || (int) $section['personnel_id'] !== $personnelId) {
             return $this->ajaxOrRedirectError('ไม่สามารถลบรายการนี้ได้');
+        }
+
+        // Publication CV entries that are linked to a Research Record publication
+        // must be deleted via the RR-backed endpoints (deleteRrPublication or
+        // untagRrPublication) so the source-of-truth stays consistent. Refuse
+        // the generic local-only delete for these — the chip UI already calls
+        // the RR endpoints; this catches direct/scripted requests.
+        if ($this->isPublicationSection($section)) {
+            $meta = CvEntryModel::decodeMetadata($entry['metadata'] ?? null);
+            $rrId = (int) ($meta['rr_publication_id'] ?? 0);
+            if ($rrId > 0) {
+                return $this->ajaxOrRedirectError(
+                    'ผลงานนี้เชื่อมอยู่กับระบบ กบศ — กรุณาใช้ปุ่ม "ลบผลงาน" หรือ "นำชื่อฉันออก"'
+                );
+            }
         }
 
         $cvEntryModel->delete($entryId);
