@@ -498,6 +498,15 @@ class ProfileCv extends BaseController
             return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'ไม่พบข้อมูลบุคลากร']);
         }
 
+        // Rate limit 60/min/session — debounced UI is ~10/min, so this only
+        // catches scripts or compromised accounts trying to scrape the
+        // personnel directory.
+        $throttler = \Config\Services::throttler();
+        if (! $throttler->check('search-personnel-names:' . session_id(), 60, MINUTE)) {
+            return $this->response->setStatusCode(429)
+                ->setJSON(['success' => false, 'message' => 'ค้นหาบ่อยเกินไป รอสักครู่']);
+        }
+
         $name = trim((string) $this->request->getGet('name'));
         $limit = (int) ($this->request->getGet('limit') ?? 10);
         if (mb_strlen($name) < 2) {
@@ -517,6 +526,12 @@ class ProfileCv extends BaseController
         }
         if ($this->resolveOwnedPersonnel() === null) {
             return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'ไม่พบข้อมูลบุคลากร']);
+        }
+
+        $throttler = \Config\Services::throttler();
+        if (! $throttler->check('search-personnel-email:' . session_id(), 60, MINUTE)) {
+            return $this->response->setStatusCode(429)
+                ->setJSON(['success' => false, 'message' => 'ค้นหาบ่อยเกินไป รอสักครู่']);
         }
 
         $email = trim((string) $this->request->getGet('email'));
