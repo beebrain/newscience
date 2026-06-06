@@ -40,6 +40,7 @@ $superAdminMemberPortal = ($userRole === 'super_admin') && session()->get(\App\C
         [x-cloak] { display: none !important; }
     </style>
     <?= $this->renderSection('styles') ?>
+    <?= view('partials/csrf_head') ?>
 </head>
 
 <body class="bg-gray-50 min-h-screen flex flex-col font-sarabun">

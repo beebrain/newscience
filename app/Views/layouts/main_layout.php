@@ -118,6 +118,7 @@
             }
         })();
     </script>
+    <?= view('partials/csrf_head') ?>
 </head>
 
 <body class="css-loading">
