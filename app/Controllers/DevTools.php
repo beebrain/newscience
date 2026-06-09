@@ -190,54 +190,5 @@ class DevTools extends BaseController
         return $model->find($id);
     }
 
-    /**
-     * สร้าง test certificate request
-     */
-    public function createTestRequest(int $templateId = 1)
-    {
-        // ตรวจสอบว่ามี template หรือยัง
-        $templateModel = new \App\Models\CertTemplateModel();
-        $template = $templateModel->find($templateId);
-
-        if (!$template) {
-            // สร้าง template ทดสอบ
-            $templateId = $templateModel->insert([
-                'name_th'       => 'ใบรับรองการศึกษา (ทดสอบ)',
-                'name_en'       => 'Test Certificate',
-                'level'         => 'program',
-                'template_file' => null,
-                'field_mapping' => json_encode([
-                    'student_name' => ['x' => 100, 'y' => 200, 'font_size' => 16],
-                    'date' => ['x' => 100, 'y' => 250, 'font_size' => 14],
-                ]),
-                'status'        => 'active',
-            ], true);
-        }
-
-        // ตรวจสอบว่า login เป็น student หรือยัง
-        if (!session()->get('student_logged_in')) {
-            return redirect()->to(base_url('dev/login-as-student'));
-        }
-
-        $requestModel = new \App\Models\CertRequestModel();
-        $requestNumber = $requestModel->generateRequestNumber();
-
-        $requestId = $requestModel->insert([
-            'request_number' => $requestNumber,
-            'student_id'     => session()->get('student_id'),
-            'template_id'    => $templateId,
-            'program_id'     => session()->get('student_program_id'),
-            'level'          => 'program',
-            'purpose'        => 'ทดสอบระบบ E-Certificate',
-            'copies'         => 1,
-            'status'         => 'pending',
-        ], true);
-
-        // Log การ submit
-        $approvalModel = new \App\Models\CertApprovalModel();
-        $approvalModel->log($requestId, 'submit', session()->get('student_id'), 'student', 'สร้างคำขอทดสอบ');
-
-        return redirect()->to(base_url('student/certificates/' . $requestId))
-            ->with('success', '[DEV] สร้างคำขอทดสอบ #' . $requestNumber . ' เรียบร้อย');
-    }
 }
+

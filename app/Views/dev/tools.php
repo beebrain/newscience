@@ -105,16 +105,6 @@
             <a href="<?= base_url('dev/login-as-staff') ?>" class="btn btn-staff">
                 👔 Login เป็นเจ้าหน้าที่
             </a>
-            <a href="<?= base_url('dev/login-as-approver/chair') ?>" class="btn btn-approver">
-                ✅ Login เป็นประธานหลักสูตร
-            </a>
-            <a href="<?= base_url('dev/login-as-approver/dean') ?>" class="btn btn-dean">
-                🎖️ Login เป็นคณบดี
-            </a>
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 0.5rem 0;">
-            <a href="<?= base_url('dev/create-test-request') ?>" class="btn btn-test">
-                📝 สร้างคำขอทดสอบ (ต้อง Login เป็นนักศึกษาก่อน)
-            </a>
             <a href="<?= base_url('dev/logout') ?>" class="btn btn-logout">
                 🚪 Logout
             </a>

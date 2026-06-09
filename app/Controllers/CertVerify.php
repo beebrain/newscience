@@ -3,21 +3,18 @@
 namespace App\Controllers;
 
 use App\Models\CertificateModel;
-use App\Models\CertRequestModel;
 use App\Models\StudentUserModel;
 use App\Models\UserModel;
 
 class CertVerify extends BaseController
 {
     protected CertificateModel $certificateModel;
-    protected CertRequestModel $requestModel;
     protected StudentUserModel $studentModel;
     protected UserModel $userModel;
 
     public function __construct()
     {
         $this->certificateModel = new CertificateModel();
-        $this->requestModel = new CertRequestModel();
         $this->studentModel = new StudentUserModel();
         $this->userModel = new UserModel();
     }
@@ -34,7 +31,7 @@ class CertVerify extends BaseController
         }
 
         $requestId = (int) ($certificate['request_id'] ?? 0);
-        $request   = $requestId > 0 ? $this->requestModel->find($requestId) : null;
+        $request   = $requestId > 0 ? \Config\Database::connect()->table('cert_requests')->where('id', $requestId)->get()->getRowArray() : null;
         $signer    = $certificate['signed_by'] ? $this->userModel->find($certificate['signed_by']) : null;
 
         $certLabel = 'ใบรับรองจากกิจกรรม';

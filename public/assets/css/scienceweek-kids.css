@@ -1,0 +1,570 @@
+@import url('https://fonts.googleapis.com/css2?family=Itim&family=Mali:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --sw-kids-body-font: 'Mali', 'Sarabun', sans-serif;
+    --sw-kids-heading-font: 'Itim', sans-serif;
+    
+    /* Child-friendly palette */
+    --kids-navy: #1A237E;
+    --kids-blue: #3F51B5;
+    --kids-cyan: #00BCD4;
+    --kids-teal: #009688;
+    --kids-green: #4CAF50;
+    --kids-yellow: #FFEB3B;
+    --kids-orange: #FF9800;
+    --kids-pink: #E91E63;
+    --kids-purple: #9C27B0;
+    --kids-dark: #2C3E50;
+    --kids-border: #2C3E50;
+    --kids-bg: #FFFDF9; /* Warm off-white */
+}
+
+body.kids-theme {
+    font-family: var(--sw-kids-body-font);
+    background-color: var(--kids-bg);
+    color: var(--kids-dark);
+    background-image: 
+        radial-gradient(#FFE0B2 1.5px, transparent 1.5px), 
+        radial-gradient(#E1BEE7 1.5px, transparent 1.5px);
+    background-size: 40px 40px;
+    background-position: 0 0, 20px 20px;
+}
+
+/* Playful Headers */
+.kids-theme h1, 
+.kids-theme h2, 
+.kids-theme h3, 
+.kids-theme h4, 
+.kids-theme h5, 
+.kids-theme h6 {
+    font-family: var(--sw-kids-heading-font);
+    font-weight: normal;
+    color: var(--kids-navy);
+}
+
+/* Wobbly Comic-style borders */
+.kids-card {
+    background: #FFF;
+    border: 3px solid var(--kids-border);
+    border-radius: 24px;
+    box-shadow: 6px 6px 0px var(--kids-border);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
+    overflow: hidden;
+}
+
+.kids-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px var(--kids-border);
+}
+
+/* Kids Button */
+.btn-kids {
+    font-family: var(--sw-kids-heading-font);
+    font-size: 1.15rem;
+    padding: 0.6rem 1.8rem;
+    border: 3px solid var(--kids-border);
+    border-radius: 50px;
+    color: #FFF !important;
+    font-weight: normal;
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.2);
+    box-shadow: 3px 3px 0px var(--kids-border);
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-kids:hover {
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px var(--kids-border);
+}
+
+.btn-kids:active {
+    transform: translateY(1px);
+    box-shadow: 1px 1px 0px var(--kids-border);
+}
+
+.btn-kids-pink { background-color: var(--kids-pink); }
+.btn-kids-teal { background-color: var(--kids-teal); }
+.btn-kids-orange { background-color: var(--kids-orange); }
+.btn-kids-blue { background-color: var(--kids-blue); }
+.btn-kids-purple { background-color: var(--kids-purple); }
+
+/* Playful Hero Section */
+.kids-hero {
+    background: linear-gradient(135deg, #E8F5E9 0%, #E0F2F1 100%);
+    border: 3px solid var(--kids-border);
+    border-radius: 32px;
+    padding: 2.5rem 2rem;
+    box-shadow: 8px 8px 0px var(--kids-border);
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.kids-hero-img {
+    max-width: 100%;
+    border-radius: 20px;
+    border: 3px solid var(--kids-border);
+    box-shadow: 4px 4px 0px var(--kids-border);
+    background: white;
+}
+
+/* Category Filter Tabs */
+.kids-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+}
+
+.kids-tab-btn {
+    font-family: var(--sw-kids-heading-font);
+    font-size: 1.25rem;
+    padding: 0.75rem 1.75rem;
+    border: 3px solid var(--kids-border);
+    border-radius: 50px;
+    background: #FFF;
+    color: var(--kids-navy);
+    cursor: pointer;
+    box-shadow: 4px 4px 0px var(--kids-border);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.kids-tab-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 6px 6px 0px var(--kids-border);
+    background: #FFFDE7;
+}
+
+.kids-tab-btn.active {
+    background: var(--kids-yellow);
+    transform: scale(1.05);
+    box-shadow: 4px 4px 0px var(--kids-border);
+}
+
+/* Card Categories Colors */
+.card-exhibition { background: linear-gradient(135deg, #E1F5FE 0%, #B3E5FC 100%); }
+.card-workshop { background: linear-gradient(135deg, #EDE7F6 0%, #D1C4E9 100%); }
+.card-contest { background: linear-gradient(135deg, #FFFDE7 0%, #FFF9C4 100%); }
+
+.kids-badge {
+    font-family: var(--sw-kids-heading-font);
+    font-size: 0.9rem;
+    padding: 0.25rem 0.75rem;
+    border: 2px solid var(--kids-border);
+    border-radius: 20px;
+    color: #FFF;
+    font-weight: normal;
+    display: inline-block;
+    box-shadow: 1px 1px 0px var(--kids-border);
+}
+
+.kids-badge-pink { background-color: var(--kids-pink); }
+.kids-badge-teal { background-color: var(--kids-teal); }
+.kids-badge-orange { background-color: var(--kids-orange); }
+.kids-badge-blue { background-color: var(--kids-blue); }
+.kids-badge-purple { background-color: var(--kids-purple); }
+.kids-badge-green { background-color: var(--kids-green); }
+
+/* Playful floating elements */
+.floating-star {
+    position: absolute;
+    font-size: 1.5rem;
+    animation: float-bubble 4s ease-in-out infinite;
+    pointer-events: none;
+    user-select: none;
+}
+
+.star-1 { top: 10%; left: 5%; color: var(--kids-yellow); animation-delay: 0s; }
+.star-2 { top: 75%; left: 8%; color: var(--kids-pink); animation-delay: 1.5s; }
+.star-3 { top: 15%; right: 6%; color: var(--kids-cyan); animation-delay: 0.8s; }
+.star-4 { top: 80%; right: 10%; color: var(--kids-orange); animation-delay: 2.2s; }
+
+@keyframes float-bubble {
+    0% { transform: translateY(0) rotate(0deg) scale(1); }
+    50% { transform: translateY(-12px) rotate(15deg) scale(1.15); }
+    100% { transform: translateY(0) rotate(0deg) scale(1); }
+}
+
+/* Modals */
+.kids-modal .modal-content {
+    border: 4px solid var(--kids-border);
+    border-radius: 28px;
+    box-shadow: 8px 8px 0px var(--kids-border);
+    background: #FFFDF7;
+    overflow: hidden;
+}
+
+.kids-modal .modal-header {
+    border-bottom: 3px solid var(--kids-border);
+    background: #E1F5FE;
+    padding: 1.2rem 1.5rem;
+}
+
+.kids-modal .modal-title {
+    font-family: var(--sw-kids-heading-font);
+    font-size: 1.5rem;
+    color: var(--kids-navy);
+}
+
+.kids-modal .modal-body {
+    padding: 1.5rem;
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+.kids-modal .modal-footer {
+    border-top: 3px solid var(--kids-border);
+    background: #FFF;
+    padding: 1rem 1.5rem;
+}
+
+.close-kids {
+    border: 3px solid var(--kids-border);
+    background: var(--kids-pink);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 2px 2px 0px var(--kids-border);
+    transition: transform 0.1s;
+}
+
+.close-kids:hover {
+    transform: scale(1.1);
+}
+
+/* Responsive adjust */
+@media (max-width: 768px) {
+    .kids-hero {
+        padding: 1.5rem 1rem;
+        text-align: center;
+    }
+    
+    .kids-hero-img {
+        margin-top: 1.5rem;
+    }
+    
+    .kids-tab-btn {
+        font-size: 1rem;
+        padding: 0.5rem 1.2rem;
+    }
+}
+
+/* Specific overrides for Site Layout Header & Footer when .kids-theme is active */
+.kids-theme .sw-header {
+    background: linear-gradient(135deg, var(--kids-purple) 0%, var(--kids-pink) 50%, var(--kids-orange) 100%) !important;
+    border-bottom: 4px solid var(--kids-border) !important;
+    padding-bottom: 0.5rem !important;
+    position: relative;
+}
+
+.kids-theme .sw-header::before {
+    background: 
+        radial-gradient(circle at 10% 40%, rgba(255,255,255,0.2) 0%, transparent 40%),
+        radial-gradient(circle at 90% 20%, rgba(255,255,255,0.15) 0%, transparent 35%) !important;
+}
+
+.kids-theme .sw-header-badge {
+    background: var(--kids-yellow) !important;
+    color: var(--kids-navy) !important;
+    border: 2px solid var(--kids-border) !important;
+    font-weight: bold !important;
+    box-shadow: 3px 3px 0px var(--kids-border) !important;
+}
+
+.kids-theme .sw-header h1 {
+    font-family: var(--sw-kids-heading-font) !important;
+    font-size: 1.9rem !important;
+    text-shadow: 2px 2px 0px var(--kids-navy) !important;
+    font-weight: normal !important;
+}
+
+.kids-theme .sw-header .subtitle {
+    font-family: var(--sw-kids-body-font) !important;
+    font-size: 0.95rem !important;
+    opacity: 1 !important;
+    color: #FFF !important;
+    text-shadow: 1px 1px 0px var(--kids-navy) !important;
+}
+
+.kids-theme .sw-header .nav-links a {
+    font-family: var(--sw-kids-heading-font) !important;
+    font-size: 1.1rem !important;
+    color: #FFF !important;
+    background: rgba(0,0,0,0.15) !important;
+    padding: 0.35rem 1.2rem !important;
+    border: 2px solid var(--kids-border) !important;
+    border-radius: 20px !important;
+    box-shadow: 3px 3px 0px var(--kids-border) !important;
+    transition: all 0.1s !important;
+    text-decoration: none;
+}
+
+.kids-theme .sw-header .nav-links a:hover {
+    background: var(--kids-yellow) !important;
+    color: var(--kids-navy) !important;
+    transform: scale(1.05) !important;
+}
+
+.kids-theme footer {
+    background: var(--kids-navy) !important;
+    border-top: 4px solid var(--kids-border) !important;
+    font-family: var(--sw-kids-heading-font) !important;
+    font-size: 1.2rem !important;
+    color: white !important;
+    padding: 1.5rem 0 !important;
+}
+
+/* Lined Notebook Paper styling for Scannable List Index */
+.kids-notebook {
+    background-color: #FFFDE7; /* Yellow pad look */
+    background-image: linear-gradient(#ECEFF1 2px, transparent 2px);
+    background-size: 100% 2.8rem; /* Increased size to match larger font */
+    border: 3px solid var(--kids-border);
+    border-radius: 24px;
+    box-shadow: 6px 6px 0px var(--kids-border);
+    padding: 1.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.kids-notebook::before {
+    content: '';
+    position: absolute;
+    left: 2.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #FF8A80; /* Pink vertical margin line */
+}
+
+/* Hole punches for spiral notebook style */
+.kids-notebook-spiral {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 16px;
+    pointer-events: none;
+    user-select: none;
+}
+
+.kids-notebook-hole {
+    width: 14px;
+    height: 14px;
+    background-color: var(--kids-bg);
+    border: 2px solid var(--kids-border);
+    border-radius: 50%;
+    margin-bottom: 8px;
+}
+
+.kids-notebook-title {
+    font-family: var(--sw-kids-heading-font);
+    font-size: 2rem; /* Increased from 1.8rem */
+    margin-bottom: 1.5rem;
+    padding-left: 2rem;
+    color: var(--kids-navy);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.kids-notebook-list {
+    list-style: none;
+    padding-left: 2rem;
+    margin-bottom: 0;
+}
+
+.kids-notebook-item {
+    font-family: var(--sw-kids-body-font);
+    font-size: 1.2rem; /* Increased from 1rem for better legibility */
+    line-height: 2.8rem; /* Increased from 2.3rem to match background-size */
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: color 0.15s, transform 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kids-notebook-item:hover {
+    color: var(--kids-pink);
+    transform: translateX(6px);
+}
+
+.kids-notebook-category-title {
+    font-family: var(--sw-kids-heading-font);
+    font-size: 1.5rem; /* Increased from 1.25rem */
+    line-height: 2.8rem; /* Increased to match background-size */
+    color: var(--kids-blue);
+    margin-bottom: 0;
+    margin-top: 0.5rem;
+    padding-left: 2rem;
+    font-weight: bold;
+    border-bottom: 2px dashed rgba(44, 62, 80, 0.2);
+}
+
+/* Style overrides for Science Week Form and Verification views (.sw-card, input fields, etc.) */
+.kids-theme .sw-card {
+    background: #FFF;
+    border: 3px solid var(--kids-border) !important;
+    border-radius: 24px !important;
+    box-shadow: 6px 6px 0px var(--kids-border) !important;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.kids-theme .sw-card-header {
+    background: linear-gradient(135deg, var(--kids-blue) 0%, var(--kids-cyan) 100%) !important;
+    border-bottom: 3px solid var(--kids-border) !important;
+    color: #FFF !important;
+    padding: 1.2rem 1.5rem !important;
+}
+
+.kids-theme .sw-card-header h4 {
+    font-family: var(--sw-kids-heading-font) !important;
+    font-size: 1.6rem !important;
+    margin-bottom: 0.2rem !important;
+    font-weight: normal;
+}
+
+.kids-theme .sw-card-header small {
+    font-family: var(--sw-kids-body-font) !important;
+    opacity: 0.9 !important;
+    font-size: 0.85rem !important;
+}
+
+.kids-theme .sw-card-body {
+    padding: 1.5rem !important;
+    background: #FFFDF9 !important;
+}
+
+.kids-theme .sw-section-num {
+    background: var(--kids-pink) !important;
+    border: 2px solid var(--kids-border) !important;
+    box-shadow: 1px 1px 0px var(--kids-border) !important;
+    font-family: var(--sw-kids-heading-font) !important;
+    font-size: 1rem !important;
+}
+
+.kids-theme .sw-section h5 {
+    font-family: var(--sw-kids-heading-font) !important;
+    font-size: 1.35rem !important;
+    color: var(--kids-navy) !important;
+    font-weight: normal;
+}
+
+.kids-theme .participant-block {
+    background: #FFF !important;
+    border: 3px solid var(--kids-border) !important;
+    border-radius: 16px !important;
+    box-shadow: 4px 4px 0px var(--kids-border) !important;
+    position: relative;
+    padding: 1.2rem !important;
+    margin-bottom: 1.2rem !important;
+}
+
+.kids-theme .participant-block::before {
+    display: none !important; /* Hide old blue stripe */
+}
+
+.kids-theme .participant-num {
+    background: var(--kids-orange) !important;
+    border: 2px solid var(--kids-border) !important;
+    box-shadow: 1px 1px 0px var(--kids-border) !important;
+    width: 26px !important;
+    height: 26px !important;
+    font-family: var(--sw-kids-heading-font) !important;
+    font-size: 0.9rem !important;
+}
+
+.kids-theme .form-control, 
+.kids-theme .form-select {
+    border: 2.5px solid var(--kids-border) !important;
+    border-radius: 10px !important;
+    background: #FFF !important;
+    font-family: var(--sw-kids-body-font) !important;
+    font-size: 0.95rem !important;
+}
+
+.kids-theme .form-control:focus, 
+.kids-theme .form-select:focus {
+    border-color: var(--kids-pink) !important;
+    box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.15) !important;
+}
+
+.kids-theme .btn-sw-submit {
+    background: var(--kids-pink) !important;
+    font-family: var(--sw-kids-heading-font) !important;
+    font-size: 1.25rem !important;
+    padding: 0.6rem 2rem !important;
+    border: 3px solid var(--kids-border) !important;
+    border-radius: 50px !important;
+    color: #FFF !important;
+    box-shadow: 3px 3px 0px var(--kids-border) !important;
+    transition: transform 0.15s, box-shadow 0.15s !important;
+}
+
+.kids-theme .btn-sw-submit:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 5px 5px 0px var(--kids-border) !important;
+}
+
+.kids-theme .btn-sw-submit:active {
+    transform: translateY(1px) !important;
+    box-shadow: 1px 1px 0px var(--kids-border) !important;
+}
+
+.kids-theme .btn-outline-secondary {
+    font-family: var(--sw-kids-heading-font) !important;
+    font-size: 1.15rem !important;
+    border: 3px solid var(--kids-border) !important;
+    border-radius: 50px !important;
+    color: var(--kids-dark) !important;
+    background: white !important;
+    box-shadow: 3px 3px 0px var(--kids-border) !important;
+    padding: 0.5rem 1.8rem !important;
+}
+
+.kids-theme .btn-outline-secondary:hover {
+    background: #F8F9FA !important;
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px var(--kids-border) !important;
+    color: var(--kids-dark) !important;
+}
+
+/* Custom styling for verification table */
+.kids-theme table.table {
+    border: 2px solid var(--kids-border) !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+}
+
+.kids-theme table.table th {
+    background-color: #E1F5FE !important;
+    font-family: var(--sw-kids-heading-font) !important;
+    font-size: 1.1rem !important;
+    color: var(--kids-navy) !important;
+    border-bottom: 2px solid var(--kids-border) !important;
+}
+
+
+

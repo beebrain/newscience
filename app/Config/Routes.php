@@ -181,11 +181,7 @@ $routes->group('dev', function ($routes) {
     $routes->get('login-as-student', 'DevTools::loginAsStudent');
     $routes->get('login-as-staff/(:num)', 'DevTools::loginAsStaff/$1');
     $routes->get('login-as-staff', 'DevTools::loginAsStaff');
-    $routes->get('login-as-approver/(:segment)/(:num)', 'DevTools::loginAsApprover/$1/$2');
-    $routes->get('login-as-approver/(:segment)', 'DevTools::loginAsApprover/$1');
     $routes->get('logout', 'DevTools::logout');
-    $routes->get('create-test-request/(:num)', 'DevTools::createTestRequest/$1');
-    $routes->get('create-test-request', 'DevTools::createTestRequest');
 
     // Upload Test Routes
     $routes->get('upload-test', 'Dev\UploadTest::index');

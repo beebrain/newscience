@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" href="<?= esc(favicon_url()) ?>" sizes="32x32">
     <link rel="stylesheet" href="<?= base_url('assets/css/fonts.css') ?>?v=<?= (defined('FCPATH') && is_file(FCPATH . 'assets/css/fonts.css')) ? filemtime(FCPATH . 'assets/css/fonts.css') : '1' ?>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="<?= base_url('assets/css/scienceweek-kids.css') ?>?v=<?= time() ?>">
     <style>
         :root {
             --sw-navy:   #0f1b4c;
@@ -315,7 +316,7 @@
         .invalid-feedback { font-size: .8rem; }
     </style>
 </head>
-<body>
+<body class="kids-theme">
 <header class="sw-header">
     <div class="container sw-header-inner">
         <div class="sw-header-badge">Science Week 2026 · มรภ.อุตรดิตถ์</div>

@@ -41,7 +41,6 @@ class Filters extends BaseFilters
         'studentauth'   => \App\Filters\StudentAuthFilter::class,
         'studentadmin'  => \App\Filters\StudentAdminFilter::class,
         'programadmin'  => \App\Filters\ProgramAdminFilter::class,
-        'certapprover'  => \App\Filters\CertApproverFilter::class,
         'edocauth'      => \App\Filters\EdocAuthFilter::class,
         'pageview'      => \App\Filters\PageViewFilter::class,
     ];

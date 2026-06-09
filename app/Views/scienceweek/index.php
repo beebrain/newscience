@@ -13,120 +13,175 @@ $levelLabels = [
 ];
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <div>
-        <h2 class="fw-bold mb-0" style="font-size:1.35rem;color:var(--sw-indigo);">เลือกรายการแข่งขัน</h2>
-        <p class="text-muted mb-0" style="font-size:.85rem;">กรอกข้อมูลให้ครบถ้วนและตรวจสอบก่อนส่งใบสมัคร</p>
-    </div>
-    <a href="<?= base_url('scienceweek/verify') ?>"
-       style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1rem;border:1.5px solid var(--sw-border);border-radius:9px;font-size:.83rem;font-weight:600;color:var(--sw-muted);background:#fff;text-decoration:none;transition:border-color .15s,color .15s;"
-       onmouseover="this.style.borderColor='var(--sw-blue)';this.style.color='var(--sw-blue)';"
-       onmouseout="this.style.borderColor='var(--sw-border)';this.style.color='var(--sw-muted)';">
-        🔍 ตรวจสอบรายชื่อผู้สมัคร
-    </a>
-</div>
+<div class="position-relative">
+    <!-- Floating Stars -->
+    <span class="floating-star star-1">⭐</span>
+    <span class="floating-star star-2">✨</span>
+    <span class="floating-star star-3">🚀</span>
+    <span class="floating-star star-4">🪐</span>
 
-<div class="row g-3">
-<?php foreach ($competitions as $key => $comp):
-    $totalCap   = $comp['cap_total'];
-    $totalCount = array_sum($caps[$key]);
-    $isFull     = $totalCap !== null && $totalCount >= $totalCap;
-    $hasDocs    = !empty($comp['docs']);
-?>
-    <div class="col-md-6">
-        <div class="comp-card h-100 d-flex flex-column <?= $isFull ? 'border-danger' : '' ?>"
-             style="<?= $isFull ? 'opacity:.75;cursor:default;' : '' ?>"
-             <?= !$isFull ? "onclick=\"window.location='".base_url('scienceweek/register/'.$key)."'\"" : '' ?>>
-            <div class="p-3 flex-grow-1">
-                <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
-                    <h5 class="mb-0" style="font-size:.97rem;font-weight:700;color:var(--sw-indigo);line-height:1.35;">
-                        <?= esc($comp['name_th']) ?>
-                    </h5>
-                    <?php if ($isFull): ?>
-                        <span class="pill" style="background:#fef2f2;color:#dc2626;flex-shrink:0;font-size:.7rem;">เต็มแล้ว</span>
-                    <?php endif; ?>
+    <!-- Hero Section -->
+    <div class="kids-hero mb-4">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7 text-center text-lg-start">
+                <div class="d-inline-block px-3 py-1 mb-2 rounded-pill bg-warning text-dark border border-dark fw-bold" style="font-family: var(--sw-kids-heading-font); font-size: 1.1rem;">
+                    🌈 งานวิทยาศาสตร์สุดหรรษา 2569 🧪
                 </div>
-                <p style="font-size:.78rem;color:var(--sw-muted);margin-bottom:.75rem;"><?= esc($comp['name_en']) ?></p>
-
-                <div class="d-flex flex-wrap gap-1 mb-2">
-                    <?php foreach ($comp['levels'] as $lk => $lv):
-                        $cnt = $caps[$key][$lk];
-                        $cap = $comp['cap_per_level'];
-                        $lvFull = $cap !== null && $cnt >= $cap;
-                    ?>
-                        <span class="badge-cap <?= $lvFull ? 'full' : '' ?>">
-                            <?= esc($lv) ?>
-                            <span style="opacity:.7;margin-left:.2rem;"><?= $cap !== null ? "{$cnt}/{$cap}" : "{$cnt} ทีม" ?></span>
-                        </span>
-                    <?php endforeach; ?>
-                    <?php if ($totalCap !== null): ?>
-                        <span class="badge-cap <?= $isFull ? 'full' : '' ?>">
-                            รวม <?= $totalCount ?>/<?= $totalCap ?> ทีม
-                        </span>
-                    <?php endif; ?>
+                <h2 class="display-6 fw-bold mb-2 text-primary" style="font-family: var(--sw-kids-heading-font); line-height: 1.2;">
+                    ดินแดนแห่งความรู้และจินตนาการ!
+                </h2>
+                <p class="mb-4" style="font-size: 1.05rem; line-height: 1.6;">
+                    ขอเชิญน้อง ๆ และคุณครูมาร่วมสนุกกับกิจกรรมสัปดาห์วิทยาศาสตร์ปีนี้! พบกับรายการนิทรรศการแสนสนุก เเวิร์กชอปทดลองวิทย์ และรายการประกวดแข่งขันชิงรางวัลมากมาย กวาดสายตาดูรายการกิจกรรมทั้งหมดด้านล่างได้เลยครับ 🚀
+                </p>
+                <div class="d-flex flex-wrap justify-content-center justify-content-lg-start gap-2">
+                    <a href="#activities-list-section" class="btn-kids btn-kids-pink">
+                        📋 ดูรายการกิจกรรมทั้งหมด
+                    </a>
+                    <a href="<?= base_url('scienceweek/verify') ?>" class="btn-kids btn-kids-teal" style="font-size: 1rem; padding: 0.5rem 1.5rem;">
+                        🔍 ตรวจสอบรายชื่อผู้สมัคร
+                    </a>
                 </div>
-
-                <div style="font-size:.78rem;color:var(--sw-muted);">
-                    <?php if ($comp['team_min'] === $comp['team_max']): ?>
-                        👥 <?= $comp['team_min'] ?> คน/ทีม
-                    <?php else: ?>
-                        👥 <?= $comp['team_min'] ?>–<?= $comp['team_max'] ?> คน/ทีม
-                    <?php endif; ?>
-                    <?php if ($comp['has_reserve']): ?>
-                        · มีตัวสำรอง <?= $comp['reserve_max'] ?> คน
-                    <?php endif; ?>
-                    <?php if ($comp['deadline']): ?>
-                        · ⏰ ปิดรับ <?= esc($comp['deadline']) ?>
-                    <?php endif; ?>
-                </div>
-
-                <?php if ($comp['notes']): ?>
-                    <div style="font-size:.78rem;color:var(--sw-teal);margin-top:.4rem;">ℹ️ <?= esc($comp['notes']) ?></div>
-                <?php endif; ?>
             </div>
-
-            <div class="px-3 pb-3 pt-2 d-flex align-items-center gap-2 flex-wrap"
-                 style="border-top:1px solid var(--sw-border);">
-                <?php if ($isFull): ?>
-                    <span style="font-size:.82rem;font-weight:700;color:#dc2626;">🔒 ปิดรับสมัครแล้ว</span>
-                <?php else: ?>
-                    <a href="<?= base_url('scienceweek/register/'.$key) ?>"
-                       class="btn-sw-submit" style="padding:.4rem 1.2rem;font-size:.85rem;border-radius:8px;box-shadow:none;"
-                       onclick="event.stopPropagation()">
-                        สมัครเลย →
-                    </a>
-                <?php endif; ?>
-
-                <?php foreach ($comp['docs'] ?? [] as $doc): ?>
-                    <a href="<?= base_url(config('SciWeek')->docsPublicPath.'/'.rawurlencode($doc)) ?>"
-                       target="_blank"
-                       class="btn-doc" onclick="event.stopPropagation()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1L14 5.5z"/>
-                            <path d="M4 11h8v1H4zm0-2h8v1H4zm0-2h3v1H4z"/>
-                        </svg>
-                        เอกสาร
-                    </a>
-                <?php endforeach; ?>
+            <div class="col-lg-5 text-center">
+                <img src="<?= base_url('assets/images/scienceweek/hero_kids.png') ?>" alt="Science Kids Banner" class="kids-hero-img img-fluid" style="max-height: 250px; object-fit: contain;">
             </div>
         </div>
     </div>
-<?php endforeach; ?>
+
+    <!-- Date and Location info banner -->
+    <div class="kids-card p-3 mb-4 card-exhibition text-center">
+        <div class="row align-items-center g-2">
+            <div class="col-md-4">
+                <h5 class="mb-0 text-primary" style="font-family: var(--sw-kids-heading-font); font-size: 1.3rem;">📅 วันจัดงาน</h5>
+                <p class="mb-0 fw-bold" style="font-size: 0.95rem;">18 - 20 สิงหาคม พ.ศ. 2569</p>
+            </div>
+            <div class="col-md-4">
+                <h5 class="mb-0 text-success" style="font-family: var(--sw-kids-heading-font); font-size: 1.3rem;">📍 สถานที่จัดงาน</h5>
+                <p class="mb-0 fw-bold" style="font-size: 0.95rem;">คณะวิทยาศาสตร์และเทคโนโลยี มรภ.อุตรดิตถ์</p>
+                <small class="text-muted" style="font-size: 0.8rem;">(ศูนย์การเรียนรู้ลำรางทุ่งกะโล่)</small>
+            </div>
+            <div class="col-md-4">
+                <h5 class="mb-0 text-danger" style="font-family: var(--sw-kids-heading-font); font-size: 1.3rem;">🔬 ผู้จัดงานหลัก</h5>
+                <p class="mb-0 fw-bold" style="font-size: 0.95rem;">มรภ.อุตรดิตถ์ เคียงข้างพัฒนาท้องถิ่น</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Lined Notebook Activities List -->
+    <div id="activities-list-section" class="kids-notebook mb-5">
+        <!-- Spiral rings look -->
+        <div class="kids-notebook-spiral d-none d-md-flex">
+            <?php for($i=0; $i<22; $i++): ?>
+                <div class="kids-notebook-hole"></div>
+            <?php endfor; ?>
+        </div>
+        
+        <h3 class="kids-notebook-title">📝 รายการกิจกรรมในสัปดาห์วิทยาศาสตร์</h3>
+        <p class="text-muted mb-4" style="padding-left: 2.2rem; font-size: 0.9rem;">📌 สรุปรายการกิจกรรมทั้งหมดเพื่อความสะดวกในการวางแผนเข้าร่วมและสมัครแข่งขัน</p>
+        
+        <div class="row g-4">
+            
+            <!-- Category 1: Exhibitions -->
+            <div class="col-lg-4">
+                <div class="kids-notebook-category-title" style="color: var(--kids-blue);">
+                    🎪 นิทรรศการแสนสนุก
+                </div>
+                <ul class="kids-notebook-list">
+                    <li class="kids-notebook-item" title="นิทรรศการเทิดพระเกียรติ รัชกาลที่ 4">
+                        👑 ร.4 พระบิดาแห่งวิทยาศาสตร์ไทย
+                    </li>
+                    <li class="kids-notebook-item" title="นิทรรศการเทิดพระเกียรติ รัชกาลที่ 9">
+                        💡 ร.9 พระบิดาแห่งเทคโนโลยีและนวัตกรรม
+                    </li>
+                    <li class="kids-notebook-item" title="นิทรรศการเทิดพระเกียรติสมเด็จพระพันปีหลวง">
+                        🌿 สมเด็จพระพันปีหลวง: ความหลากหลายชีวภาพ
+                    </li>
+                    <li class="kids-notebook-item">🪐 เทคโนโลยีทางดาราศาสตร์และอวกาศ</li>
+                    <li class="kids-notebook-item">🤖 Smart Living with AI (ชีวิตอัจฉริยะ)</li>
+                    <li class="kids-notebook-item">🍃 ชีววิทยาและสิ่งแวดล้อมเพื่ออนาคต</li>
+                    <li class="kids-notebook-item">🔢 สนุกคิดคณิตอัจฉริยะ</li>
+                    <li class="kids-notebook-item">🧪 วิทยาศาสตร์เคมีอัจฉริยะ สู่อนาคตที่ยั่งยืน</li>
+                    <li class="kids-notebook-item">⚡ ฟิสิกส์และเทคโนโลยีกับการเรียนรู้ศตวรรษที่ 21</li>
+                    <li class="kids-notebook-item">🏃 วิทยาศาสตร์การกีฬาเพื่อสุขภาพ</li>
+                    <li class="kids-notebook-item">🏥 Public Health for Sustainable Community</li>
+                    <li class="kids-notebook-item">🎓 นิทรรศการความรู้จากคณะต่าง ๆ</li>
+                    <li class="kids-notebook-item">🔬 URU Research Impact: พลังวิจัยสู่ชุมชน</li>
+                </ul>
+            </div>
+            
+            <!-- Category 2: Workshops -->
+            <div class="col-lg-4">
+                <div class="kids-notebook-category-title" style="color: var(--kids-purple);">
+                    🧪 เวิร์กชอป DIY & โชว์
+                </div>
+                <ul class="kids-notebook-list">
+                    <li class="kids-notebook-item">🧼 Soap - Sci DIY ทำสบู่แฮนด์เมด</li>
+                    <li class="kids-notebook-item">🌶️ Spice & Larb Lab วิทย์รสแซ่บ (ลาบไทย)</li>
+                    <li class="kids-notebook-item" style="color: var(--kids-pink); font-weight: bold;">
+                        💥 การแสดงทางวิทยาศาสตร์ (Science Show)
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Category 3: Competitions -->
+            <div class="col-lg-4">
+                <div class="kids-notebook-category-title" style="color: var(--kids-orange);">
+                    🏆 รายการประกวด & แข่งขัน
+                </div>
+                <ul class="kids-notebook-list" style="padding-left: 1.5rem;">
+                    
+                    <!-- Loop Online Competitions from database configuration -->
+                    <?php foreach ($competitions as $key => $comp):
+                        $totalCap   = $comp['cap_total'];
+                        $totalCount = array_sum($caps[$key] ?? []);
+                        $isFull     = $totalCap !== null && $totalCount >= $totalCap;
+                        $deadlinePassed = $comp['deadline'] !== null && date('Y-m-d') > $comp['deadline'];
+                    ?>
+                        <li class="kids-notebook-item d-flex justify-content-between align-items-center py-1" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
+                            <span class="text-truncate" style="max-width: 60%;" title="<?= esc($comp['name_th']) ?>">
+                                🏆 <?= esc($comp['name_th']) ?>
+                            </span>
+                            <div class="flex-shrink-0 d-flex gap-1 align-items-center">
+                                <?php if ($isFull): ?>
+                                    <span class="badge bg-danger border border-dark text-white rounded-pill px-2 py-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">เต็มแล้ว</span>
+                                <?php elseif ($deadlinePassed): ?>
+                                    <span class="badge bg-secondary border border-dark text-white rounded-pill px-2 py-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ปิดรับ</span>
+                                <?php else: ?>
+                                    <a href="<?= base_url('scienceweek/register/'.$key) ?>" 
+                                       class="badge bg-success border border-dark text-white rounded-pill px-2 py-1 text-decoration-none hover-scale" 
+                                       style="font-size: 0.75rem; font-family: var(--sw-kids-heading-font); box-shadow: 1px 1px 0px rgba(0,0,0,0.2); transition: transform 0.1s;">
+                                        สมัคร 📝
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </li>
+                    <?php endforeach; ?>
+
+                    <!-- Offline Competitions -->
+                    <li class="kids-notebook-item d-flex justify-content-between align-items-center py-1" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
+                        <span class="text-truncate" style="max-width: 75%;">🏆 การประกวดโครงงานวิทยาศาสตร์</span>
+                        <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
+                    </li>
+                    <li class="kids-notebook-item d-flex justify-content-between align-items-center py-1" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
+                        <span class="text-truncate" style="max-width: 75%;">🏆 การประกวดจัดสวนขวด Terrarium</span>
+                        <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
+                    </li>
+                    <li class="kids-notebook-item d-flex justify-content-between align-items-center py-1">
+                        <span class="text-truncate" style="max-width: 75%;">🏆 โครงงานสิ่งแวดล้อม GLOBE</span>
+                        <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+    </div>
 </div>
 
 <style>
-.btn-sw-submit {
-    background: linear-gradient(135deg, var(--sw-teal) 0%, var(--sw-teal-l) 100%);
-    color: #fff !important;
-    border: none;
-    font-weight: 700;
-    letter-spacing: .02em;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    transition: transform .15s, box-shadow .15s;
+.hover-scale:hover {
+    transform: scale(1.1);
 }
-.btn-sw-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,150,136,.35); }
 </style>
 
 <?= $this->endSection() ?>
