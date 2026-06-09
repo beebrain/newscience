@@ -142,6 +142,14 @@ $levelLabels = [
                                 🏆 <?= esc($comp['name_th']) ?>
                             </span>
                             <div class="flex-shrink-0 d-flex gap-1 align-items-center mt-1">
+                                <?php foreach ($comp['docs'] ?? [] as $doc): ?>
+                                    <a href="<?= base_url(config('SciWeek')->docsPublicPath.'/'.rawurlencode($doc)) ?>" 
+                                       target="_blank"
+                                       class="badge bg-warning border border-dark text-dark rounded-pill px-2 py-1 text-decoration-none hover-scale" 
+                                       style="font-size: 0.75rem; font-family: var(--sw-kids-heading-font); box-shadow: 1px 1px 0px rgba(0,0,0,0.2); transition: transform 0.1s;">
+                                        กติกา 📄
+                                    </a>
+                                <?php endforeach; ?>
                                 <?php if ($isFull): ?>
                                     <span class="badge bg-danger border border-dark text-white rounded-pill px-2 py-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">เต็มแล้ว</span>
                                 <?php elseif ($deadlinePassed): ?>
@@ -160,11 +168,27 @@ $levelLabels = [
                     <!-- Offline Competitions -->
                     <li class="kids-notebook-item d-flex justify-content-between align-items-start py-1" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
                         <span class="pe-2">🏆 การประกวดโครงงานวิทยาศาสตร์</span>
-                        <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1 flex-shrink-0 mt-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
+                        <div class="flex-shrink-0 d-flex gap-1 align-items-center mt-1">
+                            <a href="<?= base_url(config('SciWeek')->docsPublicPath.'/'.rawurlencode('ประกวดโครงงาน.pdf')) ?>" 
+                               target="_blank"
+                               class="badge bg-warning border border-dark text-dark rounded-pill px-2 py-1 text-decoration-none hover-scale" 
+                               style="font-size: 0.75rem; font-family: var(--sw-kids-heading-font); box-shadow: 1px 1px 0px rgba(0,0,0,0.2); transition: transform 0.1s;">
+                                กติกา 📄
+                            </a>
+                            <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
+                        </div>
                     </li>
                     <li class="kids-notebook-item d-flex justify-content-between align-items-start py-1" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
                         <span class="pe-2">🏆 การประกวดจัดสวนขวด Terrarium</span>
-                        <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1 flex-shrink-0 mt-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
+                        <div class="flex-shrink-0 d-flex gap-1 align-items-center mt-1">
+                            <a href="<?= base_url(config('SciWeek')->docsPublicPath.'/'.rawurlencode('ประกวดสวนในภาชนะปิด.pdf')) ?>" 
+                               target="_blank"
+                               class="badge bg-warning border border-dark text-dark rounded-pill px-2 py-1 text-decoration-none hover-scale" 
+                               style="font-size: 0.75rem; font-family: var(--sw-kids-heading-font); box-shadow: 1px 1px 0px rgba(0,0,0,0.2); transition: transform 0.1s;">
+                                กติกา 📄
+                            </a>
+                            <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
+                        </div>
                     </li>
                     <li class="kids-notebook-item d-flex justify-content-between align-items-start py-1">
                         <span class="pe-2">🏆 โครงงานสิ่งแวดล้อม GLOBE</span>

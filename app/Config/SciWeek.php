@@ -45,7 +45,7 @@ class SciWeek extends BaseConfig
         'seed_art' => [
             'name_th'       => 'ศิลปะจากเมล็ดพันธุ์สำหรับนักสร้างสรรค์รุ่นเยาว์',
             'name_en'       => 'Seed Art Contest for Young Creators',
-            'docs'          => ['69-05-13 ใบสมัครศิลปะจากเมล็ดพันธุ์ (2).pdf'],
+            'docs'          => ['ประกวดเมล็ดพันธุ์.pdf'],
             'levels'        => [
                 'primary'         => 'ระดับประถมศึกษา',
                 'lower_secondary' => 'ระดับมัธยมศึกษาตอนต้น',
@@ -69,7 +69,7 @@ class SciWeek extends BaseConfig
         'rov' => [
             'name_th'       => 'การแข่งขันกีฬา E-sport ROV Battle Tournament 2026',
             'name_en'       => 'E-sport ROV Battle Tournament 2026 by CS-IT URU',
-            'docs'          => ['กติกาการรับสมัคร ROV 2026.pdf'],
+            'docs'          => ['แข่งขัน E-sport.pdf'],
             'levels'        => [
                 'primary_lower'  => 'ระดับประถมศึกษา – มัธยมศึกษาตอนต้น',
                 'lower_higher'   => 'ระดับมัธยมศึกษาตอนต้น – อุดมศึกษา',
@@ -94,7 +94,7 @@ class SciWeek extends BaseConfig
         'python' => [
             'name_th'       => 'การแข่งขันทักษะการเขียนโปรแกรมภาษาไพธอน',
             'name_en'       => 'Python Programming Competition',
-            'docs'          => ['กติกาการแข่งขันทักษะการเขียนโปรแกรมภาษา.pdf'],
+            'docs'          => ['แข่งขันโปรแกรมไพธอน.pdf'],
             'levels'        => [
                 'secondary' => 'ระดับมัธยมศึกษาหรือเทียบเท่า',
                 'higher'    => 'ระดับอุดมศึกษาหรือเทียบเท่า',
@@ -118,7 +118,7 @@ class SciWeek extends BaseConfig
         'recycle' => [
             'name_th'       => 'การประกวดออกแบบชุดรีไซเคิล',
             'name_en'       => 'Recycle Fashion Design Contest',
-            'docs'          => ['ใบสมัครการแข่งขัน.pdf'],
+            'docs'          => ['ประกวดออกแบบชุดรีไซเคิล.pdf'],
             'levels'        => [
                 'primary'   => 'ระดับประถมศึกษา',
                 'secondary' => 'ระดับมัธยมศึกษา',
@@ -142,7 +142,7 @@ class SciWeek extends BaseConfig
         'sci_drawing' => [
             'name_th'       => 'การประกวดภาพวาดจินตนาการทางวิทยาศาสตร์',
             'name_en'       => 'Scientific Imagination Drawing Contest',
-            'docs'          => ['ใบสมัครกิจกรรมวาดภาพ ปี 69.pdf'],
+            'docs'          => ['ประกวดวาดภาพจินตนาการทางวิทย์.pdf'],
             'levels'        => [
                 'primary_upper'   => 'ระดับประถมศึกษาตอนปลาย',
                 'lower_secondary' => 'ระดับมัธยมศึกษาตอนต้น',
@@ -169,7 +169,7 @@ class SciWeek extends BaseConfig
         'network_champion' => [
             'name_th'       => 'การแข่งขันทักษะ URU Network Champion (Cabling 2026)',
             'name_en'       => 'URU Network Champion — Cabling 2026',
-            'docs'          => ['ใบสมัคร URU Network Champion.docx'],
+            'docs'          => ['แข่งขัน URU Network.pdf'],
             'levels'        => [
                 'lower_secondary' => 'ระดับมัธยมศึกษาตอนต้น / ปวช. หรือเทียบเท่า',
                 'higher'          => 'ระดับมัธยมศึกษาตอนปลาย / เทียบเท่า / อุดมศึกษา',
