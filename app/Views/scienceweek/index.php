@@ -82,7 +82,7 @@ $levelLabels = [
         <div class="row g-4">
             
             <!-- Category 1: Exhibitions -->
-            <div class="col-lg-4">
+            <div class="col-12">
                 <div class="kids-notebook-category-title" style="color: var(--kids-blue);">
                     🎪 นิทรรศการแสนสนุก
                 </div>
@@ -110,7 +110,7 @@ $levelLabels = [
             </div>
             
             <!-- Category 2: Workshops -->
-            <div class="col-lg-4">
+            <div class="col-12">
                 <div class="kids-notebook-category-title" style="color: var(--kids-purple);">
                     🧪 เวิร์กชอป DIY & โชว์
                 </div>
@@ -124,7 +124,7 @@ $levelLabels = [
             </div>
             
             <!-- Category 3: Competitions -->
-            <div class="col-lg-4">
+            <div class="col-12">
                 <div class="kids-notebook-category-title" style="color: var(--kids-orange);">
                     🏆 รายการประกวด & แข่งขัน
                 </div>
