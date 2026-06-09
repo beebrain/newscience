@@ -83,10 +83,10 @@ $levelLabels = [
             
             <!-- Category 1: Exhibitions -->
             <div class="col-12">
-                <div class="kids-notebook-category-title" style="color: var(--kids-blue);">
+                <div class="kids-notebook-category-title cat-blue">
                     🎪 นิทรรศการแสนสนุก
                 </div>
-                <ul class="kids-notebook-list">
+                <ul class="kids-notebook-list list-blue">
                     <li class="kids-notebook-item" title="นิทรรศการเทิดพระเกียรติ และพระปรีชาสามารถด้านวิทยาศาสตร์และเทคโนโลยีของพระบาทสมเด็จพระจอมเกล้าเจ้าอยู่หัว ในฐานะทรงเป็น “พระบิดาแห่งวิทยาศาสตร์ไทย”">
                         👑 นิทรรศการเทิดพระเกียรติ และพระปรีชาสามารถด้านวิทยาศาสตร์และเทคโนโลยีของพระบาทสมเด็จพระจอมเกล้าเจ้าอยู่หัว ในฐานะทรงเป็น “พระบิดาแห่งวิทยาศาสตร์ไทย”
                     </li>
@@ -112,10 +112,10 @@ $levelLabels = [
             
             <!-- Category 2: Workshops -->
             <div class="col-12">
-                <div class="kids-notebook-category-title" style="color: var(--kids-purple);">
+                <div class="kids-notebook-category-title cat-purple">
                     🧪 เวิร์กชอป DIY & โชว์
                 </div>
-                <ul class="kids-notebook-list">
+                <ul class="kids-notebook-list list-purple">
                     <li class="kids-notebook-item">🧼 นิทรรศการ คลินิกเทคโนโลยี Soap - Sci DIY Workshop</li>
                     <li class="kids-notebook-item">🌶️ นิทรรศการ ห้องปฏิบัติการอัจฉริยะ : เครื่องเทศและลาบไทยร่วมสมัย (Spice & Larb Intelligence Lab Workshop)</li>
                     <li class="kids-notebook-item" style="color: var(--kids-pink); font-weight: bold;">
@@ -126,10 +126,10 @@ $levelLabels = [
             
             <!-- Category 3: Competitions -->
             <div class="col-12">
-                <div class="kids-notebook-category-title" style="color: var(--kids-orange);">
+                <div class="kids-notebook-category-title cat-orange">
                     🏆 รายการประกวด & แข่งขัน
                 </div>
-                <ul class="kids-notebook-list" style="padding-left: 1.5rem;">
+                <ul class="kids-notebook-list list-orange">
                     
                     <!-- Loop Online Competitions from database configuration -->
                     <?php foreach ($competitions as $key => $comp):
