@@ -388,6 +388,9 @@ body.kids-theme {
     list-style: none;
     padding-left: 2rem;
     margin-bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 0 2.5rem;
 }
 
 .kids-notebook-item {
