@@ -57,12 +57,12 @@ $levelLabels = [
             </div>
             <div class="col-md-4">
                 <h5 class="mb-0 text-success" style="font-family: var(--sw-kids-heading-font); font-size: 1.3rem;">📍 สถานที่จัดงาน</h5>
-                <p class="mb-0 fw-bold" style="font-size: 0.95rem;">คณะวิทยาศาสตร์และเทคโนโลยี มรภ.อุตรดิตถ์</p>
-                <small class="text-muted" style="font-size: 0.8rem;">(วิทยาเขต ลำรางทุ่งกะโล่)</small>
+                <p class="mb-0 fw-bold" style="font-size: 0.95rem;">คณะวิทยาศาสตร์และเทคโนโลยี</p>
+                <small class="text-muted" style="font-size: 0.8rem;">มหาวิทยาลัยราชภัฏอุตรดิตถ์ วิทยาเขตลำรางทุ่งกะโล่</small>
             </div>
             <div class="col-md-4">
                 <h5 class="mb-0 text-danger" style="font-family: var(--sw-kids-heading-font); font-size: 1.3rem;">🔬 ผู้จัดงานหลัก</h5>
-                <p class="mb-0 fw-bold" style="font-size: 0.95rem;">มรภ.อุตรดิตถ์ เคียงข้างพัฒนาท้องถิ่น</p>
+                <p class="mb-0 fw-bold" style="font-size: 0.95rem;">มหาวิทยาลัยราชภัฏอุตรดิตถ์ เคียงข้างพัฒนาท้องถิ่น</p>
             </div>
         </div>
     </div>
