@@ -408,7 +408,6 @@ body.kids-theme {
     white-space: normal;
     word-break: break-word;
     border-radius: 12px;
-    border-left: 4px solid rgba(63, 81, 181, 0.35);
     background: rgba(255,255,255,0.65);
     backdrop-filter: blur(4px);
 }
@@ -416,7 +415,6 @@ body.kids-theme {
 .kids-notebook-item:hover {
     background: rgba(255,255,255,0.92);
     transform: translateX(4px);
-    border-left-color: var(--kids-blue);
     box-shadow: 2px 2px 8px rgba(63,81,181,0.10);
 }
 
@@ -425,13 +423,10 @@ body.kids-theme {
 .kids-notebook-category-title.cat-purple { background: var(--kids-purple); }
 .kids-notebook-category-title.cat-orange { background: var(--kids-orange); color: var(--kids-dark); }
 
-/* Category color variants — list left-border */
-.kids-notebook-list.list-blue   .kids-notebook-item { border-left-color: rgba(63,81,181,0.4); }
-.kids-notebook-list.list-purple .kids-notebook-item { border-left-color: rgba(156,39,176,0.4); }
-.kids-notebook-list.list-orange .kids-notebook-item { border-left-color: rgba(255,152,0,0.5); }
-.kids-notebook-list.list-blue   .kids-notebook-item:hover { border-left-color: var(--kids-blue);   box-shadow: 2px 2px 8px rgba(63,81,181,0.12); }
-.kids-notebook-list.list-purple .kids-notebook-item:hover { border-left-color: var(--kids-purple); box-shadow: 2px 2px 8px rgba(156,39,176,0.12); }
-.kids-notebook-list.list-orange .kids-notebook-item:hover { border-left-color: var(--kids-orange); box-shadow: 2px 2px 8px rgba(255,152,0,0.12); }
+/* Category color variants — list hover shadow */
+.kids-notebook-list.list-blue   .kids-notebook-item:hover { box-shadow: 2px 2px 8px rgba(63,81,181,0.12); }
+.kids-notebook-list.list-purple .kids-notebook-item:hover { box-shadow: 2px 2px 8px rgba(156,39,176,0.12); }
+.kids-notebook-list.list-orange .kids-notebook-item:hover { box-shadow: 2px 2px 8px rgba(255,152,0,0.12); }
 
 .kids-notebook-category-title {
     font-family: var(--sw-kids-heading-font);
