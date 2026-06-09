@@ -58,7 +58,7 @@ $levelLabels = [
             <div class="col-md-4">
                 <h5 class="mb-0 text-success" style="font-family: var(--sw-kids-heading-font); font-size: 1.3rem;">📍 สถานที่จัดงาน</h5>
                 <p class="mb-0 fw-bold" style="font-size: 0.95rem;">คณะวิทยาศาสตร์และเทคโนโลยี มรภ.อุตรดิตถ์</p>
-                <small class="text-muted" style="font-size: 0.8rem;">(ศูนย์การเรียนรู้ลำรางทุ่งกะโล่)</small>
+                <small class="text-muted" style="font-size: 0.8rem;">(วิทยาเขต ลำรางทุ่งกะโล่)</small>
             </div>
             <div class="col-md-4">
                 <h5 class="mb-0 text-danger" style="font-family: var(--sw-kids-heading-font); font-size: 1.3rem;">🔬 ผู้จัดงานหลัก</h5>
@@ -137,11 +137,11 @@ $levelLabels = [
                         $isFull     = $totalCap !== null && $totalCount >= $totalCap;
                         $deadlinePassed = $comp['deadline'] !== null && date('Y-m-d') > $comp['deadline'];
                     ?>
-                        <li class="kids-notebook-item d-flex justify-content-between align-items-center py-1" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
-                            <span class="text-truncate" style="max-width: 60%;" title="<?= esc($comp['name_th']) ?>">
+                        <li class="kids-notebook-item d-flex justify-content-between align-items-start py-1" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
+                            <span class="pe-2" title="<?= esc($comp['name_th']) ?>">
                                 🏆 <?= esc($comp['name_th']) ?>
                             </span>
-                            <div class="flex-shrink-0 d-flex gap-1 align-items-center">
+                            <div class="flex-shrink-0 d-flex gap-1 align-items-center mt-1">
                                 <?php if ($isFull): ?>
                                     <span class="badge bg-danger border border-dark text-white rounded-pill px-2 py-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">เต็มแล้ว</span>
                                 <?php elseif ($deadlinePassed): ?>
@@ -158,17 +158,17 @@ $levelLabels = [
                     <?php endforeach; ?>
 
                     <!-- Offline Competitions -->
-                    <li class="kids-notebook-item d-flex justify-content-between align-items-center py-1" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
-                        <span class="text-truncate" style="max-width: 75%;">🏆 การประกวดโครงงานวิทยาศาสตร์</span>
-                        <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
+                    <li class="kids-notebook-item d-flex justify-content-between align-items-start py-1" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
+                        <span class="pe-2">🏆 การประกวดโครงงานวิทยาศาสตร์</span>
+                        <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1 flex-shrink-0 mt-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
                     </li>
-                    <li class="kids-notebook-item d-flex justify-content-between align-items-center py-1" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
-                        <span class="text-truncate" style="max-width: 75%;">🏆 การประกวดจัดสวนขวด Terrarium</span>
-                        <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
+                    <li class="kids-notebook-item d-flex justify-content-between align-items-start py-1" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
+                        <span class="pe-2">🏆 การประกวดจัดสวนขวด Terrarium</span>
+                        <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1 flex-shrink-0 mt-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
                     </li>
-                    <li class="kids-notebook-item d-flex justify-content-between align-items-center py-1">
-                        <span class="text-truncate" style="max-width: 75%;">🏆 โครงงานสิ่งแวดล้อม GLOBE</span>
-                        <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
+                    <li class="kids-notebook-item d-flex justify-content-between align-items-start py-1">
+                        <span class="pe-2">🏆 โครงงานสิ่งแวดล้อม GLOBE</span>
+                        <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1 flex-shrink-0 mt-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
                     </li>
 
                 </ul>
