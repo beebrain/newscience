@@ -87,25 +87,26 @@ $levelLabels = [
                     🎪 นิทรรศการแสนสนุก
                 </div>
                 <ul class="kids-notebook-list">
-                    <li class="kids-notebook-item" title="นิทรรศการเทิดพระเกียรติ รัชกาลที่ 4">
-                        👑 ร.4 พระบิดาแห่งวิทยาศาสตร์ไทย
+                    <li class="kids-notebook-item" title="นิทรรศการเทิดพระเกียรติ และพระปรีชาสามารถด้านวิทยาศาสตร์และเทคโนโลยีของพระบาทสมเด็จพระจอมเกล้าเจ้าอยู่หัว ในฐานะทรงเป็น “พระบิดาแห่งวิทยาศาสตร์ไทย”">
+                        👑 นิทรรศการเทิดพระเกียรติ และพระปรีชาสามารถด้านวิทยาศาสตร์และเทคโนโลยีของพระบาทสมเด็จพระจอมเกล้าเจ้าอยู่หัว ในฐานะทรงเป็น “พระบิดาแห่งวิทยาศาสตร์ไทย”
                     </li>
-                    <li class="kids-notebook-item" title="นิทรรศการเทิดพระเกียรติ รัชกาลที่ 9">
-                        💡 ร.9 พระบิดาแห่งเทคโนโลยีและนวัตกรรม
+                    <li class="kids-notebook-item" title="นิทรรศการเทิดพระเกียรติพระบาทสมเด็จพระบรมชนกาธิเบศร มหาภูมิพลอดุลยเดชมหาราชบรมนาถบพิตร ในฐานะทรงเป็น “พระบิดาแห่งเทคโนโลยีของไทย” และ “พระบิดาแห่งนวัตกรรมไทย”">
+                        💡 นิทรรศการเทิดพระเกียรติพระบาทสมเด็จพระบรมชนกาธิเบศร มหาภูมิพลอดุลยเดชมหาราชบรมนาถบพิตร ในฐานะทรงเป็น “พระบิดาแห่งเทคโนโลยีของไทย” และ “พระบิดาแห่งนวัตกรรมไทย”
                     </li>
-                    <li class="kids-notebook-item" title="นิทรรศการเทิดพระเกียรติสมเด็จพระพันปีหลวง">
-                        🌿 สมเด็จพระพันปีหลวง: ความหลากหลายชีวภาพ
+                    <li class="kids-notebook-item" title="นิทรรศการเทิดพระเกียรติและน้อมรำลึกในพระมหากรุณาธิคุณสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง ในฐานะทรงเป็น “พระมารดาแห่งการคุ้มครองความหลากหลายทางชีวภาพ” และ “พระมารดาแห่งศิลปาชีพและการอนุรักษ์ผ้าไทย”">
+                        🌿 นิทรรศการเทิดพระเกียรติและน้อมรำลึกในพระมหากรุณาธิคุณสมเด็จพระนางเจ้าสิริกิติ์ พระบรมราชินีนาถ พระบรมราชชนนีพันปีหลวง ในฐานะทรงเป็น “พระมารดาแห่งการคุ้มครองความหลากหลายทางชีวภาพ” และ “พระมารดาแห่งศิลปาชีพและการอนุรักษ์ผ้าไทย”
                     </li>
-                    <li class="kids-notebook-item">🪐 เทคโนโลยีทางดาราศาสตร์และอวกาศ</li>
-                    <li class="kids-notebook-item">🤖 Smart Living with AI (ชีวิตอัจฉริยะ)</li>
-                    <li class="kids-notebook-item">🍃 ชีววิทยาและสิ่งแวดล้อมเพื่ออนาคต</li>
-                    <li class="kids-notebook-item">🔢 สนุกคิดคณิตอัจฉริยะ</li>
-                    <li class="kids-notebook-item">🧪 วิทยาศาสตร์เคมีอัจฉริยะ สู่อนาคตที่ยั่งยืน</li>
-                    <li class="kids-notebook-item">⚡ ฟิสิกส์และเทคโนโลยีกับการเรียนรู้ศตวรรษที่ 21</li>
-                    <li class="kids-notebook-item">🏃 วิทยาศาสตร์การกีฬาเพื่อสุขภาพ</li>
-                    <li class="kids-notebook-item">🏥 Public Health for Sustainable Community</li>
-                    <li class="kids-notebook-item">🎓 นิทรรศการความรู้จากคณะต่าง ๆ</li>
-                    <li class="kids-notebook-item">🔬 URU Research Impact: พลังวิจัยสู่ชุมชน</li>
+                    <li class="kids-notebook-item">🍃 นิทรรศการ Intelligence Science เพื่อการจัดการสิ่งแวดล้อมและอนาคตที่ยั่งยืน</li>
+                    <li class="kids-notebook-item">🔬 นิทรรศการ ชีววิทยาเพื่ออนาคตที่ยั่งยืน (Biology for Sustainable Future)</li>
+                    <li class="kids-notebook-item">🤖 นิทรรศการ Smart Living with AI : เปิดโหมดชีวิตอัจฉริยะด้วย AI</li>
+                    <li class="kids-notebook-item">🏃 นิทรรศการ วิทยาศาสตร์การกีฬากับความยั่งยืนทางสุขภาพ</li>
+                    <li class="kids-notebook-item">🪐 นิทรรศการ เทคโนโลยีทางดาราศาสตร์และอวกาศ</li>
+                    <li class="kids-notebook-item">⚡ นิทรรศการ ฟิสิกส์และเทคโนโลยีกับการบูรณาการการเรียนรู้ในศตวรรษที่ 21</li>
+                    <li class="kids-notebook-item">🏥 นิทรรศการ Public Health for Sustainable Health Community</li>
+                    <li class="kids-notebook-item">🔢 นิทรรศการ สนุกคิดคณิตอัจฉริยะ</li>
+                    <li class="kids-notebook-item">🧪 นิทรรศการ วิทยาศาสตร์เคมีอัจฉริยะ สู่อนาคตที่ยั่งยืน</li>
+                    <li class="kids-notebook-item">📊 นิทรรศการ URU Research Impact: พลังทุนวิจัย เปลี่ยนความคิด สู่ผลลัพธ์ที่จับต้องได้</li>
+                    <li class="kids-notebook-item">🎓 นิทรรศการคณะครุศาสตร์, คณะมนุษยศาสตร์และสังคมศาสตร์, คณะวิทยาการจัดการ, คณะเทคโนโลยีอุตสาหกรรม และคณะพยาบาลศาสตร์</li>
                 </ul>
             </div>
             
@@ -115,8 +116,8 @@ $levelLabels = [
                     🧪 เวิร์กชอป DIY & โชว์
                 </div>
                 <ul class="kids-notebook-list">
-                    <li class="kids-notebook-item">🧼 Soap - Sci DIY ทำสบู่แฮนด์เมด</li>
-                    <li class="kids-notebook-item">🌶️ Spice & Larb Lab วิทย์รสแซ่บ (ลาบไทย)</li>
+                    <li class="kids-notebook-item">🧼 นิทรรศการ คลินิกเทคโนโลยี Soap - Sci DIY Workshop</li>
+                    <li class="kids-notebook-item">🌶️ นิทรรศการ ห้องปฏิบัติการอัจฉริยะ : เครื่องเทศและลาบไทยร่วมสมัย (Spice & Larb Intelligence Lab Workshop)</li>
                     <li class="kids-notebook-item" style="color: var(--kids-pink); font-weight: bold;">
                         💥 การแสดงทางวิทยาศาสตร์ (Science Show)
                     </li>
@@ -179,7 +180,7 @@ $levelLabels = [
                         </div>
                     </li>
                     <li class="kids-notebook-item d-flex justify-content-between align-items-start py-1" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
-                        <span class="pe-2">🏆 การประกวดจัดสวนขวด Terrarium</span>
+                        <span class="pe-2">🏆 การประกวดจัดสวนในภาชนะปิด Terrarium</span>
                         <div class="flex-shrink-0 d-flex gap-1 align-items-center mt-1">
                             <a href="<?= base_url(config('SciWeek')->docsPublicPath.'/'.rawurlencode('ประกวดสวนในภาชนะปิด.pdf')) ?>" 
                                target="_blank"
@@ -191,7 +192,7 @@ $levelLabels = [
                         </div>
                     </li>
                     <li class="kids-notebook-item d-flex justify-content-between align-items-start py-1">
-                        <span class="pe-2">🏆 โครงงานสิ่งแวดล้อม GLOBE</span>
+                        <span class="pe-2">🏆 การประกวดโครงงานตรวจวัดสิ่งแวดล้อม (GLOBE)</span>
                         <span class="badge bg-info border border-dark text-dark rounded-pill px-2 py-1 flex-shrink-0 mt-1" style="font-size: 0.7rem; font-family: var(--sw-kids-heading-font);">ส่งเอกสาร</span>
                     </li>
 

@@ -43,7 +43,7 @@ class SciWeek extends BaseConfig
     public array $competitions = [
 
         'seed_art' => [
-            'name_th'       => 'ศิลปะจากเมล็ดพันธุ์สำหรับนักสร้างสรรค์รุ่นเยาว์',
+            'name_th'       => 'การประกวดศิลปะจากเมล็ดพันธุ์สำหรับนักสร้างสรรค์รุ่นเยาว์ (Seed Art Contest for Young Creators)',
             'name_en'       => 'Seed Art Contest for Young Creators',
             'docs'          => ['ประกวดเมล็ดพันธุ์.pdf'],
             'levels'        => [
@@ -67,7 +67,7 @@ class SciWeek extends BaseConfig
         ],
 
         'rov' => [
-            'name_th'       => 'การแข่งขันกีฬา E-sport ROV Battle Tournament 2026',
+            'name_th'       => 'การแข่งขันทักษะเกมทางคอมพิวเตอร์ (ROV Battle Tournament 2026 by CS-IT URU)',
             'name_en'       => 'E-sport ROV Battle Tournament 2026 by CS-IT URU',
             'docs'          => ['แข่งขัน E-sport.pdf'],
             'levels'        => [
@@ -92,7 +92,7 @@ class SciWeek extends BaseConfig
         ],
 
         'python' => [
-            'name_th'       => 'การแข่งขันทักษะการเขียนโปรแกรมภาษาไพธอน',
+            'name_th'       => 'การแข่งขันทักษะภาษาไพธอน (Python)',
             'name_en'       => 'Python Programming Competition',
             'docs'          => ['แข่งขันโปรแกรมไพธอน.pdf'],
             'levels'        => [
@@ -116,7 +116,7 @@ class SciWeek extends BaseConfig
         ],
 
         'recycle' => [
-            'name_th'       => 'การประกวดออกแบบชุดรีไซเคิล',
+            'name_th'       => 'การประกวดการออกแบบชุดรีไซเคิล',
             'name_en'       => 'Recycle Fashion Design Contest',
             'docs'          => ['ประกวดออกแบบชุดรีไซเคิล.pdf'],
             'levels'        => [
@@ -140,7 +140,7 @@ class SciWeek extends BaseConfig
         ],
 
         'sci_drawing' => [
-            'name_th'       => 'การประกวดภาพวาดจินตนาการทางวิทยาศาสตร์',
+            'name_th'       => 'การประกวดภาพวาดจินตนาการทางวิทยาศาสตร์ หัวข้อ: "โลกสีเขียวแห่งอนาคต:ภาพจินตนาการจากปัญญา วิทยาศาสตร์เพื่อความยั่งยืน" (The Green World of the Future: Imagination from Intelligent Science for Sustainability)',
             'name_en'       => 'Scientific Imagination Drawing Contest',
             'docs'          => ['ประกวดวาดภาพจินตนาการทางวิทย์.pdf'],
             'levels'        => [
@@ -167,7 +167,7 @@ class SciWeek extends BaseConfig
         ],
 
         'network_champion' => [
-            'name_th'       => 'การแข่งขันทักษะ URU Network Champion (Cabling 2026)',
+            'name_th'       => 'การแข่งขันทักษะ URU Network Champion ด้านสายสัญญาณเครือข่าย (Cabling 2026)',
             'name_en'       => 'URU Network Champion — Cabling 2026',
             'docs'          => ['แข่งขัน URU Network.pdf'],
             'levels'        => [
