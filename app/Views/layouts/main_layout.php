@@ -77,69 +77,10 @@
             }
         })();
     </script>
-
-        /* ซ่อนเนื้อหาจนกว่า CSS จะโหลดครบ (ป้องกัน FOUC) */
-        .css-loading {
-            opacity: 0;
-        }
-
-        .css-loaded {
-            opacity: 1;
-            transition: opacity 0.15s ease-in;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .css-loaded {
-                transition: none;
-            }
-        }
-
-        /* Fallback: ถ้า JavaScript ปิด ให้แสดงเนื้อหาเลย */
-        noscript+body,
-        .no-js body {
-            opacity: 1 !important;
-        }
-    </style>
-    <script>
-        (function() {
-            function showContent() {
-                if (document.body) {
-                    document.body.classList.remove('css-loading');
-                    document.body.classList.add('css-loaded');
-                }
-            }
-
-            function waitForStyles() {
-                var links = document.querySelectorAll('link[rel="stylesheet"]');
-                var total = links.length;
-                if (total === 0) {
-                    showContent();
-                    return;
-                }
-                var loaded = 0;
-
-                function checkDone() {
-                    loaded++;
-                    if (loaded >= total) showContent();
-                }
-                for (var i = 0; i < links.length; i++) {
-                    var link = links[i];
-                    if (link.sheet) checkDone();
-                    else link.onload = checkDone;
-                }
-                setTimeout(showContent, 4000);
-            }
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', waitForStyles);
-            } else {
-                waitForStyles();
-            }
-        })();
-    </script>
     <?= view('partials/csrf_head') ?>
 </head>
 
-<body class="css-loading">
+<body>
     <script>
         (function() {
             var w = window.innerWidth;
