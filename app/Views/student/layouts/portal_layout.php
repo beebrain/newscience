@@ -12,16 +12,20 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/admin.css') ?>">
     <style>
         .portal-wrap { min-height: 100vh; background: var(--color-gray-100); }
-        .portal-topbar {
+        .portal-header {
             background: var(--color-white);
-            padding: 1rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             position: sticky;
             top: 0;
             z-index: 100;
+        }
+        .portal-topbar {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .portal-topbar .portal-brand {
             font-weight: 700;
@@ -32,10 +36,10 @@
             align-items: center;
             gap: 0.5rem;
         }
-        .portal-topbar .portal-brand:hover { color: var(--primary-dark); }
+        .portal-topbar .portal-brand:hover { color: var(--secondary); }
         .portal-topbar .portal-brand-icon {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             border-radius: 8px;
             display: flex;
@@ -43,49 +47,113 @@
             justify-content: center;
             color: #1a1a1a;
         }
-        .portal-topbar .portal-brand-icon svg { width: 20px; height: 20px; }
-        .portal-nav {
+        .portal-topbar .portal-brand-icon svg { width: 18px; height: 18px; }
+        .portal-user-nav {
             display: flex;
             align-items: center;
-            gap: 0.25rem;
+            gap: 1rem;
         }
-        .portal-nav a {
-            padding: 0.5rem 1rem;
+        .portal-user-nav .portal-link-back {
+            color: var(--color-gray-500);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .portal-user-nav .portal-link-back:hover {
+            color: var(--color-gray-800);
+        }
+        .portal-user-nav .portal-user {
+            color: var(--color-gray-700);
+            font-size: 0.875rem;
+            font-weight: 600;
+            background: var(--color-gray-100);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            border: 1px solid var(--color-gray-200);
+        }
+        .portal-user-nav .portal-link-logout {
+            color: var(--color-error);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .portal-user-nav .portal-link-logout:hover {
+            text-decoration: underline;
+        }
+        .portal-subnav {
+            background: var(--color-white);
+            border-top: 1px solid var(--color-gray-100);
+        }
+        .portal-subnav-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            scrollbar-width: none; /* Firefox */
+        }
+        .portal-subnav-container::-webkit-scrollbar {
+            display: none; /* Safari and Chrome */
+        }
+        .portal-subnav-container a {
+            padding: 0.875rem 0.25rem;
             color: var(--color-gray-600);
             text-decoration: none;
-            border-radius: 8px;
             font-weight: 500;
             font-size: 0.9375rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+            white-space: nowrap;
         }
-        .portal-nav a:hover { background: var(--color-gray-100); color: var(--color-gray-800); }
-        .portal-nav a:focus-visible {
-            outline: 3px solid #0d9488;
-            outline-offset: 2px;
+        .portal-subnav-container a:hover {
+            color: var(--secondary);
+        }
+        .portal-subnav-container a.active {
+            color: var(--secondary);
+            border-bottom-color: var(--secondary);
+            font-weight: 600;
+        }
+        .portal-subnav-container a.portal-admin-tab {
+            color: var(--color-gray-700);
+        }
+        .portal-subnav-container a.portal-admin-tab:hover {
+            color: var(--color-primary-dark);
+        }
+        .portal-subnav-container a.portal-admin-tab.active {
+            color: var(--color-primary-dark);
+            border-bottom-color: var(--color-primary-dark);
         }
         .portal-flash { margin-bottom: 1rem; }
-        .portal-nav .portal-user {
-            color: var(--color-gray-500);
-            font-size: 0.875rem;
-            margin-left: 0.5rem;
-            padding-left: 1rem;
-            border-left: 1px solid var(--color-gray-200);
-        }
         .portal-main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
     </style>
 </head>
 <body>
 <div class="portal-wrap">
-    <header class="portal-topbar">
-        <a href="<?= base_url('student') ?>" class="portal-brand">
-            <div class="portal-brand-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <header class="portal-header">
+        <div class="portal-topbar">
+            <a href="<?= base_url('student') ?>" class="portal-brand">
+                <div class="portal-brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                Student Portal
+            </a>
+            <div class="portal-user-nav">
+                <a href="<?= base_url() ?>" class="portal-link-back">กลับหน้าแรกเว็บ</a>
+                <span class="portal-user"><?= esc(session()->get('student_name') ?: session()->get('student_email')) ?></span>
+                <a href="<?= base_url('student/logout') ?>" class="portal-link-logout">ออกจากระบบ</a>
             </div>
-            Student Portal
-        </a>
-        <nav class="portal-nav">
-            <a href="<?= base_url() ?>">กลับหน้าหลัก</a>
-            <span class="portal-user"><?= esc(session()->get('student_name') ?: session()->get('student_email')) ?></span>
-            <a href="<?= base_url('student/logout') ?>">ออกจากระบบ</a>
+        </div>
+        <nav class="portal-subnav">
+            <div class="portal-subnav-container">
+                <a href="<?= base_url('student') ?>" class="<?= uri_string() === 'student' || uri_string() === 'student/dashboard' ? 'active' : '' ?>">หน้าแรก Portal</a>
+                <a href="<?= base_url('student/barcodes') ?>" class="<?= str_starts_with(uri_string(), 'student/barcodes') ? 'active' : '' ?>">กิจกรรม / รับรหัส</a>
+                <a href="<?= base_url('student/certificates') ?>" class="<?= str_starts_with(uri_string(), 'student/certificates') ? 'active' : '' ?>">ใบประกาศของฉัน</a>
+                <a href="<?= base_url('student/events') ?>" class="<?= str_starts_with(uri_string(), 'student/events') ? 'active' : '' ?>">ข่าว / Event</a>
+                <?php if (in_array(session()->get('student_role'), ['club', 'admin_student'], true)): ?>
+                    <a href="<?= base_url('student-admin/barcode-events') ?>" class="<?= str_starts_with(uri_string(), 'student-admin') ? 'active' : '' ?> portal-admin-tab">Student Admin</a>
+                <?php endif; ?>
+            </div>
         </nav>
     </header>
     <main class="portal-main" id="portal-main">
