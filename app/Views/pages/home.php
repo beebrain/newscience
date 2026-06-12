@@ -84,6 +84,222 @@ function getProgramCarouselImageUrl(array $program): string
 
 <?= $this->section('content') ?>
 
+<!-- Mourning Popup Overlay -->
+<div id="mourning-popup-overlay" class="mourning-popup-overlay" role="dialog" aria-label="แสดงความอาลัย" aria-modal="true" hidden>
+    <div class="mourning-popup-backdrop"></div>
+    <div class="mourning-popup-wrap">
+        <div class="mourning-popup-content">
+            <div class="mourning-portrait-container">
+                <img src="<?= base_url('assets/images/royal_mourning_princess.jpg') ?>" alt="สมเด็จพระเจ้าลูกเธอ เจ้าฟ้าพัชรกิติยาภา นเรนทิราเทพยวดี กรมหลวงราชสาริณีสิริพัชร มหาวัชรราชธิดา" class="mourning-portrait">
+            </div>
+            <div class="mourning-text-container">
+                <p class="mourning-lead">เสด็จสู่สวรรคาลัย</p>
+                <p class="mourning-title">น้อมสำนึกในพระมหากรุณาธิคุณของ</p>
+                <h2 class="mourning-royal-name">สมเด็จพระเจ้าลูกเธอ เจ้าฟ้าพัชรกิติยาภา นเรนทิราเทพยวดี<br>กรมหลวงราชสาริณีสิริพัชร มหาวัชรราชธิดา</h2>
+                
+                <hr class="mourning-divider">
+                
+                <p class="mourning-title-en">In Reverent Remembrance of Her Royal Highness</p>
+                <h3 class="mourning-royal-name-en">Princess Bajrakitiyabha Narendiradebyavati<br>Kromluang Rajasarini Siribajra Mahavajrarajadhita</h3>
+                
+                <p class="mourning-signature">ข้าพระพุทธเจ้า คณะผู้บริหาร คณาจารย์ เจ้าหน้าที่ และนักศึกษา<br>คณะวิทยาศาสตร์และเทคโนโลยี มหาวิทยาลัยราชภัฏอุตรดิตถ์</p>
+            </div>
+            <button type="button" class="mourning-enter-btn" id="mourning-enter-btn">เข้าสู่เว็บไซต์</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ===== Mourning Popup Styles ===== */
+.mourning-popup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s;
+    background: rgba(10, 10, 10, 0.98);
+}
+.mourning-popup-overlay[data-open="true"] {
+    opacity: 1;
+    visibility: visible;
+}
+.mourning-popup-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 680px;
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s;
+}
+.mourning-popup-overlay[data-open="true"] .mourning-popup-wrap {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+.mourning-popup-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.mourning-popup-content {
+    background: #151515;
+    border: 3px double #d4af37;
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+    text-align: center;
+    color: #e0e0e0;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+    -webkit-overflow-scrolling: touch;
+}
+.mourning-popup-content::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari and Opera */
+}
+.mourning-portrait-container {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+}
+.mourning-portrait {
+    width: 140px;
+    height: auto;
+    border-radius: 8px;
+    border: 2px solid #d4af37;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    object-fit: cover;
+}
+.mourning-text-container {
+    font-family: 'Sarabun', 'Noto Sans Thai', sans-serif;
+}
+.mourning-lead {
+    font-size: 1.45rem;
+    color: #d4af37;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+}
+.mourning-title {
+    font-size: 1.15rem;
+    color: #b0b0b0;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    letter-spacing: 0.5px;
+}
+.mourning-subtitle {
+    font-size: 1.05rem;
+    color: #a0a0a0;
+    margin-bottom: 1.5rem;
+}
+.mourning-royal-name {
+    font-size: 1.3rem;
+    color: #ffffff;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+}
+.mourning-divider {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #d4af37, transparent);
+    margin: 1rem auto;
+    width: 60%;
+}
+.mourning-title-en {
+    font-size: 1.1rem;
+    color: #d4af37;
+    margin-bottom: 0.5rem;
+    font-style: italic;
+}
+.mourning-royal-name-en {
+    font-size: 1.15rem;
+    color: #ffffff;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 1.25rem;
+}
+.mourning-details {
+    font-size: 1.1rem;
+    color: #cccccc;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+}
+.mourning-signature {
+    font-size: 0.95rem;
+    color: #888888;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+}
+.mourning-enter-btn {
+    padding: 0.85rem 3.5rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #111111;
+    background: #d4af37;
+    border: 1px solid #d4af37;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
+}
+.mourning-enter-btn:hover {
+    background: transparent;
+    color: #d4af37;
+    border-color: #d4af37;
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
+}
+
+@media (max-width: 640px) {
+    .mourning-popup-content {
+        padding: 1.25rem 0.75rem;
+    }
+    .mourning-portrait-container {
+        margin-bottom: 0.75rem;
+    }
+    .mourning-portrait {
+        width: 100px;
+    }
+    .mourning-royal-name {
+        font-size: 1.15rem;
+        margin-bottom: 0.75rem;
+    }
+    .mourning-royal-name-en {
+        font-size: 1.05rem;
+        margin-bottom: 1rem;
+    }
+    .mourning-lead {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
+    }
+    .mourning-title {
+        font-size: 1.0rem;
+        margin-bottom: 0.75rem;
+    }
+    .mourning-divider {
+        margin: 1rem auto;
+    }
+    .mourning-signature {
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+    .mourning-enter-btn {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+}
+</style>
+
 <?php
 // ประกาศด่วน (ป๊อปอัป) — แสดงเฉพาะเมื่อมีข้อมูลและอยู่หน้าแรก
 $urgentPopups = $urgent_popups ?? [];
@@ -310,88 +526,125 @@ $urgentPopupsWithImage = array_values(array_filter($urgentPopups, function ($p) 
     .urgent-popup-arrow { width: 42px; height: 42px; }
     .urgent-popup-prev { left: 0.5rem; }
     .urgent-popup-next { right: 0.5rem; }
-}
 </style>
+<?php endif; ?>
 
 <script>
 (function() {
-    var overlay = document.getElementById('urgent-popup-overlay');
-    if (!overlay) return;
-    var slides = overlay.querySelectorAll('.urgent-popup-slide');
-    var popupIds = [];
-    slides.forEach(function(s) { var id = s.dataset.popupId; if (id) popupIds.push(id); });
-    var dismissedKey = 'urgent_popup_dismissed';
-    function getDismissed() { try { var j = localStorage.getItem(dismissedKey); return j ? JSON.parse(j) : []; } catch (e) { return []; } }
-    function setDismissed(id) { var a = getDismissed(); if (a.indexOf(id) === -1) a.push(id); localStorage.setItem(dismissedKey, JSON.stringify(a)); }
-    var visibleIds = popupIds.filter(function(id) { return getDismissed().indexOf(id) === -1; });
-    if (visibleIds.length === 0) return;
+    var mourningOverlay = document.getElementById('mourning-popup-overlay');
+    var urgentOverlay = document.getElementById('urgent-popup-overlay');
 
-    var currentIndex = 0;
-    var currentSlide = function() { return slides[currentIndex]; };
-    var autoplayMs = 3000;
-    var autoplayTimer = null;
-    function stopAutoplay() {
-        if (autoplayTimer) {
-            clearInterval(autoplayTimer);
-            autoplayTimer = null;
+    // Setup urgent popup logic but do NOT open it yet
+    var urgentSlides = urgentOverlay ? urgentOverlay.querySelectorAll('.urgent-popup-slide') : [];
+    var urgentPopupIds = [];
+    urgentSlides.forEach(function(s) { var id = s.dataset.popupId; if (id) urgentPopupIds.push(id); });
+    var urgentDismissedKey = 'urgent_popup_dismissed';
+    function getUrgentDismissed() { try { var j = localStorage.getItem(urgentDismissedKey); return j ? JSON.parse(j) : []; } catch (e) { return []; } }
+    function setUrgentDismissed(id) { var a = getUrgentDismissed(); if (a.indexOf(id) === -1) a.push(id); localStorage.setItem(urgentDismissedKey, JSON.stringify(a)); }
+    var visibleUrgentIds = urgentPopupIds.filter(function(id) { return getUrgentDismissed().indexOf(id) === -1; });
+
+    var currentUrgentIndex = 0;
+    var currentUrgentSlide = function() { return urgentSlides[currentUrgentIndex]; };
+    var urgentAutoplayMs = 3000;
+    var urgentAutoplayTimer = null;
+    function stopUrgentAutoplay() {
+        if (urgentAutoplayTimer) {
+            clearInterval(urgentAutoplayTimer);
+            urgentAutoplayTimer = null;
         }
     }
-    function startAutoplay() {
-        if (slides.length <= 1) return;
-        stopAutoplay();
-        autoplayTimer = setInterval(function() {
-            showSlide(currentIndex + 1, true);
-        }, autoplayMs);
+    function startUrgentAutoplay() {
+        if (urgentSlides.length <= 1) return;
+        stopUrgentAutoplay();
+        urgentAutoplayTimer = setInterval(function() {
+            showUrgentSlide(currentUrgentIndex + 1, true);
+        }, urgentAutoplayMs);
     }
-    function showSlide(i, fromAutoplay) {
-        if (i < 0) i = slides.length - 1;
-        if (i >= slides.length) i = 0;
-        currentIndex = i;
-        slides.forEach(function(s, idx) { s.classList.toggle('active', idx === currentIndex); });
-        overlay.querySelectorAll('.urgent-popup-dot').forEach(function(d, idx) { d.classList.toggle('active', idx === currentIndex); });
-        if (!fromAutoplay) startAutoplay();
+    function showUrgentSlide(i, fromAutoplay) {
+        if (i < 0) i = urgentSlides.length - 1;
+        if (i >= urgentSlides.length) i = 0;
+        currentUrgentIndex = i;
+        urgentSlides.forEach(function(s, idx) { s.classList.toggle('active', idx === currentUrgentIndex); });
+        if (urgentOverlay) {
+            urgentOverlay.querySelectorAll('.urgent-popup-dot').forEach(function(d, idx) { d.classList.toggle('active', idx === currentUrgentIndex); });
+        }
+        if (!fromAutoplay) startUrgentAutoplay();
     }
 
-    overlay.querySelector('.urgent-popup-backdrop').addEventListener('click', closePopup);
-    overlay.querySelector('#urgent-popup-close').addEventListener('click', closePopup);
-    overlay.querySelector('#urgent-popup-ok').addEventListener('click', closePopup);
-    function closePopup() {
-        stopAutoplay();
-        var cb = overlay.querySelector('#urgent-popup-dismiss-checkbox');
-        if (cb && cb.checked && currentSlide()) {
-            var id = currentSlide().dataset.popupId;
-            if (id) setDismissed(id);
+    function closeUrgentPopup() {
+        stopUrgentAutoplay();
+        if (urgentOverlay) {
+            var cb = urgentOverlay.querySelector('#urgent-popup-dismiss-checkbox');
+            if (cb && cb.checked && currentUrgentSlide()) {
+                var id = currentUrgentSlide().dataset.popupId;
+                if (id) setUrgentDismissed(id);
+            }
+            urgentOverlay.setAttribute('data-open', 'false');
+            urgentOverlay.setAttribute('hidden', '');
         }
-        overlay.setAttribute('data-open', 'false');
-        overlay.setAttribute('hidden', '');
         document.body.style.overflow = '';
     }
 
-    var nextBtn = overlay.querySelector('.urgent-popup-next');
-    var prevBtn = overlay.querySelector('.urgent-popup-prev');
-    if (nextBtn) nextBtn.addEventListener('click', function(e) { e.preventDefault(); showSlide(currentIndex + 1); });
-    if (prevBtn) prevBtn.addEventListener('click', function(e) { e.preventDefault(); showSlide(currentIndex - 1); });
-    overlay.querySelectorAll('.urgent-popup-dot').forEach(function(dot) {
-        dot.addEventListener('click', function() { showSlide(parseInt(this.dataset.index, 10)); });
-    });
-    var carousel = overlay.querySelector('.urgent-popup-carousel');
-    if (carousel && slides.length > 1) {
-        var touchStartX = 0, touchEndX = 0;
-        carousel.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-        carousel.addEventListener('touchend', function(e) {
-            touchEndX = e.changedTouches[0].screenX;
-            var d = touchStartX - touchEndX;
-            if (Math.abs(d) > 50) { showSlide(d > 0 ? currentIndex + 1 : currentIndex - 1); }
-        }, { passive: true });
+    if (urgentOverlay && urgentSlides.length > 0) {
+        var backdrop = urgentOverlay.querySelector('.urgent-popup-backdrop');
+        var closeBtn = urgentOverlay.querySelector('#urgent-popup-close');
+        var okBtn = urgentOverlay.querySelector('#urgent-popup-ok');
+        if (backdrop) backdrop.addEventListener('click', closeUrgentPopup);
+        if (closeBtn) closeBtn.addEventListener('click', closeUrgentPopup);
+        if (okBtn) okBtn.addEventListener('click', closeUrgentPopup);
+
+        var nextBtn = urgentOverlay.querySelector('.urgent-popup-next');
+        var prevBtn = urgentOverlay.querySelector('.urgent-popup-prev');
+        if (nextBtn) nextBtn.addEventListener('click', function(e) { e.preventDefault(); showUrgentSlide(currentUrgentIndex + 1); });
+        if (prevBtn) prevBtn.addEventListener('click', function(e) { e.preventDefault(); showUrgentSlide(currentUrgentIndex - 1); });
+        urgentOverlay.querySelectorAll('.urgent-popup-dot').forEach(function(dot) {
+            dot.addEventListener('click', function() { showUrgentSlide(parseInt(this.dataset.index, 10)); });
+        });
+        var carousel = urgentOverlay.querySelector('.urgent-popup-carousel');
+        if (carousel && urgentSlides.length > 1) {
+            var touchStartX = 0, touchEndX = 0;
+            carousel.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+            carousel.addEventListener('touchend', function(e) {
+                touchEndX = e.changedTouches[0].screenX;
+                var d = touchStartX - touchEndX;
+                if (Math.abs(d) > 50) { showUrgentSlide(d > 0 ? currentUrgentIndex + 1 : currentUrgentIndex - 1); }
+            }, { passive: true });
+        }
     }
 
-    overlay.removeAttribute('hidden');
-    overlay.setAttribute('data-open', 'true');
-    document.body.style.overflow = 'hidden';
-    startAutoplay();
+    // Function to check and show urgent popup
+    function tryShowUrgentPopup() {
+        if (urgentOverlay && visibleUrgentIds.length > 0) {
+            urgentOverlay.removeAttribute('hidden');
+            urgentOverlay.setAttribute('data-open', 'true');
+            document.body.style.overflow = 'hidden';
+            startUrgentAutoplay();
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Mourning popup actions
+    if (mourningOverlay) {
+        var enterBtn = mourningOverlay.querySelector('#mourning-enter-btn');
+        if (enterBtn) {
+            enterBtn.addEventListener('click', function() {
+                mourningOverlay.setAttribute('data-open', 'false');
+                mourningOverlay.setAttribute('hidden', '');
+                // Try opening the next popup (urgent popup)
+                tryShowUrgentPopup();
+            });
+        }
+        // Force open mourning popup
+        mourningOverlay.removeAttribute('hidden');
+        mourningOverlay.setAttribute('data-open', 'true');
+        document.body.style.overflow = 'hidden';
+    } else {
+        // If no mourning popup, try showing urgent popup directly
+        tryShowUrgentPopup();
+    }
 })();
 </script>
-<?php endif; ?>
 
 <?php
 // Get settings with defaults

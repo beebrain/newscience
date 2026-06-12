@@ -36,9 +36,26 @@ $superAdminMemberPortal = ($userRole === 'super_admin') && session()->get(\App\C
         }
     </script>
     <style>
+        html.grayscale-theme {
+            filter: grayscale(100%) !important;
+            -webkit-filter: grayscale(100%) !important;
+            -moz-filter: grayscale(100%) !important;
+            -ms-filter: grayscale(100%) !important;
+            -o-filter: grayscale(100%) !important;
+        }
         body { font-family: 'Sarabun', 'Noto Sans Thai', sans-serif; }
         [x-cloak] { display: none !important; }
     </style>
+    <script>
+        (function() {
+            var isGrayscale = localStorage.getItem('theme_grayscale') !== 'false';
+            if (isGrayscale) {
+                document.documentElement.classList.add('grayscale-theme');
+            } else {
+                document.documentElement.classList.remove('grayscale-theme');
+            }
+        })();
+    </script>
     <?= $this->renderSection('styles') ?>
     <?= view('partials/csrf_head') ?>
 </head>
@@ -295,6 +312,81 @@ $superAdminMemberPortal = ($userRole === 'super_admin') && session()->get(\App\C
             if (typeof Swal === 'undefined') return Promise.resolve(window.confirm(title + (text ? '\n' + text : '')));
             return Swal.fire({ title: title, text: text, icon: 'question', showCancelButton: true, confirmButtonText: confirmText, cancelButtonText: cancelText, confirmButtonColor: '#d33', cancelButtonColor: '#6c757d' }).then(function(r) { return r.isConfirmed; });
         };
+    </script>
+    <!-- Accessibility Color Switcher (Mourning vs Normal Tone) -->
+    <button id="theme-tone-switcher" class="theme-tone-switcher" aria-label="สลับโทนสีขาวดำ/สีปกติ" title="สลับโทนสีขาวดำ/สีปกติ">
+        <svg class="icon-grayscale" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 2a10 10 0 0 0 0 20z" fill="currentColor"/>
+        </svg>
+        <span>โทนสี ขาวดำ / สีปกติ</span>
+    </button>
+
+    <style>
+        /* Floating Theme Switcher styling */
+        .theme-tone-switcher {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.15rem;
+            background: #ffffff;
+            color: #1a1a1a;
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+        html.grayscale-theme .theme-tone-switcher {
+            background: #1a1a1a;
+            color: #ffffff;
+            border-color: #333333;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.05);
+        }
+        .theme-tone-switcher:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+        .theme-tone-switcher svg {
+            transition: transform 0.5s ease;
+        }
+        .theme-tone-switcher:hover svg {
+            transform: rotate(180deg);
+        }
+
+        @media (max-width: 768px) {
+            .theme-tone-switcher {
+                bottom: 1rem;
+                left: 1rem;
+                padding: 0.5rem 0.85rem;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var btn = document.getElementById('theme-tone-switcher');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    var html = document.documentElement;
+                    if (html.classList.contains('grayscale-theme')) {
+                        html.classList.remove('grayscale-theme');
+                        localStorage.setItem('theme_grayscale', 'false');
+                    } else {
+                        html.classList.add('grayscale-theme');
+                        localStorage.setItem('theme_grayscale', 'true');
+                    }
+                });
+            }
+        });
     </script>
     <?= $this->renderSection('scripts') ?>
 </body>
