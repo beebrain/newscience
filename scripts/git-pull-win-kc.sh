@@ -12,11 +12,6 @@ USER="${WIN_KC_USER:-Administrator}"
 REPO="${WIN_KC_REPO:-C:/inetpub/newscience}"
 PASS="${SSHPASS:-${FTP_PASS:-${WIN_KC_PASS:-}}}"
 
-if [[ -z "$PASS" ]]; then
-  echo "ตั้งรหัสผ่าน: SSHPASS='...' หรือ FTP_PASS='...' ./scripts/git-pull-win-kc.sh" >&2
-  exit 1
-fi
-
 if ! command -v tailscale >/dev/null 2>&1; then
   echo "ไม่พบ tailscale CLI" >&2
   exit 1
@@ -30,32 +25,28 @@ fi
 mkdir -p ~/.ssh
 ssh-keyscan -t ed25519,rsa -H "$HOST" 2>/dev/null >> ~/.ssh/known_hosts || true
 
-export SSHPASS="$PASS"
+SSH_OPTS=(
+  -F /dev/null
+  -o StrictHostKeyChecking=accept-new
+  -o UserKnownHostsFile="${HOME}/.ssh/known_hosts"
+  -o ProxyCommand="tailscale nc %h 22"
+  -o ConnectTimeout=25
+)
+
+SSH_CMD=()
+if [[ -n "$PASS" ]]; then
+  export SSHPASS="$PASS"
+  SSH_CMD=(sshpass -e ssh "${SSH_OPTS[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=password,keyboard-interactive)
+else
+  SSH_CMD=(ssh "${SSH_OPTS[@]}")
+fi
+
 REMOTE_CMD="cd /d ${REPO//\//\\\\} && git rev-parse --short HEAD && git pull origin master && git rev-parse --short HEAD && git log -1 --oneline"
 
 echo "=== git pull บน ${USER}@${HOST} (${REPO}) ผ่าน tailscale nc ==="
-sshpass -e ssh \
-  -F /dev/null \
-  -o StrictHostKeyChecking=accept-new \
-  -o UserKnownHostsFile="${HOME}/.ssh/known_hosts" \
-  -o PubkeyAuthentication=no \
-  -o PreferredAuthentications=password,keyboard-interactive \
-  -o ProxyCommand="tailscale nc %h 22" \
-  -o ConnectTimeout=25 \
-  "${USER}@${HOST}" \
-  "${REMOTE_CMD}"
+"${SSH_CMD[@]}" "${USER}@${HOST}" "${REMOTE_CMD}"
 
 echo "=== cache + migrate (ถ้ามี php) ==="
-sshpass -e ssh \
-  -F /dev/null \
-  -o StrictHostKeyChecking=no \
-  -o UserKnownHostsFile="${HOME}/.ssh/known_hosts" \
-  -o PubkeyAuthentication=no \
-  -o PreferredAuthentications=password,keyboard-interactive \
-  -o ProxyCommand="tailscale nc %h 22" \
-  -o ConnectTimeout=25 \
-  "${USER}@${HOST}" \
-  "cd /d ${REPO//\//\\\\} && (php spark cache:clear 2>nul || echo skip-cache) && (php spark migrate 2>nul || echo skip-migrate) && (php scripts/run_add_barcode_events_join_code.php 2>nul || echo skip-join-code)" \
-  || true
+"${SSH_CMD[@]}" "${USER}@${HOST}" "cd /d ${REPO//\//\\\\} && (php spark cache:clear 2>nul || echo skip-cache) && (php spark migrate 2>nul || echo skip-migrate) && (php scripts/run_add_barcode_events_join_code.php 2>nul || echo skip-join-code)" || true
 
 echo "=== done ==="
