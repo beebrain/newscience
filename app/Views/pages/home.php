@@ -786,48 +786,34 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
         <?php if (!empty($bachelor_programs)): ?>
             <h3 class="text-center mb-4" style="font-size: 1.1rem; color: var(--primary);">ระดับปริญญาตรี</h3>
 
-            <!-- Programs Carousel -->
-            <div class="programs-carousel-wrapper">
-                <div class="programs-carousel" id="bachelorProgramsCarousel">
-                    <?php foreach ($bachelor_programs as $program): ?>
-                        <?php $programLink = base_url('program/' . (int)($program['id'] ?? 0)); ?>
-                        <a href="<?= esc($programLink) ?>" class="program-carousel-card" style="text-decoration: none; color: inherit;">
-                            <?php $programImage = getProgramCarouselImageUrl($program); ?>
-                            <div class="program-carousel-card__image-wrapper">
-                                <img src="<?= esc($programImage) ?>"
-                                    alt="<?= esc($program['name_th']) ?>"
-                                    class="program-carousel-card__image"
-                                    onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
-                                <div class="program-carousel-card__overlay">
-                                    <div class="program-icon-square program-icon-square--carousel">
-                                        <?= getProgramIcon($program['name_th'] ?? $program['name_en'] ?? '') ?>
-                                    </div>
+            <!-- Programs Grid -->
+            <div class="programs-grid" id="bachelorProgramsGrid">
+                <?php foreach ($bachelor_programs as $program): ?>
+                    <?php $programLink = base_url('program/' . (int)($program['id'] ?? 0)); ?>
+                    <a href="<?= esc($programLink) ?>" class="program-grid-card" style="text-decoration: none; color: inherit;">
+                        <?php $programImage = getProgramCarouselImageUrl($program); ?>
+                        <div class="program-grid-card__image-wrapper">
+                            <img src="<?= esc($programImage) ?>"
+                                alt="<?= esc($program['name_th']) ?>"
+                                class="program-grid-card__image"
+                                onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
+                            <div class="program-grid-card__overlay">
+                                <div class="program-icon-square program-icon-square--grid">
+                                    <?= getProgramIcon($program['name_th'] ?? $program['name_en'] ?? '') ?>
                                 </div>
                             </div>
-                            <div class="program-carousel-card__content">
-                                <span class="program-carousel-card__degree"><?= esc($program['degree_th'] ?? 'วท.บ.') ?></span>
-                                <h4 class="program-carousel-card__name"><?= esc($program['name_th']) ?></h4>
-                                <?php if (!empty($program['description'])): ?>
-                                    <p class="program-carousel-card__description">
-                                        <?= esc(mb_substr($program['description'], 0, 100)) ?>...
-                                    </p>
-                                <?php endif; ?>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-
-                <!-- Carousel Navigation -->
-                <button class="carousel-nav carousel-nav--prev" onclick="scrollCarousel('bachelorProgramsCarousel', -1)">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                </button>
-                <button class="carousel-nav carousel-nav--next" onclick="scrollCarousel('bachelorProgramsCarousel', 1)">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
+                        </div>
+                        <div class="program-grid-card__content">
+                            <span class="program-grid-card__degree"><?= esc($program['degree_th'] ?? 'วท.บ.') ?></span>
+                            <h4 class="program-grid-card__name"><?= esc($program['name_th']) ?></h4>
+                            <?php if (!empty($program['description'])): ?>
+                                <p class="program-grid-card__description">
+                                    <?= esc(mb_substr($program['description'], 0, 100)) ?>...
+                                </p>
+                            <?php endif; ?>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
             </div>
 
             <?php if (count($bachelor_programs) > 6): ?>
@@ -840,72 +826,58 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
         <?php if (!empty($master_programs) || !empty($doctorate_programs)): ?>
             <h3 class="text-center mt-6 mb-4" style="font-size: 1.1rem; color: var(--primary);">ระดับบัณฑิตศึกษา</h3>
 
-            <!-- Graduate Programs Carousel -->
-            <div class="programs-carousel-wrapper">
-                <div class="programs-carousel" id="graduateProgramsCarousel">
-                    <?php foreach ($master_programs as $program): ?>
-                        <a href="<?= esc(base_url('program/' . (int)($program['id'] ?? 0))) ?>" class="program-carousel-card program-carousel-card--master" style="text-decoration: none; color: inherit;">
-                            <?php $programImage = getProgramCarouselImageUrl($program); ?>
-                            <div class="program-carousel-card__image-wrapper">
-                                <img src="<?= esc($programImage) ?>"
-                                    alt="<?= esc($program['name_th']) ?>"
-                                    class="program-carousel-card__image"
-                                    onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
-                                <div class="program-carousel-card__overlay">
-                                    <div class="program-icon-square program-icon-square--carousel program-icon-square--master">
-                                        <?= getProgramIcon($program['name_th'] ?? $program['name_en'] ?? '') ?>
-                                    </div>
+            <!-- Graduate Programs Grid -->
+            <div class="programs-grid" id="graduateProgramsGrid">
+                <?php foreach ($master_programs as $program): ?>
+                    <a href="<?= esc(base_url('program/' . (int)($program['id'] ?? 0))) ?>" class="program-grid-card program-grid-card--master" style="text-decoration: none; color: inherit;">
+                        <?php $programImage = getProgramCarouselImageUrl($program); ?>
+                        <div class="program-grid-card__image-wrapper">
+                            <img src="<?= esc($programImage) ?>"
+                                alt="<?= esc($program['name_th']) ?>"
+                                class="program-grid-card__image"
+                                onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
+                            <div class="program-grid-card__overlay">
+                                <div class="program-icon-square program-icon-square--grid program-icon-square--master">
+                                    <?= getProgramIcon($program['name_th'] ?? $program['name_en'] ?? '') ?>
                                 </div>
                             </div>
-                            <div class="program-carousel-card__content">
-                                <span class="program-carousel-card__degree"><?= esc($program['degree_th'] ?? 'วท.ม.') ?></span>
-                                <h4 class="program-carousel-card__name"><?= esc($program['name_th']) ?></h4>
-                                <?php if (!empty($program['description'])): ?>
-                                    <p class="program-carousel-card__description">
-                                        <?= esc(mb_substr($program['description'], 0, 100)) ?>...
-                                    </p>
-                                <?php endif; ?>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
-                    <?php foreach ($doctorate_programs as $program): ?>
-                        <a href="<?= esc(base_url('program/' . (int)($program['id'] ?? 0))) ?>" class="program-carousel-card program-carousel-card--doctorate" style="text-decoration: none; color: inherit;">
-                            <?php $programImage = getProgramCarouselImageUrl($program); ?>
-                            <div class="program-carousel-card__image-wrapper">
-                                <img src="<?= esc($programImage) ?>"
-                                    alt="<?= esc($program['name_th']) ?>"
-                                    class="program-carousel-card__image"
-                                    onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
-                                <div class="program-carousel-card__overlay">
-                                    <div class="program-icon-square program-icon-square--carousel program-icon-square--doctorate">
-                                        <?= getProgramIcon($program['name_th'] ?? $program['name_en'] ?? '') ?>
-                                    </div>
+                        </div>
+                        <div class="program-grid-card__content">
+                            <span class="program-grid-card__degree"><?= esc($program['degree_th'] ?? 'วท.ม.') ?></span>
+                            <h4 class="program-grid-card__name"><?= esc($program['name_th']) ?></h4>
+                            <?php if (!empty($program['description'])): ?>
+                                <p class="program-grid-card__description">
+                                    <?= esc(mb_substr($program['description'], 0, 100)) ?>...
+                                </p>
+                            <?php endif; ?>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+                <?php foreach ($doctorate_programs as $program): ?>
+                    <a href="<?= esc(base_url('program/' . (int)($program['id'] ?? 0))) ?>" class="program-grid-card program-grid-card--doctorate" style="text-decoration: none; color: inherit;">
+                        <?php $programImage = getProgramCarouselImageUrl($program); ?>
+                        <div class="program-grid-card__image-wrapper">
+                            <img src="<?= esc($programImage) ?>"
+                                alt="<?= esc($program['name_th']) ?>"
+                                class="program-grid-card__image"
+                                onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
+                            <div class="program-grid-card__overlay">
+                                <div class="program-icon-square program-icon-square--grid program-icon-square--doctorate">
+                                    <?= getProgramIcon($program['name_th'] ?? $program['name_en'] ?? '') ?>
                                 </div>
                             </div>
-                            <div class="program-carousel-card__content">
-                                <span class="program-carousel-card__degree"><?= esc($program['degree_th'] ?? 'ปร.ด.') ?></span>
-                                <h4 class="program-carousel-card__name"><?= esc($program['name_th']) ?></h4>
-                                <?php if (!empty($program['description'])): ?>
-                                    <p class="program-carousel-card__description">
-                                        <?= esc(mb_substr($program['description'], 0, 100)) ?>...
-                                    </p>
-                                <?php endif; ?>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-
-                <!-- Carousel Navigation -->
-                <button class="carousel-nav carousel-nav--prev" onclick="scrollCarousel('graduateProgramsCarousel', -1)">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                </button>
-                <button class="carousel-nav carousel-nav--next" onclick="scrollCarousel('graduateProgramsCarousel', 1)">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
+                        </div>
+                        <div class="program-grid-card__content">
+                            <span class="program-grid-card__degree"><?= esc($program['degree_th'] ?? 'ปร.ด.') ?></span>
+                            <h4 class="program-grid-card__name"><?= esc($program['name_th']) ?></h4>
+                            <?php if (!empty($program['description'])): ?>
+                                <p class="program-grid-card__description">
+                                    <?= esc(mb_substr($program['description'], 0, 100)) ?>...
+                                </p>
+                            <?php endif; ?>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
             </div>
         <?php endif; ?>
     </div>
@@ -1682,71 +1654,7 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
 </section>
 
 <script>
-    // Carousel scroll function
-    function scrollCarousel(carouselId, direction) {
-        const carousel = document.getElementById(carouselId);
-        if (!carousel) return;
 
-        const scrollAmount = 340; // Card width + gap
-        const currentScroll = carousel.scrollLeft;
-        const newScroll = currentScroll + (scrollAmount * direction);
-
-        carousel.scrollTo({
-            left: newScroll,
-            behavior: 'smooth'
-        });
-    }
-
-    // Touch/swipe support for mobile
-    document.addEventListener('DOMContentLoaded', function() {
-        const carousels = document.querySelectorAll('.programs-carousel');
-
-        carousels.forEach(carousel => {
-            let isDown = false;
-            let startX;
-            let scrollLeft;
-
-            carousel.addEventListener('mousedown', (e) => {
-                isDown = true;
-                carousel.style.cursor = 'grabbing';
-                startX = e.pageX - carousel.offsetLeft;
-                scrollLeft = carousel.scrollLeft;
-            });
-
-            carousel.addEventListener('mouseleave', () => {
-                isDown = false;
-                carousel.style.cursor = 'grab';
-            });
-
-            carousel.addEventListener('mouseup', () => {
-                isDown = false;
-                carousel.style.cursor = 'grab';
-            });
-
-            carousel.addEventListener('mousemove', (e) => {
-                if (!isDown) return;
-                e.preventDefault();
-                const x = e.pageX - carousel.offsetLeft;
-                const walk = (x - startX) * 2;
-                carousel.scrollLeft = scrollLeft - walk;
-            });
-
-            // Touch events for mobile
-            let touchStartX = 0;
-            let touchScrollLeft = 0;
-
-            carousel.addEventListener('touchstart', (e) => {
-                touchStartX = e.touches[0].pageX - carousel.offsetLeft;
-                touchScrollLeft = carousel.scrollLeft;
-            });
-
-            carousel.addEventListener('touchmove', (e) => {
-                const x = e.touches[0].pageX - carousel.offsetLeft;
-                const walk = (x - touchStartX) * 2;
-                carousel.scrollLeft = touchScrollLeft - walk;
-            });
-        });
-    });
 
     // Load news sections via AJAX
     (function() {

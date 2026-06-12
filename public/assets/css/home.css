@@ -481,31 +481,19 @@
     box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
 }
 
-/* Programs Carousel */
-.programs-carousel-wrapper {
-    position: relative;
-    margin: 2rem 0;
-    padding: 0 3rem;
-}
-
-.programs-carousel {
-    display: flex;
+/* Programs Grid */
+.programs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.5rem;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    margin: 2rem 0;
     padding: 1rem 0;
-    touch-action: manipulation;
-    -webkit-overflow-scrolling: touch;
 }
 
-.programs-carousel::-webkit-scrollbar {
-    display: none;
-}
-
-.program-carousel-card {
-    flex: 0 0 320px;
+.program-grid-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     background: var(--color-white);
     border-radius: 16px;
     overflow: hidden;
@@ -514,12 +502,12 @@
     cursor: pointer;
 }
 
-.program-carousel-card:hover {
+.program-grid-card:hover {
     transform: translateY(-8px);
     box-shadow: var(--shadow-lg);
 }
 
-.program-carousel-card__image-wrapper {
+.program-grid-card__image-wrapper {
     position: relative;
     width: 100%;
     height: 200px;
@@ -527,18 +515,18 @@
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
 }
 
-.program-carousel-card__image {
+.program-grid-card__image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
 }
 
-.program-carousel-card:hover .program-carousel-card__image {
+.program-grid-card:hover .program-grid-card__image {
     transform: scale(1.1);
 }
 
-.program-carousel-card__overlay {
+.program-grid-card__overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -552,11 +540,11 @@
     transition: opacity 0.3s ease;
 }
 
-.program-carousel-card:hover .program-carousel-card__overlay {
+.program-grid-card:hover .program-grid-card__overlay {
     opacity: 1;
 }
 
-.program-icon-square--carousel {
+.program-icon-square--grid {
     width: 80px;
     height: 80px;
     background: rgba(255, 255, 255, 0.95);
@@ -564,12 +552,16 @@
     box-shadow: var(--shadow);
 }
 
-.program-carousel-card__content {
+.program-grid-card__content {
     padding: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.program-carousel-card__degree {
+.program-grid-card__degree {
     display: inline-block;
+    align-self: flex-start;
     padding: 0.25rem 0.75rem;
     background: var(--color-primary-light);
     color: var(--primary);
@@ -579,17 +571,17 @@
     margin-bottom: 0.75rem;
 }
 
-.program-carousel-card--master .program-carousel-card__degree {
+.program-grid-card--master .program-grid-card__degree {
     background: var(--color-secondary-light);
     color: var(--secondary);
 }
 
-.program-carousel-card--doctorate .program-carousel-card__degree {
+.program-grid-card--doctorate .program-grid-card__degree {
     background: #f3e5f5;
     color: #7b1fa2;
 }
 
-.program-carousel-card__name {
+.program-grid-card__name {
     font-size: 1.125rem;
     font-weight: 600;
     margin: 0 0 0.5rem;
@@ -597,7 +589,7 @@
     line-height: 1.4;
 }
 
-.program-carousel-card__description {
+.program-grid-card__description {
     font-size: 0.875rem;
     color: var(--color-gray-600);
     line-height: 1.6;
@@ -705,12 +697,9 @@
 }
 
 @media (max-width: 768px) {
-    .programs-carousel-wrapper {
-        padding: 0 2.25rem;
-    }
-
-    .program-carousel-card {
-        flex: 0 0 280px;
+    .programs-grid {
+        gap: 1.25rem;
+        margin: 1.5rem 0;
     }
 
     .carousel-nav {
@@ -747,12 +736,10 @@
 }
 
 @media (max-width: 480px) {
-    .programs-carousel-wrapper {
-        padding: 0 1rem;
-    }
-
-    .program-carousel-card {
-        flex: 0 0 min(260px, 85vw);
+    .programs-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin: 1rem 0;
     }
 
     .degree-badges {
@@ -1135,10 +1122,8 @@
     .hero-carousel__slide {
         transition: none;
     }
-    .hero-carousel__nav,
-    .hero-carousel__dot,
     .carousel-nav,
-    .program-carousel-card,
+    .program-grid-card,
     .dean-card,
     .vice-dean-card,
     .degree-badge,
@@ -1147,7 +1132,7 @@
     }
     .hero-carousel__nav:hover,
     .carousel-nav:hover,
-    .program-carousel-card:hover,
+    .program-grid-card:hover,
     .vice-dean-card:hover,
     .degree-badge:hover,
     .event-card:hover {
