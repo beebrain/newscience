@@ -34,6 +34,16 @@ class Certificate extends BaseController
     public function index()
     {
         $studentId = (int) session()->get('student_id');
+        $email = session()->get('student_email');
+
+        if ($studentId > 0 && ! empty($email)) {
+            // ผูกสิทธิ์ย้อนหลังกรณีที่นักศึกษาเพิ่งเข้าสู่ระบบครั้งแรกหลังจากใบประกาศออกแล้ว
+            $this->recipientModel->where('recipient_email', $email)
+                ->where('student_id', null)
+                ->set(['student_id' => $studentId])
+                ->update();
+        }
+
         $certificates = $this->recipientModel->getByStudent($studentId);
 
         return view('student/certificates/index', [

@@ -57,7 +57,7 @@ class CertificateEmailService
         $mail->setSubject('ใบรับรองการเข้าร่วม: ' . $eventTitle);
         $mail->setMailType('text');
         $mail->setMessage($body);
-        $mail->attach($absolutePdfPath, 'attachment', basename($absolutePdfPath), 'application/pdf');
+        $mail->attach($absolutePdfPath, 'attachment', basename($absolutePdfPath));
 
         try {
             if (! $mail->send()) {

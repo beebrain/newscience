@@ -88,6 +88,7 @@ class StudentUserModel extends Model
 
         // ไม่อัปเดต profile_image จาก API (ยกเว้นตามข้อกำหนด — ใช้เฉพาะที่ user อัปโหลดหรือมีอยู่แล้ว)
 
+        $result = null;
         if ($student) {
             // student มีอยู่แล้ว — อัปเดตทุกครั้งที่ login (sync ข้อมูลจาก Portal)
             $existingLoginUid = trim($student['login_uid'] ?? '');
@@ -127,20 +128,44 @@ class StudentUserModel extends Model
             } elseif (!$ok) {
                 log_message('error', 'StudentUserModel::findOrCreateFromPortalUser update failed email=' . $email);
             }
-            return $updated;
+            $result = $updated;
+        } else {
+            // ไม่มี student — สร้างใหม่
+            $updateData['password'] = null;
+            $updateData['role']     = 'student';
+            $updateData['status']   = 'active';
+            $id = $this->insert($updateData);
+            if (!$id) {
+                log_message('error', 'StudentUserModel::findOrCreateFromPortalUser insert failed email=' . $email);
+                return null;
+            }
+            log_message('info', 'StudentUserModel::findOrCreateFromPortalUser created new student id=' . $id . ' email=' . $email . ' login_uid=' . $loginUid);
+            $result = $this->find($id);
         }
 
-        // ไม่มี student — สร้างใหม่
-        $updateData['password'] = null;
-        $updateData['role']     = 'student';
-        $updateData['status']   = 'active';
-        $id = $this->insert($updateData);
-        if (!$id) {
-            log_message('error', 'StudentUserModel::findOrCreateFromPortalUser insert failed email=' . $email);
-            return null;
+        if ($result && is_array($result)) {
+            $studentId = (int) ($result['id'] ?? 0);
+            $studentEmail = strtolower(trim((string) ($result['email'] ?? '')));
+            $studentUid = trim((string) ($result['login_uid'] ?? ''));
+
+            if ($studentId > 0) {
+                // ผูกสิทธิ์ย้อนหลังให้กับ E-Certificate ที่ออกก่อนที่จะเข้าสู่ระบบครั้งแรก
+                if ($studentEmail !== '') {
+                    $this->db->table('cert_event_recipients')
+                        ->where('recipient_email', $studentEmail)
+                        ->where('student_id', null)
+                        ->update(['student_id' => $studentId]);
+                }
+                if ($studentUid !== '') {
+                    $this->db->table('cert_event_recipients')
+                        ->where('recipient_id_no', $studentUid)
+                        ->where('student_id', null)
+                        ->update(['student_id' => $studentId]);
+                }
+            }
         }
-        log_message('info', 'StudentUserModel::findOrCreateFromPortalUser created new student id=' . $id . ' email=' . $email . ' login_uid=' . $loginUid);
-        return $this->find($id);
+
+        return $result;
     }
 
     /**
