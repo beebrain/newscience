@@ -199,6 +199,7 @@ $routes->group('dev', function ($routes) {
 $routes->get('/student/login', 'Student\Auth::login');
 $routes->post('/student/login', 'Student\Auth::attemptLogin');
 $routes->get('/student/logout', 'Student\Auth::logout');
+$routes->get('/student/stop-impersonate', 'Admin\UserManagement::stopImpersonateStudent');
 $routes->get('/student', 'Student\Dashboard::index', ['filter' => 'studentauth']);
 $routes->get('/student/dashboard', 'Student\Dashboard::index', ['filter' => 'studentauth']);
 $routes->get('/student/barcodes', 'Student\Dashboard::barcodes', ['filter' => 'studentauth']);
@@ -270,6 +271,7 @@ $routes->group('admin', ['filter' => ['adminauth', 'adminsystemaccess']], functi
     $routes->post('users/toggle-user-status/(:num)', 'Admin\UserManagement::toggleUserStatus/$1');
     $routes->post('users/toggle-student-status/(:num)', 'Admin\UserManagement::toggleStudentStatus/$1');
     $routes->post('users/bulk-update', 'Admin\UserManagement::bulkUpdate');
+    $routes->get('users/impersonate-student/(:num)', 'Admin\UserManagement::impersonateStudent/$1');
 
     // System Access Management (for user permissions)
     $routes->get('users/system-access/(:num)', 'Admin\UserManagement::getUserSystemAccess/$1');

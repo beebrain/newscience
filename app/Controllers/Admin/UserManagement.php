@@ -822,4 +822,111 @@ class UserManagement extends BaseController
             'results' => $results
         ]);
     }
+
+    /**
+     * Super Admin impersonates a student
+     */
+    public function impersonateStudent($id)
+    {
+        if (($this->currentUser['role'] ?? '') !== self::ROLE_SUPER_ADMIN) {
+            return redirect()->to(base_url('admin/users'))
+                ->with('error', 'คุณไม่มีสิทธิ์ใช้งานฟังก์ชันนี้');
+        }
+
+        $student = $this->studentUserModel->find((int)$id);
+        if (!$student) {
+            return redirect()->to(base_url('admin/users'))
+                ->with('error', 'ไม่พบข้อมูลนักศึกษาที่ต้องการเข้าสู่ระบบแทน');
+        }
+
+        $logModel = new \App\Models\AdminImpersonationLogModel();
+        $logId = $logModel->logEvent('student_impersonation_start', [
+            'actor_uid'       => (int) session()->get('admin_id'),
+            'actor_email'     => session()->get('admin_email'),
+            'target_uid'      => (int) $student['id'],
+            'target_email'    => $student['email'] ?? '',
+            'target_role'     => $student['role'] ?? 'student',
+            'reason'          => 'Super Admin student support (impersonation)',
+            'status'          => 'started',
+            'ip_address'      => $this->request->getIPAddress(),
+            'user_agent'      => substr((string) $this->request->getUserAgent(), 0, 1000),
+            'session_id_hash' => hash('sha256', (string) session_id()),
+            'started_at'      => date('Y-m-d H:i:s'),
+            'context'         => [
+                'actor_role' => session()->get('admin_role'),
+                'target_name' => ($student['tf_name'] ?? '') . ' ' . ($student['tl_name'] ?? ''),
+            ]
+        ]);
+
+        session()->set([
+            'is_impersonating'            => true,
+            'impersonator_admin_id'       => session()->get('admin_id'),
+            'impersonator_admin_email'    => session()->get('admin_email'),
+            'impersonator_admin_name'     => session()->get('admin_name'),
+            'impersonator_admin_role'     => session()->get('admin_role'),
+            'impersonator_student_log_id' => $logId,
+
+            'student_logged_in'           => true,
+            'student_id'                  => (int) $student['id'],
+            'student_email'               => $student['email'] ?? '',
+            'student_uid'                 => $student['login_uid'] ?? '',
+            'student_name'                => ($student['tf_name'] ?? 'ทดสอบ') . ' ' . ($student['tl_name'] ?? 'นักศึกษา'),
+            'student_role'                => $student['role'] ?? 'student',
+            'student_program_id'          => $student['program_id'] ?? null,
+        ]);
+
+        return redirect()->to(base_url('student'))
+            ->with('success', 'เข้าสู่ระบบแทน ' . ($student['tf_name'] ?? '') . ' ' . ($student['tl_name'] ?? '') . ' แล้ว');
+    }
+
+    /**
+     * Stop impersonating student and return to Super Admin
+     */
+    public function stopImpersonateStudent()
+    {
+        if (!session()->get('is_impersonating')) {
+            return redirect()->to(base_url('student/login'));
+        }
+
+        $logId = (int) session()->get('impersonator_student_log_id');
+        if ($logId > 0) {
+            $logModel = new \App\Models\AdminImpersonationLogModel();
+            $logModel->close($logId, 'manual');
+        }
+
+        $logModel = new \App\Models\AdminImpersonationLogModel();
+        $logModel->logEvent('student_impersonation_stop', [
+            'actor_uid'       => (int) session()->get('impersonator_admin_id'),
+            'actor_email'     => session()->get('impersonator_admin_email'),
+            'target_uid'      => (int) session()->get('student_id'),
+            'target_email'    => session()->get('student_email') ?? '',
+            'target_role'     => session()->get('student_role') ?? 'student',
+            'reason'          => 'Switch back to Admin',
+            'status'          => 'ended',
+            'ip_address'      => $this->request->getIPAddress(),
+            'user_agent'      => substr((string) $this->request->getUserAgent(), 0, 1000),
+            'session_id_hash' => hash('sha256', (string) session_id()),
+            'started_at'      => date('Y-m-d H:i:s'),
+            'ended_at'        => date('Y-m-d H:i:s'),
+        ]);
+
+        session()->remove([
+            'student_logged_in',
+            'student_id',
+            'student_email',
+            'student_uid',
+            'student_name',
+            'student_role',
+            'student_program_id',
+            'is_impersonating',
+            'impersonator_admin_id',
+            'impersonator_admin_email',
+            'impersonator_admin_name',
+            'impersonator_admin_role',
+            'impersonator_student_log_id',
+        ]);
+
+        return redirect()->to(base_url('admin/users'))
+            ->with('success', 'กลับเข้าสู่ระบบของ Super Admin แล้ว');
+    }
 }

@@ -93,12 +93,18 @@ class Auth extends BaseController
      */
     public function logout()
     {
+        if (session()->get('is_impersonating')) {
+            return redirect()->to(base_url('student/stop-impersonate'));
+        }
+
         session()->remove([
             'student_logged_in',
             'student_id',
             'student_email',
+            'student_uid',
             'student_name',
             'student_role',
+            'student_program_id',
         ]);
         return redirect()->to(base_url('student/login'))->with('success', 'ออกจากระบบแล้ว');
     }

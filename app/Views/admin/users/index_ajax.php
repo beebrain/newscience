@@ -540,6 +540,7 @@ $userTitleOptions = \App\Libraries\CvProfile::academicTitleOptionsTh();
 
 <script>
     const baseUrl = '<?= base_url() ?>';
+    const currentUserRole = '<?= esc($current_user['role'] ?? '') ?>';
     let currentTab = 'users';
     let currentPage = {
         users: 1,
@@ -734,6 +735,7 @@ $userTitleOptions = \App\Libraries\CvProfile::academicTitleOptionsTh();
             <td>
                 <div class="action-btns">
                     <button class="action-btn btn-primary" onclick="editStudent('${s.id}')">แก้ไข</button>
+                    ${currentUserRole === 'super_admin' ? `<button class="action-btn btn-warning" onclick="impersonateStudent('${s.id}')">เข้าสู่ระบบแทน</button>` : ''}
                 </div>
             </td>
         </tr>
@@ -1023,6 +1025,19 @@ $userTitleOptions = \App\Libraries\CvProfile::academicTitleOptionsTh();
                 console.error(err);
                 swalAlert('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
             });
+    }
+
+    function impersonateStudent(id) {
+        swalConfirm({
+            title: 'ต้องการเข้าสู่ระบบเป็นนักศึกษานี้หรือไม่?',
+            text: 'ระบบจะเก็บบันทึกการเข้าทำงานเพื่อความโปร่งใสและตรวจสอบได้ (Audit Log)',
+            confirmText: 'ตกลง',
+            cancelText: 'ยกเลิก'
+        }).then(function(ok) {
+            if (ok) {
+                window.location.href = `${baseUrl}admin/users/impersonate-student/` + id;
+            }
+        });
     }
 
     function saveUser(e) {
