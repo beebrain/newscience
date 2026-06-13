@@ -73,10 +73,8 @@ class Impersonation extends BaseController
         }
 
         $reason = trim((string) $this->request->getPost('reason'));
-        if (mb_strlen($reason) < 10) {
-            AdminImpersonation::logDenied($actor, $target, 'reason_too_short', $this->request);
-            return redirect()->back()
-                ->with('error', 'กรุณาระบุเหตุผลอย่างน้อย 10 ตัวอักษรก่อนเริ่ม Login As');
+        if ($reason === '') {
+            $reason = 'Super Admin Login As';
         }
 
         $ok = AdminImpersonation::start($actor, $target, mb_substr($reason, 0, 1000), $this->request);

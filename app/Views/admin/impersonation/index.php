@@ -111,19 +111,7 @@ $pageUrl = static function (int $page) use ($queryBase): string {
                                         data-target-name="<?= esc($displayName, 'attr') ?>"
                                     >
                                         <?= csrf_field() ?>
-                                        <label class="form-label" for="<?= esc($reasonId, 'attr') ?>" style="font-size: 0.75rem;">เหตุผล</label>
-                                        <textarea
-                                            id="<?= esc($reasonId, 'attr') ?>"
-                                            name="reason"
-                                            class="form-control"
-                                            rows="2"
-                                            minlength="10"
-                                            maxlength="1000"
-                                            required
-                                            autocomplete="off"
-                                            placeholder="เช่น ช่วยตรวจสอบข้อมูลโปรไฟล์ตามคำร้องขอ…"
-                                            style="resize: vertical; margin-bottom: 0.5rem;"
-                                        ></textarea>
+                                        <input type="hidden" name="reason" value="Super Admin Login As">
                                         <button type="submit" class="btn btn-sm btn-primary" <?= $isImpersonating ? 'disabled' : '' ?>>
                                             เข้าใช้งานในฐานะนี้
                                         </button>
@@ -159,13 +147,7 @@ $pageUrl = static function (int $page) use ($queryBase): string {
     document.querySelectorAll('.impersonation-start-form').forEach(function(form) {
         form.addEventListener('submit', function(event) {
             var targetName = form.getAttribute('data-target-name') || 'ผู้ใช้นี้';
-            var reason = form.querySelector('textarea[name="reason"]');
-            if (reason && reason.value.trim().length < 10) {
-                event.preventDefault();
-                reason.focus();
-                return;
-            }
-            if (!window.confirm('ยืนยัน Login As: ' + targetName + '\nระบบจะบันทึก audit log พร้อมเหตุผลที่ระบุ')) {
+            if (!window.confirm('ยืนยัน Login As: ' + targetName + '\nระบบจะเก็บบันทึกการเข้าทำงานเพื่อความโปร่งใสและตรวจสอบได้ (Audit Log)')) {
                 event.preventDefault();
             }
         });

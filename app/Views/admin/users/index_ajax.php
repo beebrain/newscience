@@ -1042,39 +1042,38 @@ $userTitleOptions = \App\Libraries\CvProfile::academicTitleOptionsTh();
     }
 
     function impersonateUser(uid, displayName) {
-        var reason = prompt('กรุณาระบุเหตุผลในการเข้าสู่ระบบแทน ' + displayName + '\n(ต้องการอย่างน้อย 10 ตัวอักษรเพื่อบันทึก Audit Log):');
-        if (reason === null) {
-            return; // cancelled
-        }
-        reason = reason.trim();
-        if (reason.length < 10) {
-            alert('เหตุผลต้องมีอย่างน้อย 10 ตัวอักษร');
-            return;
-        }
+        swalConfirm({
+            title: 'ต้องการเข้าสู่ระบบเป็นผู้ใช้งานนี้หรือไม่?',
+            text: 'ระบบจะเก็บบันทึกการเข้าทำงานเพื่อความโปร่งใสและตรวจสอบได้ (Audit Log)',
+            confirmText: 'ตกลง',
+            cancelText: 'ยกเลิก'
+        }).then(function(ok) {
+            if (ok) {
+                // Create form dynamically to post
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `${baseUrl}admin/impersonation/start/` + uid;
 
-        // Create form dynamically to post
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `${baseUrl}admin/impersonation/start/` + uid;
+                // Add CSRF token
+                var csrfName = '<?= csrf_token() ?>';
+                var csrfHash = '<?= csrf_hash() ?>';
+                var csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = csrfName;
+                csrfInput.value = csrfHash;
+                form.appendChild(csrfInput);
 
-        // Add CSRF token
-        var csrfName = '<?= csrf_token() ?>';
-        var csrfHash = '<?= csrf_hash() ?>';
-        var csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = csrfName;
-        csrfInput.value = csrfHash;
-        form.appendChild(csrfInput);
+                // Add reason
+                var reasonInput = document.createElement('input');
+                reasonInput.type = 'hidden';
+                reasonInput.name = 'reason';
+                reasonInput.value = 'Super Admin Login As';
+                form.appendChild(reasonInput);
 
-        // Add reason
-        var reasonInput = document.createElement('input');
-        reasonInput.type = 'hidden';
-        reasonInput.name = 'reason';
-        reasonInput.value = reason;
-        form.appendChild(reasonInput);
-
-        document.body.appendChild(form);
-        form.submit();
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
     }
 
     function saveUser(e) {
