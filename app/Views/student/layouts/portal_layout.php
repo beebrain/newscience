@@ -148,8 +148,8 @@
             </a>
             <div class="portal-user-nav">
                 <a href="<?= base_url() ?>" class="portal-link-back">กลับหน้าแรกเว็บ</a>
-                <span class="portal-user"><?= esc(session()->get('student_name') ?: session()->get('student_email')) ?></span>
-                <a href="<?= base_url('student/logout') ?>" class="portal-link-logout">ออกจากระบบ</a>
+                <span class="portal-user"><?= esc(session()->get('student_name') ?: session()->get('student_email') ?: session()->get('admin_name') ?: session()->get('admin_email') ?: 'User') ?></span>
+                <a href="<?= session()->get('is_impersonating') ? base_url('student/logout') : (session()->get('admin_logged_in') ? base_url('admin/logout') : base_url('student/logout')) ?>" class="portal-link-logout">ออกจากระบบ</a>
             </div>
         </div>
         <nav class="portal-subnav">
@@ -158,7 +158,7 @@
                 <a href="<?= base_url('student/barcodes') ?>" class="<?= str_starts_with(uri_string(), 'student/barcodes') ? 'active' : '' ?>">กิจกรรม / รับรหัส</a>
                 <a href="<?= base_url('student/certificates') ?>" class="<?= str_starts_with(uri_string(), 'student/certificates') ? 'active' : '' ?>">ใบประกาศของฉัน</a>
                 <a href="<?= base_url('student/events') ?>" class="<?= str_starts_with(uri_string(), 'student/events') ? 'active' : '' ?>">ข่าว / Event</a>
-                <?php if (in_array(session()->get('student_role'), ['club', 'admin_student'], true)): ?>
+                <?php if (session()->get('admin_logged_in') || in_array(session()->get('student_role'), ['club', 'admin_student'], true)): ?>
                     <a href="<?= base_url('student-admin/barcode-events') ?>" class="<?= str_starts_with(uri_string(), 'student-admin') ? 'active' : '' ?> portal-admin-tab">Student Admin</a>
                 <?php endif; ?>
             </div>

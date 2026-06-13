@@ -45,7 +45,7 @@
                     กลับ Dashboard
                 </a>
             <?php endif; ?>
-            <?php if (session()->get('student_logged_in')): ?>
+            <?php if (session()->get('student_logged_in') || session()->get('admin_logged_in')): ?>
                 <a href="<?= base_url('student') ?>">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     กลับ Student Portal

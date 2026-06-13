@@ -61,7 +61,7 @@ class Dashboard extends BaseController
      */
     public function index()
     {
-        if (!(int) session()->get('student_id')) {
+        if (!(int) session()->get('student_id') && !session()->get('admin_logged_in')) {
             return redirect()->to(base_url('student/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
         }
         $data = [
@@ -91,7 +91,7 @@ class Dashboard extends BaseController
     public function barcodes()
     {
         $studentId = (int) session()->get('student_id');
-        if (! $studentId) {
+        if (! $studentId && !session()->get('admin_logged_in')) {
             return redirect()->to(base_url('student/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
         }
 
@@ -134,7 +134,7 @@ class Dashboard extends BaseController
     public function redeemJoinCode()
     {
         $studentId = (int) session()->get('student_id');
-        if (! $studentId) {
+        if (! $studentId && !session()->get('admin_logged_in')) {
             return redirect()->to(base_url('student/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
         }
 
@@ -175,7 +175,7 @@ class Dashboard extends BaseController
     public function barcodeEvent($eventId)
     {
         $studentId = (int) session()->get('student_id');
-        if (! $studentId) {
+        if (! $studentId && !session()->get('admin_logged_in')) {
             return redirect()->to(base_url('student/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
         }
 
@@ -204,7 +204,7 @@ class Dashboard extends BaseController
     public function claimFromEvent($eventId)
     {
         $studentId = (int) session()->get('student_id');
-        if (! $studentId) {
+        if (! $studentId && !session()->get('admin_logged_in')) {
             return redirect()->to(base_url('student/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
         }
 
@@ -243,7 +243,7 @@ class Dashboard extends BaseController
     public function claimBarcode($barcodeId)
     {
         $studentId = (int) session()->get('student_id');
-        if (! $studentId) {
+        if (! $studentId && !session()->get('admin_logged_in')) {
             return redirect()->to(base_url('student/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
         }
         $barcodeModel = new BarcodeModel();
@@ -272,7 +272,7 @@ class Dashboard extends BaseController
      */
     public function events()
     {
-        if (!(int) session()->get('student_id')) {
+        if (!(int) session()->get('student_id') && !session()->get('admin_logged_in')) {
             return redirect()->to(base_url('student/login'))->with('error', 'กรุณาเข้าสู่ระบบ');
         }
 

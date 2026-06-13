@@ -14,7 +14,7 @@ class StudentAuthFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        if (!session()->get('student_logged_in')) {
+        if (!session()->get('student_logged_in') && !session()->get('admin_logged_in')) {
             session()->set('student_redirect_url', current_url());
             return redirect()->to(base_url('student/login'))
                 ->with('error', 'กรุณาเข้าสู่ระบบ');
