@@ -1319,3 +1319,270 @@
 .qr-output-wrap .btn {
     margin-top: 0.5rem;
 }
+
+/* ================================
+   Modern Home Page Programs Styles (UI/UX Pro Max)
+   ================================ */
+
+/* Section header descriptions */
+.section-header__description {
+    text-align: center;
+    max-width: 600px;
+    margin: 0.5rem auto 0;
+    color: var(--text-secondary);
+    font-size: var(--text-base);
+    line-height: 1.6;
+}
+
+/* Tab Controls Container */
+.program-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem auto 2.5rem;
+    background: var(--color-gray-200);
+    padding: 0.35rem;
+    border-radius: 50px;
+    max-width: fit-content;
+    border: 1px solid var(--color-gray-300);
+}
+
+.program-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.75rem 1.75rem;
+    border: none;
+    background: transparent;
+    color: var(--color-gray-700);
+    font-family: var(--font-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.program-tab-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.program-tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.program-tab-btn.active {
+    background: var(--color-white);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+}
+
+.program-tab-btn .tab-icon {
+    transition: transform 0.25s ease;
+}
+
+.program-tab-btn.active .tab-icon {
+    transform: scale(1.1);
+    color: var(--primary);
+}
+
+/* Tab Panels */
+.program-tab-content {
+    display: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.program-tab-content.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Modern Programs Grid */
+.programs-modern-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Modern Program Card */
+.program-modern-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-white);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--color-gray-200);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.program-modern-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+    border-color: var(--primary);
+}
+
+/* Floating Badge */
+.program-modern-card__image-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--color-gray-100);
+}
+
+.program-modern-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.program-modern-card:hover .program-modern-card__image {
+    transform: scale(1.08);
+}
+
+.program-modern-card__badge-floating {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: var(--color-primary-light);
+    color: var(--primary-dark);
+    padding: 0.35rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(253, 224, 71, 0.4);
+    z-index: 2;
+}
+
+.program-modern-card__badge-floating--master {
+    background: var(--color-secondary-light);
+    color: var(--secondary-dark);
+    border-color: rgba(61, 165, 93, 0.2);
+}
+
+.program-modern-card__badge-floating--doctorate {
+    background: #f3e8ff;
+    color: #6b21a8;
+    border-color: rgba(147, 51, 234, 0.2);
+}
+
+/* Content Area */
+.program-modern-card__content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.program-modern-card__title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-gray-900);
+    margin: 0 0 0.75rem;
+    line-height: 1.4;
+    transition: color 0.2s ease;
+}
+
+.program-modern-card:hover .program-modern-card__title {
+    color: var(--text-primary);
+}
+
+.program-modern-card__description {
+    font-size: 0.9rem;
+    color: var(--color-gray-600);
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+    flex-grow: 1;
+}
+
+/* Link Button */
+.program-modern-card__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    margin-top: auto;
+    width: fit-content;
+}
+
+.program-modern-card__link .arrow-icon {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.program-modern-card:hover .program-modern-card__link {
+    color: var(--text-primary);
+}
+
+.program-modern-card:hover .program-modern-card__link .arrow-icon {
+    transform: translateX(6px);
+}
+
+.programs-empty-state {
+    text-align: center;
+    padding: 4rem;
+    background: var(--color-gray-50);
+    border-radius: 16px;
+    border: 2px dashed var(--color-gray-300);
+    color: var(--color-gray-500);
+    font-size: 1rem;
+}
+
+/* Custom shadow on hover for general buttons */
+.shadow-hover {
+    transition: all 0.25s ease;
+}
+.shadow-hover:hover {
+    box-shadow: 0 10px 15px -3px rgba(234, 179, 8, 0.3), 0 4px 6px -2px rgba(234, 179, 8, 0.15) !important;
+}
+
+@media (max-width: 768px) {
+    .programs-modern-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+    .program-tabs {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 12px;
+        flex-direction: row;
+        gap: 0.25rem;
+    }
+    .program-tab-btn {
+        flex: 1;
+        padding: 0.65rem 1rem;
+        font-size: 0.9rem;
+        justify-content: center;
+        border-radius: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .programs-modern-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+    .program-tab-btn {
+        padding: 0.5rem 0.5rem;
+        font-size: 0.8rem;
+        gap: 0.35rem;
+    }
+    .program-tab-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
