@@ -12,6 +12,14 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/admin.css') ?>">
 </head>
 <body>
+<?php if (session()->get('is_impersonating')): ?>
+    <div style="background: var(--color-warning, #f59e0b); color: #1a1a1a; padding: 0.75rem 1.5rem; text-align: center; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 1rem; position: relative; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1001;">
+        <span>กำลังใช้งานแทนนักศึกษา: <?= esc(session()->get('student_name')) ?> (รหัสนักศึกษา: <?= esc(session()->get('student_uid')) ?>)</span>
+        <a href="<?= base_url('student/stop-impersonate') ?>" style="background: #1a1a1a; color: white; border: none; padding: 0.35rem 0.75rem; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: background 0.2s;">
+            กลับสู่ระบบ Admin
+        </a>
+    </div>
+<?php endif; ?>
 <a href="#student-admin-main" class="admin-skip-link">ข้ามไปเนื้อหาหลัก</a>
 <div class="admin-container">
     <aside class="sidebar">
@@ -36,7 +44,8 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                     กลับ Dashboard
                 </a>
-            <?php elseif (session()->get('student_logged_in')): ?>
+            <?php endif; ?>
+            <?php if (session()->get('student_logged_in')): ?>
                 <a href="<?= base_url('student') ?>">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     กลับ Student Portal
@@ -58,8 +67,14 @@
                 <h1 class="topbar-title" style="margin: 0;"><?= esc($page_title ?? 'Student Admin') ?></h1>
             </div>
             <div class="topbar-user">
-                <span><?= esc(session()->get('admin_name') ?? session()->get('student_name') ?? session()->get('student_email') ?? 'User') ?></span>
-                <a href="<?= session()->get('admin_logged_in') ? base_url('admin/logout') : base_url('student/logout') ?>">ออกจากระบบ</a>
+                <span>
+                    <?php if (session()->get('is_impersonating')): ?>
+                        <?= esc(session()->get('student_name') ?? 'Student') ?> (ใช้งานแทน)
+                    <?php else: ?>
+                        <?= esc(session()->get('admin_name') ?? session()->get('student_name') ?? session()->get('student_email') ?? 'User') ?>
+                    <?php endif; ?>
+                </span>
+                <a href="<?= session()->get('is_impersonating') ? base_url('student/logout') : (session()->get('admin_logged_in') ? base_url('admin/logout') : base_url('student/logout')) ?>">ออกจากระบบ</a>
             </div>
         </header>
         <div class="content">
