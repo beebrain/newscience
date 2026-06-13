@@ -697,6 +697,7 @@ $userTitleOptions = \App\Libraries\CvProfile::academicTitleOptionsTh();
             <td>
                 <div class="action-btns">
                     <button class="action-btn btn-primary" onclick="editUser('${u.uid}')">แก้ไข</button>
+                    ${currentUserRole === 'super_admin' && u.role !== 'super_admin' ? `<button class="action-btn btn-warning" onclick="impersonateUser('${u.uid}', '${(u.display_name || u.gf_name + ' ' + u.gl_name).replace(/'/g, "\\'")}')">เข้าสู่ระบบแทน</button>` : ''}
                 </div>
             </td>
         </tr>
@@ -1038,6 +1039,42 @@ $userTitleOptions = \App\Libraries\CvProfile::academicTitleOptionsTh();
                 window.location.href = `${baseUrl}admin/users/impersonate-student/` + id;
             }
         });
+    }
+
+    function impersonateUser(uid, displayName) {
+        var reason = prompt('กรุณาระบุเหตุผลในการเข้าสู่ระบบแทน ' + displayName + '\n(ต้องการอย่างน้อย 10 ตัวอักษรเพื่อบันทึก Audit Log):');
+        if (reason === null) {
+            return; // cancelled
+        }
+        reason = reason.trim();
+        if (reason.length < 10) {
+            alert('เหตุผลต้องมีอย่างน้อย 10 ตัวอักษร');
+            return;
+        }
+
+        // Create form dynamically to post
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `${baseUrl}admin/impersonation/start/` + uid;
+
+        // Add CSRF token
+        var csrfName = '<?= csrf_token() ?>';
+        var csrfHash = '<?= csrf_hash() ?>';
+        var csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = csrfName;
+        csrfInput.value = csrfHash;
+        form.appendChild(csrfInput);
+
+        // Add reason
+        var reasonInput = document.createElement('input');
+        reasonInput.type = 'hidden';
+        reasonInput.name = 'reason';
+        reasonInput.value = reason;
+        form.appendChild(reasonInput);
+
+        document.body.appendChild(form);
+        form.submit();
     }
 
     function saveUser(e) {

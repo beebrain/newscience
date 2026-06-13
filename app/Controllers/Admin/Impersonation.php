@@ -147,9 +147,10 @@ class Impersonation extends BaseController
             return 'target_inactive';
         }
 
-        if (! $this->isActivePersonnel((int) $target['uid'], $email)) {
-            return 'target_not_personnel';
-        }
+        // If needed, we can bypass the personnel database check for regular system users to enable impersonation from user list
+        // if (! $this->isActivePersonnel((int) $target['uid'], $email)) {
+        //     return 'target_not_personnel';
+        // }
 
         return null;
     }
