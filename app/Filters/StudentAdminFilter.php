@@ -21,6 +21,48 @@ class StudentAdminFilter implements FilterInterface
             $role = $session->get('admin_role');
             $allowedAdminRoles = ['admin', 'editor', 'super_admin', 'faculty_admin'];
             if (in_array($role, $allowedAdminRoles, true)) {
+                // Auto-login/associate student profile if not already logged in as a student
+                if (!$session->get('student_logged_in')) {
+                    $adminId = $session->get('admin_id');
+                    $adminEmail = $session->get('admin_email');
+                    if ($adminId && $adminEmail) {
+                        $studentModel = new \App\Models\StudentUserModel();
+                        $emailNorm = strtolower(trim($adminEmail));
+                        $student = $studentModel->findByEmail($emailNorm);
+
+                        if (!$student) {
+                            $userModel = new \App\Models\UserModel();
+                            $adminUser = $userModel->find($adminId);
+                            if ($adminUser) {
+                                $studentData = [
+                                    'email'     => $emailNorm,
+                                    'login_uid' => $adminUser['login_uid'] ?? '',
+                                    'title'     => $adminUser['title'] ?? '',
+                                    'tf_name'   => $adminUser['tf_name'] ?? '',
+                                    'tl_name'   => $adminUser['tl_name'] ?? '',
+                                    'gf_name'   => $adminUser['gf_name'] ?? '',
+                                    'gl_name'   => $adminUser['gl_name'] ?? '',
+                                    'role'      => 'student',
+                                    'status'    => 'active',
+                                ];
+                                $newId = $studentModel->insert($studentData);
+                                if ($newId) {
+                                    $student = $studentModel->find($newId);
+                                }
+                            }
+                        }
+
+                        if ($student) {
+                            $session->set([
+                                'student_logged_in' => true,
+                                'student_id'        => $student['id'],
+                                'student_email'     => $student['email'],
+                                'student_name'      => $studentModel->getFullName($student),
+                                'student_role'      => $student['role'] ?? 'student',
+                            ]);
+                        }
+                    }
+                }
                 return; // allow
             }
         }
