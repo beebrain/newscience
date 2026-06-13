@@ -647,6 +647,16 @@ $urgentPopupsWithImage = array_values(array_filter($urgentPopups, function ($p) 
 </script>
 
 <?php
+if (!function_exists('getShortDegree')) {
+    function getShortDegree($degree) {
+        $degree = trim($degree);
+        if (preg_match('/\(([^)]+)\)/', $degree, $matches)) {
+            return $matches[1];
+        }
+        return $degree;
+    }
+}
+
 // Get settings with defaults
 $siteName = $settings['site_name_th'] ?? 'คณะวิทยาศาสตร์และเทคโนโลยี';
 $siteNameEn = $settings['site_name_en'] ?? 'Faculty of Science and Technology';
@@ -777,10 +787,11 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                                 loading="lazy"
                                 onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
                             <span class="program-modern-card__badge-floating">
-                                <?= esc($program['degree_th'] ?? 'วท.บ.') ?>
+                                <?= esc(getShortDegree($program['degree_th'] ?? 'วท.บ.')) ?>
                             </span>
                         </div>
                         <div class="program-modern-card__content">
+                            <span class="program-modern-card__degree-label"><?= esc($program['degree_th'] ?? '') ?></span>
                             <h4 class="program-modern-card__title"><?= esc($program['name_th']) ?></h4>
                             <?php if (!empty($program['description'])): ?>
                                 <p class="program-modern-card__description">
@@ -812,10 +823,11 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                                 loading="lazy"
                                 onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
                             <span class="program-modern-card__badge-floating program-modern-card__badge-floating--master">
-                                <?= esc($program['degree_th'] ?? 'วท.ม.') ?>
+                                <?= esc(getShortDegree($program['degree_th'] ?? 'วท.ม.')) ?>
                             </span>
                         </div>
                         <div class="program-modern-card__content">
+                            <span class="program-modern-card__degree-label"><?= esc($program['degree_th'] ?? '') ?></span>
                             <h4 class="program-modern-card__title"><?= esc($program['name_th']) ?></h4>
                             <?php if (!empty($program['description'])): ?>
                                 <p class="program-modern-card__description">
@@ -847,10 +859,11 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
                                 loading="lazy"
                                 onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
                             <span class="program-modern-card__badge-floating program-modern-card__badge-floating--doctorate">
-                                <?= esc($program['degree_th'] ?? 'ปร.ด.') ?>
+                                <?= esc(getShortDegree($program['degree_th'] ?? 'ปร.ด.')) ?>
                             </span>
                         </div>
                         <div class="program-modern-card__content">
+                            <span class="program-modern-card__degree-label"><?= esc($program['degree_th'] ?? '') ?></span>
                             <h4 class="program-modern-card__title"><?= esc($program['name_th']) ?></h4>
                             <?php if (!empty($program['description'])): ?>
                                 <p class="program-modern-card__description">

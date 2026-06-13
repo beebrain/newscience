@@ -46,14 +46,14 @@
         ? filemtime(FCPATH . 'assets/js/home-scroll.js') : '1';
     ?>
     <!-- Central CSS: theme + base + components (โหลด parallel), home/pages ตามหน้าที่ใช้ -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>?v=<?= $css_ver ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/base.css') ?>?v=<?= $css_ver ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/components.css') ?>?v=<?= $css_ver ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/smart-media-frame.css') ?>?v=<?= $css_ver ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>?v=<?= (defined('FCPATH') && is_file(FCPATH . 'assets/css/theme.css')) ? filemtime(FCPATH . 'assets/css/theme.css') : '1' ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/base.css') ?>?v=<?= (defined('FCPATH') && is_file(FCPATH . 'assets/css/base.css')) ? filemtime(FCPATH . 'assets/css/base.css') : '1' ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/components.css') ?>?v=<?= (defined('FCPATH') && is_file(FCPATH . 'assets/css/components.css')) ? filemtime(FCPATH . 'assets/css/components.css') : '1' ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/smart-media-frame.css') ?>?v=<?= (defined('FCPATH') && is_file(FCPATH . 'assets/css/smart-media-frame.css')) ? filemtime(FCPATH . 'assets/css/smart-media-frame.css') : '1' ?>">
     <?php if ($is_home): ?>
-        <link rel="stylesheet" href="<?= base_url('assets/css/home.css') ?>?v=<?= $css_ver ?>">
+        <link rel="stylesheet" href="<?= base_url('assets/css/home.css') ?>?v=<?= (defined('FCPATH') && is_file(FCPATH . 'assets/css/home.css')) ? filemtime(FCPATH . 'assets/css/home.css') : '1' ?>">
     <?php else: ?>
-        <link rel="stylesheet" href="<?= base_url('assets/css/pages.css') ?>?v=<?= $css_ver ?>">
+        <link rel="stylesheet" href="<?= base_url('assets/css/pages.css') ?>?v=<?= (defined('FCPATH') && is_file(FCPATH . 'assets/css/pages.css')) ? filemtime(FCPATH . 'assets/css/pages.css') : '1' ?>">
     <?php endif; ?>
     <style>
         html {
