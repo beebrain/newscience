@@ -763,139 +763,115 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
             </p>
         </div>
 
-        <!-- Tab Controls -->
-        <div class="program-tabs">
-            <button class="program-tab-btn active" data-tab="undergraduate" aria-selected="true" role="tab">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
-                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                    <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-                </svg>
-                ระดับปริญญาตรี
-            </button>
-            <button class="program-tab-btn" data-tab="graduate" aria-selected="false" role="tab">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                </svg>
-                ระดับบัณฑิตศึกษา
-            </button>
-        </div>
-
-        <!-- Tab Content: Undergraduate -->
-        <div class="program-tab-content active" id="tab-undergraduate" role="tabpanel">
+        <div class="programs-modern-grid">
+            <!-- ระดับปริญญาตรี -->
             <?php if (!empty($bachelor_programs)): ?>
-                <div class="programs-modern-grid">
-                    <?php foreach ($bachelor_programs as $program): ?>
-                        <?php $programLink = base_url('program/' . (int)($program['id'] ?? 0)); ?>
-                        <div class="program-modern-card animate-on-scroll">
-                            <div class="program-modern-card__image-wrapper">
-                                <?php $programImage = getProgramCarouselImageUrl($program); ?>
-                                <img src="<?= esc($programImage) ?>"
-                                    alt="<?= esc($program['name_th']) ?>"
-                                    class="program-modern-card__image"
-                                    loading="lazy"
-                                    onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
-                                <span class="program-modern-card__badge-floating">
-                                    <?= esc($program['degree_th'] ?? 'วท.บ.') ?>
-                                </span>
-                            </div>
-                            <div class="program-modern-card__content">
-                                <h4 class="program-modern-card__title"><?= esc($program['name_th']) ?></h4>
-                                <?php if (!empty($program['description'])): ?>
-                                    <p class="program-modern-card__description">
-                                        <?= esc(mb_substr(strip_tags($program['description']), 0, 95)) ?>...
-                                    </p>
-                                <?php endif; ?>
-                                <a href="<?= esc($programLink) ?>" class="program-modern-card__link" aria-label="ดูข้อมูลหลักสูตร <?= esc($program['name_th']) ?>">
-                                    <span>ดูรายละเอียดหลักสูตร</span>
-                                    <svg class="arrow-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        <polyline points="12 5 19 12 12 19"></polyline>
-                                    </svg>
-                                </a>
-                            </div>
+                <?php foreach ($bachelor_programs as $program): ?>
+                    <?php $programLink = base_url('program/' . (int)($program['id'] ?? 0)); ?>
+                    <div class="program-modern-card animate-on-scroll">
+                        <div class="program-modern-card__image-wrapper">
+                            <?php $programImage = getProgramCarouselImageUrl($program); ?>
+                            <img src="<?= esc($programImage) ?>"
+                                alt="<?= esc($program['name_th']) ?>"
+                                class="program-modern-card__image"
+                                loading="lazy"
+                                onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
+                            <span class="program-modern-card__badge-floating">
+                                <?= esc($program['degree_th'] ?? 'วท.บ.') ?>
+                            </span>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php if (count($bachelor_programs) > 6): ?>
-                    <div class="text-center mt-5">
-                        <a href="<?= base_url('academics') ?>" class="btn btn-primary btn-lg shadow-hover">ดูหลักสูตรทั้งหมด</a>
+                        <div class="program-modern-card__content">
+                            <h4 class="program-modern-card__title"><?= esc($program['name_th']) ?></h4>
+                            <?php if (!empty($program['description'])): ?>
+                                <p class="program-modern-card__description">
+                                    <?= esc(mb_substr(strip_tags($program['description']), 0, 95)) ?>...
+                                </p>
+                            <?php endif; ?>
+                            <a href="<?= esc($programLink) ?>" class="program-modern-card__link" aria-label="ดูข้อมูลหลักสูตร <?= esc($program['name_th']) ?>">
+                                <span>ดูรายละเอียดหลักสูตร</span>
+                                <svg class="arrow-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </a>
+                        </div>
                     </div>
-                <?php endif; ?>
-            <?php else: ?>
-                <div class="programs-empty-state">ไม่มีข้อมูลหลักสูตรปริญญาตรี</div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+
+            <!-- ระดับบัณฑิตศึกษา (ปริญญาโท) -->
+            <?php if (!empty($master_programs)): ?>
+                <?php foreach ($master_programs as $program): ?>
+                    <?php $programLink = base_url('program/' . (int)($program['id'] ?? 0)); ?>
+                    <div class="program-modern-card program-modern-card--master animate-on-scroll">
+                        <div class="program-modern-card__image-wrapper">
+                            <?php $programImage = getProgramCarouselImageUrl($program); ?>
+                            <img src="<?= esc($programImage) ?>"
+                                alt="<?= esc($program['name_th']) ?>"
+                                class="program-modern-card__image"
+                                loading="lazy"
+                                onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
+                            <span class="program-modern-card__badge-floating program-modern-card__badge-floating--master">
+                                <?= esc($program['degree_th'] ?? 'วท.ม.') ?>
+                            </span>
+                        </div>
+                        <div class="program-modern-card__content">
+                            <h4 class="program-modern-card__title"><?= esc($program['name_th']) ?></h4>
+                            <?php if (!empty($program['description'])): ?>
+                                <p class="program-modern-card__description">
+                                    <?= esc(mb_substr(strip_tags($program['description']), 0, 95)) ?>...
+                                </p>
+                            <?php endif; ?>
+                            <a href="<?= esc($programLink) ?>" class="program-modern-card__link" aria-label="ดูข้อมูลหลักสูตร <?= esc($program['name_th']) ?>">
+                                <span>ดูรายละเอียดหลักสูตร</span>
+                                <svg class="arrow-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+
+            <!-- ระดับบัณฑิตศึกษา (ปริญญาเอก) -->
+            <?php if (!empty($doctorate_programs)): ?>
+                <?php foreach ($doctorate_programs as $program): ?>
+                    <?php $programLink = base_url('program/' . (int)($program['id'] ?? 0)); ?>
+                    <div class="program-modern-card program-modern-card--doctorate animate-on-scroll">
+                        <div class="program-modern-card__image-wrapper">
+                            <?php $programImage = getProgramCarouselImageUrl($program); ?>
+                            <img src="<?= esc($programImage) ?>"
+                                alt="<?= esc($program['name_th']) ?>"
+                                class="program-modern-card__image"
+                                loading="lazy"
+                                onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
+                            <span class="program-modern-card__badge-floating program-modern-card__badge-floating--doctorate">
+                                <?= esc($program['degree_th'] ?? 'ปร.ด.') ?>
+                            </span>
+                        </div>
+                        <div class="program-modern-card__content">
+                            <h4 class="program-modern-card__title"><?= esc($program['name_th']) ?></h4>
+                            <?php if (!empty($program['description'])): ?>
+                                <p class="program-modern-card__description">
+                                    <?= esc(mb_substr(strip_tags($program['description']), 0, 95)) ?>...
+                                </p>
+                            <?php endif; ?>
+                            <a href="<?= esc($programLink) ?>" class="program-modern-card__link" aria-label="ดูข้อมูลหลักสูตร <?= esc($program['name_th']) ?>">
+                                <span>ดูรายละเอียดหลักสูตร</span>
+                                <svg class="arrow-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             <?php endif; ?>
         </div>
 
-        <!-- Tab Content: Graduate -->
-        <div class="program-tab-content" id="tab-graduate" role="tabpanel">
-            <?php if (!empty($master_programs) || !empty($doctorate_programs)): ?>
-                <div class="programs-modern-grid">
-                    <?php foreach ($master_programs as $program): ?>
-                        <?php $programLink = base_url('program/' . (int)($program['id'] ?? 0)); ?>
-                        <div class="program-modern-card program-modern-card--master animate-on-scroll">
-                            <div class="program-modern-card__image-wrapper">
-                                <?php $programImage = getProgramCarouselImageUrl($program); ?>
-                                <img src="<?= esc($programImage) ?>"
-                                    alt="<?= esc($program['name_th']) ?>"
-                                    class="program-modern-card__image"
-                                    loading="lazy"
-                                    onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
-                                <span class="program-modern-card__badge-floating program-modern-card__badge-floating--master">
-                                    <?= esc($program['degree_th'] ?? 'วท.ม.') ?>
-                                </span>
-                            </div>
-                            <div class="program-modern-card__content">
-                                <h4 class="program-modern-card__title"><?= esc($program['name_th']) ?></h4>
-                                <?php if (!empty($program['description'])): ?>
-                                    <p class="program-modern-card__description">
-                                        <?= esc(mb_substr(strip_tags($program['description']), 0, 95)) ?>...
-                                    </p>
-                                <?php endif; ?>
-                                <a href="<?= esc($programLink) ?>" class="program-modern-card__link" aria-label="ดูข้อมูลหลักสูตร <?= esc($program['name_th']) ?>">
-                                    <span>ดูรายละเอียดหลักสูตร</span>
-                                    <svg class="arrow-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        <polyline points="12 5 19 12 12 19"></polyline>
-                                    </svg>
-                                </a>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                    <?php foreach ($doctorate_programs as $program): ?>
-                        <?php $programLink = base_url('program/' . (int)($program['id'] ?? 0)); ?>
-                        <div class="program-modern-card program-modern-card--doctorate animate-on-scroll">
-                            <div class="program-modern-card__image-wrapper">
-                                <?php $programImage = getProgramCarouselImageUrl($program); ?>
-                                <img src="<?= esc($programImage) ?>"
-                                    alt="<?= esc($program['name_th']) ?>"
-                                    class="program-modern-card__image"
-                                    loading="lazy"
-                                    onerror="this.src='<?= base_url('assets/images/placeholder.png') ?>'">
-                                <span class="program-modern-card__badge-floating program-modern-card__badge-floating--doctorate">
-                                    <?= esc($program['degree_th'] ?? 'ปร.ด.') ?>
-                                </span>
-                            </div>
-                            <div class="program-modern-card__content">
-                                <h4 class="program-modern-card__title"><?= esc($program['name_th']) ?></h4>
-                                <?php if (!empty($program['description'])): ?>
-                                    <p class="program-modern-card__description">
-                                        <?= esc(mb_substr(strip_tags($program['description']), 0, 95)) ?>...
-                                    </p>
-                                <?php endif; ?>
-                                <a href="<?= esc($programLink) ?>" class="program-modern-card__link" aria-label="ดูข้อมูลหลักสูตร <?= esc($program['name_th']) ?>">
-                                    <span>ดูรายละเอียดหลักสูตร</span>
-                                    <svg class="arrow-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        <polyline points="12 5 19 12 12 19"></polyline>
-                                    </svg>
-                                </a>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php else: ?>
-                <div class="programs-empty-state">ไม่มีข้อมูลหลักสูตรบัณฑิตศึกษา</div>
-            <?php endif; ?>
+        <div class="text-center mt-5">
+            <a href="<?= base_url('academics') ?>" class="btn btn-primary btn-lg shadow-hover">ดูหลักสูตรทั้งหมด</a>
         </div>
     </div>
 </section>
@@ -2004,36 +1980,6 @@ $heroDesc = $settings['hero_description_th'] ?? 'สร้างบัณฑิ�
             });
         }, 1000); // Wait for tags to be loaded
 
-        // Program Tabs Switcher
-        const tabBtns = document.querySelectorAll('.program-tab-btn');
-        const tabContents = document.querySelectorAll('.program-tab-content');
-
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const targetTab = this.getAttribute('data-tab');
-
-                // Update button active state
-                tabBtns.forEach(b => {
-                    b.classList.remove('active');
-                    b.setAttribute('aria-selected', 'false');
-                });
-                this.classList.add('active');
-                this.setAttribute('aria-selected', 'true');
-
-                // Update content panel active state with smooth transition
-                tabContents.forEach(content => {
-                    if (content.id === `tab-${targetTab}`) {
-                        content.classList.add('active');
-                        // Trigger scroll animation check for lazy loading / fade-in items
-                        setTimeout(() => {
-                            window.dispatchEvent(new Event('scroll'));
-                        }, 50);
-                    } else {
-                        content.classList.remove('active');
-                    }
-                });
-            });
-        });
     });
 </script>
 
