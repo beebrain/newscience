@@ -34,19 +34,21 @@ $apiExecutivesUrl = base_url('api/executives');
     </div>
   </div>
 
-  <section class="tier-section page-about-team" id="executives-head-office-wrap" style="display:none;">
-    <h2 class="tier-title">หัวหน้าสำนักงาน</h2>
-    <div class="team-grid" id="executives-head-office">
-      <span class="executives-loading">กำลังโหลด...</span>
-    </div>
-  </section>
+  <div class="exec-split-grid">
+    <section class="tier-section page-about-team" id="executives-head-research-wrap" style="display:none;">
+      <h2 class="tier-title">หัวหน้าหน่วยจัดการงานวิจัย</h2>
+      <div class="team-grid" id="executives-head-research">
+        <span class="executives-loading">กำลังโหลด...</span>
+      </div>
+    </section>
 
-  <section class="tier-section page-about-team" id="executives-head-research-wrap" style="display:none;">
-    <h2 class="tier-title">หัวหน้าหน่วยจัดการงานวิจัย</h2>
-    <div class="team-grid" id="executives-head-research">
-      <span class="executives-loading">กำลังโหลด...</span>
-    </div>
-  </section>
+    <section class="tier-section page-about-team" id="executives-head-office-wrap" style="display:none;">
+      <h2 class="tier-title">หัวหน้าสำนักงาน</h2>
+      <div class="team-grid" id="executives-head-office">
+        <span class="executives-loading">กำลังโหลด...</span>
+      </div>
+    </section>
+  </div>
 
   <section class="tier-section page-about-team" id="executives-program-chairs-wrap" style="display:none;">
     <h2 class="tier-title">ประธานหลักสูตร</h2>
@@ -292,14 +294,14 @@ $apiExecutivesUrl = base_url('api/executives');
           }
 
           function step4() {
-            renderTier4(headOfficeEl, headOffice, 'หัวหน้าสำนักงาน');
-            if (headOfficeWrap) headOfficeWrap.style.display = headOffice.length ? '' : 'none';
+            renderTier4(headResearchEl, headResearch, 'หัวหน้าหน่วยจัดการงานวิจัย');
+            if (headResearchWrap) headResearchWrap.style.display = headResearch.length ? '' : 'none';
             setTimeout(step5, DELAY_MS);
           }
 
           function step5() {
-            renderTier4(headResearchEl, headResearch, 'หัวหน้าหน่วยจัดการงานวิจัย');
-            if (headResearchWrap) headResearchWrap.style.display = headResearch.length ? '' : 'none';
+            renderTier4(headOfficeEl, headOffice, 'หัวหน้าสำนักงาน');
+            if (headOfficeWrap) headOfficeWrap.style.display = headOffice.length ? '' : 'none';
             setTimeout(step6, DELAY_MS);
           }
 
