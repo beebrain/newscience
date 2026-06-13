@@ -13,12 +13,17 @@
 </head>
 <body>
 <?php if (session()->get('is_impersonating')): ?>
-    <div style="background: var(--color-warning, #f59e0b); color: #1a1a1a; padding: 0.75rem 1.5rem; text-align: center; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 1rem; position: relative; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1001;">
+    <div style="background: var(--color-warning, #f59e0b); color: #1a1a1a; padding: 0.75rem 1.5rem; text-align: center; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 1rem; position: fixed; top: 0; left: 0; right: 0; height: 50px; box-sizing: border-box; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1100;">
         <span>กำลังใช้งานแทนนักศึกษา: <?= esc(session()->get('student_name')) ?> (รหัสนักศึกษา: <?= esc(session()->get('student_uid')) ?>)</span>
         <a href="<?= base_url('student/stop-impersonate') ?>" style="background: #1a1a1a; color: white; border: none; padding: 0.35rem 0.75rem; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: background 0.2s;">
             กลับสู่ระบบ Admin
         </a>
     </div>
+    <style>
+        .sidebar { top: 50px !important; height: calc(100vh - 50px) !important; }
+        .topbar { top: 50px !important; }
+        .admin-container { margin-top: 50px !important; }
+    </style>
 <?php endif; ?>
 <a href="#student-admin-main" class="admin-skip-link">ข้ามไปเนื้อหาหลัก</a>
 <div class="admin-container">
