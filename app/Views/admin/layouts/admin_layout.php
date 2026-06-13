@@ -446,16 +446,6 @@ use App\Libraries\AccessControl; ?>
                                     </svg>
                                     จัดการผู้ใช้
                                 </a>
-                                <?php if ($isSidebarSuperAdmin): ?>
-                                    <a href="<?= base_url('admin/impersonation') ?>" class="<?= (uri_string() == 'admin/impersonation' || strpos(uri_string(), 'admin/impersonation') === 0) ? 'active' : '' ?>">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                            <circle cx="9" cy="7" r="4" />
-                                            <path d="M22 11l-3-3m0 0l-3 3m3-3v12" />
-                                        </svg>
-                                        Login As บุคลากร
-                                    </a>
-                                <?php endif; ?>
                                 <a href="<?= base_url('admin/club-representatives') ?>" class="<?= (uri_string() == 'admin/club-representatives' || strpos(uri_string(), 'admin/club-representatives') === 0) ? 'active' : '' ?>">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />

@@ -20,28 +20,9 @@ class Impersonation extends BaseController
         }
     }
 
-    public function index(): string
+    public function index()
     {
-        $search = trim((string) $this->request->getGet('search'));
-        $page = max(1, (int) ($this->request->getGet('page') ?? 1));
-        $perPage = 20;
-
-        $total = $this->countEligibleTargets($search);
-        $totalPages = max(1, (int) ceil($total / $perPage));
-        $page = min($page, $totalPages);
-        $targets = $this->eligibleTargets($search, $perPage, ($page - 1) * $perPage);
-
-        return view('admin/impersonation/index', [
-            'page_title'      => 'Login As บุคลากร',
-            'targets'         => $targets,
-            'search'          => $search,
-            'currentPage'     => $page,
-            'totalPages'      => $totalPages,
-            'total'           => $total,
-            'hasPreviousPage' => $page > 1,
-            'hasNextPage'     => $page < $totalPages,
-            'isImpersonating' => AdminImpersonation::isActive(),
-        ]);
+        return redirect()->to(base_url('admin/users'));
     }
 
     public function start(int $uid)
@@ -54,13 +35,13 @@ class Impersonation extends BaseController
         $this->recordStartAttempt();
         if (! $this->startAttemptAllowed()) {
             AdminImpersonation::logDenied($actor, null, 'too_many_attempts', $this->request);
-            return redirect()->to(base_url('admin/impersonation'))
+            return redirect()->to(base_url('admin/users'))
                 ->with('error', 'มีการเริ่มใช้งานแทนถี่เกินไป กรุณารอสักครู่แล้วลองใหม่');
         }
 
         if (AdminImpersonation::isActive()) {
             AdminImpersonation::logDenied($actor, null, 'nested_impersonation_blocked', $this->request);
-            return redirect()->to(base_url('admin/impersonation'))
+            return redirect()->to(base_url('admin/users'))
                 ->with('error', 'ไม่สามารถเริ่ม Login As ซ้อนกันได้ กรุณาหยุด session ปัจจุบันก่อน');
         }
 
@@ -68,7 +49,7 @@ class Impersonation extends BaseController
         $denyReason = $this->targetDenyReason($target);
         if ($denyReason !== null) {
             AdminImpersonation::logDenied($actor, is_array($target) ? $target : null, $denyReason, $this->request);
-            return redirect()->to(base_url('admin/impersonation'))
+            return redirect()->to(base_url('admin/users'))
                 ->with('error', $this->denyMessage($denyReason));
         }
 
@@ -79,7 +60,7 @@ class Impersonation extends BaseController
 
         $ok = AdminImpersonation::start($actor, $target, mb_substr($reason, 0, 1000), $this->request);
         if (! $ok) {
-            return redirect()->to(base_url('admin/impersonation'))
+            return redirect()->to(base_url('admin/users'))
                 ->with('error', 'ไม่สามารถเริ่ม Login As ได้ เพราะบันทึก audit log ไม่สำเร็จ');
         }
 
@@ -94,9 +75,10 @@ class Impersonation extends BaseController
                 ->with('error', 'ไม่สามารถคืน session เดิมได้ ระบบจึงออกจากระบบเพื่อความปลอดภัย');
         }
 
-        return redirect()->to(base_url('admin/impersonation'))
+        return redirect()->to(base_url('admin/users'))
             ->with('success', 'หยุดใช้งานแทนและกลับเป็น Super Admin แล้ว');
     }
+
 
     private function currentActor(): ?array
     {
