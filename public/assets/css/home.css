@@ -1405,8 +1405,8 @@
 /* Modern Programs Grid */
 .programs-modern-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.75rem;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem;
     margin-bottom: 2rem;
 }
 
@@ -1557,17 +1557,24 @@
     box-shadow: 0 10px 15px -3px rgba(234, 179, 8, 0.3), 0 4px 6px -2px rgba(234, 179, 8, 0.15) !important;
 }
 
+@media (max-width: 1200px) {
+    .programs-modern-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+    }
+}
+
 @media (max-width: 1024px) {
     .programs-modern-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
+        gap: 1.25rem;
     }
 }
 
 @media (max-width: 768px) {
     .programs-modern-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 1.25rem;
+        gap: 1rem;
     }
 }
 
