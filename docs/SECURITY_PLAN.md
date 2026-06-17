@@ -7,6 +7,8 @@
 - **ขอบเขต:** โค้ด `app/` ทั้งหมด + การตั้งค่า production (win-kc / `sci.uru.ac.th`, IIS + PHP 8.3, CodeIgniter 4.6)
 - **ผลโดยรวม:** ✅ ไม่พบช่องโหว่วิกฤตที่นำไปสู่การยึดระบบได้ทันที (RCE / auth bypass) — โครงสร้างพื้นฐานทำมาดี เหลือเป็นงาน hardening ป้องกันเชิงลึก
 
+> **สถานะการแก้ (อัปเดต 2026-06-17):** ✅ แก้และ deploy แล้ว: **F-2, F-3, F-4, F-6, F-9** (ทดสอบบน production: uploads บล็อก `.php` จริง/รูปยังเสิร์ฟได้, cookie `Secure`, เว็บ 200) — ⏳ ยังค้าง: **F-1 (CSRF global), F-5, F-7, F-8**
+
 ---
 
 ## 0. สิ่งที่ทำมาดีแล้ว (ไม่ต้องแก้ — ไว้กันลืมว่าตรวจแล้ว)
@@ -141,20 +143,20 @@
 
 ## 3. ลำดับการแก้ที่แนะนำ (Roadmap)
 
-**รอบที่ 1 — ทำได้เลย ผลสูง ความเสี่ยงต่ำ (≈ ครึ่งวัน)**
-- [ ] F-3 `cookie.secure = true` บน prod .env
-- [ ] F-2 วาง `public/uploads/web.config`
-- [ ] F-4 whitelist `$metric`/`$dimension`
-- [ ] F-6 IIS error → Custom
+**รอบที่ 1 — ทำได้เลย ผลสูง ความเสี่ยงต่ำ ✅ เสร็จแล้ว 2026-06-17**
+- [x] F-3 `cookie.secure = true` บน prod .env (ยืนยัน Set-Cookie มี `Secure`)
+- [x] F-2 วาง `public/uploads/web.config` (ยืนยัน `.php` ถูกบล็อก 404, static ยังเสิร์ฟ) — หมายเหตุ: ใช้ `requestFiltering` เท่านั้น (อย่าใช้ `<handlers>` — IIS ล็อกไว้ Deny = 500)
+- [x] F-4 whitelist `$metric`/`$dimension`
+- [x] F-6 IIS error → `DetailedLocalOnly`
+- [x] F-9 DevTools → 404 (ทำพร้อมรอบนี้)
 
-**รอบที่ 2 — ต้องทดสอบ regression (≈ 1 วัน)**
+**รอบที่ 2 — ต้องทดสอบ regression (≈ 1 วัน) ⏳ ค้าง**
 - [ ] F-1 เปิด CSRF global + ตรวจทุกฟอร์ม/AJAX admin
 - [ ] F-7 ใส่ role check ใน impersonation
 
-**รอบที่ 3 — hardening (เมื่อมีเวลา)**
+**รอบที่ 3 — hardening (เมื่อมีเวลา) ⏳ ค้าง**
 - [ ] F-5 `realpath()` containment ใน Serve
 - [ ] F-8 tokenRandomize / matchIP
-- [ ] F-9 DevTools → 404
 
 ---
 
