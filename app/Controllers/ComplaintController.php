@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Controllers\Concerns\AntiBot;
 use App\Models\ComplaintModel;
 use App\Models\SiteSettingModel;
 use App\Services\ComplaintNotificationService;
@@ -9,20 +10,10 @@ use CodeIgniter\HTTP\Files\UploadedFile;
 
 class ComplaintController extends BaseController
 {
+    use AntiBot;
+
     private const RATE_LIMIT_WINDOW = 600;
     private const RATE_LIMIT_MAX_ATTEMPTS = 3;
-
-    /** ชื่อช่อง honeypot (ซ่อนจากคน — บอตมักกรอกค่าให้) */
-    private const HONEYPOT_FIELD = 'website';
-
-    /** เวลาขั้นต่ำ (วินาที) ที่คนจริงใช้กรอกฟอร์ม — ต่ำกว่านี้ถือว่าเป็นบอต */
-    private const MIN_FORM_FILL_SECONDS = 3;
-
-    /** คีย์เก็บเวลาเปิดฟอร์มไว้ใน session สำหรับตรวจ timing */
-    private const FORM_TS_SESSION_KEY = 'complaint_form_ts';
-
-    /** ลายเซ็นบอตสแปมฟอร์มที่รู้จัก (ตัวพิมพ์เล็กทั้งหมด) */
-    private const SPAM_TOKENS = ['lxbfyeaa'];
 
     private ComplaintModel $complaintModel;
     private SiteSettingModel $siteSettingModel;
@@ -48,7 +39,7 @@ class ComplaintController extends BaseController
         ]);
 
         // จดเวลาเปิดฟอร์มไว้ ใช้ตรวจว่าผู้ส่งกรอกเร็วผิดมนุษย์ (บอต) หรือไม่
-        session()->set(self::FORM_TS_SESSION_KEY, time());
+        $this->markAntiBotFormRendered('complaint');
 
         return view('pages/complaints', $data);
     }
@@ -57,11 +48,15 @@ class ComplaintController extends BaseController
     {
         // ตรวจจับบอตสแปม (เช่น lxbfYeaa) ก่อนทุกอย่าง แล้ว "แกล้งทำเป็นสำเร็จ"
         // เพื่อไม่ให้บอตรู้ตัวและปรับวิธี — ไม่มีการบันทึกลงฐานข้อมูลหรือส่งอีเมล
-        if ($this->isLikelyBot()) {
-            log_message('warning', 'Complaint spam blocked. IP: {ip} | UA: {ua}', [
-                'ip' => $this->request->getIPAddress(),
-                'ua' => substr((string) $this->request->getUserAgent(), 0, 255),
-            ]);
+        $botFields = [
+            $this->request->getPost('complainant_name'),
+            $this->request->getPost('complainant_email'),
+            $this->request->getPost('complainant_phone'),
+            $this->request->getPost('subject'),
+            $this->request->getPost('detail'),
+        ];
+        if ($this->isLikelyBot('complaint', $botFields)) {
+            $this->logAntiBotBlocked('complaint');
 
             return redirect()->to(base_url('complaints'))
                 ->with('success', 'ส่งเรื่องร้องเรียนเรียบร้อยแล้ว เจ้าหน้าที่จะรับทราบและดำเนินการต่อไป');
@@ -148,43 +143,6 @@ class ComplaintController extends BaseController
         }
 
         return 'complaints/' . $newName;
-    }
-
-    /**
-     * ตรวจว่าการส่งครั้งนี้น่าจะมาจากบอตสแปมหรือไม่ โดยใช้ 3 ชั้น:
-     *  1) honeypot — ช่องซ่อนที่คนมองไม่เห็น ถ้ามีค่ากรอกมาแปลว่าเป็นบอต
-     *  2) timing — กรอกฟอร์มเสร็จเร็วเกินกว่ามนุษย์จะทำได้
-     *  3) blocklist — เจอลายเซ็นบอตที่รู้จัก (เช่น lxbfYeaa) ในข้อมูลที่ส่งมา
-     */
-    private function isLikelyBot(): bool
-    {
-        // 1) honeypot ต้องว่างเสมอสำหรับคนจริง
-        if (trim((string) $this->request->getPost(self::HONEYPOT_FIELD)) !== '') {
-            return true;
-        }
-
-        // 2) ส่งเร็วผิดปกติ (มี timestamp ใน session เท่านั้นจึงตรวจ — กันfalse positive)
-        $loadedAt = (int) session()->get(self::FORM_TS_SESSION_KEY);
-        if ($loadedAt > 0 && (time() - $loadedAt) < self::MIN_FORM_FILL_SECONDS) {
-            return true;
-        }
-
-        // 3) ลายเซ็นบอตที่รู้จักในทุกช่องข้อความ
-        $haystack = strtolower(implode(' ', [
-            (string) $this->request->getPost('complainant_name'),
-            (string) $this->request->getPost('complainant_email'),
-            (string) $this->request->getPost('complainant_phone'),
-            (string) $this->request->getPost('subject'),
-            (string) $this->request->getPost('detail'),
-        ]));
-
-        foreach (self::SPAM_TOKENS as $token) {
-            if ($token !== '' && str_contains($haystack, $token)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function hasReachedRateLimit(): bool

@@ -3,12 +3,15 @@
 namespace App\Controllers\ScienceWeek;
 
 use App\Controllers\BaseController;
+use App\Controllers\Concerns\AntiBot;
 use App\Models\SwRegistrationModel;
 use App\Models\SwParticipantModel;
 use Config\SciWeek;
 
 class Register extends BaseController
 {
+    use AntiBot;
+
     private SciWeek $cfg;
     private SwRegistrationModel $regModel;
     private SwParticipantModel $partModel;
@@ -63,6 +66,9 @@ class Register extends BaseController
             }
         }
 
+        // จดเวลาเปิดฟอร์มไว้ ใช้ตรวจ timing กันบอตตอนส่ง
+        $this->markAntiBotFormRendered('scienceweek');
+
         return view('scienceweek/form', [
             'comp'          => $comp,
             'competitionKey'=> $competitionKey,
@@ -87,6 +93,24 @@ class Register extends BaseController
         }
 
         $post = $this->request->getPost();
+
+        // ตรวจจับบอตสแปม (เช่น lxbfYeaa) ก่อนบันทึก แล้วเด้งกลับเงียบ ๆ โดยไม่บันทึกลง DB
+        $botFields = [
+            $post['school_name']   ?? '',
+            $post['coach_name']    ?? '',
+            $post['team_name']     ?? '',
+            $post['contact_email'] ?? '',
+            $post['coach_email']   ?? '',
+            $post['contact_phone'] ?? '',
+        ];
+        foreach (($post['participants'] ?? []) as $p) {
+            $botFields[] = $p['full_name'] ?? '';
+        }
+        if ($this->isLikelyBot('scienceweek', $botFields)) {
+            $this->logAntiBotBlocked('scienceweek');
+
+            return redirect()->to(base_url('scienceweek'));
+        }
 
         // Validation พื้นฐาน
         $rules = $this->buildValidationRules($comp);

@@ -71,12 +71,7 @@
 
                     <form action="<?= base_url('complaints/submit') ?>" method="post" enctype="multipart/form-data" class="complaint-form">
                         <?= csrf_field() ?>
-
-                        <?php /* กับดักบอตสแปม: ช่องนี้ถูกซ่อนจากผู้ใช้จริง ต้องเว้นว่างเสมอ บอตที่กรอกทุกช่องจะถูกจับได้ */ ?>
-                        <div class="complaint-hp" aria-hidden="true">
-                            <label for="website">เว็บไซต์ (ห้ามกรอก)</label>
-                            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" value="">
-                        </div>
+                        <?= view('partials/anti_bot_field') ?>
 
                         <div class="complaint-form__grid">
                             <div class="form-group">
@@ -155,16 +150,6 @@
 .complaint-form {
     display: grid;
     gap: 1rem;
-}
-
-/* กับดักบอต: ดันออกนอกจอแทน display:none (บอตบางตัวข้ามช่อง display:none) */
-.complaint-hp {
-    position: absolute;
-    left: -9999px;
-    top: auto;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
 }
 
 .complaint-form .form-group {
