@@ -76,9 +76,11 @@ class Pages extends BaseController
         }
 
         $philosophyCanonical = 'วิทยาศาสตร์และเทคโนโลยีเพื่อการพัฒนาท้องถิ่นและประเทศ ด้วยองค์ความรู้ นวัตกรรมและความเป็นหนึ่งเดียวกับชุมชน';
+        $educationalPhilosophyCanonical = 'พัฒนาผู้เรียนให้มีความรู้ ทักษะ และนวัตกรรมทางวิทยาศาสตร์และเทคโนโลยี บนพื้นฐานความเป็นหนึ่งเดียวกับชุมชน เพื่อการพัฒนาท้องถิ่นและประเทศ';
         $visionCanonical = 'คณะวิทยาศาสตร์และเทคโนโลยีจะเป็นองค์กรแห่งความเป็นหนึ่งเดียว เป็นศูนย์กลางองค์ความรู้และนวัตกรรมทางวิทยาศาสตร์และเทคโนโลยี สร้างบัณฑิตคุณภาพที่มีคุณธรรม จิตอาสา ความรู้ และทักษะวิชาชีพ เพื่อเป็นพลังขับเคลื่อนการพัฒนาท้องถิ่นและชุมชนสู่ความยั่งยืน';
 
         $philosophyOut = trim((string) ($siteInfo['philosophy_th'] ?? '')) !== '' ? trim($siteInfo['philosophy_th']) : $philosophyCanonical;
+        $educationalPhilosophyOut = trim((string) ($siteInfo['educational_philosophy_th'] ?? '')) !== '' ? trim($siteInfo['educational_philosophy_th']) : $educationalPhilosophyCanonical;
         $visionOut = trim((string) ($siteInfo['vision_th'] ?? '')) !== '' ? trim($siteInfo['vision_th']) : $visionCanonical;
         if (str_contains($visionOut, 'องค์กรแห่งความสุข')) {
             $visionOut = trim(preg_replace('/\s+/', ' ', str_replace('องค์กรแห่งความสุข', '', $visionOut)) ?? $visionOut);
@@ -94,6 +96,7 @@ class Pages extends BaseController
             'vision' => $visionOut,
             'mission' => $siteInfo['mission_th'] ?? '',
             'philosophy' => $philosophyOut,
+            'educational_philosophy' => $educationalPhilosophyOut,
             'identity' => $siteInfo['identity_th'] ?? '',
             'history' => $siteInfo['history_th'] ?? '',
             'policy' => $siteInfo['policy_th'] ?? '',

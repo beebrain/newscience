@@ -295,6 +295,13 @@ PROSE;
                         </div>
                     </div>
 
+                    <?php if (!empty($educational_philosophy)): ?>
+                        <div class="about-callout animate-on-scroll" style="margin-top:3rem;">
+                            <span class="about-callout__label">ปรัชญาการศึกษา</span>
+                            <p class="about-callout__text"><?= esc($educational_philosophy) ?></p>
+                        </div>
+                    <?php endif; ?>
+
                     <div class="feature-section feature-section--reverse animate-on-scroll" style="margin-top:3rem;">
                         <div class="feature-section__image">
                             <?php
