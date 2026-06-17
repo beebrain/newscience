@@ -298,6 +298,15 @@ class DocumentAnalysisController extends EdocBaseController
         $period = $this->request->getGet('period') ?? 'all';
         $metric = $this->request->getGet('metric') ?? 'doc_count';
         $dimension = $this->request->getGet('dimension') ?? 'doctype';
+
+        // กัน SQL injection ผ่านชื่อคอลัมน์ (metric/dimension ถูกใส่ใน orderBy/select): รับเฉพาะค่าที่อนุญาต
+        if (! in_array($metric, ['doc_count', 'avg_pages', 'total_paper', 'max_pages', 'min_pages'], true)) {
+            $metric = 'doc_count';
+        }
+        if (! in_array($dimension, ['doctype', 'owner', 'time', 'participant'], true)) {
+            $dimension = 'doctype';
+        }
+
         $userId = $this->edocUser['uid'];
 
         $builder = $this->db->table('edoctitle e');

@@ -13,9 +13,9 @@ class DevTools extends BaseController
 {
     public function __construct()
     {
-        // ป้องกันการใช้งานบน production
+        // ป้องกันการใช้งานบน production — ตอบ 404 ไม่เปิดเผยว่ามีเครื่องมือนี้
         if (ENVIRONMENT !== 'development') {
-            exit('DevTools ใช้ได้เฉพาะ development environment เท่านั้น');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
     }
 

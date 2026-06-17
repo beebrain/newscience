@@ -164,7 +164,8 @@ Sci_week/
 # public/ is tracked; exclude generated/user content below
 public/newsimages/
 public/thumbnails/
-public/uploads/
+public/uploads/*
+!public/uploads/web.config
 # Uploads stored in writable (served via /serve/uploads/)
 writable/uploads/
 
