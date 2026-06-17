@@ -2,71 +2,62 @@ import { test, expect, Page } from '@playwright/test';
 
 const BASE = 'http://localhost/newscience/public/scienceweek';
 const SS = '/tmp/sw-verify';
+// ใช้ค่าไม่ซ้ำต่อรอบ เพื่อกันชน cap ต่อสถาบัน (rov 1/ระดับ, python 2/สถาบัน) เวลารันซ้ำ
+const RUN = Date.now();
 
-// Helper: submit form and follow redirect
-async function submitForm(page: Page, url: string, fields: Record<string,string>) {
-  await page.goto(url);
-  for (const [sel, val] of Object.entries(fields)) {
-    const el = page.locator(sel).first();
-    if (await el.getAttribute('type') === 'radio') {
-      await page.check(`${sel}[value="${val}"]`);
-    } else {
-      await el.fill(val);
-    }
-  }
+// ระดับการแข่งขันใช้ radio ที่ถูกซ่อน (input[type=radio]{display:none}) แล้วจัดสไตล์ที่ label
+// ดังนั้นต้อง "คลิกที่ label" เหมือนผู้ใช้จริง แทน page.check() ที่ต้องการ element ที่มองเห็น
+async function selectLevel(page: Page, value: string) {
+  await page.locator(`label:has(input[name="level_key"][value="${value}"])`).click();
 }
 
 // ──────────────────────────────────────────────
-// 1. หน้า index แสดง 5 รายการ
+// 1. หน้า index แสดงครบ 6 กิจกรรม (มีลิงก์สมัครทุกตัว)
 // ──────────────────────────────────────────────
-test('index page shows 5 competitions', async ({ page }) => {
+test('index page lists all 6 competitions with register links', async ({ page }) => {
   await page.goto(BASE);
   await page.screenshot({ path: `${SS}/01_index.png`, fullPage: true });
-  const cards = page.locator('.comp-card');
-  await expect(cards).toHaveCount(5);
-  const titles = await page.locator('.comp-card .card-title').allTextContents();
-  console.log('Competitions:', titles);
+  const keys = ['seed_art', 'rov', 'python', 'recycle', 'sci_drawing', 'network_champion'];
+  for (const key of keys) {
+    await expect(page.locator(`a[href*="register/${key}"]`).first()).toBeVisible();
+  }
 });
 
 // ──────────────────────────────────────────────
-// 2. ERROR: ส่งฟอร์มว่าง (seed_art)
+// 2. ERROR: ส่งฟอร์มว่าง (seed_art) → ต้องไม่ไป success
 // ──────────────────────────────────────────────
-test('seed_art: empty form shows validation errors', async ({ page }) => {
+test('seed_art: empty form is blocked (no success)', async ({ page }) => {
   await page.goto(`${BASE}/register/seed_art`);
   await page.click('button[type="submit"]');
   await page.screenshot({ path: `${SS}/02_seed_art_empty_error.png`, fullPage: true });
-  // browser native validation should block — or CI4 should redirect back with errors
-  const url = page.url();
-  // ถ้า native validation ทำงาน จะยังอยู่หน้าเดิม
-  expect(url).toContain('seed_art');
+  expect(page.url()).toContain('seed_art');
+  expect(page.url()).not.toContain('success');
 });
 
 // ──────────────────────────────────────────────
 // 3. ERROR: กรอกโรงเรียนแต่ไม่กรอก participants (seed_art)
 // ──────────────────────────────────────────────
-test('seed_art: missing participants shows error', async ({ page }) => {
+test('seed_art: missing participants shows server-side error', async ({ page }) => {
   await page.goto(`${BASE}/register/seed_art`);
-  await page.check('input[name="level_key"][value="primary"]');
-  await page.fill('input[name="school_name"]', 'โรงเรียนทดสอบ');
+  await selectLevel(page, 'primary');
+  await page.fill('input[name="school_name"]', `โรงเรียนทดสอบ ${RUN}`);
   await page.fill('input[name="contact_phone"]', '055-123456');
   await page.fill('input[name="coach_name"]', 'อาจารย์ทดสอบ');
   // ไม่กรอก participants
   await page.click('button[type="submit"]');
-  await page.waitForURL(`**`);
   await page.screenshot({ path: `${SS}/03_seed_art_no_participants_error.png`, fullPage: true });
-  // ต้องกลับมาหน้าฟอร์มพร้อม error
-  const errorBox = page.locator('.alert-danger, .invalid-feedback');
-  const hasError = await errorBox.count() > 0;
-  console.log('Error shown:', hasError, await errorBox.first().textContent().catch(() => 'none'));
+  expect(page.url()).not.toContain('success');
+  // BUG-2 fix: error ต้องแสดงในฟอร์มจริง (กล่องสรุป หรือ inline)
+  await expect(page.locator('.alert-danger, .invalid-feedback').first()).toBeVisible();
 });
 
 // ──────────────────────────────────────────────
-// 4. SUCCESS: seed_art สมัครครบถ้วน
+// 4. SUCCESS: seed_art สมัครครบถ้วน (ทีม 3 คน)
 // ──────────────────────────────────────────────
 test('seed_art: full valid submission → success page', async ({ page }) => {
   await page.goto(`${BASE}/register/seed_art`);
-  await page.check('input[name="level_key"][value="lower_secondary"]');
-  await page.fill('input[name="school_name"]', 'โรงเรียนทดสอบสมัครได้');
+  await selectLevel(page, 'lower_secondary');
+  await page.fill('input[name="school_name"]', `โรงเรียนทดสอบสมัครได้ ${RUN}`);
   await page.fill('input[name="contact_phone"]', '055-111111');
   await page.fill('input[name="coach_name"]', 'ครูสมัครทดสอบ');
   await page.fill('input[name="participants[0][full_name]"]', 'นักเรียน หนึ่ง');
@@ -85,23 +76,20 @@ test('seed_art: full valid submission → success page', async ({ page }) => {
 // ──────────────────────────────────────────────
 // 5. ERROR: ROV กรอก player ไม่ครบ 5 คน
 // ──────────────────────────────────────────────
-test('rov: only 3 players (need 5) → error', async ({ page }) => {
+test('rov: only 3 players (need 5) → blocked', async ({ page }) => {
   await page.goto(`${BASE}/register/rov`);
-  await page.check('input[name="level_key"][value="primary_lower"]');
-  await page.fill('input[name="school_name"]', 'โรงเรียน ROV Test');
+  await selectLevel(page, 'primary_lower');
+  await page.fill('input[name="school_name"]', `โรงเรียน ROV Test ${RUN}`);
   await page.fill('input[name="contact_phone"]', '055-222222');
   await page.fill('input[name="coach_name"]', 'โค้ชROV');
-  // กรอกแค่ 3 คน (ต้องการ 5)
   for (let i = 0; i < 3; i++) {
-    await page.fill(`input[name="participants[${i}][full_name]"]`, `ผู้เล่น ${i+1}`);
-    await page.fill(`input[name="participants[${i}][game_id]"]`, `ROVID${i+1}`);
+    await page.fill(`input[name="participants[${i}][full_name]"]`, `ผู้เล่น ${i + 1}`);
+    await page.fill(`input[name="participants[${i}][game_id]"]`, `ROVID${i + 1}`);
   }
   await page.click('button[type="submit"]');
-  await page.waitForURL(`**`);
   await page.screenshot({ path: `${SS}/05_rov_incomplete_error.png`, fullPage: true });
-  const url = page.url();
-  const isError = url.includes('rov') && !url.includes('success');
-  console.log('ROV incomplete → stayed on form:', isError);
+  expect(page.url()).toContain('rov');
+  expect(page.url()).not.toContain('success');
 });
 
 // ──────────────────────────────────────────────
@@ -109,13 +97,13 @@ test('rov: only 3 players (need 5) → error', async ({ page }) => {
 // ──────────────────────────────────────────────
 test('rov: 5 players + 1 reserve → success', async ({ page }) => {
   await page.goto(`${BASE}/register/rov`);
-  await page.check('input[name="level_key"][value="lower_higher"]');
-  await page.fill('input[name="school_name"]', 'มหาวิทยาลัย ROV สาขาIT');
+  await selectLevel(page, 'lower_higher');
+  await page.fill('input[name="school_name"]', `มหาวิทยาลัย ROV IT ${RUN}`);
   await page.fill('input[name="contact_phone"]', '055-333333');
   await page.fill('input[name="coach_name"]', 'อาจารย์ IT');
   for (let i = 0; i < 5; i++) {
-    await page.fill(`input[name="participants[${i}][full_name]"]`, `นักกีฬา ${i+1}`);
-    await page.fill(`input[name="participants[${i}][game_id]"]`, `GameID_${i+1}`);
+    await page.fill(`input[name="participants[${i}][full_name]"]`, `นักกีฬา ${i + 1}`);
+    await page.fill(`input[name="participants[${i}][game_id]"]`, `GameID_${i + 1}`);
   }
   await page.fill('input[name="reserves[0][full_name]"]', 'ตัวสำรอง 1');
   await page.fill('input[name="reserves[0][game_id]"]', 'ReserveID1');
@@ -128,13 +116,19 @@ test('rov: 5 players + 1 reserve → success', async ({ page }) => {
 });
 
 // ──────────────────────────────────────────────
-// 7. SUCCESS: python สมัคร 2 คน
+// 7. SUCCESS: python สมัคร 2 คน + ที่อยู่แยกช่อง + โทรสาร (ตามใบสมัคร)
 // ──────────────────────────────────────────────
-test('python: 2 members → success', async ({ page }) => {
+test('python: 2 members with structured address + fax → success', async ({ page }) => {
   await page.goto(`${BASE}/register/python`);
-  await page.check('input[name="level_key"][value="secondary"]');
-  await page.fill('input[name="school_name"]', 'โรงเรียนโค้ดเดอร์');
+  await selectLevel(page, 'secondary');
+  await page.fill('input[name="school_name"]', `โรงเรียนโค้ดเดอร์ ${RUN}`);
   await page.fill('input[name="contact_phone"]', '055-444444');
+  await page.fill('input[name="addr[road]"]', '27 ถนนอินใจมี');
+  await page.fill('input[name="addr[subdistrict]"]', 'ท่าอิฐ');
+  await page.fill('input[name="addr[district]"]', 'เมือง');
+  await page.fill('input[name="addr[province]"]', 'อุตรดิตถ์');
+  await page.fill('input[name="addr[postcode]"]', '53000');
+  await page.fill('input[name="fax"]', '055-411412');
   await page.fill('input[name="coach_name"]', 'อาจารย์โปรแกรมมิ่ง');
   await page.fill('input[name="participants[0][full_name]"]', 'โปรแกรมเมอร์ 1');
   await page.fill('input[name="participants[0][level_class]"]', 'ม.5');
@@ -151,8 +145,8 @@ test('python: 2 members → success', async ({ page }) => {
 // ──────────────────────────────────────────────
 test('recycle: team of 3 → success', async ({ page }) => {
   await page.goto(`${BASE}/register/recycle`);
-  await page.check('input[name="level_key"][value="primary"]');
-  await page.fill('input[name="school_name"]', 'โรงเรียนรักษ์โลก');
+  await selectLevel(page, 'primary');
+  await page.fill('input[name="school_name"]', `โรงเรียนรักษ์โลก ${RUN}`);
   await page.fill('input[name="contact_phone"]', '055-555555');
   await page.fill('input[name="coach_name"]', 'ครูสิ่งแวดล้อม');
   await page.fill('input[name="participants[0][full_name]"]', 'เด็กรีไซเคิล 1');
@@ -165,12 +159,12 @@ test('recycle: team of 3 → success', async ({ page }) => {
 });
 
 // ──────────────────────────────────────────────
-// 9. SUCCESS: sci_drawing (เดี่ยว)
+// 9. SUCCESS: sci_drawing (เดี่ยว + อายุ)
 // ──────────────────────────────────────────────
 test('sci_drawing: solo with age → success', async ({ page }) => {
   await page.goto(`${BASE}/register/sci_drawing`);
-  await page.check('input[name="level_key"][value="lower_secondary"]');
-  await page.fill('input[name="school_name"]', 'โรงเรียนศิลป์วิทย์');
+  await selectLevel(page, 'lower_secondary');
+  await page.fill('input[name="school_name"]', `โรงเรียนศิลป์วิทย์ ${RUN}`);
   await page.fill('input[name="contact_phone"]', '055-666666');
   await page.fill('input[name="coach_name"]', 'ครูศิลปะ');
   await page.fill('input[name="participants[0][full_name]"]', 'จิตรกรน้อย');
@@ -182,29 +176,26 @@ test('sci_drawing: solo with age → success', async ({ page }) => {
 });
 
 // ──────────────────────────────────────────────
-// 10. ERROR: sci_drawing ไม่กรอก age (required)
+// 10. ERROR: sci_drawing ไม่กรอก age (required) → blocked
 // ──────────────────────────────────────────────
-test('sci_drawing: missing age → error', async ({ page }) => {
+test('sci_drawing: missing required age → blocked', async ({ page }) => {
   await page.goto(`${BASE}/register/sci_drawing`);
-  await page.check('input[name="level_key"][value="lower_secondary"]');
-  await page.fill('input[name="school_name"]', 'โรงเรียนวาดภาพ');
+  await selectLevel(page, 'lower_secondary');
+  await page.fill('input[name="school_name"]', `โรงเรียนวาดภาพ ${RUN}`);
   await page.fill('input[name="contact_phone"]', '055-777777');
   await page.fill('input[name="coach_name"]', 'ครูวาดภาพ');
   await page.fill('input[name="participants[0][full_name]"]', 'เด็กวาดภาพ');
   // ไม่กรอก age
   await page.click('button[type="submit"]');
-  await page.waitForURL(`**`);
   await page.screenshot({ path: `${SS}/10_drawing_no_age_error.png`, fullPage: true });
-  const url = page.url();
-  console.log('Drawing no age URL:', url);
+  expect(page.url()).not.toContain('success');
 });
 
 // ──────────────────────────────────────────────
-// 11. หน้า verify แสดงรายชื่อ
+// 11. หน้า verify แสดงรายชื่อทีมที่สมัครแล้ว
 // ──────────────────────────────────────────────
 test('verify page shows registered teams', async ({ page }) => {
   await page.goto(`${BASE}/verify?competition=seed_art&level=lower_secondary`);
   await page.screenshot({ path: `${SS}/11_verify_list.png`, fullPage: true });
   await expect(page.locator('body')).toContainText('นักเรียน หนึ่ง');
 });
-

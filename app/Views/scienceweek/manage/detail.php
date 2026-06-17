@@ -64,6 +64,12 @@ $extra      = is_array($reg['extra']) ? $reg['extra'] : ($reg['extra'] ? json_de
                     <div><?= esc($reg['contact_email']) ?></div>
                 </div>
                 <?php endif; ?>
+                <?php if (!empty($extra['fax'])): ?>
+                <div class="col-md-4">
+                    <label class="text-muted small">โทรสาร</label>
+                    <div><?= esc($extra['fax']) ?></div>
+                </div>
+                <?php endif; ?>
                 <?php if ($reg['team_name']): ?>
                 <div class="col-md-4">
                     <label class="text-muted small">ชื่อทีม</label>

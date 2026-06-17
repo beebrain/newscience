@@ -144,11 +144,15 @@ $levelLabels = [
                             </span>
                             <div class="flex-shrink-0 d-flex gap-1 align-items-center mt-1">
                                 <?php foreach ($comp['docs'] ?? [] as $doc): ?>
-                                    <a href="<?= base_url(config('SciWeek')->docsPublicPath.'/'.rawurlencode($doc)) ?>" 
+                                    <?php
+                                        $docFile  = is_array($doc) ? ($doc['file'] ?? '') : $doc;
+                                        $docLabel = is_array($doc) ? ($doc['label'] ?? 'เอกสาร') : 'กติกา';
+                                    ?>
+                                    <a href="<?= base_url(config('SciWeek')->docsPublicPath.'/'.rawurlencode($docFile)) ?>"
                                        target="_blank"
-                                       class="badge bg-warning border border-dark text-dark rounded-pill px-2 py-1 text-decoration-none hover-scale" 
+                                       class="badge bg-warning border border-dark text-dark rounded-pill px-2 py-1 text-decoration-none hover-scale"
                                        style="font-size: 0.75rem; font-family: var(--sw-kids-heading-font); box-shadow: 1px 1px 0px rgba(0,0,0,0.2); transition: transform 0.1s;">
-                                        กติกา 📄
+                                        <?= esc($docLabel) ?> 📄
                                     </a>
                                 <?php endforeach; ?>
                                 <?php if ($isFull): ?>

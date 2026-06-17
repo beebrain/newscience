@@ -2,10 +2,12 @@
 <?= $this->section('content') ?>
 
 <?php
-$v = \Config\Services::validation();
+// validation errors ถูก flash ไว้ใน session โดย redirect()->withInput()
+// (Services::validation() เป็น instance ใหม่ใน request ถัดไป จึงคืน [] — ต้องอ่านจาก session)
+$swErrors = session('_ci_validation_errors') ?? [];
 function swErr(string $field): string {
-    $v = \Config\Services::validation();
-    $err = $v->getError($field);
+    $errors = session('_ci_validation_errors') ?? [];
+    $err = $errors[$field] ?? '';
     return $err ? '<div class="invalid-feedback d-block mt-1">'.esc($err).'</div>' : '';
 }
 function swOld(string $field, array $old): string {
@@ -38,14 +40,18 @@ function swOld(string $field, array $old): string {
             <?php if (!empty($comp['docs'])): ?>
                 <div class="d-flex gap-2 flex-wrap mt-1">
                     <?php foreach ($comp['docs'] as $doc): ?>
-                        <a href="<?= base_url(config('SciWeek')->docsPublicPath.'/'.rawurlencode($doc)) ?>"
+                        <?php
+                            $docFile  = is_array($doc) ? ($doc['file'] ?? '') : $doc;
+                            $docLabel = is_array($doc) ? ($doc['label'] ?? 'เอกสาร') : 'เอกสาร';
+                        ?>
+                        <a href="<?= base_url(config('SciWeek')->docsPublicPath.'/'.rawurlencode($docFile)) ?>"
                            target="_blank"
                            class="btn-doc" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
                                 <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1L14 5.5z"/>
                                 <path d="M4 11h8v1H4zm0-2h8v1H4zm0-2h3v1H4z"/>
                             </svg>
-                            ดาวน์โหลดเอกสาร
+                            ดาวน์โหลด<?= esc($docLabel) ?>
                         </a>
                     <?php endforeach; ?>
                 </div>
@@ -56,19 +62,19 @@ function swOld(string $field, array $old): string {
     <div class="sw-card-body">
 
         <?php if ($deadlineMsg): ?>
-            <div class="alert alert-<?= str_contains($deadlineMsg, 'ปิด') ? 'danger' : 'info' ?> d-flex align-items-center gap-2 py-2 mb-4">
-                <span style="font-size:1.1rem;"><?= str_contains($deadlineMsg, 'ปิด') ? '🔒' : '📅' ?></span>
+            <div class="alert alert-<?= $deadlineClosed ? 'danger' : 'info' ?> d-flex align-items-center gap-2 py-2 mb-4">
+                <span style="font-size:1.1rem;"><?= $deadlineClosed ? '🔒' : '📅' ?></span>
                 <span><?= esc($deadlineMsg) ?></span>
             </div>
         <?php endif; ?>
 
-        <?php $errors = $v->getErrors(); if (!empty($errors)): ?>
+        <?php if (!empty($swErrors)): ?>
             <div class="alert alert-danger mb-4">
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <strong>⚠️ กรุณาตรวจสอบข้อมูล:</strong>
                 </div>
                 <ul class="mb-0 ps-3" style="font-size:.88rem;">
-                    <?php foreach ($errors as $err): ?>
+                    <?php foreach ($swErrors as $err): ?>
                         <li><?= esc($err) ?></li>
                     <?php endforeach; ?>
                 </ul>
@@ -122,18 +128,58 @@ function swOld(string $field, array $old): string {
                            placeholder="0x-xxxx-xxxx">
                     <?= swErr('contact_phone') ?>
                 </div>
+                <?php if (!empty($comp['address_fields'])): ?>
+                    <?php $addr = $old['addr'] ?? []; ?>
+                    <div class="col-md-8">
+                        <label class="form-label">เลขที่ / หมู่ / ถนน</label>
+                        <input type="text" name="addr[road]" class="form-control"
+                               value="<?= esc($addr['road'] ?? '') ?>" maxlength="190"
+                               placeholder="เช่น 27 ถนนอินใจมี">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">ตำบล / แขวง</label>
+                        <input type="text" name="addr[subdistrict]" class="form-control"
+                               value="<?= esc($addr['subdistrict'] ?? '') ?>" maxlength="120">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">อำเภอ / เขต</label>
+                        <input type="text" name="addr[district]" class="form-control"
+                               value="<?= esc($addr['district'] ?? '') ?>" maxlength="120">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">จังหวัด</label>
+                        <input type="text" name="addr[province]" class="form-control"
+                               value="<?= esc($addr['province'] ?? '') ?>" maxlength="120">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">รหัสไปรษณีย์</label>
+                        <input type="text" name="addr[postcode]" class="form-control"
+                               value="<?= esc($addr['postcode'] ?? '') ?>" maxlength="5"
+                               inputmode="numeric" pattern="[0-9]{5}" placeholder="53000">
+                        <?= swErr('addr.postcode') ?>
+                    </div>
+                <?php else: ?>
                 <div class="col-12">
                     <label class="form-label">ที่อยู่สถานศึกษา</label>
                     <input type="text" name="school_address" class="form-control"
                            value="<?= swOld('school_address', $old) ?>" maxlength="500"
                            placeholder="เลขที่ ถนน ตำบล อำเภอ จังหวัด">
                 </div>
+                <?php endif; ?>
                 <div class="col-md-6">
                     <label class="form-label">อีเมลสถานศึกษา</label>
                     <input type="email" name="contact_email" class="form-control"
                            value="<?= swOld('contact_email', $old) ?>" maxlength="190"
                            placeholder="school@example.com">
                 </div>
+                <?php if (!empty($comp['show_fax'])): ?>
+                <div class="col-md-6">
+                    <label class="form-label">โทรสาร <span class="text-muted fw-normal">(ถ้ามี)</span></label>
+                    <input type="text" name="fax" class="form-control"
+                           value="<?= swOld('fax', $old) ?>" maxlength="40"
+                           placeholder="0x-xxx-xxxx">
+                </div>
+                <?php endif; ?>
                 <?php if ($comp['team_min'] < $comp['team_max']): ?>
                 <div class="col-md-6">
                     <label class="form-label">ชื่อทีม</label>
@@ -243,7 +289,7 @@ function swOld(string $field, array $old): string {
                                    value="<?= esc($old['participants'][$i]['full_name'] ?? '') ?>"
                                    <?= $required ? 'required' : '' ?> maxlength="190"
                                    placeholder="ชื่อ นามสกุล">
-                            <?= swErr("participants[{$i}][full_name]") ?>
+                            <?= swErr("participants.{$i}.full_name") ?>
                         </div>
                         <?php foreach ($comp['per_person'] as $field => $meta): ?>
                             <div class="col-md-3">
@@ -257,7 +303,7 @@ function swOld(string $field, array $old): string {
                                        value="<?= esc($old['participants'][$i][$field] ?? '') ?>"
                                        <?= ($meta['required'] && $required) ? 'required' : '' ?>
                                        maxlength="190">
-                                <?= swErr("participants[{$i}][{$field}]") ?>
+                                <?= swErr("participants.{$i}.{$field}") ?>
                             </div>
                         <?php endforeach; ?>
                     </div>

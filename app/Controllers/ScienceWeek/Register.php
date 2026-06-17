@@ -49,7 +49,8 @@ class Register extends BaseController
         }
 
         // ตรวจ deadline
-        $deadlineMsg = $this->getDeadlineMessage($comp);
+        $deadlineMsg    = $this->getDeadlineMessage($comp);
+        $deadlineClosed = $comp['deadline'] !== null && date('Y-m-d') > $comp['deadline'];
 
         // ตรวจเพดานทีม (cap_total)
         if ($comp['cap_total'] !== null) {
@@ -66,6 +67,7 @@ class Register extends BaseController
             'comp'          => $comp,
             'competitionKey'=> $competitionKey,
             'deadlineMsg'   => $deadlineMsg,
+            'deadlineClosed'=> $deadlineClosed,
             'validation'    => \Config\Services::validation(),
             'old'           => session()->getFlashdata('old_input') ?? [],
         ]);
@@ -117,12 +119,42 @@ class Register extends BaseController
             ];
         }
 
+        // ที่อยู่สถานศึกษา: แบบแยกช่องตามใบสมัคร (ถนน/ตำบล/อำเภอ/จังหวัด/รหัสไปรษณีย์)
+        // รวมเป็นข้อความเดียวเก็บใน school_address และเก็บโครงสร้างไว้ใน extra ด้วย
+        $schoolAddress = $post['school_address'] ?? null;
+        if (!empty($comp['address_fields'])) {
+            $rawAddr = $post['addr'] ?? [];
+            $addr = [
+                'road'        => trim($rawAddr['road'] ?? ''),
+                'subdistrict' => trim($rawAddr['subdistrict'] ?? ''),
+                'district'    => trim($rawAddr['district'] ?? ''),
+                'province'    => trim($rawAddr['province'] ?? ''),
+                'postcode'    => trim($rawAddr['postcode'] ?? ''),
+            ];
+            $parts = array_filter([
+                $addr['road'],
+                $addr['subdistrict'] !== '' ? 'ต.'.$addr['subdistrict'] : '',
+                $addr['district'] !== ''    ? 'อ.'.$addr['district']    : '',
+                $addr['province'] !== ''    ? 'จ.'.$addr['province']    : '',
+                $addr['postcode'],
+            ], static fn($s) => $s !== '');
+            $schoolAddress = $parts ? implode(' ', $parts) : null;
+            if (array_filter($addr, static fn($s) => $s !== '')) {
+                $extra['address'] = $addr;
+            }
+        }
+
+        // โทรสาร (ตามใบสมัคร)
+        if (!empty($comp['show_fax']) && trim($post['fax'] ?? '') !== '') {
+            $extra['fax'] = trim($post['fax']);
+        }
+
         // บันทึก registration
         $regId = $this->regModel->insert([
             'competition_key' => $competitionKey,
             'level_key'       => $levelKey,
             'school_name'     => $schoolName,
-            'school_address'  => $post['school_address'] ?? null,
+            'school_address'  => $schoolAddress,
             'contact_phone'   => $post['contact_phone'],
             'contact_email'   => $post['contact_email'] ?? null,
             'team_name'       => $post['team_name'] ?? null,
@@ -180,6 +212,26 @@ class Register extends BaseController
             'contact_phone'=> 'required|max_length[40]',
             'coach_name'   => 'required|max_length[190]',
         ];
+
+        // ที่อยู่แบบแยกช่อง (ตามใบสมัคร) — ไม่บังคับ แต่ตรวจรูปแบบรหัสไปรษณีย์
+        if (!empty($comp['address_fields'])) {
+            $rules['addr.road']        = 'permit_empty|max_length[190]';
+            $rules['addr.subdistrict'] = 'permit_empty|max_length[120]';
+            $rules['addr.district']    = 'permit_empty|max_length[120]';
+            $rules['addr.province']    = 'permit_empty|max_length[120]';
+            $rules['addr.postcode']    = [
+                'rules'  => 'permit_empty|exact_length[5]|numeric',
+                'errors' => [
+                    'exact_length' => 'รหัสไปรษณีย์ต้องเป็นตัวเลข 5 หลัก',
+                    'numeric'      => 'รหัสไปรษณีย์ต้องเป็นตัวเลข 5 หลัก',
+                ],
+            ];
+        }
+
+        // โทรสาร (ตามใบสมัคร)
+        if (!empty($comp['show_fax'])) {
+            $rules['fax'] = 'permit_empty|max_length[40]';
+        }
 
         // CI4 validation ใช้ dot notation สำหรับ nested arrays
         $min = $comp['team_min'];

@@ -26,12 +26,15 @@ class SciWeek extends BaseConfig
      * ชุดข้อมูลแต่ละรายการ:
      *   name_th       ชื่อภาษาไทย
      *   name_en       ชื่อภาษาอังกฤษ
+     *   docs          ไฟล์เอกสารดาวน์โหลด — รับได้ทั้ง 'ชื่อไฟล์.pdf' หรือ ['file' => 'ชื่อไฟล์.pdf', 'label' => 'ป้ายปุ่ม']
      *   levels        ระดับที่เปิดรับ ['key' => 'label']
      *   team_min      จำนวนสมาชิกขั้นต่ำ (คนหลัก)
      *   team_max      จำนวนสมาชิกสูงสุด (คนหลัก)
      *   has_reserve   มีตัวสำรองหรือไม่
      *   reserve_max   จำนวนตัวสำรองสูงสุด
      *   per_person    ฟิลด์พิเศษต่อผู้เข้าแข่งขัน: ['field' => ['label','required'(bool),'type']]
+     *   address_fields แสดงที่อยู่สถานศึกษาแบบแยกช่อง (ถนน/ตำบล/อำเภอ/จังหวัด/รหัสไปรษณีย์) ตามใบสมัคร (default false)
+     *   show_fax      แสดงช่องโทรสาร ตามใบสมัคร (default false)
      *   cap_per_level จำนวนทีมสูงสุดต่อระดับ (null = ไม่จำกัด)
      *   cap_total     จำนวนทีมสูงสุดรวมทุกระดับ (null = ไม่จำกัด)
      *   cap_per_school จำนวนทีมสูงสุดต่อสถาบัน/ระดับ (null = ไม่จำกัด)
@@ -94,7 +97,9 @@ class SciWeek extends BaseConfig
         'python' => [
             'name_th'       => 'การแข่งขันทักษะภาษาไพธอน (Python)',
             'name_en'       => 'Python Programming Competition',
-            'docs'          => ['แข่งขันโปรแกรมไพธอน.pdf'],
+            'docs'          => [
+                ['file' => 'ใบสมัคร แข่งขันไพธอน 2569.pdf', 'label' => 'กติกา'],
+            ],
             'levels'        => [
                 'secondary' => 'ระดับมัธยมศึกษาหรือเทียบเท่า',
                 'higher'    => 'ระดับอุดมศึกษาหรือเทียบเท่า',
@@ -106,10 +111,12 @@ class SciWeek extends BaseConfig
             'per_person'    => [
                 'level_class' => ['label' => 'ระดับชั้น', 'required' => true, 'type' => 'text'],
             ],
+            'address_fields'=> true, // ใบสมัครแยกช่อง ถนน/ตำบล/อำเภอ/จังหวัด/รหัสไปรษณีย์
+            'show_fax'      => true, // ใบสมัครมีช่องโทรสาร
             'cap_per_level' => null,
             'cap_total'     => null,
             'cap_per_school'=> 2,   // ≤2 ทีม/สถาบัน (ทุกระดับรวมกัน per spec)
-            'deadline'      => null, // TODO ยืนยันกับ อ.พรเทพ
+            'deadline'      => '2026-08-08', // ใบสมัคร: รับสมัครถึง 8 สิงหาคม 2569
             'extra_coaches' => 1,
             'contact'       => 'อ.พรเทพ จันทร์เพ็ง pornthep@uru.ac.th 089-957-0965',
             'notes'         => 'ทีมละ 2 คน ≤2 ทีม/สถาบัน',
