@@ -106,7 +106,7 @@ class Register extends BaseController
         foreach (($post['participants'] ?? []) as $p) {
             $botFields[] = $p['full_name'] ?? '';
         }
-        if ($this->isLikelyBot('scienceweek', $botFields)) {
+        if ($this->isLikelyBot('scienceweek', $botFields) || ! $this->passesRecaptcha('scienceweek')) {
             $this->logAntiBotBlocked('scienceweek');
 
             return redirect()->to(base_url('scienceweek'));

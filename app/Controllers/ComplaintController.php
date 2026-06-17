@@ -55,7 +55,7 @@ class ComplaintController extends BaseController
             $this->request->getPost('subject'),
             $this->request->getPost('detail'),
         ];
-        if ($this->isLikelyBot('complaint', $botFields)) {
+        if ($this->isLikelyBot('complaint', $botFields) || ! $this->passesRecaptcha('complaint')) {
             $this->logAntiBotBlocked('complaint');
 
             return redirect()->to(base_url('complaints'))

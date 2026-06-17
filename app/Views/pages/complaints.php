@@ -72,6 +72,7 @@
                     <form action="<?= base_url('complaints/submit') ?>" method="post" enctype="multipart/form-data" class="complaint-form">
                         <?= csrf_field() ?>
                         <?= view('partials/anti_bot_field') ?>
+                        <?= view('partials/recaptcha_v3', ['rcAction' => 'complaint']) ?>
 
                         <div class="complaint-form__grid">
                             <div class="form-group">

@@ -84,6 +84,7 @@ function swOld(string $field, array $old): string {
         <form method="post" action="<?= base_url('scienceweek/register/'.$competitionKey) ?>" novalidate>
             <?= csrf_field() ?>
             <?= view('partials/anti_bot_field') ?>
+            <?= view('partials/recaptcha_v3', ['rcAction' => 'scienceweek']) ?>
 
             <!-- ── Section 1: ระดับการแข่งขัน ── -->
             <div class="sw-section">

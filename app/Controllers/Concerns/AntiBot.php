@@ -73,6 +73,76 @@ trait AntiBot
         return false;
     }
 
+    /**
+     * ตรวจ Google reCAPTCHA v3 กับฝั่ง server
+     *
+     * - ถ้ายังไม่ได้ตั้งค่า secretKey → คืน true (ข้าม reCAPTCHA, honeypot ยังกันอยู่)
+     * - ตั้งค่าแล้วแต่ไม่มี token → คืน false (ไม่ผ่าน JS / บอตยิงตรง)
+     * - เชื่อม Google ไม่ได้ (network ล้ม) → คืน true (fail-open กันฟอร์มพัง, honeypot ยังกัน)
+     * - success=false / action ไม่ตรง / score < ขั้นต่ำ → คืน false
+     */
+    protected function passesRecaptcha(string $action): bool
+    {
+        $cfg = config('Recaptcha');
+        if ($cfg->secretKey === '') {
+            return true; // ยังไม่เปิดใช้ reCAPTCHA
+        }
+
+        $token = trim((string) $this->request->getPost('g-recaptcha-response'));
+        if ($token === '') {
+            log_message('warning', 'reCAPTCHA: missing token on {action}. IP: {ip}', [
+                'action' => $action,
+                'ip'     => $this->request->getIPAddress(),
+            ]);
+
+            return false;
+        }
+
+        try {
+            $client = \Config\Services::curlrequest(['timeout' => 5, 'http_errors' => false]);
+            $resp   = $client->post('https://www.google.com/recaptcha/api/siteverify', [
+                'form_params' => [
+                    'secret'   => $cfg->secretKey,
+                    'response' => $token,
+                    'remoteip' => $this->request->getIPAddress(),
+                ],
+            ]);
+            $data = json_decode((string) $resp->getBody(), true) ?: [];
+        } catch (\Throwable $e) {
+            log_message('error', 'reCAPTCHA verify error: {msg}', ['msg' => $e->getMessage()]);
+
+            return true; // fail-open เมื่อต่อ Google ไม่ได้
+        }
+
+        if (empty($data['success'])) {
+            log_message('warning', 'reCAPTCHA failed on {action}: {err}', [
+                'action' => $action,
+                'err'    => implode(',', (array) ($data['error-codes'] ?? ['unknown'])),
+            ]);
+
+            return false;
+        }
+
+        // กัน token ถูกนำไปใช้ข้ามฟอร์ม
+        if (isset($data['action']) && $data['action'] !== $action) {
+            return false;
+        }
+
+        $score = (float) ($data['score'] ?? 0);
+        if ($score < $cfg->minScore) {
+            log_message('warning', 'reCAPTCHA low score {score} (< {min}) on {action}. IP: {ip}', [
+                'score'  => $score,
+                'min'    => $cfg->minScore,
+                'action' => $action,
+                'ip'     => $this->request->getIPAddress(),
+            ]);
+
+            return false;
+        }
+
+        return true;
+    }
+
     /** เขียน log เตือนเมื่อบล็อกบอต (ไว้ตรวจสอบย้อนหลัง) */
     protected function logAntiBotBlocked(string $context): void
     {
