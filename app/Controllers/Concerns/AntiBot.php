@@ -20,22 +20,13 @@ namespace App\Controllers\Concerns;
 trait AntiBot
 {
     /** ชื่อช่อง honeypot (ต้องตรงกับใน partials/anti_bot_field.php) */
-    protected function antiBotHoneypotName(): string
-    {
-        return 'website';
-    }
+    private const HONEYPOT_FIELD = 'website';
 
     /** เวลาขั้นต่ำ (วินาที) ที่คนจริงใช้กรอกฟอร์ม — ต่ำกว่านี้ถือว่าเป็นบอต */
-    protected function antiBotMinSeconds(): int
-    {
-        return 3;
-    }
+    private const MIN_FILL_SECONDS = 3;
 
     /** ลายเซ็นบอตสแปมที่รู้จัก (ตัวพิมพ์เล็กทั้งหมด) */
-    protected function antiBotSpamTokens(): array
-    {
-        return ['lxbfyeaa'];
-    }
+    private const SPAM_TOKENS = ['lxbfyeaa'];
 
     /** จดเวลาเปิดฟอร์มไว้ใน session สำหรับตรวจ timing */
     protected function markAntiBotFormRendered(string $context): void
@@ -52,19 +43,19 @@ trait AntiBot
     protected function isLikelyBot(string $context, array $textFields = []): bool
     {
         // 1) honeypot ต้องว่างเสมอสำหรับคนจริง
-        if (trim((string) $this->request->getPost($this->antiBotHoneypotName())) !== '') {
+        if (trim((string) $this->request->getPost(self::HONEYPOT_FIELD)) !== '') {
             return true;
         }
 
         // 2) ส่งเร็วผิดปกติ (ตรวจเฉพาะเมื่อมี timestamp ใน session — กัน false positive)
         $loadedAt = (int) session()->get($this->antiBotSessionKey($context));
-        if ($loadedAt > 0 && (time() - $loadedAt) < $this->antiBotMinSeconds()) {
+        if ($loadedAt > 0 && (time() - $loadedAt) < self::MIN_FILL_SECONDS) {
             return true;
         }
 
         // 3) ลายเซ็นบอตที่รู้จักในข้อความที่ส่งมา
         $haystack = strtolower(implode(' ', array_map(static fn ($v) => (string) $v, $textFields)));
-        foreach ($this->antiBotSpamTokens() as $token) {
+        foreach (self::SPAM_TOKENS as $token) {
             if ($token !== '' && str_contains($haystack, $token)) {
                 return true;
             }
