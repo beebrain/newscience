@@ -16,7 +16,7 @@
 | Edoc | เป็น sub-app ใน NS แล้ว (`/edoc` routes) |
 | EdocSso ที่ยังทำงานจริง | แค่ logout iframe/chain ไป edoc ตัวนอก ([login.php:304](app/Views/admin/auth/login.php#L304)) + ลิงก์ legacy ใน dashboard |
 | RR SSO secret | **explicit ทั้ง NS + RR** (ไม่พึ่ง edoc fallback) ✓ |
-| Secret ที่รั่ว (scrub current แล้ว แต่ยังอยู่ใน git history) | win-kc admin pw, MySQL root+remote_import pw, `pisit_secret` |
+| Secret ที่รั่ว (scrub current แล้ว แต่ยังอยู่ใน git history) | win-kc admin pw, MySQL root+remote_import pw, `<sso-shared-secret>` |
 | edoc.sci.uru.ac.th (ตัวนอก) | host ยังตอบ (ต้องยืนยันว่ายังมีคนใช้ไหม) |
 
 ⚠️ **EdocSso พันกับ ResearchRecordSso** (ที่ยังใช้จริง): `oauthCallback` รับทั้ง `provider=edoc|researchrecord`, `buildLogoutRedirectChain` ไล่ทั้งสอง, `OAuthController:221` + `ResearchRecordSso.php:47` มี fallback ไป `edocsso.sharedSecret` → **ลบโค้ดต้องระวัง ไม่ใช่ rip-out**
@@ -59,7 +59,7 @@
 |---|---|---|---|---|
 | S1 | win-kc `Administrator` pw | Windows account (`net user`) | local notes; ลบจาก `.claude/settings.local.json` local | deploy ใช้ **key auth** → ไม่พัง |
 | S2 | MySQL `root` + `remote_import` pw | `ALTER USER ... IDENTIFIED BY` ทุก MySQL | `database.default.password` ใน `.env` ทุก server + `server.env` local | สคริปต์ grant ใช้ placeholder `CHANGE_ME_*` แล้ว |
-| S3 | `researchrecordsso` secret (`pisit_secret`) | สุ่มค่าใหม่ strong | NS `researchrecordsso.sharedSecret` + RR `newscience_sso.sharedSecret` (**ต้องตรงกัน**) | ช่วง mismatch สั้น ๆ SSO ล่ม → ทำนอกเวลา, อัปเดต 2 ฝั่งติดกัน |
+| S3 | `researchrecordsso` secret (`<sso-shared-secret>`) | สุ่มค่าใหม่ strong | NS `researchrecordsso.sharedSecret` + RR `newscience_sso.sharedSecret` (**ต้องตรงกัน**) | ช่วง mismatch สั้น ๆ SSO ล่ม → ทำนอกเวลา, อัปเดต 2 ฝั่งติดกัน |
 | S4 | `edocsso.sharedSecret` | **ไม่หมุน** | — | ตัดทิ้งผ่าน Track E |
 | S5 | (optional) git history | `git filter-repo --replace-text` | force-push | ⚠️ ต้อง **re-clone win-kc ทั้ง NS + RR** (pull แบบ ff) → ทำเป็นขั้นสุดท้าย; เพราะ rotate แล้ว ค่าเก่าตายแล้ว นี่แค่เก็บกวาด |
 
