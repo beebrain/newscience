@@ -301,10 +301,6 @@
                 </div>
                 <div class="logout-iframes" aria-hidden="true">
                     <?php
-                    $edocSso = config(\Config\EdocSso::class);
-                    if ($edocSso->enabled && $edocSso->logoutUrl !== '') {
-                        echo '<iframe src="' . esc($edocSso->logoutUrl) . '" title="Edoc logout"></iframe>';
-                    }
                     $researchSso = config(\Config\ResearchRecordSso::class);
                     if ($researchSso->enabled && $researchSso->logoutUrl !== '') {
                         echo '<iframe src="' . esc($researchSso->logoutUrl) . '" title="Research logout"></iframe>';

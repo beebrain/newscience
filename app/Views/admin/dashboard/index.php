@@ -209,19 +209,6 @@ $statsOverviewGridClass = $showProgramAdminQuick
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <?php
-            $edocSso = config(\Config\EdocSso::class);
-            $edocLegacyUrl = ($edocSso->baseUrl !== '') ? rtrim($edocSso->baseUrl, '/') : 'https://edoc.sci.uru.ac.th';
-            ?>
-            <a href="<?= esc($edocLegacyUrl) ?>" target="_blank" rel="noopener" class="group flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all">
-                <div class="w-10 h-10 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                </div>
-                <div>
-                    <div class="text-sm font-semibold text-gray-700">e-Doc เดิม</div>
-                    <div class="text-xs text-gray-400">edoc.sci.uru.ac.th</div>
-                </div>
-            </a>
-            <?php
             $researchSso = config(\Config\ResearchRecordSso::class);
             if ($researchSso->enabled && $researchSso->baseUrl !== ''):
             ?>

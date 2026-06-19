@@ -218,7 +218,7 @@
                             <li class="nav__item--has-dropdown nav__item--has-subdropdown">
                                 <span class="nav__dropdown-link nav__dropdown-link--subtrigger">ระบบและวารสาร</span>
                                 <ul class="nav__dropdown nav__dropdown--sub">
-                                    <li><a href="http://edoc.sci.uru.ac.th/" target="_blank" class="nav__dropdown-link" rel="noopener">งานวิชาการ (e-Doc)</a></li>
+                                    <li><a href="<?= base_url('edoc') ?>" class="nav__dropdown-link">งานวิชาการ (e-Doc)</a></li>
                                     <li><a href="https://sci.uru.ac.th/docs/qa2568.pdf" target="_blank" class="nav__dropdown-link" rel="noopener">ประกันคุณภาพ</a></li>
                                     <li><a href="https://ph03.tci-thaijo.org/index.php/ajsas" target="_blank" class="nav__dropdown-link" rel="noopener">วารสารวิทยาศาสตร์ฯ (AJSAS)</a></li>
                                 </ul>
@@ -350,7 +350,7 @@
                             <span class="mobile-nav__subtoggle-text">ระบบและวารสาร</span>
                         </button>
                         <ul class="mobile-nav__sub mobile-nav__sub--nested" id="mn-sub-services-sys" hidden>
-                            <li><a href="http://edoc.sci.uru.ac.th/" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">งานวิชาการ (e-Doc)</a></li>
+                            <li><a href="<?= base_url('edoc') ?>" class="mobile-nav__sublink">งานวิชาการ (e-Doc)</a></li>
                             <li><a href="https://sci.uru.ac.th/docs/qa2568.pdf" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">ประกันคุณภาพ</a></li>
                             <li><a href="https://ph03.tci-thaijo.org/index.php/ajsas" class="mobile-nav__sublink" target="_blank" rel="noopener noreferrer">วารสารวิทยาศาสตร์ฯ (AJSAS)</a></li>
                         </ul>

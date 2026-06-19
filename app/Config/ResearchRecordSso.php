@@ -6,12 +6,12 @@ use CodeIgniter\Config\BaseConfig;
 
 /**
  * Research Record SSO — ล็อกอินผ่าน research.academic.uru.ac.th (URU Portal ผ่าน Research Record)
- * ใช้ shared secret เดียวกับ Edoc ได้ (ตั้ง edocsso.sharedSecret แล้วใช้านั้นที่นี่ หรือตั้ง researchrecordsso.sharedSecret)
+ * ต้องตั้ง researchrecordsso.sharedSecret ให้ตรงกับฝั่ง Research Record (ไม่มี fallback ไป edoc แล้ว)
  *
  * ตั้งค่าใน .env (ถ้ามี):
  *   researchrecordsso.baseUrl = "https://research.academic.uru.ac.th"
  *   researchrecordsso.exchangeCodeUrl = "https://research.academic.uru.ac.th/api/sso/exchange-code"
- *   researchrecordsso.sharedSecret = "same_as_edoc" หรือไม่ตั้งจะใช้ edocsso.sharedSecret
+ *   researchrecordsso.sharedSecret = "<shared-secret>"  (ต้องตรงกับฝั่ง RR)
  *   researchrecordsso.enabled = "true"
  */
 class ResearchRecordSso extends BaseConfig
@@ -43,10 +43,7 @@ class ResearchRecordSso extends BaseConfig
         $this->baseUrl = env('researchrecordsso.baseUrl', $this->baseUrl) ?: $this->baseUrl;
         $this->exchangeCodeUrl = env('researchrecordsso.exchangeCodeUrl', $this->exchangeCodeUrl) ?: $this->exchangeCodeUrl;
         $secret = env('researchrecordsso.sharedSecret');
-        if ($secret === null || $secret === '' || $secret === 'SHARED_SECRET_PLACEHOLDER') {
-            $secret = env('edocsso.sharedSecret');
-        }
-        if ($secret !== null && $secret !== '') {
+        if ($secret !== null && $secret !== '' && $secret !== 'SHARED_SECRET_PLACEHOLDER') {
             $this->sharedSecret = $secret;
         }
         $enabled = env('researchrecordsso.enabled', 'true');

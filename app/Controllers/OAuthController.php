@@ -218,7 +218,7 @@ class OAuthController extends BaseController
         }
         [$payloadB64, $sigB64] = $parts;
 
-        $secret = getenv('researchrecordsso.sharedSecret') ?: getenv('edocsso.sharedSecret') ?: '';
+        $secret = getenv('researchrecordsso.sharedSecret') ?: '';
         if ($secret === '') {
             return false;
         }

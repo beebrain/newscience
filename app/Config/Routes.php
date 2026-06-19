@@ -73,11 +73,6 @@ $routes->get('/admin/login', 'Admin\Auth::login');
 $routes->post('/admin/login', 'Admin\Auth::attemptLogin'); // ปิด login email/password — redirect ไป OAuth แทน
 $routes->get('/admin/logout', 'Admin\Auth::logout');
 $routes->get('/admin/clear-session', 'Admin\Auth::clearSession');
-// รับ redirect หลัง logout จาก Edoc — ให้ Edoc ตั้ง redirect หลัง signout มาที่ URL นี้เพื่อเด้งกลับ newScience
-$routes->get('/admin/edoc-logout-return', 'Admin\Auth::edocLogoutReturn');
-// SSO ผ่าน Edoc (URU Portal เดียว)
-$routes->get('/admin/portal-login', 'Admin\Auth::portalLogin');
-$routes->get('/admin/oauth-callback', 'Admin\Auth::oauthCallback');
 
 // -------------------------------------------------------------------------
 // URU Portal OAuth 2.0 Routes (ใช้ร่วมกันทั้ง นักศึกษา และ บุคลากร)

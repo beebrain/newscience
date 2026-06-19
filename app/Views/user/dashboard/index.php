@@ -146,19 +146,6 @@ $quickSystemsGridClass = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <?php
-            $edocSso = config(\Config\EdocSso::class);
-            $edocLegacyUrl = ($edocSso->baseUrl !== '') ? rtrim($edocSso->baseUrl, '/') : 'https://edoc.sci.uru.ac.th';
-            ?>
-            <a href="<?= esc($edocLegacyUrl) ?>" target="_blank" rel="noopener" class="group relative bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-gray-300 hover:-translate-y-1 transition-all duration-200">
-                <div class="w-12 h-12 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                </div>
-                <div class="font-semibold text-gray-800 group-hover:text-gray-600 transition-colors">e-Doc เดิม</div>
-                <div class="text-sm text-gray-500 mt-1">edoc.sci.uru.ac.th</div>
-                <svg class="absolute top-5 right-5 w-5 h-5 text-gray-300 group-hover:text-gray-400 group-hover:translate-x-1 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </a>
-
-            <?php
             $researchSso = config(\Config\ResearchRecordSso::class);
             if ($researchSso->enabled && $researchSso->baseUrl !== ''):
             ?>
