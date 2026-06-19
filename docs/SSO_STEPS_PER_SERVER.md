@@ -1,6 +1,6 @@
 # สรุปขั้นตอนที่ต้องทำบนแต่ละ Server (SSO เชื่อม 3 แอป)
 
-ทั้ง 3 แอปใช้ **Email** เป็นตัวระบุตัวตนร่วมกัน และใช้ **shared secret = pisit_secret** (หรือตั้งใน env ของแต่ละ server)
+ทั้ง 3 แอปใช้ **Email** เป็นตัวระบุตัวตนร่วมกัน และใช้ **shared secret = <shared-secret>** (หรือตั้งใน env ของแต่ละ server)
 
 ---
 
@@ -10,8 +10,8 @@
 
 ### 1. ไฟล์/โค้ดที่มีอยู่แล้ว
 
-- `app/Config/EdocSso.php` — baseUrl, exchangeCodeUrl, sharedSecret (pisit_secret)
-- `app/Config/ResearchRecordSso.php` — baseUrl, sharedSecret (pisit_secret)
+- `app/Config/EdocSso.php` — baseUrl, exchangeCodeUrl, sharedSecret (<shared-secret>)
+- `app/Config/ResearchRecordSso.php` — baseUrl, sharedSecret (<shared-secret>)
 - `app/Controllers/Admin/Auth.php` — portalLogin, oauthCallback, goResearchRecord
 - `app/Views/admin/auth/login.php` — ปุ่ม "Login ผ่าน URU Portal" (ไป Edoc เท่านั้น)
 - `app/Views/admin/layouts/admin_layout.php` — เมนู "Research Record"
@@ -22,11 +22,11 @@
 1. **อัปโหลดโค้ด** — ให้ครบโฟลเดอร์ app (Config, Controllers, Views) และ routes ตามข้างบน
 2. **ตั้งค่า base URL** — ใน `app/Config/App.php` (หรือ .env) ตั้ง `baseURL` ให้เป็น URL จริงของ newScience (เช่น `https://sci.uru.ac.th/`)
 3. **ตั้งค่า Edoc SSO (ถ้าต้องการ override)**
-   - ใน `.env`: `edocsso.baseUrl`, `edocsso.exchangeCodeUrl`, `edocsso.sharedSecret` (ถ้าไม่ตั้ง จะใช้ค่าใน config รวมถึง pisit_secret)
+   - ใน `.env`: `edocsso.baseUrl`, `edocsso.exchangeCodeUrl`, `edocsso.sharedSecret` (ถ้าไม่ตั้ง จะใช้ค่าใน config รวมถึง <shared-secret>)
    - ให้ `edocsso.exchangeCodeUrl` ชี้ไปที่ Edoc จริง เช่น `https://edoc.sci.uru.ac.th/api/sso/exchange-code` (หรือมี index.php ตามที่ Edoc ใช้)
 4. **ตั้งค่า Research Record SSO (ถ้าต้องการ override)**
    - ใน `.env`: `researchrecordsso.baseUrl` = `https://research.academic.uru.ac.th` (หรือ URL จริงของ Research Record)
-   - `researchrecordsso.sharedSecret` ถ้าไม่ตั้ง จะใช้ edocsso.sharedSecret หรือ pisit_secret
+   - `researchrecordsso.sharedSecret` ถ้าไม่ตั้ง จะใช้ edocsso.sharedSecret หรือ <shared-secret>
 5. **ตรวจสอบ**
    - เปิดหน้า `/admin/login` ต้องเห็นปุ่ม "Login ผ่าน URU Portal"
    - หลังล็อกอินแอดมิน ต้องเห็นเมนู "Research Record" ในแถบซ้าย
@@ -39,7 +39,7 @@
 
 ### 1. ไฟล์/โค้ดที่มีอยู่แล้ว
 
-- `app/Config/NewscienceSso.php` — enabled, sharedSecret (pisit_secret), returnUrlAllowlist, codeTtl
+- `app/Config/NewscienceSso.php` — enabled, sharedSecret (<shared-secret>), returnUrlAllowlist, codeTtl
 - `app/Controllers/AuthenController.php` — login รับ from/return_url; callback สร้าง one-time code แล้ว redirect กลับ newScience
 - `app/Controllers/SsoApiController.php` — POST api/sso/exchange-code แลก code เป็น user info
 - `app/Views/auth/URULogin.php` — แสดงข้อความ "จาก newScience" เมื่อ from=newscience
@@ -49,7 +49,7 @@
 
 1. **อัปโหลดโค้ด** — ให้ครบ Config (NewscienceSso), AuthenController, SsoApiController, View auth/URULogin, Routes
 2. **ตั้งค่า NewscienceSso**
-   - ใน config หรือ `.env`: `sharedSecret` = **pisit_secret** (ให้ตรงกับ newScience)
+   - ใน config หรือ `.env`: `sharedSecret` = **<shared-secret>** (ให้ตรงกับ newScience)
    - ตรวจ `returnUrlAllowlist` ว่ามี base URL ของ newScience เช่น `https://sci.uru.ac.th/`, `http://localhost/` ตามที่ใช้จริง
 3. **ตรวจสอบว่า URU Portal OAuth ทำงาน** — client_id, client_secret, redirect_uri ของ Edoc ต้องลงทะเบียนกับ URU Portal แล้ว
 4. **ตรวจสอบ**
@@ -111,7 +111,7 @@
 
 ### 1. ไฟล์/โค้ดที่มีอยู่แล้ว
 
-- `app/Config/NewscienceSso.php` — enabled, sharedSecret (pisit_secret)
+- `app/Config/NewscienceSso.php` — enabled, sharedSecret (<shared-secret>)
 - `app/Controllers/AuthenController.php` — ssoEntry() รับ token จาก newScience, ตรวจ signature, หา/สร้าง user จาก email, set session, redirect /dashboard
 - Routes: `auth/sso-entry` → AuthenController::ssoEntry
 
@@ -119,11 +119,11 @@
 
 1. **อัปโหลดโค้ด** — ให้ครบ Config (NewscienceSso), AuthenController (มี ssoEntry และ base64UrlDecode), Routes
 2. **ตั้งค่า NewscienceSso**
-   - ใน config หรือ `.env`: `newscience_sso.sharedSecret` = **pisit_secret** (ให้ตรงกับ newScience และ Edoc)
+   - ใน config หรือ `.env`: `newscience_sso.sharedSecret` = **<shared-secret>** (ให้ตรงกับ newScience และ Edoc)
    - `newscience_sso.enabled` = true
 3. **ตรวจสอบ**
    - จาก newScience (หลังล็อกอินแอดมิน) กดเมนู "Research Record" จะ redirect ไป `https://research.academic.uru.ac.th/auth/sso-entry?token=xxx`
-   - Research Record ต้องรับ token, ตรวจ signature ด้วย pisit_secret, หา/สร้าง user จาก email แล้วสร้าง session แล้ว redirect ไป /dashboard โดยไม่ต้องล็อกอินซ้ำ
+   - Research Record ต้องรับ token, ตรวจ signature ด้วย <shared-secret>, หา/สร้าง user จาก email แล้วสร้าง session แล้ว redirect ไป /dashboard โดยไม่ต้องล็อกอินซ้ำ
 
 ---
 
@@ -131,9 +131,9 @@
 
 | Server          | Config / ตัวแปร                                      | ค่าที่ใช้        |
 | --------------- | ---------------------------------------------------- | ---------------- |
-| newScience      | EdocSso.sharedSecret, ResearchRecordSso.sharedSecret | **pisit_secret** |
-| Edoc            | NewscienceSso.sharedSecret                           | **pisit_secret** |
-| Research Record | NewscienceSso.sharedSecret                           | **pisit_secret** |
+| newScience      | EdocSso.sharedSecret, ResearchRecordSso.sharedSecret | **<shared-secret>** |
+| Edoc            | NewscienceSso.sharedSecret                           | **<shared-secret>** |
+| Research Record | NewscienceSso.sharedSecret                           | **<shared-secret>** |
 
 ถ้าใช้ .env ให้ตั้งให้ตรงกันทั้ง 3 ที่ (เช่น edocsso.sharedSecret, newscience_sso.sharedSecret).
 

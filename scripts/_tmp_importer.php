@@ -6,7 +6,7 @@ if ($token !== 'ns2026import') { http_response_code(403); exit('403 Forbidden');
 $sqlFile = __DIR__ . '/eval_migrate.sql';
 if (!file_exists($sqlFile)) { exit('SQL file not found: ' . $sqlFile); }
 
-$pdo = new PDO('mysql:host=127.0.0.1;dbname=newscience;charset=utf8mb4', 'root', 'admin@SCI@2026', [
+$pdo = new PDO('mysql:host=127.0.0.1;dbname=newscience;charset=utf8mb4', 'root', 'CHANGE_ME_DB_PASS', [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 ]);
 

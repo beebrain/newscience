@@ -45,8 +45,17 @@ $RECYCLE.BIN/
 # อย่าเก็บสำเนา config ชื่อ env (ไม่มีจุด) — CI4 โหลดเฉพาะ `.env`
 /env
 scripts/ftp_server_49.env
+server.env
 .vagrant
 Vagrantfile
+
+#-------------------------
+# AI assistant & local tooling (never commit — may hold secrets / local paths)
+#-------------------------
+.claude/settings.local.json
+.claude/settings.json
+.claude/agents/
+memory/
 
 #-------------------------
 # Temporary Files

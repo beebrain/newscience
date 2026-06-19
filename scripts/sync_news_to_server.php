@@ -14,7 +14,7 @@ $local = [
 $remote = [
     'host' => '49.231.30.18',
     'user' => 'root',
-    'pass' => 'admin@SCI@2026',
+    'pass' => 'CHANGE_ME_DB_PASS',
     'db'   => 'newscience',
 ];
 

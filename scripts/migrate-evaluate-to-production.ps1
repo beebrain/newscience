@@ -28,7 +28,7 @@ param(
 
     # Production MySQL (บน server)
     [string]$ServerDbUser = "root",
-    [string]$ServerDbPass = "admin@SCI@2026",
+    [string]$ServerDbPass = "CHANGE_ME_DB_PASS",
     [string]$ServerDb = "newscience",
     [string]$MysqlPathRemote = "C:/xampp/mysql/bin/mysql.exe",
 
