@@ -3,32 +3,21 @@
 namespace App\Models\Edoc;
 
 use CodeIgniter\Model;
+use Config\Services;
 
 class SendmailModel extends Model
 {
-    private $username;
-    private $detailname;
-    private $password;
-    private $sendform;
-    private $smtpHost;
-    private $smtpPort;
-    private $smtpSecure;
+    private string $fromName;
+    private string $fromEmail;
 
     public function __construct()
     {
         parent::__construct();
 
-        $this->username = (string) env('mail.smtpUsername', '');
-        $this->detailname = (string) env('mail.fromName', 'Edocument System');
-        $this->password = (string) env('mail.smtpPassword', '');
-        $this->sendform = (string) env('mail.fromEmail', $this->username);
-        $this->smtpHost = (string) env('mail.smtpHost', 'smtp.gmail.com');
-        $this->smtpPort = (int) env('mail.smtpPort', 465);
-        $this->smtpSecure = (string) env('mail.smtpSecure', 'ssl');
-
-        require_once APPPATH . 'ThirdParty/PHPMailer/PHPMailer.php';
-        require_once APPPATH . 'ThirdParty/PHPMailer/SMTP.php';
-        require_once APPPATH . 'ThirdParty/PHPMailer/Exception.php';
+        // From เดิม: ชื่อ "Edocument System" / อีเมล datascience@uru.ac.th
+        // SMTP host/port/auth มาจาก Config\Email (อ่าน mail.* env ชุดเดียวกับ PHPMailer เดิม) — แหล่ง config เดียวทั้งระบบ
+        $this->fromName  = (string) env('mail.fromName', 'Edocument System');
+        $this->fromEmail = (string) env('mail.fromEmail', env('mail.smtpUsername', ''));
     }
 
     /**
@@ -49,7 +38,7 @@ Please visit the following link in order to activate your account:
 ";
         $body .= base_url('user/confirm/' . base64_encode($emailAddress));
         $body .= "
-Your password has been securely stored in our database and cannot be 
+Your password has been securely stored in our database and cannot be
 retrieved. In the event that it is forgotten, you will be able to reset it
 using the email address associated with your account.
 
@@ -61,43 +50,29 @@ Thank you for registering.";
     }
 
     /**
-     * Standard email sending function
+     * Standard email sending function (plain text)
      */
     public function sendMail($emailAddress, $body, $subject, $bcc = "")
     {
-        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $email = Services::email();
+        $email->clear(true); // ponytail: ล้าง state กัน recipient ค้างข้ามการเรียกใน request เดียว (R5)
+        $email->setFrom($this->fromEmail, $this->fromName);
+        $email->setTo($emailAddress); // CI4 รับ comma-separated เอง (R4)
+        if ($bcc !== "") {
+            $email->setBCC($bcc);
+        }
+        $email->setSubject($subject);
+        $email->setMailType('text');
+        $email->setMessage($body);
 
-        try {
-            $mail->isSMTP();
-            $mail->CharSet = "UTF-8";
-            $mail->SMTPAuth = true;
-            $mail->SMTPSecure = $this->smtpSecure;
-            $mail->Host = $this->smtpHost;
-            $mail->Port = $this->smtpPort;
-            $mail->Username = $this->username;
-            $mail->Password = $this->password;
-            $mail->setFrom($this->sendform, $this->detailname);
-
-            $mail->Subject = $subject;
-            $mail->Body = $body;
-
-            $to_array = explode(',', $emailAddress);
-            foreach ($to_array as $address) {
-                $mail->addAddress(trim($address), 'Web Enquiry');
-            }
-
-            if ($bcc != "") {
-                $mail->addBcc($bcc, 'Secrete');
-            }
-
-            $mail->send();
-            $data["message"] = "ส่งอีเมล์สำเร็จ!";
-        } catch (\PHPMailer\PHPMailer\Exception $e) {
-            $data["message"] = "Error: " . $mail->ErrorInfo;
-            log_message('error', "Email sending failed: {$mail->ErrorInfo}");
+        if ($email->send(false)) {
+            return ["message" => "ส่งอีเมล์สำเร็จ!"]; // R1: คงสตริงเดิมเป๊ะ (GeneralController match ตรงตัว)
         }
 
-        return $data;
+        $err = $email->printDebugger(['headers']);
+        log_message('error', "Email sending failed: {$err}");
+
+        return ["message" => "Error: {$err}"];
     }
 
     /**
@@ -105,41 +80,25 @@ Thank you for registering.";
      */
     public function sendMailHTML($emailAddress, $htmlContent, $textContent, $subject, $bcc = "")
     {
-        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $email = Services::email();
+        $email->clear(true);
+        $email->setFrom($this->fromEmail, $this->fromName);
+        $email->setTo($emailAddress);
+        if ($bcc !== "") {
+            $email->setBCC($bcc);
+        }
+        $email->setSubject($subject);
+        $email->setMailType('html');
+        $email->setMessage($htmlContent);
+        $email->setAltMessage($textContent); // R2: คง plain-text สำรองเดิม
 
-        try {
-            $mail->isSMTP();
-            $mail->CharSet = "UTF-8";
-            $mail->SMTPAuth = true;
-            $mail->SMTPSecure = $this->smtpSecure;
-            $mail->Host = $this->smtpHost;
-            $mail->Port = $this->smtpPort;
-            $mail->Username = $this->username;
-            $mail->Password = $this->password;
-            $mail->setFrom($this->sendform, $this->detailname);
-
-            $mail->Subject = $subject;
-
-            $mail->isHTML(true);
-            $mail->Body = $htmlContent;
-            $mail->AltBody = $textContent;
-
-            $to_array = explode(',', $emailAddress);
-            foreach ($to_array as $address) {
-                $mail->addAddress(trim($address), 'Document Notification');
-            }
-
-            if ($bcc != "") {
-                $mail->addBcc($bcc, 'Secrete');
-            }
-
-            $mail->send();
-            $data["message"] = "ส่งอีเมล์สำเร็จ!";
-        } catch (\PHPMailer\PHPMailer\Exception $e) {
-            $data["message"] = "Error: " . $mail->ErrorInfo;
-            log_message('error', "Email sending failed: {$mail->ErrorInfo}");
+        if ($email->send(false)) {
+            return ["message" => "ส่งอีเมล์สำเร็จ!"];
         }
 
-        return $data;
+        $err = $email->printDebugger(['headers']);
+        log_message('error', "Email sending failed: {$err}");
+
+        return ["message" => "Error: {$err}"];
     }
 }
