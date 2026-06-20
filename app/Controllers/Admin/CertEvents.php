@@ -397,7 +397,7 @@ class CertEvents extends BaseController
         // ตรวจสอบว่ามีการออก Certificate แล้วหรือไม่
         $issuedCount = $this->recipientModel->countByStatus($id, 'issued');
         if ($issuedCount > 0) {
-            $message = 'ไม่สามารถลบกิจกรรมที่มีการออก Certificate แล้ว';
+            $message = 'ไม่สามารถลบกิจกรรมนี้ได้เนื่องจากมีการออกใบรับรอง (PDF) ไปแล้ว หากต้องการลบ กรุณาติดต่อผู้ดูแลระบบเพื่อทำการถอนสิทธิ์รายชื่อผู้รับใบประกาศในกิจกรรมนี้ก่อน';
             if ($this->request->isAJAX()) {
                 return $this->response->setJSON(['success' => false, 'message' => $message]);
             }
@@ -485,7 +485,7 @@ class CertEvents extends BaseController
         }
 
         if ($recipient['status'] === 'issued') {
-            return redirect()->back()->with('error', 'ไม่สามารถลบผู้ที่ออก Certificate แล้ว');
+            return redirect()->back()->with('error', 'ไม่สามารถลบรายชื่อนี้ได้เนื่องจากมีการออกใบรับรอง (PDF) ไปแล้ว หากต้องการลบ กรุณาติดต่อผู้ดูแลระบบเพื่อทำการถอนสิทธิ์รายชื่อผู้รับใบประกาศก่อน');
         }
 
         $this->recipientModel->delete($recipientId);
